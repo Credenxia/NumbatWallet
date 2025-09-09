@@ -1,0 +1,809 @@
+openapi: 3.1.0
+info:
+  title: Credenxia Digital Wallet API
+  description: |
+    Digital Wallet and Verifiable Credentials Solution for WA Government.
+    This API provides comprehensive wallet management, credential issuance,
+    and verification services compliant with W3C standards.
+  version: 1.0.0
+  contact:
+    name: API Support
+    email: api-support@credenxia.gov.au
+  license:
+    name: Proprietary
+    url: https://credenxia.gov.au/license
+
+servers:
+  - url: https://api.credenxia.gov.au/v1
+    description: Production environment
+  - url: https://api-staging.credenxia.gov.au/v1
+    description: Staging environment
+  - url: https://api-sandbox.credenxia.gov.au/v1
+    description: Sandbox environment
+
+security:
+  - BearerAuth: []
+  - OAuth2:
+      - wallet:read
+      - wallet:write
+      - credentials:read
+      - credentials:write
+
+paths:
+  /wallets:
+    post:
+      summary: Create a new wallet
+      operationId: createWallet
+      tags:
+        - Wallets
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateWalletRequest'
+      responses:
+        '201':
+          description: Wallet created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Wallet'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+    get:
+      summary: List wallets
+      operationId: listWallets
+      tags:
+        - Wallets
+      parameters:
+        - $ref: '#/components/parameters/PageSize'
+        - $ref: '#/components/parameters/PageToken'
+      responses:
+        '200':
+          description: List of wallets
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WalletList'
+
+  /wallets/{walletId}:
+    get:
+      summary: Get wallet details
+      operationId: getWallet
+      tags:
+        - Wallets
+      parameters:
+        - $ref: '#/components/parameters/WalletId'
+      responses:
+        '200':
+          description: Wallet details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Wallet'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    delete:
+      summary: Delete a wallet
+      operationId: deleteWallet
+      tags:
+        - Wallets
+      parameters:
+        - $ref: '#/components/parameters/WalletId'
+      responses:
+        '204':
+          description: Wallet deleted successfully
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /wallets/{walletId}/backup:
+    post:
+      summary: Create wallet backup
+      operationId: backupWallet
+      tags:
+        - Wallets
+      parameters:
+        - $ref: '#/components/parameters/WalletId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BackupRequest'
+      responses:
+        '200':
+          description: Backup created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BackupResponse'
+
+  /wallets/{walletId}/restore:
+    post:
+      summary: Restore wallet from backup
+      operationId: restoreWallet
+      tags:
+        - Wallets
+      parameters:
+        - $ref: '#/components/parameters/WalletId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RestoreRequest'
+      responses:
+        '200':
+          description: Wallet restored
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Wallet'
+
+  /credentials/issue:
+    post:
+      summary: Issue a new credential
+      operationId: issueCredential
+      tags:
+        - Credentials
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IssueCredentialRequest'
+      responses:
+        '201':
+          description: Credential issued
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Credential'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /credentials/{credentialId}:
+    get:
+      summary: Get credential details
+      operationId: getCredential
+      tags:
+        - Credentials
+      parameters:
+        - $ref: '#/components/parameters/CredentialId'
+      responses:
+        '200':
+          description: Credential details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Credential'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /credentials/{credentialId}/revoke:
+    post:
+      summary: Revoke a credential
+      operationId: revokeCredential
+      tags:
+        - Credentials
+      parameters:
+        - $ref: '#/components/parameters/CredentialId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RevokeRequest'
+      responses:
+        '200':
+          description: Credential revoked
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RevocationResult'
+
+  /credentials/{credentialId}/status:
+    get:
+      summary: Check credential status
+      operationId: getCredentialStatus
+      tags:
+        - Credentials
+      parameters:
+        - $ref: '#/components/parameters/CredentialId'
+      responses:
+        '200':
+          description: Credential status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CredentialStatus'
+
+  /presentations/requests:
+    post:
+      summary: Create presentation request
+      operationId: createPresentationRequest
+      tags:
+        - Presentations
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PresentationRequest'
+      responses:
+        '201':
+          description: Presentation request created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PresentationRequestResponse'
+
+  /presentations/submit:
+    post:
+      summary: Submit a presentation
+      operationId: submitPresentation
+      tags:
+        - Presentations
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PresentationSubmission'
+      responses:
+        '200':
+          description: Presentation submitted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PresentationResult'
+
+  /presentations/verify:
+    post:
+      summary: Verify a presentation
+      operationId: verifyPresentation
+      tags:
+        - Presentations
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VerificationRequest'
+      responses:
+        '200':
+          description: Verification result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VerificationResult'
+
+  /trust/issuers:
+    get:
+      summary: List trusted issuers
+      operationId: listIssuers
+      tags:
+        - Trust Registry
+      parameters:
+        - $ref: '#/components/parameters/PageSize'
+        - $ref: '#/components/parameters/PageToken'
+      responses:
+        '200':
+          description: List of trusted issuers
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IssuerList'
+
+  /trust/schemas:
+    get:
+      summary: List credential schemas
+      operationId: listSchemas
+      tags:
+        - Trust Registry
+      parameters:
+        - $ref: '#/components/parameters/PageSize'
+        - $ref: '#/components/parameters/PageToken'
+      responses:
+        '200':
+          description: List of schemas
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SchemaList'
+
+  /health:
+    get:
+      summary: Health check endpoint
+      operationId: healthCheck
+      tags:
+        - System
+      security: []
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthStatus'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    OAuth2:
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: https://auth.credenxia.gov.au/oauth/authorize
+          tokenUrl: https://auth.credenxia.gov.au/oauth/token
+          scopes:
+            wallet:read: Read wallet information
+            wallet:write: Create and modify wallets
+            credentials:read: Read credentials
+            credentials:write: Issue and revoke credentials
+            presentations:read: Read presentations
+            presentations:write: Create and submit presentations
+
+  parameters:
+    WalletId:
+      name: walletId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+      description: Unique wallet identifier
+    
+    CredentialId:
+      name: credentialId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+      description: Unique credential identifier
+    
+    PageSize:
+      name: pageSize
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+      description: Number of items per page
+    
+    PageToken:
+      name: pageToken
+      in: query
+      schema:
+        type: string
+      description: Token for pagination
+
+  schemas:
+    CreateWalletRequest:
+      type: object
+      required:
+        - userId
+        - type
+      properties:
+        userId:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum: [personal, organizational]
+        metadata:
+          type: object
+          additionalProperties: true
+
+    Wallet:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        userId:
+          type: string
+          format: uuid
+        did:
+          type: string
+          pattern: '^did:[a-z]+:[a-zA-Z0-9._%-]*[a-zA-Z0-9._%-]$'
+        type:
+          type: string
+        status:
+          type: string
+          enum: [active, suspended, revoked]
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        metadata:
+          type: object
+
+    WalletList:
+      type: object
+      properties:
+        wallets:
+          type: array
+          items:
+            $ref: '#/components/schemas/Wallet'
+        nextPageToken:
+          type: string
+        totalCount:
+          type: integer
+
+    BackupRequest:
+      type: object
+      required:
+        - encryptionKey
+      properties:
+        encryptionKey:
+          type: string
+          format: byte
+        format:
+          type: string
+          enum: [encrypted, portable]
+
+    BackupResponse:
+      type: object
+      properties:
+        backupId:
+          type: string
+          format: uuid
+        encryptedData:
+          type: string
+          format: byte
+        checksum:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    RestoreRequest:
+      type: object
+      required:
+        - backupData
+        - decryptionKey
+      properties:
+        backupData:
+          type: string
+          format: byte
+        decryptionKey:
+          type: string
+          format: byte
+
+    IssueCredentialRequest:
+      type: object
+      required:
+        - credentialType
+        - subject
+        - walletId
+      properties:
+        credentialType:
+          type: string
+        subject:
+          type: object
+        walletId:
+          type: string
+          format: uuid
+        expirationDate:
+          type: string
+          format: date-time
+        options:
+          type: object
+          properties:
+            proofType:
+              type: string
+            proofPurpose:
+              type: string
+
+    Credential:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+          type: array
+          items:
+            type: string
+        issuer:
+          type: string
+        issuanceDate:
+          type: string
+          format: date-time
+        expirationDate:
+          type: string
+          format: date-time
+        credentialSubject:
+          type: object
+        proof:
+          type: object
+        status:
+          $ref: '#/components/schemas/CredentialStatus'
+
+    CredentialStatus:
+      type: object
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+        status:
+          type: string
+          enum: [active, revoked, suspended, expired]
+        statusListIndex:
+          type: integer
+        statusListUrl:
+          type: string
+          format: uri
+
+    RevokeRequest:
+      type: object
+      required:
+        - reason
+      properties:
+        reason:
+          type: string
+        effectiveDate:
+          type: string
+          format: date-time
+
+    RevocationResult:
+      type: object
+      properties:
+        credentialId:
+          type: string
+          format: uuid
+        revoked:
+          type: boolean
+        revokedAt:
+          type: string
+          format: date-time
+        reason:
+          type: string
+
+    PresentationRequest:
+      type: object
+      required:
+        - challenge
+        - requestedCredentials
+      properties:
+        challenge:
+          type: string
+        domain:
+          type: string
+        requestedCredentials:
+          type: array
+          items:
+            type: object
+            properties:
+              type:
+                type: string
+              fields:
+                type: array
+                items:
+                  type: string
+              constraints:
+                type: object
+
+    PresentationRequestResponse:
+      type: object
+      properties:
+        requestId:
+          type: string
+          format: uuid
+        challenge:
+          type: string
+        qrCode:
+          type: string
+          format: byte
+        expiresAt:
+          type: string
+          format: date-time
+
+    PresentationSubmission:
+      type: object
+      required:
+        - requestId
+        - presentation
+      properties:
+        requestId:
+          type: string
+          format: uuid
+        presentation:
+          type: object
+          properties:
+            type:
+              type: array
+              items:
+                type: string
+            verifiableCredential:
+              type: array
+              items:
+                type: object
+            proof:
+              type: object
+
+    PresentationResult:
+      type: object
+      properties:
+        submissionId:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [accepted, rejected, pending]
+        verificationResult:
+          $ref: '#/components/schemas/VerificationResult'
+
+    VerificationRequest:
+      type: object
+      required:
+        - presentation
+      properties:
+        presentation:
+          type: object
+        options:
+          type: object
+          properties:
+            challenge:
+              type: string
+            domain:
+              type: string
+            checkStatus:
+              type: boolean
+
+    VerificationResult:
+      type: object
+      properties:
+        verified:
+          type: boolean
+        checks:
+          type: array
+          items:
+            type: object
+            properties:
+              check:
+                type: string
+              passed:
+                type: boolean
+              message:
+                type: string
+        errors:
+          type: array
+          items:
+            type: string
+        warnings:
+          type: array
+          items:
+            type: string
+
+    IssuerList:
+      type: object
+      properties:
+        issuers:
+          type: array
+          items:
+            type: object
+            properties:
+              did:
+                type: string
+              name:
+                type: string
+              type:
+                type: string
+              credentialTypes:
+                type: array
+                items:
+                  type: string
+              status:
+                type: string
+        nextPageToken:
+          type: string
+
+    SchemaList:
+      type: object
+      properties:
+        schemas:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              name:
+                type: string
+              version:
+                type: string
+              type:
+                type: string
+              schema:
+                type: object
+        nextPageToken:
+          type: string
+
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [healthy, degraded, unhealthy]
+        version:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+        services:
+          type: object
+          additionalProperties:
+            type: object
+            properties:
+              status:
+                type: string
+              latency:
+                type: number
+
+    ErrorResponse:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          type: object
+          required:
+            - code
+            - message
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+            details:
+              type: array
+              items:
+                type: object
+            traceId:
+              type: string
+
+  responses:
+    BadRequest:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    
+    Conflict:
+      description: Resource conflict
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
