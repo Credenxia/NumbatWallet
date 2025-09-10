@@ -13,8 +13,9 @@ This is a tender/proposal documentation repository for a Digital Wallet and Veri
 ├── NumbatWallet/                 # Main repository
 │   ├── CLAUDE.md                 # This file - AI assistant context
 │   ├── README.md                 # Repository overview
-│   └── docs/                     # GitHub Pages (Azure Calculator)
-│       └── index.html            # Interactive Azure pricing calculator
+│   ├── index.html                # Interactive Azure pricing calculator (GitHub Pages)
+│   └── docs/                     # Documentation folder
+│       └── Tender/               # Original tender documents (PDFs)
 │
 └── NumbatWallet.wiki/            # Wiki repository (separate clone)
     ├── Home.md                   # Master PRD (main documentation)
