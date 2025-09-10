@@ -201,7 +201,8 @@
     <div class="container">
         <h1>Internal Pricing Calculator - Digital Wallet Solution</h1>
         <div class="internal-warning">
-            ⚠️ INTERNAL USE ONLY - Shows real costs, contingency, and margins
+            ⚠️ INTERNAL USE ONLY - Shows real costs, contingency, and margins<br>
+            📌 NOTE: POA (Proof-of-Operation) is $55,000 separate at-risk investment - not included in Pilot pricing below
         </div>
         
         <div class="controls">
@@ -247,10 +248,10 @@
             <thead>
                 <tr>
                     <th style="width: 50px;">Item #</th>
-                    <th style="width: 30%;">Description</th>
-                    <th style="width: 60px;">Qty</th>
-                    <th style="width: 100px;">Unit Cost</th>
-                    <th style="width: 100px;">Base Amount</th>
+                    <th style="width: 25%;">Description</th>
+                    <th style="width: 130px;">Qty</th>
+                    <th style="width: 110px;">Unit Cost</th>
+                    <th style="width: 110px;">Base Amount</th>
                     <th style="width: 100px;">Contingency</th>
                     <th style="width: 100px;">Margin</th>
                     <th style="width: 120px;">Total Amount</th>
@@ -273,14 +274,15 @@
                 categories: [
                     {
                         name: 'Personnel Costs (6.5 FTE)',
+                        isPersonnel: true,
                         items: [
-                            { description: 'Project Manager (1.0 FTE)', quantity: 12, unitCost: 15000 },
-                            { description: 'Business Analyst (1.0 FTE)', quantity: 12, unitCost: 8333 },
-                            { description: 'Tester/QA (1.0 FTE)', quantity: 12, unitCost: 8333 },
-                            { description: 'Solution Architect (1.0 FTE)', quantity: 12, unitCost: 15000 },
-                            { description: 'Full-Stack Developer (1.0 FTE)', quantity: 12, unitCost: 13333 },
-                            { description: 'DevOps/Security Engineer (1.0 FTE)', quantity: 12, unitCost: 15000 },
-                            { description: 'Technical Support (0.5 FTE)', quantity: 12, unitCost: 4167 }
+                            { description: 'Project Manager', fte: 1.0, months: 12, unitCost: 15000 },
+                            { description: 'Business Analyst', fte: 1.0, months: 12, unitCost: 8333 },
+                            { description: 'Tester/QA', fte: 1.0, months: 12, unitCost: 8333 },
+                            { description: 'Solution Architect', fte: 1.0, months: 12, unitCost: 15000 },
+                            { description: 'Full-Stack Developer', fte: 1.0, months: 12, unitCost: 13333 },
+                            { description: 'DevOps/Security Engineer', fte: 1.0, months: 12, unitCost: 15000 },
+                            { description: 'Technical Support', fte: 0.5, months: 12, unitCost: 8333 }
                         ]
                     },
                     {
@@ -292,12 +294,32 @@
                         ]
                     },
                     {
-                        name: 'Security and Compliance',
+                        name: 'Compliance and Certification',
                         items: [
-                            { description: 'Penetration testing', quantity: 1, unitCost: 20000 },
-                            { description: 'Vulnerability scanning (6 months)', quantity: 6, unitCost: 1000 },
-                            { description: 'Compliance audits', quantity: 1, unitCost: 15000 },
-                            { description: 'DR testing & BCP (quarterly)', quantity: 3, unitCost: 3000 }
+                            { description: 'IRAP Assessment', quantity: 1, unitCost: 36232 },
+                            { description: 'ISO 27001 Certification', quantity: 1, unitCost: 25362 },
+                            { description: 'ISO 18013-5 Conformance', quantity: 1, unitCost: 18116 },
+                            { description: 'TDIF Accreditation', quantity: 1, unitCost: 32609 },
+                            { description: 'SOC 2 Type 2', quantity: 1, unitCost: 21739 },
+                            { description: 'Digital ID Rules Compliance', quantity: 1, unitCost: 21739 },
+                            { description: 'Penetration Testing (2x)', quantity: 1, unitCost: 28986 },
+                            { description: 'Compliance Tools & Software', quantity: 1, unitCost: 14493 },
+                            { description: 'External Consultancy', quantity: 1, unitCost: 21739 }
+                        ]
+                    },
+                    {
+                        name: 'Training and Documentation',
+                        items: [
+                            { description: 'User Documentation', quantity: 1, unitCost: 10870 },
+                            { description: 'Technical Documentation', quantity: 1, unitCost: 10870 },
+                            { description: 'Training Materials', quantity: 1, unitCost: 7246 },
+                            { description: 'Workshop Delivery', quantity: 1, unitCost: 3623 }
+                        ]
+                    },
+                    {
+                        name: 'Contingency',
+                        items: [
+                            { description: 'General Risk Buffer', quantity: 1, unitCost: 39855 }
                         ]
                     }
                 ]
@@ -308,14 +330,15 @@
                 margin: 20,
                 categories: [
                     {
-                        name: 'Personnel Costs (3.6 FTE)',
+                        name: 'Personnel Costs',
+                        isPersonnel: true,
                         items: [
-                            { description: 'Account Manager (1.0 FTE)', quantity: 12, unitCost: 13333 },
-                            { description: 'Business Analyst (0.3 FTE)', quantity: 12, unitCost: 2500 },
-                            { description: 'Solution Architect (0.5 FTE)', quantity: 12, unitCost: 7500 },
-                            { description: 'Full-Stack Developer (0.5 FTE)', quantity: 12, unitCost: 6667 },
-                            { description: 'DevOps/Security (0.5 FTE)', quantity: 12, unitCost: 7500 },
-                            { description: 'Technical Support (0.8 FTE)', quantity: 12, unitCost: 6667 }
+                            { description: 'Account Manager', fte: 1.0, months: 12, unitCost: 13333 },
+                            { description: 'Business Analyst', fte: 0.3, months: 12, unitCost: 8333 },
+                            { description: 'Solution Architect', fte: 0.5, months: 12, unitCost: 15000 },
+                            { description: 'Full-Stack Developer', fte: 0.5, months: 12, unitCost: 13333 },
+                            { description: 'DevOps/Security', fte: 0.5, months: 12, unitCost: 15000 },
+                            { description: 'Technical Support', fte: 0.8, months: 12, unitCost: 8333 }
                         ]
                     },
                     {
@@ -350,14 +373,15 @@
                 margin: 20,
                 categories: [
                     {
-                        name: 'Personnel Costs (3.6 FTE with 3% CPI)',
+                        name: 'Personnel Costs',
+                        isPersonnel: true,
                         items: [
-                            { description: 'Account Manager (1.0 FTE)', quantity: 12, unitCost: 13733 },
-                            { description: 'Business Analyst (0.3 FTE)', quantity: 12, unitCost: 2575 },
-                            { description: 'Solution Architect (0.5 FTE)', quantity: 12, unitCost: 7725 },
-                            { description: 'Full-Stack Developer (0.5 FTE)', quantity: 12, unitCost: 6867 },
-                            { description: 'DevOps/Security (0.5 FTE)', quantity: 12, unitCost: 7725 },
-                            { description: 'Technical Support (0.8 FTE)', quantity: 12, unitCost: 6867 }
+                            { description: 'Account Manager', fte: 1.0, months: 12, unitCost: 13733 },
+                            { description: 'Business Analyst', fte: 0.3, months: 12, unitCost: 8583 },
+                            { description: 'Solution Architect', fte: 0.5, months: 12, unitCost: 15450 },
+                            { description: 'Full-Stack Developer', fte: 0.5, months: 12, unitCost: 13733 },
+                            { description: 'DevOps/Security', fte: 0.5, months: 12, unitCost: 15450 },
+                            { description: 'Technical Support', fte: 0.8, months: 12, unitCost: 8583 }
                         ]
                     },
                     {
@@ -392,14 +416,15 @@
                 margin: 20,
                 categories: [
                     {
-                        name: 'Personnel Costs (4.5 FTE with 3% CPI)',
+                        name: 'Personnel Costs',
+                        isPersonnel: true,
                         items: [
-                            { description: 'Account Manager (1.0 FTE)', quantity: 12, unitCost: 14145 },
-                            { description: 'Business Analyst (0.5 FTE)', quantity: 12, unitCost: 4425 },
-                            { description: 'Solution Architect (0.5 FTE)', quantity: 12, unitCost: 7957 },
-                            { description: 'Senior Developer (1.0 FTE)', quantity: 12, unitCost: 14145 },
-                            { description: 'DevOps/Security (0.5 FTE)', quantity: 12, unitCost: 7957 },
-                            { description: 'Technical Support (1.0 FTE)', quantity: 12, unitCost: 8850 }
+                            { description: 'Account Manager', fte: 1.0, months: 12, unitCost: 14145 },
+                            { description: 'Business Analyst', fte: 0.5, months: 12, unitCost: 8850 },
+                            { description: 'Solution Architect', fte: 0.5, months: 12, unitCost: 15914 },
+                            { description: 'Senior Developer', fte: 1.0, months: 12, unitCost: 14145 },
+                            { description: 'DevOps/Security', fte: 0.5, months: 12, unitCost: 15914 },
+                            { description: 'Technical Support', fte: 1.0, months: 12, unitCost: 8850 }
                         ]
                     },
                     {
@@ -459,12 +484,22 @@
             let itemNumber = 1;
 
             data.categories.forEach((category, catIndex) => {
+                // Calculate total FTE for personnel categories
+                let categoryName = category.name;
+                if (category.isPersonnel) {
+                    let totalFTE = 0;
+                    category.items.forEach(item => {
+                        totalFTE += item.fte || 0;
+                    });
+                    categoryName = `Personnel Costs (${totalFTE.toFixed(1)} FTE)`;
+                }
+                
                 // Category header
                 const headerRow = tbody.insertRow();
                 headerRow.className = 'category-header';
                 headerRow.innerHTML = `
                     <td>${itemNumber}</td>
-                    <td colspan="4"><strong>${category.name}</strong></td>
+                    <td colspan="4"><strong>${categoryName}</strong></td>
                     <td colspan="3"></td>
                     <td>
                         <button class="add-row-btn" onclick="addItem(${catIndex})">+ Add</button>
@@ -478,7 +513,15 @@
                 let categoryFinalTotal = 0;
                 
                 category.items.forEach((item, itemIndex) => {
-                    const baseAmount = item.quantity * item.unitCost;
+                    // Calculate base amount based on whether it's personnel or not
+                    let baseAmount;
+                    if (category.isPersonnel) {
+                        const fte = item.fte || 1;
+                        const months = item.months || 12;
+                        baseAmount = fte * months * item.unitCost;
+                    } else {
+                        baseAmount = (item.quantity || 1) * item.unitCost;
+                    }
                     
                     // Apply contingency to ALL categories
                     const contingencyAmount = baseAmount * (data.contingency / 100);
@@ -494,36 +537,75 @@
                     categoryFinalTotal += totalAmount;
                     
                     const row = tbody.insertRow();
-                    row.innerHTML = `
-                        <td></td>
-                        <td>
-                            <input type="text" value="${item.description}" 
-                                onchange="updateItem(${catIndex}, ${itemIndex}, 'description', this.value)">
-                        </td>
-                        <td>
-                            <input type="number" value="${item.quantity}" style="width: 60px;"
-                                onchange="updateItem(${catIndex}, ${itemIndex}, 'quantity', parseFloat(this.value))">
-                        </td>
-                        <td>
-                            <input type="text" value="${formatCurrency(item.unitCost)}" style="text-align: right;"
-                                onchange="updateItem(${catIndex}, ${itemIndex}, 'unitCost', parseCurrency(this.value))">
-                        </td>
-                        <td class="readonly">
-                            <input type="text" value="${formatCurrency(baseAmount)}" readonly class="readonly">
-                        </td>
-                        <td class="readonly">
-                            <input type="text" value="${formatCurrency(contingencyAmount)}" readonly class="readonly">
-                        </td>
-                        <td class="readonly">
-                            <input type="text" value="${formatCurrency(marginAmount)}" readonly class="readonly">
-                        </td>
-                        <td class="readonly">
-                            <input type="text" value="${formatCurrency(totalAmount)}" readonly class="readonly" style="font-weight: bold;">
-                        </td>
-                        <td>
-                            <button class="delete-btn" onclick="deleteItem(${catIndex}, ${itemIndex})">×</button>
-                        </td>
-                    `;
+                    
+                    if (category.isPersonnel) {
+                        // Personnel row with FTE and Months columns
+                        row.innerHTML = `
+                            <td></td>
+                            <td>
+                                <input type="text" value="${item.description}" 
+                                    onchange="updateItem(${catIndex}, ${itemIndex}, 'description', this.value)">
+                            </td>
+                            <td>
+                                <input type="number" value="${item.fte}" style="width: 45px;" step="0.1" placeholder="FTE"
+                                    onchange="updatePersonnelItem(${catIndex}, ${itemIndex}, 'fte', parseFloat(this.value))">
+                                ×
+                                <input type="number" value="${item.months}" style="width: 45px;" placeholder="Months"
+                                    onchange="updatePersonnelItem(${catIndex}, ${itemIndex}, 'months', parseFloat(this.value))">
+                            </td>
+                            <td>
+                                <input type="text" value="${formatCurrency(item.unitCost)}" style="text-align: right;"
+                                    onchange="updateItem(${catIndex}, ${itemIndex}, 'unitCost', parseCurrency(this.value))">
+                            </td>
+                            <td class="readonly">
+                                <input type="text" value="${formatCurrency(baseAmount)}" readonly class="readonly">
+                            </td>
+                            <td class="readonly">
+                                <input type="text" value="${formatCurrency(contingencyAmount)}" readonly class="readonly">
+                            </td>
+                            <td class="readonly">
+                                <input type="text" value="${formatCurrency(marginAmount)}" readonly class="readonly">
+                            </td>
+                            <td class="readonly">
+                                <input type="text" value="${formatCurrency(totalAmount)}" readonly class="readonly" style="font-weight: bold;">
+                            </td>
+                            <td>
+                                <button class="delete-btn" onclick="deleteItem(${catIndex}, ${itemIndex})">×</button>
+                            </td>
+                        `;
+                    } else {
+                        // Regular row with quantity column
+                        row.innerHTML = `
+                            <td></td>
+                            <td>
+                                <input type="text" value="${item.description}" 
+                                    onchange="updateItem(${catIndex}, ${itemIndex}, 'description', this.value)">
+                            </td>
+                            <td>
+                                <input type="number" value="${item.quantity || 1}" style="width: 100px;"
+                                    onchange="updateItem(${catIndex}, ${itemIndex}, 'quantity', parseFloat(this.value))">
+                            </td>
+                            <td>
+                                <input type="text" value="${formatCurrency(item.unitCost)}" style="text-align: right;"
+                                    onchange="updateItem(${catIndex}, ${itemIndex}, 'unitCost', parseCurrency(this.value))">
+                            </td>
+                            <td class="readonly">
+                                <input type="text" value="${formatCurrency(baseAmount)}" readonly class="readonly">
+                            </td>
+                            <td class="readonly">
+                                <input type="text" value="${formatCurrency(contingencyAmount)}" readonly class="readonly">
+                            </td>
+                            <td class="readonly">
+                                <input type="text" value="${formatCurrency(marginAmount)}" readonly class="readonly">
+                            </td>
+                            <td class="readonly">
+                                <input type="text" value="${formatCurrency(totalAmount)}" readonly class="readonly" style="font-weight: bold;">
+                            </td>
+                            <td>
+                                <button class="delete-btn" onclick="deleteItem(${catIndex}, ${itemIndex})">×</button>
+                            </td>
+                        `;
+                    }
                 });
 
                 // Category subtotal
@@ -576,12 +658,29 @@
             renderTable();
         }
 
+        function updatePersonnelItem(catIndex, itemIndex, field, value) {
+            currentData[currentScale].categories[catIndex].items[itemIndex][field] = value;
+            renderTable();
+        }
+
         function addItem(catIndex) {
-            currentData[currentScale].categories[catIndex].items.push({
-                description: 'New Item',
-                quantity: 1,
-                unitCost: 0
-            });
+            const category = currentData[currentScale].categories[catIndex];
+            if (category.isPersonnel) {
+                // Add personnel item with FTE and months
+                category.items.push({
+                    description: 'New Role',
+                    fte: 1.0,
+                    months: 12,
+                    unitCost: 10000
+                });
+            } else {
+                // Add regular item with quantity
+                category.items.push({
+                    description: 'New Item',
+                    quantity: 1,
+                    unitCost: 0
+                });
+            }
             renderTable();
         }
 
@@ -654,7 +753,15 @@
                 summary += `${category.name}\n`;
                 
                 category.items.forEach(item => {
-                    const baseAmount = item.quantity * item.unitCost;
+                    // Handle personnel vs regular items
+                    let baseAmount;
+                    if (category.isPersonnel) {
+                        const fte = item.fte || 1;
+                        const months = item.months || 12;
+                        baseAmount = fte * months * item.unitCost;
+                    } else {
+                        baseAmount = (item.quantity || 1) * item.unitCost;
+                    }
                     // Apply contingency to ALL categories
                     const contingencyAmount = baseAmount * (data.contingency / 100);
                     
