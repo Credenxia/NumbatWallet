@@ -9,23 +9,56 @@ This is a tender/proposal documentation repository for a Digital Wallet and Veri
 ## Repository Structure
 
 ```
-/tender
-├── docs/                         # Main documentation directory
-│   ├── ChatGPT/                  # Processed documentation in Markdown format
-│   │   ├── PRD_Master.md         # Master Product Requirements Document
-│   │   ├── Appendix_*.md         # Technical appendices covering various aspects
-│   │   └── PDF AND DOC/          # Original Word and PDF versions
-│   └── DPC2142 Attachment*.pdf   # Official tender documents and specifications
+/repo/
+├── NumbatWallet/                 # Main repository
+│   ├── CLAUDE.md                 # This file - AI assistant context
+│   ├── README.md                 # Repository overview
+│   └── docs/                     # GitHub Pages (Azure Calculator)
+│       └── index.html            # Interactive Azure pricing calculator
+│
+└── NumbatWallet.wiki/            # Wiki repository (separate clone)
+    ├── Home.md                   # Master PRD (main documentation)
+    ├── Solution-Architecture.md  # Technical architecture
+    ├── Security-Privacy-Compliance.md
+    ├── Technical-Specification.md
+    ├── API-Documentation.md
+    ├── SDK-Documentation.md
+    ├── SDK-Flutter-Guide.md      # Flutter SDK implementation
+    ├── SDK-DotNet-Guide.md       # .NET SDK implementation
+    ├── SDK-JavaScript-Guide.md   # Web SDK implementation
+    ├── Testing-Strategy.md
+    ├── Deployment-Guide.md
+    ├── Support-Model.md
+    ├── Pricing-Assumptions.md
+    ├── Detailed-Cost-Breakdown.md
+    ├── Azure-Justification-Pricing.md
+    ├── Azure-Calculator-Guide.md # Azure pricing calculator inputs
+    ├── Team-Resources.md
+    ├── Risk-Matrix.md
+    ├── Compliance-Matrix.md
+    ├── _Sidebar.md               # Wiki navigation
+    └── _Footer.md                # Wiki footer
 ```
+
+## Documentation Access
+
+- **GitHub Wiki**: https://github.com/Credenxia/NumbatWallet/wiki
+- **Azure Calculator**: https://credenxia.github.io/NumbatWallet/
+- **Wiki Repository**: The wiki is a separate Git repository at the same level as NumbatWallet
+- **All documentation is maintained in the `NumbatWallet.wiki` repository**
 
 ## Key Documentation Files
 
-- **PRD_Master.md**: Comprehensive product requirements document outlining the digital wallet solution, including executive summary, goals, stakeholders, functional/non-functional requirements, and standards compliance
-- **Appendix_SolutionArchitecture.md**: Technical architecture including system components, deployment topology, and integration points
-- **Appendix_APIs_SDKs.md**: API specifications and SDK requirements for Flutter, .NET, and TypeScript/JS
-- **Appendix_Security_Privacy_Compliance.md**: Security controls, privacy requirements, and compliance mappings
-- **Appendix_Workflows.md**: Detailed credential issuance, presentation, and verification workflows
-- **Appendix_DataModel.md**: Data structures for credentials, trust lists, and wallet operations
+- **Home.md**: Master PRD - Comprehensive product requirements document outlining the digital wallet solution
+- **Solution-Architecture.md**: Technical architecture including system components, deployment topology, and integration points
+- **API-Documentation.md**: OpenAPI 3.0 specifications, endpoint details, authentication flows
+- **SDK-Documentation.md**: Overview of SDK offerings with links to detailed guides
+- **SDK-Flutter-Guide.md**: Complete Flutter SDK documentation and examples
+- **SDK-DotNet-Guide.md**: Enterprise .NET SDK documentation
+- **SDK-JavaScript-Guide.md**: TypeScript/JavaScript SDK for web applications
+- **Security-Privacy-Compliance.md**: Security controls, privacy requirements, and compliance mappings
+- **Technical-Specification.md**: Data models, state machines, and component specifications
+- **Azure-Calculator-Guide.md**: Detailed Azure service configurations for cost estimation
 
 ## Project Context
 
