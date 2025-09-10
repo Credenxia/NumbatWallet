@@ -296,15 +296,15 @@
                     {
                         name: 'Compliance and Certification',
                         items: [
-                            { description: 'IRAP Assessment', quantity: 1, unitCost: 36232 },
-                            { description: 'ISO 27001 Certification', quantity: 1, unitCost: 25362 },
+                            { description: 'IRAP Assessment', quantity: 1, unitCost: 21739 },
+                            { description: 'ISO 27001 Certification', quantity: 1, unitCost: 14493 },
                             { description: 'ISO 18013-5 Conformance', quantity: 1, unitCost: 18116 },
-                            { description: 'TDIF Accreditation', quantity: 1, unitCost: 32609 },
-                            { description: 'SOC 2 Type 2', quantity: 1, unitCost: 21739 },
-                            { description: 'Digital ID Rules Compliance', quantity: 1, unitCost: 21739 },
-                            { description: 'Penetration Testing (2x)', quantity: 1, unitCost: 28986 },
+                            { description: 'TDIF Accreditation', quantity: 1, unitCost: 21739 },
+                            { description: 'SOC 2 Type 2', quantity: 1, unitCost: 18116 },
+                            { description: 'Digital ID Rules Compliance', quantity: 1, unitCost: 14493 },
+                            { description: 'Penetration Testing (2x)', quantity: 1, unitCost: 21739 },
                             { description: 'Compliance Tools & Software', quantity: 1, unitCost: 14493 },
-                            { description: 'External Consultancy', quantity: 1, unitCost: 21739 }
+                            { description: 'External Consultancy', quantity: 1, unitCost: 18116 }
                         ]
                     },
                     {
@@ -516,11 +516,11 @@
                     // Calculate base amount based on whether it's personnel or not
                     let baseAmount;
                     if (category.isPersonnel) {
-                        const fte = item.fte || 1;
-                        const months = item.months || 12;
+                        const fte = item.fte !== undefined ? item.fte : 1;
+                        const months = item.months !== undefined ? item.months : 12;
                         baseAmount = fte * months * item.unitCost;
                     } else {
-                        baseAmount = (item.quantity || 1) * item.unitCost;
+                        baseAmount = (item.quantity !== undefined ? item.quantity : 1) * item.unitCost;
                     }
                     
                     // Apply contingency to ALL categories
@@ -582,7 +582,7 @@
                                     onchange="updateItem(${catIndex}, ${itemIndex}, 'description', this.value)">
                             </td>
                             <td>
-                                <input type="number" value="${item.quantity || 1}" style="width: 100px;"
+                                <input type="number" value="${item.quantity !== undefined ? item.quantity : 1}" style="width: 100px;"
                                     onchange="updateItem(${catIndex}, ${itemIndex}, 'quantity', parseFloat(this.value))">
                             </td>
                             <td>
@@ -654,11 +654,21 @@
         }
 
         function updateItem(catIndex, itemIndex, field, value) {
+            // Allow zero values but treat empty/NaN as 0
+            if (field === 'quantity' || field === 'unitCost') {
+                value = parseFloat(value);
+                if (isNaN(value)) value = 0;
+            }
             currentData[currentScale].categories[catIndex].items[itemIndex][field] = value;
             renderTable();
         }
 
         function updatePersonnelItem(catIndex, itemIndex, field, value) {
+            // Allow zero values but treat empty/NaN as 0
+            if (field === 'fte' || field === 'months' || field === 'unitCost') {
+                value = parseFloat(value);
+                if (isNaN(value)) value = 0;
+            }
             currentData[currentScale].categories[catIndex].items[itemIndex][field] = value;
             renderTable();
         }
@@ -756,11 +766,11 @@
                     // Handle personnel vs regular items
                     let baseAmount;
                     if (category.isPersonnel) {
-                        const fte = item.fte || 1;
-                        const months = item.months || 12;
+                        const fte = item.fte !== undefined ? item.fte : 1;
+                        const months = item.months !== undefined ? item.months : 12;
                         baseAmount = fte * months * item.unitCost;
                     } else {
-                        baseAmount = (item.quantity || 1) * item.unitCost;
+                        baseAmount = (item.quantity !== undefined ? item.quantity : 1) * item.unitCost;
                     }
                     // Apply contingency to ALL categories
                     const contingencyAmount = baseAmount * (data.contingency / 100);
