@@ -249,7 +249,7 @@
                 <tr>
                     <th style="width: 50px;">Item #</th>
                     <th style="width: 25%;">Description</th>
-                    <th style="width: 130px;">Qty</th>
+                    <th style="width: 150px;">Qty</th>
                     <th style="width: 110px;">Unit Cost</th>
                     <th style="width: 110px;">Base Amount</th>
                     <th style="width: 100px;">Contingency</th>
@@ -296,15 +296,9 @@
                     {
                         name: 'Compliance and Certification',
                         items: [
-                            { description: 'IRAP Assessment', quantity: 1, unitCost: 21739 },
-                            { description: 'ISO 27001 Certification', quantity: 1, unitCost: 14493 },
-                            { description: 'ISO 18013-5 Conformance', quantity: 1, unitCost: 18116 },
-                            { description: 'TDIF Accreditation', quantity: 1, unitCost: 21739 },
                             { description: 'SOC 2 Type 2', quantity: 1, unitCost: 18116 },
-                            { description: 'Digital ID Rules Compliance', quantity: 1, unitCost: 14493 },
-                            { description: 'Penetration Testing (2x)', quantity: 1, unitCost: 21739 },
-                            { description: 'Compliance Tools & Software', quantity: 1, unitCost: 14493 },
-                            { description: 'External Consultancy', quantity: 1, unitCost: 18116 }
+                            { description: 'Penetration Testing', quantity: 2, unitCost: 10870 },
+                            { description: 'Compliance Tools & Software', quantity: 1, unitCost: 14493 }
                         ]
                     },
                     {
@@ -352,17 +346,17 @@
                     {
                         name: 'Security and Compliance',
                         items: [
-                            { description: 'Penetration testing', quantity: 2, unitCost: 20000 },
+                            { description: 'Penetration testing (quarterly)', quantity: 4, unitCost: 15000 },
                             { description: 'Vulnerability scanning', quantity: 12, unitCost: 1000 },
-                            { description: 'Compliance audits', quantity: 2, unitCost: 15000 },
-                            { description: 'DR testing & BCP (quarterly)', quantity: 4, unitCost: 3000 }
+                            { description: 'Compliance audits', quantity: 2, unitCost: 11500 },
+                            { description: 'DR testing & BCP (quarterly)', quantity: 4, unitCost: 1250 }
                         ]
                     },
                     {
                         name: 'Operations and Support',
                         items: [
-                            { description: '24/7 Support services', quantity: 12, unitCost: 5000 },
-                            { description: 'Monitoring & alerting', quantity: 12, unitCost: 2500 }
+                            { description: '24/7 Support services', quantity: 12, unitCost: 3500 },
+                            { description: 'Monitoring & alerting', quantity: 12, unitCost: 1500 }
                         ]
                     }
                 ]
@@ -395,17 +389,17 @@
                     {
                         name: 'Security and Compliance',
                         items: [
-                            { description: 'Penetration testing', quantity: 2, unitCost: 20000 },
-                            { description: 'Vulnerability scanning', quantity: 12, unitCost: 1500 },
-                            { description: 'Compliance audits', quantity: 2, unitCost: 15000 },
-                            { description: 'DR testing & BCP (monthly)', quantity: 12, unitCost: 3000 }
+                            { description: 'Penetration testing (quarterly)', quantity: 4, unitCost: 18000 },
+                            { description: 'Vulnerability scanning', quantity: 12, unitCost: 2000 },
+                            { description: 'Compliance audits (SOC2, ISO)', quantity: 3, unitCost: 18000 },
+                            { description: 'DR testing & BCP (monthly)', quantity: 12, unitCost: 0 }
                         ]
                     },
                     {
                         name: 'Operations and Support',
                         items: [
-                            { description: '24/7 Premium support', quantity: 12, unitCost: 7000 },
-                            { description: 'NOC monitoring', quantity: 12, unitCost: 3000 }
+                            { description: '24/7 Premium support', quantity: 12, unitCost: 5833 },
+                            { description: 'NOC monitoring', quantity: 12, unitCost: 2500 }
                         ]
                     }
                 ]
@@ -438,17 +432,17 @@
                     {
                         name: 'Security and Compliance',
                         items: [
-                            { description: 'Penetration testing', quantity: 2, unitCost: 20000 },
-                            { description: 'Vulnerability scanning (continuous)', quantity: 12, unitCost: 2000 },
-                            { description: 'Compliance audits', quantity: 2, unitCost: 15000 },
-                            { description: 'DR testing & BCP (weekly)', quantity: 52, unitCost: 1000 }
+                            { description: 'Penetration testing (quarterly)', quantity: 4, unitCost: 20000 },
+                            { description: 'Vulnerability scanning (continuous)', quantity: 12, unitCost: 3000 },
+                            { description: 'Compliance audits (SOC2, ISO, TDIF)', quantity: 4, unitCost: 21000 },
+                            { description: 'DR testing & BCP (weekly)', quantity: 52, unitCost: 0 }
                         ]
                     },
                     {
                         name: 'Operations (NOC/SOC)',
                         items: [
-                            { description: '24/7 SOC services', quantity: 12, unitCost: 12000 },
-                            { description: 'NOC operations', quantity: 12, unitCost: 6000 }
+                            { description: '24/7 SOC services', quantity: 12, unitCost: 10000 },
+                            { description: 'NOC operations', quantity: 12, unitCost: 5000 }
                         ]
                     }
                 ]
@@ -546,11 +540,11 @@
                                 <input type="text" value="${item.description}" 
                                     onchange="updateItem(${catIndex}, ${itemIndex}, 'description', this.value)">
                             </td>
-                            <td>
-                                <input type="number" value="${item.fte}" style="width: 45px;" step="0.1" placeholder="FTE"
+                            <td style="white-space: nowrap;">
+                                <input type="number" value="${item.fte}" style="width: 60px;" step="0.1" placeholder="FTE"
                                     onchange="updatePersonnelItem(${catIndex}, ${itemIndex}, 'fte', parseFloat(this.value))">
                                 ×
-                                <input type="number" value="${item.months}" style="width: 45px;" placeholder="Months"
+                                <input type="number" value="${item.months}" style="width: 60px;" placeholder="Months"
                                     onchange="updatePersonnelItem(${catIndex}, ${itemIndex}, 'months', parseFloat(this.value))">
                             </td>
                             <td>
@@ -760,7 +754,18 @@
             data.categories.forEach(category => {
                 let categoryBaseTotal = 0;
                 let categoryFinalTotal = 0;
-                summary += `${category.name}\n`;
+                
+                // Calculate actual FTE for personnel categories
+                let categoryName = category.name;
+                if (category.isPersonnel) {
+                    let totalFTE = 0;
+                    category.items.forEach(item => {
+                        totalFTE += item.fte || 0;
+                    });
+                    categoryName = `Personnel Costs (${totalFTE.toFixed(1)} FTE)`;
+                }
+                
+                summary += `${categoryName}\n`;
                 
                 category.items.forEach(item => {
                     // Handle personnel vs regular items
@@ -789,8 +794,16 @@
                 grandFinalTotal += categoryFinalTotal;
             });
             
+            // Calculate contingency and margin amounts
+            const totalContingency = grandBaseTotal * (data.contingency / 100);
+            const baseWithContingency = grandBaseTotal + totalContingency;
+            const totalMargin = baseWithContingency * (data.margin / 100);
+            
             summary += '-'.repeat(50) + '\n';
             summary += `Base Cost: ${formatCurrency(grandBaseTotal)}\n`;
+            summary += `Contingency (${data.contingency}%): ${formatCurrency(totalContingency)}\n`;
+            summary += `With Contingency: ${formatCurrency(baseWithContingency)}\n`;
+            summary += `Margin (${data.margin}%): ${formatCurrency(totalMargin)}\n`;
             summary += `FINAL PRICE: ${formatCurrency(grandFinalTotal)}\n`;
             
             navigator.clipboard.writeText(summary).then(() => {
