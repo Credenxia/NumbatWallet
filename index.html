@@ -355,13 +355,13 @@
                         name: 'Personnel Costs (6.5 FTE)',
                         isPersonnel: true,
                         items: [
-                            { description: 'Project Manager', fte: 1.0, months: 12, unitCost: 15000 },
-                            { description: 'Business Analyst', fte: 1.0, months: 12, unitCost: 8333 },
-                            { description: 'Tester/QA', fte: 1.0, months: 12, unitCost: 8333 },
+                            { description: 'Project Manager', fte: 0.75, months: 12, unitCost: 15000 },
+                            { description: 'Business Analyst', fte: 0.67, months: 12, unitCost: 8333 },
+                            { description: 'Tester/QA', fte: 0.79, months: 12, unitCost: 8333 },
                             { description: 'Solution Architect', fte: 1.0, months: 12, unitCost: 15000 },
-                            { description: 'Full-Stack Developer', fte: 1.0, months: 12, unitCost: 13333 },
-                            { description: 'DevOps/Security Engineer', fte: 1.0, months: 12, unitCost: 15000 },
-                            { description: 'Technical Support', fte: 0.5, months: 12, unitCost: 8333 }
+                            { description: 'Full-Stack Developer', fte: 0.94, months: 12, unitCost: 13333 },
+                            { description: 'DevOps/Security Engineer', fte: 0.61, months: 12, unitCost: 15000 },
+                            { description: 'Technical Support', fte: 0.48, months: 12, unitCost: 8333 }
                         ]
                     },
                     {
@@ -716,7 +716,7 @@
             grandTotalRow.className = 'total-row';
             grandTotalRow.innerHTML = `
                 <td></td>
-                <td colspan="3"><strong>GRAND TOTAL</strong></td>
+                <td colspan="3"><strong>SUBTOTAL</strong></td>
                 <td><strong>${formatCurrency(baseTotalAllCategories)}</strong></td>
                 <td><strong>${formatCurrency(contingencyTotalAllCategories)}</strong></td>
                 <td><strong>${formatCurrency(marginTotalAllCategories)}</strong></td>
@@ -724,11 +724,35 @@
                 <td></td>
             `;
 
+            // GST row (10%)
+            const gstAmount = grandTotal * 0.10;
+            const gstRow = tbody.insertRow();
+            gstRow.style.background = '#fff3cd';
+            gstRow.innerHTML = `
+                <td></td>
+                <td colspan="6"><strong>GST (10%)</strong></td>
+                <td><strong>${formatCurrency(gstAmount)}</strong></td>
+                <td></td>
+            `;
+
+            // Total including GST row
+            const totalWithGST = grandTotal + gstAmount;
+            const finalTotalRow = tbody.insertRow();
+            finalTotalRow.className = 'total-row';
+            finalTotalRow.style.background = '#28a745';
+            finalTotalRow.style.color = 'white';
+            finalTotalRow.innerHTML = `
+                <td></td>
+                <td colspan="6"><strong>TOTAL (inc GST)</strong></td>
+                <td><strong>${formatCurrency(totalWithGST)}</strong></td>
+                <td></td>
+            `;
+
             // Update metrics
             document.getElementById('baseCost').textContent = formatCurrency(baseTotalAllCategories);
             document.getElementById('withContingency').textContent = formatCurrency(baseTotalAllCategories + contingencyTotalAllCategories);
             document.getElementById('withMargin').textContent = formatCurrency(grandTotal);
-            document.getElementById('finalPrice').textContent = formatCurrency(grandTotal);
+            document.getElementById('finalPrice').textContent = formatCurrency(totalWithGST);
             
             // Update contingency and margin inputs
             document.getElementById('contingencyInput').value = data.contingency;
@@ -1048,7 +1072,10 @@
             summary += `Contingency (${data.contingency}%): ${formatCurrency(totalContingency)}\n`;
             summary += `With Contingency: ${formatCurrency(baseWithContingency)}\n`;
             summary += `Margin (${data.margin}%): ${formatCurrency(totalMargin)}\n`;
-            summary += `FINAL PRICE: ${formatCurrency(grandFinalTotal)}\n`;
+            summary += `SUBTOTAL: ${formatCurrency(grandFinalTotal)}\n`;
+            const gstAmount = grandFinalTotal * 0.10;
+            summary += `GST (10%): ${formatCurrency(gstAmount)}\n`;
+            summary += `FINAL PRICE (inc GST): ${formatCurrency(grandFinalTotal + gstAmount)}\n`;
             
             navigator.clipboard.writeText(summary).then(() => {
                 alert('Summary copied to clipboard!');
