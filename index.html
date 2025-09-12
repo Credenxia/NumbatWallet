@@ -206,6 +206,11 @@
         </div>
         
         <div class="controls">
+            <select id="modelSelector" onchange="switchModel(this.value)">
+                <option value="option1">Option 1 - Infrastructure Plus</option>
+                <option value="option2">Option 2 - Consumption Based</option>
+                <option value="option3">Option 3 - Consumption Based (10K Tiers)</option>
+            </select>
             <select id="scaleSelector">
                 <option value="pilot">Pilot (12 months)</option>
                 <option value="small">Small Scale (Annual)</option>
@@ -244,24 +249,175 @@
             </div>
         </div>
 
-        <table id="pricingTable">
-            <thead>
-                <tr>
-                    <th style="width: 50px;">Item #</th>
-                    <th style="width: 25%;">Description</th>
-                    <th style="width: 150px;">Qty</th>
-                    <th style="width: 110px;">Unit Cost</th>
-                    <th style="width: 110px;">Base Amount</th>
-                    <th style="width: 100px;">Contingency</th>
-                    <th style="width: 100px;">Margin</th>
-                    <th style="width: 120px;">Total Amount</th>
-                    <th style="width: 60px;">Actions</th>
-                </tr>
-            </thead>
-            <tbody id="tableBody">
-                <!-- Content will be populated by JavaScript -->
-            </tbody>
-        </table>
+        <div id="option1Content">
+            <table id="pricingTable">
+                <thead>
+                    <tr>
+                        <th style="width: 50px;">Item #</th>
+                        <th style="width: 25%;">Description</th>
+                        <th style="width: 150px;">Qty</th>
+                        <th style="width: 110px;">Unit Cost</th>
+                        <th style="width: 110px;">Base Amount</th>
+                        <th style="width: 100px;">Contingency</th>
+                        <th style="width: 100px;">Margin</th>
+                        <th style="width: 120px;">Total Amount</th>
+                        <th style="width: 60px;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                    <!-- Content will be populated by JavaScript -->
+                </tbody>
+            </table>
+        </div>
+        
+        <div id="option2Content" class="hidden">
+            <div style="background: #e7f3ff; padding: 15px; border-radius: 4px; margin-bottom: 20px;">
+                <h3>Option 2 - Consumption Based Calculator</h3>
+                <p style="margin-top: 10px; color: #666;">Adjust the parameters below to calculate consumption-based pricing</p>
+            </div>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+                <div style="background: #f8f9fa; padding: 15px; border-radius: 4px;">
+                    <h4>Base Configuration</h4>
+                    <label style="display: block; margin-top: 10px;">Base Platform Fee (Annual):
+                        <input type="number" id="basePlatformFee" value="1250476" style="width: 150px; margin-left: 10px;" onchange="calculateOption2()">
+                    </label>
+                    <label style="display: block; margin-top: 10px;">Included Credentials:
+                        <input type="number" id="includedCredentials" value="100000" style="width: 150px; margin-left: 10px;" onchange="calculateOption2()">
+                    </label>
+                    <label style="display: block; margin-top: 10px;">Included Transactions:
+                        <input type="number" id="includedTransactions" value="50000" style="width: 150px; margin-left: 10px;" onchange="calculateOption2()" readonly>
+                        <small style="display: block; color: #666; margin-top: 5px;">Auto-adjusts by scale: Small 50K, Medium 500K, Large 5M</small>
+                    </label>
+                </div>
+                
+                <div style="background: #f8f9fa; padding: 15px; border-radius: 4px;">
+                    <h4>Credential Pricing (per credential)</h4>
+                    <label style="display: block; margin-top: 10px;">Small (0-100K):
+                        <input type="number" id="credPriceSmall" value="0" step="0.1" style="width: 100px; margin-left: 10px;" onchange="calculateOption2()" readonly>
+                    </label>
+                    <label style="display: block; margin-top: 10px;">Medium (100K-1M):
+                        <input type="number" id="credPriceMedium" value="2" step="0.1" style="width: 100px; margin-left: 10px;" onchange="calculateOption2()">
+                    </label>
+                    <label style="display: block; margin-top: 10px;">Large (1M+):
+                        <input type="number" id="credPriceLarge" value="1" step="0.1" style="width: 100px; margin-left: 10px;" onchange="calculateOption2()">
+                    </label>
+                </div>
+            </div>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+                <div style="background: #f8f9fa; padding: 15px; border-radius: 4px;">
+                    <h4>Transaction Pricing (per transaction)</h4>
+                    <label style="display: block; margin-top: 10px;">Small Overage (>50K):
+                        <input type="number" id="txnPriceSmall" value="1.00" step="0.01" style="width: 100px; margin-left: 10px;" onchange="calculateOption2()">
+                    </label>
+                    <label style="display: block; margin-top: 10px;">Medium Overage (>500K):
+                        <input type="number" id="txnPriceMedium" value="0.50" step="0.01" style="width: 100px; margin-left: 10px;" onchange="calculateOption2()">
+                    </label>
+                    <label style="display: block; margin-top: 10px;">Large Overage (>5M):
+                        <input type="number" id="txnPriceLarge" value="0.30" step="0.01" style="width: 100px; margin-left: 10px;" onchange="calculateOption2()">
+                    </label>
+                </div>
+                
+                <div style="background: #f8f9fa; padding: 15px; border-radius: 4px;">
+                    <h4>Usage Simulation</h4>
+                    <label style="display: block; margin-top: 10px;">Credentials Issued:
+                        <input type="number" id="simulatedCredentials" value="150000" style="width: 150px; margin-left: 10px;" onchange="updateTransactionsFromCredentials(); calculateOption2()">
+                    </label>
+                    <label style="display: block; margin-top: 10px;">Annual Transactions:
+                        <input type="number" id="simulatedTransactions" value="750000" style="width: 150px; margin-left: 10px;" onchange="calculateOption2()">
+                    </label>
+                    <label style="display: block; margin-top: 10px;">Additional PKI Partitions:
+                        <input type="number" id="additionalPKI" value="0" style="width: 100px; margin-left: 10px;" onchange="calculateOption2()">
+                    </label>
+                    <label style="display: block; margin-top: 10px;">PKI Cost (one-time):
+                        <input type="number" id="pkiCost" value="50000" style="width: 100px; margin-left: 10px;" onchange="calculateOption2()">
+                    </label>
+                </div>
+            </div>
+            
+            <div style="background: #fff; border: 2px solid #007bff; padding: 20px; border-radius: 4px;">
+                <h3>Calculation Results</h3>
+                <div id="option2Results" style="margin-top: 15px;">
+                    <!-- Results will be populated by JavaScript -->
+                </div>
+            </div>
+        </div>
+        
+        <div id="option3Content" class="hidden">
+            <div style="background: #ffe7f3; padding: 15px; border-radius: 4px; margin-bottom: 20px;">
+                <h3>Option 3 - Consumption Based Calculator (10K Tier Structure)</h3>
+                <p style="margin-top: 10px; color: #666;">Different tier structure: Small (0-10K), Medium (10K-100K), Large (100K+)</p>
+            </div>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+                <div style="background: #f8f9fa; padding: 15px; border-radius: 4px;">
+                    <h4>Base Configuration</h4>
+                    <label style="display: block; margin-top: 10px;">Base Platform Fee (Annual):
+                        <input type="number" id="basePlatformFee3" value="1250476" style="width: 150px; margin-left: 10px;" onchange="calculateOption3()">
+                    </label>
+                    <label style="display: block; margin-top: 10px;">Included Credentials:
+                        <input type="number" id="includedCredentials3" value="10000" style="width: 150px; margin-left: 10px;" onchange="calculateOption3()" readonly>
+                        <small style="display: block; color: #666; margin-top: 5px;">Small includes 10K, Medium/Large calculate from there</small>
+                    </label>
+                    <label style="display: block; margin-top: 10px;">Included Transactions:
+                        <input type="number" id="includedTransactions3" value="50000" style="width: 150px; margin-left: 10px;" onchange="calculateOption3()" readonly>
+                        <small style="display: block; color: #666; margin-top: 5px;">Auto-adjusts: Small 50K, Medium 500K, Large 1M</small>
+                    </label>
+                </div>
+                
+                <div style="background: #f8f9fa; padding: 15px; border-radius: 4px;">
+                    <h4>Credential Pricing (per credential)</h4>
+                    <label style="display: block; margin-top: 10px;">Small (0-10K):
+                        <input type="number" id="credPriceSmall3" value="0" step="0.01" style="width: 100px; margin-left: 10px;" onchange="calculateOption3()" readonly>
+                    </label>
+                    <label style="display: block; margin-top: 10px;">Medium (10K-100K):
+                        <input type="number" id="credPriceMedium3" value="0.20" step="0.01" style="width: 100px; margin-left: 10px;" onchange="calculateOption3()">
+                    </label>
+                    <label style="display: block; margin-top: 10px;">Large (100K+):
+                        <input type="number" id="credPriceLarge3" value="0.10" step="0.01" style="width: 100px; margin-left: 10px;" onchange="calculateOption3()">
+                    </label>
+                </div>
+            </div>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+                <div style="background: #f8f9fa; padding: 15px; border-radius: 4px;">
+                    <h4>Transaction Pricing (per transaction overage)</h4>
+                    <label style="display: block; margin-top: 10px;">Small (>50K):
+                        <input type="number" id="txnPriceSmall3" value="0.25" step="0.01" style="width: 100px; margin-left: 10px;" onchange="calculateOption3()">
+                    </label>
+                    <label style="display: block; margin-top: 10px;">Medium (>500K):
+                        <input type="number" id="txnPriceMedium3" value="0.15" step="0.01" style="width: 100px; margin-left: 10px;" onchange="calculateOption3()">
+                    </label>
+                    <label style="display: block; margin-top: 10px;">Large (>1M):
+                        <input type="number" id="txnPriceLarge3" value="0.10" step="0.01" style="width: 100px; margin-left: 10px;" onchange="calculateOption3()">
+                    </label>
+                </div>
+                
+                <div style="background: #f8f9fa; padding: 15px; border-radius: 4px;">
+                    <h4>Usage Simulation</h4>
+                    <label style="display: block; margin-top: 10px;">Credentials Issued:
+                        <input type="number" id="simulatedCredentials3" value="50000" style="width: 150px; margin-left: 10px;" onchange="updateTransactionsFromCredentials3(); calculateOption3()">
+                    </label>
+                    <label style="display: block; margin-top: 10px;">Annual Transactions:
+                        <input type="number" id="simulatedTransactions3" value="150000" style="width: 150px; margin-left: 10px;" onchange="calculateOption3()">
+                    </label>
+                    <label style="display: block; margin-top: 10px;">Additional PKI Partitions:
+                        <input type="number" id="additionalPKI3" value="0" style="width: 100px; margin-left: 10px;" onchange="calculateOption3()">
+                    </label>
+                    <label style="display: block; margin-top: 10px;">PKI Cost (one-time):
+                        <input type="number" id="pkiCost3" value="50000" style="width: 100px; margin-left: 10px;" onchange="calculateOption3()">
+                    </label>
+                </div>
+            </div>
+            
+            <div style="background: #fff; border: 2px solid #ff007b; padding: 20px; border-radius: 4px;">
+                <h3>Calculation Results</h3>
+                <div id="option3Results" style="margin-top: 15px;">
+                    <!-- Results will be populated by JavaScript -->
+                </div>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -321,7 +477,7 @@
             small: {
                 scale: 'small',
                 contingency: 15,
-                margin: 20,
+                margin: 30,
                 categories: [
                     {
                         name: 'Personnel Costs',
@@ -364,7 +520,7 @@
             medium: {
                 scale: 'medium',
                 contingency: 15,
-                margin: 20,
+                margin: 35,
                 categories: [
                     {
                         name: 'Personnel Costs',
@@ -407,7 +563,7 @@
             large: {
                 scale: 'large',
                 contingency: 15,
-                margin: 20,
+                margin: 40,
                 categories: [
                     {
                         name: 'Personnel Costs',
@@ -467,10 +623,19 @@
         }
 
         function renderTable() {
-            const tbody = document.getElementById('tableBody');
-            tbody.innerHTML = '';
-            
-            const data = currentData[currentScale];
+            try {
+                const tbody = document.getElementById('tableBody');
+                if (!tbody) {
+                    console.error('tableBody element not found');
+                    return;
+                }
+                tbody.innerHTML = '';
+                
+                const data = currentData[currentScale];
+                if (!data) {
+                    console.error('No data for scale:', currentScale);
+                    return;
+                }
             let grandTotal = 0;
             let baseTotalAllCategories = 0;
             let contingencyTotalAllCategories = 0;
@@ -645,6 +810,10 @@
             // Update contingency and margin inputs
             document.getElementById('contingencyInput').value = data.contingency;
             document.getElementById('marginInput').value = data.margin;
+            } catch (error) {
+                console.error('Error in renderTable:', error);
+                alert('Error rendering table: ' + error.message);
+            }
         }
 
         function updateItem(catIndex, itemIndex, field, value) {
@@ -740,6 +909,300 @@
                 renderTable();
             }
         }
+        
+        // Option 2 Calculator Functions
+        function switchModel(model) {
+            if (model === 'option1') {
+                document.getElementById('option1Content').classList.remove('hidden');
+                document.getElementById('option2Content').classList.add('hidden');
+                document.getElementById('option3Content').classList.add('hidden');
+                document.getElementById('scaleSelector').disabled = false;
+            } else if (model === 'option2') {
+                document.getElementById('option1Content').classList.add('hidden');
+                document.getElementById('option2Content').classList.remove('hidden');
+                document.getElementById('option3Content').classList.add('hidden');
+                document.getElementById('scaleSelector').disabled = true;
+                calculateOption2();
+            } else if (model === 'option3') {
+                document.getElementById('option1Content').classList.add('hidden');
+                document.getElementById('option2Content').classList.add('hidden');
+                document.getElementById('option3Content').classList.remove('hidden');
+                document.getElementById('scaleSelector').disabled = true;
+                calculateOption3();
+            }
+        }
+        
+        function updateTransactionsFromCredentials() {
+            const simCreds = parseFloat(document.getElementById('simulatedCredentials').value) || 0;
+            // Set transactions to 5x credentials
+            document.getElementById('simulatedTransactions').value = simCreds * 5;
+        }
+
+        function calculateOption2() {
+            // Get inputs
+            const baseFee = parseFloat(document.getElementById('basePlatformFee').value) || 0;
+            const includedCreds = parseFloat(document.getElementById('includedCredentials').value) || 0;
+            
+            const credPriceMedium = parseFloat(document.getElementById('credPriceMedium').value) || 0;
+            const credPriceLarge = parseFloat(document.getElementById('credPriceLarge').value) || 0;
+            
+            const txnPriceSmall = parseFloat(document.getElementById('txnPriceSmall').value) || 0;
+            const txnPriceMedium = parseFloat(document.getElementById('txnPriceMedium').value) || 0;
+            const txnPriceLarge = parseFloat(document.getElementById('txnPriceLarge').value) || 0;
+            
+            const simCreds = parseFloat(document.getElementById('simulatedCredentials').value) || 0;
+            const simTxns = parseFloat(document.getElementById('simulatedTransactions').value) || 0;
+            const additionalPKI = parseFloat(document.getElementById('additionalPKI').value) || 0;
+            const pkiCost = parseFloat(document.getElementById('pkiCost').value) || 0;
+            
+            // Determine scale based on credentials
+            let scale = 'small';
+            if (simCreds >= 1000000) scale = 'large';
+            else if (simCreds >= 100000) scale = 'medium';
+            
+            // Set included transactions based on scale
+            let includedTxns = 50000; // Small default
+            if (scale === 'medium') includedTxns = 500000;
+            if (scale === 'large') includedTxns = 5000000;
+            
+            // Update the included transactions field to show current scale's inclusion
+            document.getElementById('includedTransactions').value = includedTxns;
+            
+            // Calculate credential cost
+            let credCost = 0;
+            if (scale === 'small') {
+                // First 100K included
+                credCost = 0;
+            } else if (scale === 'medium') {
+                // Pay for everything above 100K
+                if (simCreds > includedCreds) {
+                    credCost = (simCreds - includedCreds) * credPriceMedium;
+                }
+            } else { // large
+                // First 100K free, 100K-1M at medium price, above 1M at large price
+                if (simCreds > includedCreds) {
+                    const mediumCreds = Math.min(1000000 - includedCreds, simCreds - includedCreds);
+                    const largeCreds = Math.max(0, simCreds - 1000000);
+                    credCost = (mediumCreds * credPriceMedium) + (largeCreds * credPriceLarge);
+                }
+            }
+            
+            // Calculate transaction cost
+            let txnCost = 0;
+            if (scale === 'small') {
+                // Only pay for transactions above included amount
+                if (simTxns > includedTxns) {
+                    txnCost = (simTxns - includedTxns) * txnPriceSmall;
+                }
+            } else if (scale === 'medium') {
+                // First 500K included, then pay medium price for excess
+                if (simTxns > includedTxns) {
+                    txnCost = (simTxns - includedTxns) * txnPriceMedium;
+                }
+            } else { // large
+                // First 500K included, then pay large price for excess
+                if (simTxns > includedTxns) {
+                    txnCost = (simTxns - includedTxns) * txnPriceLarge;
+                }
+            }
+            
+            // Calculate PKI cost
+            const pkiTotal = additionalPKI * pkiCost;
+            
+            // Calculate totals
+            const subtotal = baseFee + credCost + txnCost + pkiTotal;
+            
+            // Use hardcoded Option 1 prices (GST-inclusive)
+            let option1Total = 0;
+            if (scale === 'small') {
+                option1Total = 1375524; // $1,375,523.60
+            } else if (scale === 'medium') {
+                option1Total = 1773126; // $1,773,126.30
+            } else if (scale === 'large') {
+                option1Total = 3115152; // $3,115,151.60
+            }
+            
+            // Prices are now GST-inclusive, no need to add GST
+            const option2Total = subtotal;
+            
+            // Compare the totals (both GST-inclusive)
+            const difference = option2Total - option1Total;
+            const percentDiff = ((difference / option1Total) * 100).toFixed(1);
+            
+            // Display results
+            const resultsHTML = `
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                    <div>
+                        <h4>Cost Breakdown</h4>
+                        <table style="width: 100%; margin-top: 10px;">
+                            <tr><td>Base Platform Fee:</td><td style="text-align: right;">$${baseFee.toLocaleString()}</td></tr>
+                            <tr><td>Credential Costs:</td><td style="text-align: right;">$${credCost.toLocaleString()}</td></tr>
+                            <tr><td>Transaction Costs:</td><td style="text-align: right;">$${txnCost.toLocaleString()}</td></tr>
+                            <tr><td>PKI Partitions:</td><td style="text-align: right;">$${pkiTotal.toLocaleString()}</td></tr>
+                            <tr style="border-top: 2px solid #000;"><td><strong>Total (inc GST):</strong></td><td style="text-align: right;"><strong>$${Math.round(option2Total).toLocaleString()}</strong></td></tr>
+                        </table>
+                    </div>
+                    <div>
+                        <h4>Analysis</h4>
+                        <table style="width: 100%; margin-top: 10px;">
+                            <tr><td>Detected Scale:</td><td style="text-align: right;"><strong>${scale.toUpperCase()}</strong></td></tr>
+                            <tr><td>Credentials Charged:</td><td style="text-align: right;">${Math.max(0, simCreds - (scale === 'small' ? includedCreds : includedCreds)).toLocaleString()}</td></tr>
+                            <tr><td>Transactions Charged:</td><td style="text-align: right;">${Math.max(0, simTxns - includedTxns).toLocaleString()}</td></tr>
+                            <tr style="border-top: 1px solid #dee2e6;"><td><strong>Option 1 Total (inc GST):</strong></td><td style="text-align: right;"><strong>$${option1Total.toLocaleString()}</strong></td></tr>
+                            <tr style="border-top: 1px solid #dee2e6;"><td>Difference:</td><td style="text-align: right; color: ${difference > 0 ? 'red' : 'green'};">${difference > 0 ? '+' : ''}$${Math.abs(difference).toLocaleString()}</td></tr>
+                            <tr><td>Percentage:</td><td style="text-align: right; color: ${difference > 0 ? 'red' : 'green'};">${difference > 0 ? '+' : ''}${percentDiff}%</td></tr>
+                        </table>
+                    </div>
+                </div>
+                <div style="margin-top: 20px; padding: 10px; background: ${difference > 0 ? '#f8d7da' : '#d4edda'}; border-radius: 4px;">
+                    <strong>Recommendation:</strong> ${difference > 0 ? 
+                        'Option 2 is MORE expensive than Option 1. Consider adjusting credential/transaction prices.' : 
+                        'Option 2 is CHEAPER than Option 1. Good value proposition for client.'}
+                </div>
+            `;
+            
+            document.getElementById('option2Results').innerHTML = resultsHTML;
+        }
+
+        // Option 3 Calculator Functions
+        function updateTransactionsFromCredentials3() {
+            const simCreds = parseFloat(document.getElementById('simulatedCredentials3').value) || 0;
+            // Set transactions to 5x credentials
+            document.getElementById('simulatedTransactions3').value = simCreds * 5;
+        }
+
+        function calculateOption3() {
+            // Get inputs
+            const baseFee = parseFloat(document.getElementById('basePlatformFee3').value) || 0;
+            const simCreds = parseFloat(document.getElementById('simulatedCredentials3').value) || 0;
+            const simTxns = parseFloat(document.getElementById('simulatedTransactions3').value) || 0;
+            const additionalPKI = parseFloat(document.getElementById('additionalPKI3').value) || 0;
+            const pkiCost = parseFloat(document.getElementById('pkiCost3').value) || 0;
+            
+            // Get pricing inputs
+            const credPriceMedium = parseFloat(document.getElementById('credPriceMedium3').value) || 0;
+            const credPriceLarge = parseFloat(document.getElementById('credPriceLarge3').value) || 0;
+            const txnPriceSmall = parseFloat(document.getElementById('txnPriceSmall3').value) || 0;
+            const txnPriceMedium = parseFloat(document.getElementById('txnPriceMedium3').value) || 0;
+            const txnPriceLarge = parseFloat(document.getElementById('txnPriceLarge3').value) || 0;
+            
+            // Determine scale based on NEW TIERS (10K, 100K thresholds)
+            let scale = 'small';
+            if (simCreds > 100000) scale = 'large';  // 100,001+
+            else if (simCreds > 10000) scale = 'medium'; // 10,001-100,000
+            // 0-10,000 remains small
+            
+            // Set included transactions based on scale
+            let includedTxns = 50000; // Small default
+            if (scale === 'medium') includedTxns = 500000;
+            if (scale === 'large') includedTxns = 1000000;
+            
+            // Update the included transactions field to show current scale's inclusion
+            document.getElementById('includedTransactions3').value = includedTxns;
+            
+            // Calculate credential cost with CUMULATIVE PRICING STRUCTURE
+            let credCost = 0;
+            if (scale === 'small') {
+                // 0-10,000: All free
+                credCost = 0;
+            } else if (scale === 'medium') {
+                // 10,001-100,000: First 10K free, rest at medium price
+                credCost = (simCreds - 10000) * credPriceMedium;
+            } else if (scale === 'large') {
+                // 100,001+: First 10K free, next 90K at medium price, rest at large price
+                const mediumTierCreds = 90000; // 10,001 to 100,000
+                const largeTierCreds = simCreds - 100000; // 100,001+
+                credCost = (mediumTierCreds * credPriceMedium) + (largeTierCreds * credPriceLarge);
+            }
+            
+            // Calculate transaction cost
+            let txnCost = 0;
+            let txnPrice = 0;
+            
+            if (scale === 'small') {
+                txnPrice = txnPriceSmall;
+            } else if (scale === 'medium') {
+                txnPrice = txnPriceMedium;
+            } else {
+                txnPrice = txnPriceLarge;
+            }
+            
+            // Only charge for transactions above included amount
+            if (simTxns > includedTxns) {
+                txnCost = (simTxns - includedTxns) * txnPrice;
+            }
+            
+            // Calculate PKI cost
+            const pkiTotal = additionalPKI * pkiCost;
+            
+            // Calculate totals
+            const subtotal = baseFee + credCost + txnCost + pkiTotal;
+            
+            // For Option 3, use Option 3's scale to determine which Option 1 price to compare
+            // Option 3 scale already determined above (scale variable)
+            // Map Option 3 scale to Option 1 price
+            let option1Scale = scale; // Use Option 3's detected scale
+            
+            // Use hardcoded Option 1 prices (GST-inclusive)
+            let option1Total = 0;
+            if (option1Scale === 'small') {
+                option1Total = 1375524; // $1,375,523.60
+            } else if (option1Scale === 'medium') {
+                option1Total = 1773126; // $1,773,126.30
+            } else if (option1Scale === 'large') {
+                option1Total = 3115152; // $3,115,151.60
+            }
+            
+            // Prices are now GST-inclusive, no need to add GST
+            const option3Total = subtotal;
+            
+            // Compare the totals (both GST-inclusive)
+            const difference = option3Total - option1Total;
+            const percentDiff = ((difference / option1Total) * 100).toFixed(1);
+            
+            // Display results
+            const resultsHTML = `
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                    <div>
+                        <h4>Cost Breakdown</h4>
+                        <table style="width: 100%; margin-top: 10px;">
+                            <tr><td>Base Platform Fee:</td><td style="text-align: right;">$${baseFee.toLocaleString()}</td></tr>
+                            <tr><td>Credential Costs:</td><td style="text-align: right;">$${credCost.toLocaleString()}</td></tr>
+                            <tr><td>Transaction Costs:</td><td style="text-align: right;">$${txnCost.toLocaleString()}</td></tr>
+                            <tr><td>PKI Partitions:</td><td style="text-align: right;">$${pkiTotal.toLocaleString()}</td></tr>
+                            <tr style="border-top: 2px solid #000;"><td><strong>Total (inc GST):</strong></td><td style="text-align: right;"><strong>$${Math.round(option3Total).toLocaleString()}</strong></td></tr>
+                        </table>
+                    </div>
+                    <div>
+                        <h4>Analysis</h4>
+                        <table style="width: 100%; margin-top: 10px;">
+                            <tr><td>Detected Scale (Option 3):</td><td style="text-align: right;"><strong>${scale.toUpperCase()}</strong></td></tr>
+                            <tr><td>Credentials Free:</td><td style="text-align: right;">10,000</td></tr>
+                            <tr><td>Credentials at Medium Price:</td><td style="text-align: right;">${scale === 'small' ? '0' : scale === 'medium' ? Math.max(0, simCreds - 10000).toLocaleString() : '90,000'}</td></tr>
+                            <tr><td>Credentials at Large Price:</td><td style="text-align: right;">${scale === 'large' ? Math.max(0, simCreds - 100000).toLocaleString() : '0'}</td></tr>
+                            <tr><td>Transactions Included:</td><td style="text-align: right;">${includedTxns.toLocaleString()}</td></tr>
+                            <tr><td>Transactions Charged:</td><td style="text-align: right;">${Math.max(0, simTxns - includedTxns).toLocaleString()}</td></tr>
+                            <tr style="border-top: 1px solid #dee2e6;"><td><strong>Option 1 Scale:</strong></td><td style="text-align: right;"><strong>${option1Scale.toUpperCase()}</strong></td></tr>
+                            <tr><td><strong>Option 1 Total (inc GST):</strong></td><td style="text-align: right;"><strong>$${option1Total.toLocaleString()}</strong></td></tr>
+                            <tr style="border-top: 1px solid #dee2e6;"><td>Difference:</td><td style="text-align: right; color: ${difference > 0 ? 'red' : 'green'};">${difference > 0 ? '+' : ''}$${Math.abs(difference).toLocaleString()}</td></tr>
+                            <tr><td>Percentage:</td><td style="text-align: right; color: ${difference > 0 ? 'red' : 'green'};">${difference > 0 ? '+' : ''}${percentDiff}%</td></tr>
+                        </table>
+                    </div>
+                </div>
+                <div style="margin-top: 20px; padding: 10px; background: ${difference > 0 ? '#f8d7da' : '#d4edda'}; border-radius: 4px;">
+                    <strong>Recommendation:</strong> ${difference > 0 ? 
+                        'Option 3 is MORE expensive than Option 1. Consider adjusting credential/transaction prices.' : 
+                        'Option 3 is CHEAPER than Option 1. Good value proposition for client.'}
+                </div>
+                <div style="margin-top: 10px; padding: 10px; background: #e7f3ff; border-radius: 4px;">
+                    <strong>Tier Structure:</strong> Small (0-10,000), Medium (10,001-100,000), Large (100,001+)<br>
+                    <strong>Credential Pricing:</strong> First 10K always free, 10,001-100,000 at Medium price, 100,001+ at Large price<br>
+                    <strong>Transaction Inclusions:</strong> Small 50K, Medium 500K, Large 1M
+                </div>
+            `;
+            
+            document.getElementById('option3Results').innerHTML = resultsHTML;
+        }
 
         function exportToClipboard() {
             const data = currentData[currentScale];
@@ -817,7 +1280,11 @@
             renderTable();
         });
 
-        // Initial render
+        // Initial render - ensure currentData is properly initialized
+        if (!currentData || !currentData[currentScale]) {
+            currentData = JSON.parse(JSON.stringify(defaultData));
+            currentScale = 'pilot';
+        }
         renderTable();
     </script>
 </body>
