@@ -1,209 +1,132 @@
-# POA Dependency Matrix
+# POA Issue Dependency Matrix
 
-**Generated:** September 10, 2025  
-**Purpose:** Visual representation of task dependencies and parallelization opportunities
+## Critical Path Issues
 
-## 🚦 Parallelization Guide
+These issues block the most other work and should be prioritized:
 
-### Day 1 - Can Start Immediately (Parallel)
-These tasks have NO dependencies and can all start simultaneously:
+### Foundation Issues (Must Complete First)
+1. **#1** - POA-001: Azure subscription setup → Blocks ALL infrastructure
+2. **#10** - POA-012: Backend project structure → Blocks ALL backend work
+3. **#62** - POA-100: Wallet app architecture → Blocks ALL wallet features
+4. **#72** - POA-110: ISO 18013-5 implementation → Blocks mDL features
+5. **#87** - POA-125: IACA root certificates → Blocks ALL PKI work
 
-| Task | GitHub | Team | Description |
-|------|--------|------|-------------|
-| POA-001 | #1 | DevOps | Azure subscription (CRITICAL - blocks 7 others) |
-| POA-010 | #31 | Backend | Database schema design |
-| POA-012 | #10 | Backend | Backend project structure |
-| POA-015 | #12 | Mobile | Flutter SDK initialization |
-| POA-033 | #39 | Backend | .NET SDK setup |
-| POA-035 | #41 | Frontend | TypeScript SDK setup |
-| POA-081 | #42 | DevOps | **TEST: Set up test framework and CI pipeline** |
+### Critical Path for Demo (Sequential)
+1. Infrastructure Setup (#1)
+   ↓
+2. Backend Structure (#10)
+   ↓
+3. Authentication (#13)
+   ↓
+4. Credential APIs (#17)
+   ↓
+5. Wallet Architecture (#62)
+   ↓
+6. Wallet UI Implementation (#64-67)
+   ↓
+7. Communication Features (#95, #96, #68)
+   ↓
+8. Demo App Integration (#24)
+   ↓
+9. Live Demonstration (#19)
 
-**Key Insight:** 3 teams can work independently from Day 1!
+## Dependency Categories
 
-### Critical Path Items
-These tasks block the most other tasks and should be prioritized:
+### Wallet Dependencies
+- **POA-100** (#62) → Blocks: All wallet features
+- **POA-101** (#63) → Blocks: UI implementation
+- **POA-102** (#64) → Blocks: Home screen access
+- **POA-103** (#65) → Blocks: Detail views
+- **POA-104** (#66) → Blocks: Sharing features
+- **POA-105** (#67) → Blocks: Demo scenarios
 
-1. **POA-001** (#1) → Blocks 7 infrastructure tasks
-2. **POA-012** (#10) → Blocks backend development 
-3. **POA-021** (#13) → Blocks ALL authentication work (including Flutter SDK auth)
-4. **POA-025** (#16) → Blocks API endpoints
+### Standards Dependencies
+- **POA-110** (#72) → Blocks: mDL features
+- **POA-112** (#74) → Blocks: Verifiable presentations
+- **POA-113** (#75) → Blocks: W3C VC implementation
+- **POA-114** (#76) → Blocks: Issuance flow
+- **POA-115** (#77) → Blocks: Presentation flow
 
-## 📊 Full Dependency Matrix
+### PKI Dependencies
+- **POA-125** (#87) → Blocks: All PKI operations
+- **POA-126** (#88) → Blocks: Credential signing
+- **POA-127** (#89) → Blocks: Trust verification
+- **POA-128** (#90) → Blocks: Key operations
 
-### Legend
-- ✅ = Can start immediately
-- ⏸️ = Blocked by another task
-- 🚫 = Blocks other tasks
-- ⚠️ = Cross-team dependency
+### Backend Dependencies
+- **POA-012** (#10) → Blocks: All backend
+- **POA-021** (#13) → Blocks: Tenant operations
+- **POA-023** (#15) → Blocks: Credential operations
+- **POA-025** (#16) → Blocks: API implementation
+- **POA-026** (#17) → Blocks: Demo scenarios
 
-### Week 1 Dependencies
+## Parallel Work Streams
 
-| Task | Status | Blocks | Blocked By | Notes |
-|------|--------|--------|-------------|-------|
-| POA-001 (#1) | ✅ | 🚫 #2,3,4,5,26,28,29 | None | **CRITICAL PATH** |
-| POA-002 (#2) | ⏸️ | None | #1 | PostgreSQL |
-| POA-003 (#3) | ⏸️ | 🚫 #30 | #1 | Container Registry |
-| POA-004 (#26) | ⏸️ | 🚫 #27 | #1 | VNet |
-| POA-005 (#4) | ⏸️ | None | #1 | Key Vault |
-| POA-006 (#27) | ⏸️ | None | #26 | App Gateway |
-| POA-007 (#28) | ⏸️ | 🚫 #37 | #1 | App Service |
-| POA-008 (#29) | ⏸️ | None | #1 | Log Analytics |
-| POA-009 (#30) | ⏸️ | None | #3 | CI/CD |
-| POA-009a (#5) | ⏸️ | 🚫 #6,7,8 | #1 | Bicep main |
-| POA-009b (#6) | ⏸️ | 🚫 #9 | #5 | Bicep network |
-| POA-009c (#7) | ⏸️ | 🚫 #9 | #5 | Bicep database |
-| POA-009d (#8) | ⏸️ | 🚫 #9 | #5 | Bicep containers |
-| POA-009e (#9) | ⏸️ | None | #6,7,8 | Bicep deploy |
-| POA-010 (#31) | ✅ | 🚫 #32 | None | DB schema |
-| POA-011 (#32) | ⏸️ | POA-024 | #31 | Migrations |
-| POA-012 (#10) | ✅ | 🚫 #11,33,36 | None | **Backend structure** |
-| POA-013 (#11) | ⏸️ | 🚫 #13 | #10 | Health checks |
-| POA-014 (#33) | ⏸️ | None | #10 | Swagger |
-| POA-015 (#12) | ✅ | 🚫 #34,35 | None | **Flutter SDK** |
-| POA-016 (#34) | ⏸️ | POA-032 | #12 | Flutter models |
-| POA-017 (#35) | ⏸️ | None | #12 | Flutter HTTP |
-| POA-018 (#36) | ⏸️ | 🚫 #37 | #10 | Docker |
-| POA-019 (#37) | ⏸️ | None | #28,36 | Deploy |
-| **TESTING** | | | | |
-| POA-081 (#42) | ✅ | 🚫 All tests | None | **Test framework** |
-| POA-082 (#43) | ⏸️ | Unit tests | #10 | Domain tests |
-| POA-083 (#44) | ⏸️ | Integration | #10 | Test harness |
-| POA-084 (#45) | ⏸️ | DB tests | #2 | Test database |
-| POA-085 (#46) | ⏸️ | All tests | #43 | Test builders |
-| POA-086 (#47) | ⏸️ | Flutter tests | #12 | Flutter tests |
-| POA-087 (#48) | ⏸️ | Infra tests | #10 | Infrastructure tests |
+These can be worked on independently:
 
-### Week 2 Dependencies
+### Stream 1: Infrastructure
+- Azure setup (#1)
+- Database (#2)
+- Networking (#26)
+- Key Vault (#4)
+- Container Registry (#3)
 
-| Task | Status | Blocks | Blocked By | Notes |
-|------|--------|--------|-------------|-------|
-| POA-021 (#13) | ⏸️ | 🚫 #14,15,18 | #11 | **⚠️ CRITICAL: Blocks Flutter auth** |
-| POA-022 (#14) | ⏸️ | None | #13 | Mock IdX |
-| POA-023 (#15) | ⏸️ | None | #13 | Tenant resolution |
-| POA-024 | ⏸️ | POA-025,030 | #32 | Domain model (no GitHub issue) |
-| POA-025 (#16) | ⏸️ | 🚫 #17 | POA-024 | CQRS |
-| POA-026 (#17) | ⏸️ | Testing, Demo | #16 | **API endpoints** |
-| POA-031 (#18) | ⏸️ | None | #13 | **⚠️ Flutter auth (cross-team)** |
-| POA-033 (#39) | ✅ | 🚫 #40 | None | .NET SDK |
-| POA-034 (#40) | ⏸️ | None | #39 | .NET client |
-| POA-035 (#41) | ✅ | None | None | TypeScript SDK |
-| **TESTING** | | | | |
-| POA-088 (#49) | ⏸️ | None | #16 | Credential tests |
-| POA-089 (#50) | ⏸️ | None | #13 | Auth tests |
-| POA-090 (#51) | ⏸️ | E2E tests | #17 | API tests |
-| POA-091 (#52) | ⏸️ | None | #15 | Tenant tests |
-| POA-092 (#53) | ⏸️ | None | POA-029 | Security tests |
-| POA-093 (#54) | ⏸️ | None | #40 | SDK tests |
-| POA-094 (#55) | ⏸️ | Load tests | #51 | Performance baseline |
+### Stream 2: Standards
+- ISO 18013-5 (#72)
+- W3C VC (#74)
+- W3C DID (#75)
+- OpenID4VCI (#76)
+- OpenID4VP (#77)
 
-## 🎯 Optimal Execution Order
+### Stream 3: Wallet UI/UX
+- Design mockups (#63)
+- UI components
+- Accessibility
+- Localization
 
-### Phase 1: Parallel Starts (Day 1)
-```
-Parallel:
-├── Team DevOps: POA-001 (Azure) [PRIORITY] + POA-081 (Test Framework)
-├── Team Backend: POA-012 (Structure) + POA-010 (Schema)
-├── Team Mobile: POA-015 (Flutter SDK)
-└── Team SDK: POA-033 (.NET) + POA-035 (TypeScript)
+### Stream 4: PKI
+- IACA setup (#87)
+- DSC implementation (#88)
+- Trust lists (#89)
+- HSM integration (#90)
 
-CRITICAL: POA-081 (Test Framework) MUST complete Day 1 for TDD compliance
-```
+## Demo Requirements
 
-### Phase 2: Infrastructure Sprint (Day 2-3)
-```
-After POA-001:
-├── POA-002 (PostgreSQL)
-├── POA-003 (Container Registry) → POA-009 (CI/CD)
-├── POA-004 (VNet) → POA-006 (App Gateway)
-├── POA-005 (Key Vault)
-├── POA-007 (App Service)
-├── POA-008 (Log Analytics)
-└── POA-009a (Bicep) → POA-009b,c,d → POA-009e
-```
+For successful demo, these must be complete:
 
-### Phase 3: Backend Development (Day 2-4)
-```
-After POA-012:
-├── POA-013 (Health) → POA-021 (OIDC) [CRITICAL]
-├── POA-014 (Swagger)
-└── POA-018 (Docker) → POA-019 (Deploy)
+### Week 1 Deliverables
+- [ ] Infrastructure deployed (#1-9)
+- [ ] Backend operational (#10-11)
+- [ ] SDKs delivered (#12, #39, #41)
 
-After POA-010:
-└── POA-011 (Migrations) → POA-024 (Domain) → POA-025 (CQRS) → POA-026 (APIs)
-```
+### Week 2 Deliverables
+- [ ] Authentication working (#13)
+- [ ] Credential APIs (#17)
+- [ ] Wallet core features (#62-67)
 
-### Phase 4: SDK Development (Day 2-4)
-```
-After POA-015:
-├── POA-016 (Models) → POA-032 (Storage)
-└── POA-017 (HTTP client)
+### Week 3 Demo Requirements
+- [ ] Offline verification (#94)
+- [ ] QR codes (#95)
+- [ ] NFC support (#96)
+- [ ] Demo app (#24)
+- [ ] Live presentation (#19)
 
-After POA-033:
-└── POA-034 (.NET client)
+## Risk Mitigation
 
-POA-035 continues independently
-```
+### High-Risk Dependencies
+1. **ServiceWA Integration** - Start early, daily sync
+2. **PKI Certificates** - Order immediately
+3. **Standards Compliance** - Engage consultant
+4. **Device Testing** - Procure devices now
+5. **Performance** - Continuous testing
 
-### Phase 5: Integration (Week 2)
-```
-After POA-021:
-├── POA-022 (Mock IdX)
-├── POA-023 (Tenant)
-└── POA-031 (Flutter Auth) [Cross-team handoff]
-```
-
-## ⚠️ Critical Cross-Team Dependencies
-
-1. **Backend → Mobile**: POA-021 (#13) must complete before POA-031 (#18)
-   - **Impact**: Flutter team blocked on auth module
-   - **Mitigation**: Flutter team should mock auth interface
-
-2. **Infrastructure → Backend**: POA-007 (#28) must complete before POA-019 (#37)
-   - **Impact**: Cannot deploy without App Service
-   - **Mitigation**: Use local Docker for testing
-
-3. **Backend → Demo**: POA-026 (#17) must complete before demo preparation
-   - **Impact**: No real data for demo
-   - **Mitigation**: Create mock data scenarios
-
-## 📈 Parallelization Metrics
-
-- **Maximum parallel tasks (Day 1)**: 6 tasks across 3 teams
-- **Critical path length**: 8 tasks (POA-001 → ... → POA-026)
-- **Cross-team dependencies**: 1 critical (Backend OIDC → Flutter Auth)
-- **Independent workstreams**: 3 (Infrastructure, Backend, SDKs)
-
-## 🚀 Recommendations
-
-1. **Start immediately**: POA-001, POA-010, POA-012, POA-015, POA-033, POA-035
-2. **Prioritize**: POA-001 (blocks 7 tasks), POA-012 (blocks backend)
-3. **Coordinate**: Backend and Mobile teams on POA-021 → POA-031 handoff
-4. **Mock early**: Flutter team should mock auth while waiting for POA-021
-5. **Parallelize SDKs**: All three SDKs can develop independently
-
-## 📋 Team Assignment Guide
-
-### DevOps Team (Infrastructure)
-- **Day 1**: Start POA-001 (CRITICAL)
-- **Day 2-3**: Execute POA-002 through POA-008 in parallel
-- **Day 3-4**: Bicep templates and deployment
-
-### Backend Team
-- **Day 1**: Start POA-012 (structure) AND POA-010 (schema) 
-- **Day 2**: POA-013, POA-014, POA-011
-- **Day 3-4**: POA-018, POA-024, POA-025
-- **Week 2**: POA-021 (CRITICAL for Mobile team)
-
-### Mobile Team (Flutter)
-- **Day 1-2**: POA-015 (init)
-- **Day 2-3**: POA-016, POA-017 in parallel
-- **Day 3-4**: POA-032 (can mock auth)
-- **Week 2**: POA-031 (wait for POA-021)
-
-### SDK Teams
-- **.NET**: POA-033 → POA-034 (independent)
-- **TypeScript**: POA-035 (completely independent)
+### Contingency Plans
+- If wallet delayed → Use white-label solution
+- If PKI delayed → Use test certificates
+- If standards fail → Document compliance roadmap
+- If integration blocked → Mock endpoints
+- If performance poor → Reduce concurrent users
 
 ---
 
-**Note**: This matrix is based on the GitHub issues created. Some POA tasks without GitHub issues are noted but not fully tracked.
+*Last Updated: September 15, 2025*
