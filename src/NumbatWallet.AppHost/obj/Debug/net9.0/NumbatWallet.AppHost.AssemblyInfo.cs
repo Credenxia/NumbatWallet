@@ -25,7 +25,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("NumbatWallet.AppHost")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+1f049f2b53282de761d259c1a619df385bac5ff9")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+3b1793047210df598a97fbff8a89cf93085bb746")]
 [assembly: System.Reflection.AssemblyProductAttribute("NumbatWallet.AppHost")]
 [assembly: System.Reflection.AssemblyTitleAttribute("NumbatWallet.AppHost")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

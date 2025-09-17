@@ -22,6 +22,4 @@ public sealed record Error(string Code, string Message)
 
     public static Error Conflict(string message) =>
         new("Error.Conflict", message);
-
-    public static implicit operator Result(Error error) => Result.Failure(error);
 }

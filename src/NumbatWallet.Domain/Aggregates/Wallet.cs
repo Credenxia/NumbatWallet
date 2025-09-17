@@ -1,0 +1,175 @@
+using NumbatWallet.SharedKernel.Primitives;
+using NumbatWallet.SharedKernel.Enums;
+using NumbatWallet.SharedKernel.Results;
+using NumbatWallet.SharedKernel.Guards;
+using NumbatWallet.SharedKernel.Interfaces;
+
+namespace NumbatWallet.Domain.Aggregates;
+
+public sealed class Wallet : AuditableEntity<Guid>, ITenantAware
+{
+    private readonly List<Guid> _credentialIds = new();
+
+    public Guid PersonId { get; private set; }
+    public Guid TenantId { get; set; }
+    public string WalletName { get; private set; }
+    public string WalletDid { get; private set; }
+    public WalletStatus Status { get; private set; }
+    public string? SuspensionReason { get; private set; }
+    public string? LockReason { get; private set; }
+    public IReadOnlyCollection<Guid> GetCredentials() => _credentialIds.AsReadOnly();
+
+    private Wallet(
+        Guid personId,
+        Guid tenantId,
+        string walletName)
+        : base(Guid.NewGuid())
+    {
+        PersonId = personId;
+        TenantId = tenantId;
+        WalletName = walletName;
+        WalletDid = GenerateWalletDid();
+        Status = WalletStatus.Active;
+    }
+
+    public static Result<Wallet> Create(
+        Guid personId,
+        Guid tenantId,
+        string walletName)
+    {
+        try
+        {
+            Guard.AgainstEmptyGuid(personId, nameof(personId));
+            Guard.AgainstEmptyGuid(tenantId, nameof(tenantId));
+            Guard.AgainstNullOrWhiteSpace(walletName, nameof(walletName));
+
+            var wallet = new Wallet(
+                personId,
+                tenantId,
+                walletName);
+
+            return Result.Success(wallet);
+        }
+        catch (ArgumentException ex)
+        {
+            return Error.Validation("Wallet.Invalid", ex.Message);
+        }
+    }
+
+    public Result AddCredential(Guid credentialId)
+    {
+        Guard.AgainstEmptyGuid(credentialId, nameof(credentialId));
+
+        if (_credentialIds.Contains(credentialId))
+        {
+            return Error.BusinessRule("Wallet.CredentialExists", "Credential already exists in wallet.");
+        }
+
+        if (Status != WalletStatus.Active)
+        {
+            return Error.BusinessRule("Wallet.NotActive", "Cannot add credentials to inactive wallet.");
+        }
+
+        _credentialIds.Add(credentialId);
+        return Result.Success();
+    }
+
+    public Result RemoveCredential(Guid credentialId)
+    {
+        Guard.AgainstEmptyGuid(credentialId, nameof(credentialId));
+
+        if (!_credentialIds.Contains(credentialId))
+        {
+            return Error.BusinessRule("Wallet.CredentialNotFound", "Credential not found in wallet.");
+        }
+
+        _credentialIds.Remove(credentialId);
+        return Result.Success();
+    }
+
+    public Result Suspend(string reason)
+    {
+        Guard.AgainstNullOrWhiteSpace(reason, nameof(reason));
+
+        if (Status == WalletStatus.Suspended)
+        {
+            return Error.BusinessRule("Wallet.AlreadySuspended", "Wallet is already suspended.");
+        }
+
+        if (Status == WalletStatus.Locked)
+        {
+            return Error.BusinessRule("Wallet.Locked", "Cannot suspend a locked wallet.");
+        }
+
+        Status = WalletStatus.Suspended;
+        SuspensionReason = reason;
+        return Result.Success();
+    }
+
+    public Result Reactivate()
+    {
+        if (Status == WalletStatus.Active)
+        {
+            return Error.BusinessRule("Wallet.AlreadyActive", "Wallet is already active.");
+        }
+
+        if (Status == WalletStatus.Locked)
+        {
+            return Error.BusinessRule("Wallet.Locked", "Cannot reactivate a locked wallet. Unlock it first.");
+        }
+
+        Status = WalletStatus.Active;
+        SuspensionReason = null;
+        return Result.Success();
+    }
+
+    public Result Lock(string reason)
+    {
+        Guard.AgainstNullOrWhiteSpace(reason, nameof(reason));
+
+        if (Status == WalletStatus.Locked)
+        {
+            return Error.BusinessRule("Wallet.AlreadyLocked", "Wallet is already locked.");
+        }
+
+        Status = WalletStatus.Locked;
+        LockReason = reason;
+        return Result.Success();
+    }
+
+    public Result Unlock()
+    {
+        if (Status != WalletStatus.Locked)
+        {
+            return Error.BusinessRule("Wallet.NotLocked", "Wallet is not locked.");
+        }
+
+        Status = WalletStatus.Active;
+        LockReason = null;
+        return Result.Success();
+    }
+
+    public Result UpdateName(string newName)
+    {
+        Guard.AgainstNullOrWhiteSpace(newName, nameof(newName));
+
+        if (WalletName == newName)
+        {
+            return Error.BusinessRule("Wallet.SameName", "New name is the same as current name.");
+        }
+
+        WalletName = newName;
+        return Result.Success();
+    }
+
+    public int GetCredentialCount() => _credentialIds.Count;
+
+    public bool HasCredential(Guid credentialId) => _credentialIds.Contains(credentialId);
+
+    private static string GenerateWalletDid()
+    {
+        // Generate a DID for the wallet
+        // In production, this would use a proper DID method
+        return $"did:wa:wallet:{Guid.NewGuid():N}";
+    }
+}
