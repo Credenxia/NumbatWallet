@@ -1,0 +1,168 @@
+{
+  "version": 3,
+  "targets": {
+    "net9.0": {
+      "NumbatWallet.Application/1.0.0": {
+        "type": "project",
+        "framework": ".NETCoreApp,Version=v9.0",
+        "dependencies": {
+          "NumbatWallet.Domain": "1.0.0",
+          "NumbatWallet.SharedKernel": "1.0.0"
+        },
+        "compile": {
+          "bin/placeholder/NumbatWallet.Application.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/NumbatWallet.Application.dll": {}
+        }
+      },
+      "NumbatWallet.Domain/1.0.0": {
+        "type": "project",
+        "framework": ".NETCoreApp,Version=v9.0",
+        "dependencies": {
+          "NumbatWallet.SharedKernel": "1.0.0"
+        },
+        "compile": {
+          "bin/placeholder/NumbatWallet.Domain.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/NumbatWallet.Domain.dll": {}
+        }
+      },
+      "NumbatWallet.Infrastructure/1.0.0": {
+        "type": "project",
+        "framework": ".NETCoreApp,Version=v9.0",
+        "dependencies": {
+          "NumbatWallet.Application": "1.0.0",
+          "NumbatWallet.Domain": "1.0.0",
+          "NumbatWallet.SharedKernel": "1.0.0"
+        },
+        "compile": {
+          "bin/placeholder/NumbatWallet.Infrastructure.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/NumbatWallet.Infrastructure.dll": {}
+        }
+      },
+      "NumbatWallet.SharedKernel/1.0.0": {
+        "type": "project",
+        "framework": ".NETCoreApp,Version=v9.0",
+        "compile": {
+          "bin/placeholder/NumbatWallet.SharedKernel.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/NumbatWallet.SharedKernel.dll": {}
+        }
+      }
+    }
+  },
+  "libraries": {
+    "NumbatWallet.Application/1.0.0": {
+      "type": "project",
+      "path": "../NumbatWallet.Application/NumbatWallet.Application.csproj",
+      "msbuildProject": "../NumbatWallet.Application/NumbatWallet.Application.csproj"
+    },
+    "NumbatWallet.Domain/1.0.0": {
+      "type": "project",
+      "path": "../NumbatWallet.Domain/NumbatWallet.Domain.csproj",
+      "msbuildProject": "../NumbatWallet.Domain/NumbatWallet.Domain.csproj"
+    },
+    "NumbatWallet.Infrastructure/1.0.0": {
+      "type": "project",
+      "path": "../NumbatWallet.Infrastructure/NumbatWallet.Infrastructure.csproj",
+      "msbuildProject": "../NumbatWallet.Infrastructure/NumbatWallet.Infrastructure.csproj"
+    },
+    "NumbatWallet.SharedKernel/1.0.0": {
+      "type": "project",
+      "path": "../NumbatWallet.SharedKernel/NumbatWallet.SharedKernel.csproj",
+      "msbuildProject": "../NumbatWallet.SharedKernel/NumbatWallet.SharedKernel.csproj"
+    }
+  },
+  "projectFileDependencyGroups": {
+    "net9.0": [
+      "NumbatWallet.Application >= 1.0.0",
+      "NumbatWallet.Domain >= 1.0.0",
+      "NumbatWallet.Infrastructure >= 1.0.0",
+      "NumbatWallet.SharedKernel >= 1.0.0"
+    ]
+  },
+  "packageFolders": {
+    "/Users/rodrigolmiranda/.nuget/packages/": {}
+  },
+  "project": {
+    "version": "1.0.0",
+    "restore": {
+      "projectUniqueName": "/Users/rodrigolmiranda/repo/NumbatWallet/src/NumbatWallet.Web.Admin/NumbatWallet.Web.Admin.csproj",
+      "projectName": "NumbatWallet.Web.Admin",
+      "projectPath": "/Users/rodrigolmiranda/repo/NumbatWallet/src/NumbatWallet.Web.Admin/NumbatWallet.Web.Admin.csproj",
+      "packagesPath": "/Users/rodrigolmiranda/.nuget/packages/",
+      "outputPath": "/Users/rodrigolmiranda/repo/NumbatWallet/src/NumbatWallet.Web.Admin/obj/",
+      "projectStyle": "PackageReference",
+      "configFilePaths": [
+        "/Users/rodrigolmiranda/.nuget/NuGet/NuGet.Config"
+      ],
+      "originalTargetFrameworks": [
+        "net9.0"
+      ],
+      "sources": {
+        "/Users/rodrigolmiranda/.dotnet/library-packs": {},
+        "https://api.nuget.org/v3/index.json": {}
+      },
+      "frameworks": {
+        "net9.0": {
+          "targetAlias": "net9.0",
+          "projectReferences": {
+            "/Users/rodrigolmiranda/repo/NumbatWallet/src/NumbatWallet.Application/NumbatWallet.Application.csproj": {
+              "projectPath": "/Users/rodrigolmiranda/repo/NumbatWallet/src/NumbatWallet.Application/NumbatWallet.Application.csproj"
+            },
+            "/Users/rodrigolmiranda/repo/NumbatWallet/src/NumbatWallet.Domain/NumbatWallet.Domain.csproj": {
+              "projectPath": "/Users/rodrigolmiranda/repo/NumbatWallet/src/NumbatWallet.Domain/NumbatWallet.Domain.csproj"
+            },
+            "/Users/rodrigolmiranda/repo/NumbatWallet/src/NumbatWallet.Infrastructure/NumbatWallet.Infrastructure.csproj": {
+              "projectPath": "/Users/rodrigolmiranda/repo/NumbatWallet/src/NumbatWallet.Infrastructure/NumbatWallet.Infrastructure.csproj"
+            },
+            "/Users/rodrigolmiranda/repo/NumbatWallet/src/NumbatWallet.SharedKernel/NumbatWallet.SharedKernel.csproj": {
+              "projectPath": "/Users/rodrigolmiranda/repo/NumbatWallet/src/NumbatWallet.SharedKernel/NumbatWallet.SharedKernel.csproj"
+            }
+          }
+        }
+      },
+      "warningProperties": {
+        "warnAsError": [
+          "NU1605"
+        ]
+      },
+      "restoreAuditProperties": {
+        "enableAudit": "true",
+        "auditLevel": "low",
+        "auditMode": "direct"
+      },
+      "SdkAnalysisLevel": "9.0.300"
+    },
+    "frameworks": {
+      "net9.0": {
+        "targetAlias": "net9.0",
+        "imports": [
+          "net461",
+          "net462",
+          "net47",
+          "net471",
+          "net472",
+          "net48",
+          "net481"
+        ],
+        "assetTargetFallback": true,
+        "warn": true,
+        "frameworkReferences": {
+          "Microsoft.AspNetCore.App": {
+            "privateAssets": "none"
+          },
+          "Microsoft.NETCore.App": {
+            "privateAssets": "all"
+          }
+        },
+        "runtimeIdentifierGraphPath": "/Users/rodrigolmiranda/.dotnet/sdk/9.0.305/PortableRuntimeIdentifierGraph.json"
+      }
+    }
+  }
+}

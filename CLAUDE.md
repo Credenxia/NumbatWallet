@@ -10,36 +10,51 @@ This is a tender/proposal documentation repository for a Digital Wallet and Veri
 
 ```
 /repo/
-├── NumbatWallet/                 # Main repository
-│   ├── CLAUDE.md                 # This file - AI assistant context
+├── NumbatWallet/                 # Main repository (THIS REPO)
+│   ├── CLAUDE.md                 # Master AI assistant context (THIS FILE)
 │   ├── README.md                 # Repository overview
-│   ├── index.html                # Interactive Azure pricing calculator (GitHub Pages)
-│   └── docs/                     # Documentation folder
-│       └── Tender/               # Original tender documents (PDFs)
+│   ├── index.html                # Interactive Azure pricing calculator
+│   ├── src/
+│   │   ├── NumbatWallet.Domain/  # Domain layer project
+│   │   ├── NumbatWallet.Application/ # Application layer project
+│   │   ├── NumbatWallet.Infrastructure/ # Infrastructure project
+│   │   ├── NumbatWallet.Web.Api/ # REST API project
+│   │   ├── NumbatWallet.Web.Admin/ # Admin portal project
+│   │   └── Tests/                # Test projects
+│   ├── docs/
+│   │   ├── standards/            # Development standards
+│   │   │   ├── master/           # Cross-language standards
+│   │   │   ├── backend/          # .NET backend standards
+│   │   │   ├── sdk/              # SDK standard references
+│   │   │   └── github/           # GitHub management
+│   │   ├── poa/                  # POA documentation
+│   │   └── tender/               # Original tender documents
+│   └── infrastructure/           # IaC and deployment
+│       ├── bicep/                # Azure Bicep templates
+│       ├── docker/               # Docker configurations
+│       └── scripts/              # Deployment scripts
 │
-└── NumbatWallet.wiki/            # Wiki repository (separate clone)
-    ├── Home.md                   # Master PRD (main documentation)
+├── NumbatWallet-sdks/            # SDK repository (SEPARATE REPO)
+│   ├── numbatwallet-dotnet-sdk/
+│   │   └── CLAUDE.md             # .NET SDK AI context
+│   ├── numbatwallet-flutter-sdk/
+│   │   └── CLAUDE.md             # Flutter SDK AI context
+│   ├── numbatwallet-typescript-sdk/
+│   │   └── CLAUDE.md             # TypeScript SDK AI context
+│   └── integration-tests/        # Cross-SDK tests
+│
+└── NumbatWallet.wiki/            # Wiki repository (SEPARATE CLONE)
+    ├── Home.md                   # Master PRD
     ├── Solution-Architecture.md  # Technical architecture
-    ├── Security-Privacy-Compliance.md
-    ├── Technical-Specification.md
     ├── API-Documentation.md
     ├── SDK-Documentation.md
-    ├── SDK-Flutter-Guide.md      # Flutter SDK implementation
-    ├── SDK-DotNet-Guide.md       # .NET SDK implementation
-    ├── SDK-JavaScript-Guide.md   # Web SDK implementation
-    ├── Testing-Strategy.md
-    ├── Deployment-Guide.md
-    ├── Support-Model.md
-    ├── Pricing-Assumptions.md
-    ├── Detailed-Cost-Breakdown.md
-    ├── Azure-Justification-Pricing.md
-    ├── Azure-Calculator-Guide.md # Azure pricing calculator inputs
-    ├── Team-Resources.md
-    ├── Risk-Matrix.md
-    ├── Compliance-Matrix.md
-    ├── _Sidebar.md               # Wiki navigation
-    └── _Footer.md                # Wiki footer
+    └── [other wiki pages...]
 ```
+
+### Context-Specific CLAUDE.md Files
+
+- **This file** (`/NumbatWallet/CLAUDE.md`): Master context for overall project including backend development
+- **SDKs** (`/NumbatWallet-sdks/*/CLAUDE.md`): Language-specific SDK development (separate repositories)
 
 ## Documentation Access
 
@@ -150,7 +165,7 @@ This is a tender/proposal documentation repository for a Digital Wallet and Veri
 
 ### Architecture
 - **Clean Architecture/Onion Architecture** with Domain-Driven Design
-- **CQRS** with MediatR for command/query separation
+- **CQRS** with custom in-house implementation (no MediatR - see issue #154)
 - **Repository pattern** with Unit of Work
 - **Dependency injection** using Microsoft.Extensions.DependencyInjection
 
@@ -267,3 +282,52 @@ git commit -m "POA-XXX: Implement feature with TDD"
 - No ignored or skipped tests
 - Performance tests for critical paths
 - Security tests for sensitive operations
+
+## Backend Development Milestones
+
+The backend development follows these milestones in chronological order:
+
+### Backend Milestones (Sep 19 - Oct 3, 2025)
+1. **011-Backend-Foundation** (Sep 19) - Domain entities, value objects, base patterns
+2. **012-Backend-Domain** (Sep 24) - Aggregates, domain services, domain events
+3. **013-Backend-Infrastructure** (Sep 25) - EF Core, PostgreSQL, external services
+4. **014-Backend-Application** (Sep 26) - Custom CQRS implementation (NO MediatR)
+5. **015-Backend-IaC** (Sep 26) - Bicep templates, deployment scripts
+6. **016-Backend-API** (Oct 2) - REST controllers, GraphQL endpoints
+7. **017-Backend-Admin** (Oct 3) - Admin portal, Blazor components
+
+### Backend Development Workflow
+1. Check milestone due dates and dependencies in GitHub Project #18
+2. Review blocking issues before starting
+3. Follow Clean Architecture layer dependencies: Domain → Application → Infrastructure → Web
+4. Implement custom CQRS without MediatR (see issue #154)
+5. Use TDD approach for all backend code
+
+### Backend Project Structure
+- `NumbatWallet.Domain/` - No dependencies, pure business logic
+- `NumbatWallet.Application/` - Custom CQRS, use cases, no MediatR
+- `NumbatWallet.Infrastructure/` - EF Core, external services
+- `NumbatWallet.Web.Api/` - REST/GraphQL endpoints
+- `NumbatWallet.Web.Admin/` - Blazor admin portal
+
+### Key Backend Standards
+- **CQRS**: Custom implementation without MediatR (see issue #154)
+- **Multi-tenancy**: Complete isolation at all layers
+- **Testing**: TDD with >85% coverage requirement
+- **Database**: PostgreSQL with EF Core 9
+
+For detailed backend commands and implementation, refer to the specific GitHub issues.
+
+## Development Session Startup
+
+**Use the prompt in `SESSION_START_PROMPT.md` to begin each development session.**
+
+This ensures:
+- Systematic review of milestones and dependencies
+- TDD approach for all code
+- Zero tolerance for warnings/errors
+- Proper progress tracking with TodoWrite
+- Parallel work on non-blocking issues
+- GitHub Project #18 stays updated
+
+Run `./scripts/start_dev_session.sh` for automated session status check.

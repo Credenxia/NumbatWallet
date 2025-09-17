@@ -1,0 +1,146 @@
+name: Weekly Version Check
+
+on:
+  schedule:
+    # Run every Monday at 9 AM UTC
+    - cron: '0 9 * * 1'
+  workflow_dispatch:
+    inputs:
+      create_issue:
+        description: 'Create issue if updates found'
+        required: false
+        default: 'true'
+        type: choice
+        options:
+          - 'true'
+          - 'false'
+
+jobs:
+  check-versions:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      contents: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.x'
+
+      - name: Check .NET versions
+        id: dotnet_check
+        run: |
+          echo "### .NET Ecosystem Versions" >> version_report.md
+          echo "" >> version_report.md
+
+          # Check .NET SDK
+          echo "**.NET SDK:** $(dotnet --version)" >> version_report.md
+
+          # Check Aspire latest
+          ASPIRE_LATEST=$(curl -s https://api.nuget.org/v3-flatcontainer/aspire.apphost.sdk/index.json | jq -r '.versions[-1]')
+          echo "**.NET Aspire Latest:** $ASPIRE_LATEST" >> version_report.md
+
+          # Check EF Core latest
+          EF_LATEST=$(curl -s https://api.nuget.org/v3-flatcontainer/microsoft.entityframeworkcore/index.json | jq -r '.versions[-1]')
+          echo "**EF Core Latest:** $EF_LATEST" >> version_report.md
+
+          # Check HotChocolate latest
+          HC_LATEST=$(curl -s https://api.nuget.org/v3-flatcontainer/hotchocolate/index.json | jq -r '.versions[-1]')
+          echo "**HotChocolate Latest:** $HC_LATEST" >> version_report.md
+
+          echo "" >> version_report.md
+
+      - name: Check Node.js ecosystem versions
+        run: |
+          echo "### Node.js Ecosystem Versions" >> version_report.md
+          echo "" >> version_report.md
+
+          echo "**Node.js:** $(node --version)" >> version_report.md
+          echo "**npm:** $(npm --version)" >> version_report.md
+
+          # Check TypeScript latest
+          TS_LATEST=$(npm view typescript version)
+          echo "**TypeScript Latest:** $TS_LATEST" >> version_report.md
+
+          echo "" >> version_report.md
+
+      - name: Check Infrastructure versions
+        run: |
+          echo "### Infrastructure Versions" >> version_report.md
+          echo "" >> version_report.md
+
+          # PostgreSQL latest
+          PG_LATEST=$(curl -s https://www.postgresql.org/versions.json 2>/dev/null | jq -r '.[0].current' || echo "17.6")
+          echo "**PostgreSQL Latest:** $PG_LATEST" >> version_report.md
+
+          # Redis latest
+          REDIS_LATEST=$(curl -s https://api.github.com/repos/redis/redis/releases/latest | jq -r '.tag_name' | sed 's/v//')
+          echo "**Redis Latest:** $REDIS_LATEST" >> version_report.md
+
+          echo "" >> version_report.md
+
+      - name: Check for outdated packages in solution
+        if: hashFiles('**/*.csproj') != ''
+        continue-on-error: true
+        run: |
+          echo "### Outdated NuGet Packages" >> version_report.md
+          echo '```' >> version_report.md
+          find . -name "*.csproj" -exec dirname {} \; | while read dir; do
+            echo "Checking $dir..." >> version_report.md
+            cd "$dir"
+            dotnet list package --outdated 2>/dev/null || true
+            cd - > /dev/null
+          done
+          echo '```' >> version_report.md
+          echo "" >> version_report.md
+
+      - name: Generate version report
+        id: report
+        run: |
+          echo "### Version Check Report - $(date +'%Y-%m-%d')" > final_report.md
+          echo "" >> final_report.md
+          cat version_report.md >> final_report.md
+
+          # Check if we should create an issue
+          if grep -q "outdated" version_report.md 2>/dev/null || [ "${{ github.event.inputs.create_issue }}" == "true" ]; then
+            echo "updates_available=true" >> $GITHUB_OUTPUT
+          else
+            echo "updates_available=false" >> $GITHUB_OUTPUT
+          fi
+
+          # Output report for debugging
+          cat final_report.md
+
+      - name: Create issue if updates available
+        if: steps.report.outputs.updates_available == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const report = fs.readFileSync('final_report.md', 'utf8');
+
+            const issue = await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `Version Updates Available - ${new Date().toISOString().split('T')[0]}`,
+              body: report + '\n\n**Action Required:**\n- [ ] Review version updates\n- [ ] Update versions.md\n- [ ] Update packages as needed\n- [ ] Run tests after updates\n\nRelated: #99 (Version Management Strategy)',
+              labels: ['dependencies', 'maintenance']
+            });
+
+            console.log(`Created issue #${issue.data.number}`);
+
+      - name: Upload version report
+        uses: actions/upload-artifact@v4
+        with:
+          name: version-report
+          path: final_report.md
+          retention-days: 30

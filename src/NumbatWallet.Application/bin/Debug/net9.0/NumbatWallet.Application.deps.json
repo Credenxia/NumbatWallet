@@ -1,0 +1,56 @@
+{
+  "runtimeTarget": {
+    "name": ".NETCoreApp,Version=v9.0",
+    "signature": ""
+  },
+  "compilationOptions": {},
+  "targets": {
+    ".NETCoreApp,Version=v9.0": {
+      "NumbatWallet.Application/1.0.0": {
+        "dependencies": {
+          "NumbatWallet.Domain": "1.0.0",
+          "NumbatWallet.SharedKernel": "1.0.0"
+        },
+        "runtime": {
+          "NumbatWallet.Application.dll": {}
+        }
+      },
+      "NumbatWallet.Domain/1.0.0": {
+        "dependencies": {
+          "NumbatWallet.SharedKernel": "1.0.0"
+        },
+        "runtime": {
+          "NumbatWallet.Domain.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "1.0.0.0"
+          }
+        }
+      },
+      "NumbatWallet.SharedKernel/1.0.0": {
+        "runtime": {
+          "NumbatWallet.SharedKernel.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "1.0.0.0"
+          }
+        }
+      }
+    }
+  },
+  "libraries": {
+    "NumbatWallet.Application/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "NumbatWallet.Domain/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "NumbatWallet.SharedKernel/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    }
+  }
+}

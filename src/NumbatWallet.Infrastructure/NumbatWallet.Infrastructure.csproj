@@ -1,0 +1,15 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\NumbatWallet.Application\NumbatWallet.Application.csproj" />
+    <ProjectReference Include="..\NumbatWallet.Domain\NumbatWallet.Domain.csproj" />
+    <ProjectReference Include="..\NumbatWallet.SharedKernel\NumbatWallet.SharedKernel.csproj" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+</Project>
