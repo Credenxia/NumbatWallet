@@ -29,7 +29,7 @@ public class EntityConfigurationsTests
         Assert.NotNull(idProperty);
         Assert.True(idProperty.IsKey());
 
-        var nameProperty = entityType.FindProperty("Name");
+        var nameProperty = entityType.FindProperty("WalletName");
         Assert.NotNull(nameProperty);
         Assert.Equal(256, nameProperty.GetMaxLength());
         Assert.False(nameProperty.IsNullable);
@@ -74,13 +74,22 @@ public class EntityConfigurationsTests
 
         var firstNameProperty = entityType.FindProperty("FirstName");
         Assert.NotNull(firstNameProperty);
-        Assert.Equal(128, firstNameProperty.GetMaxLength());
+        Assert.Equal("jsonb", firstNameProperty.GetColumnType());
 
-        var emailProperty = entityType.FindProperty("Email");
-        Assert.NotNull(emailProperty);
+        var lastNameProperty = entityType.FindProperty("LastName");
+        Assert.NotNull(lastNameProperty);
+        Assert.Equal("jsonb", lastNameProperty.GetColumnType());
 
-        var phoneNumberProperty = entityType.FindProperty("PhoneNumber");
-        Assert.NotNull(phoneNumberProperty);
+        var dobProperty = entityType.FindProperty("DateOfBirth");
+        Assert.NotNull(dobProperty);
+        Assert.Equal("jsonb", dobProperty.GetColumnType());
+
+        // Email and PhoneNumber are owned entities, need to check navigation properties
+        var emailNavigation = entityType.FindNavigation("Email");
+        Assert.NotNull(emailNavigation);
+
+        var phoneNumberNavigation = entityType.FindNavigation("PhoneNumber");
+        Assert.NotNull(phoneNumberNavigation);
     }
 
     [Fact]
@@ -124,11 +133,13 @@ public class EntityConfigurationsTests
 
         // Assert
         var walletEntity = modelBuilder.Model.FindEntityType(typeof(Wallet));
+        Assert.NotNull(walletEntity);
         var walletIndexes = walletEntity.GetIndexes();
         Assert.Contains(walletIndexes, idx => idx.Properties.Any(p => p.Name == "PersonId"));
         Assert.Contains(walletIndexes, idx => idx.Properties.Any(p => p.Name == "TenantId"));
 
         var credentialEntity = modelBuilder.Model.FindEntityType(typeof(Credential));
+        Assert.NotNull(credentialEntity);
         var credentialIndexes = credentialEntity.GetIndexes();
         Assert.Contains(credentialIndexes, idx => idx.Properties.Any(p => p.Name == "WalletId"));
         Assert.Contains(credentialIndexes, idx => idx.Properties.Any(p => p.Name == "IssuerId"));

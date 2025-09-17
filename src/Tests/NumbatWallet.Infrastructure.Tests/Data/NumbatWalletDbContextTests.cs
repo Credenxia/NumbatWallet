@@ -172,8 +172,8 @@ public class NumbatWalletDbContextTests : IDisposable
 
         // Assert
         _eventDispatcherMock.Verify(x =>
-            x.DispatchAsync(It.IsAny<IDomainEvent>(), It.IsAny<CancellationToken>()),
-            Times.AtLeastOnce);
+            x.DispatchAsync(It.IsAny<IEnumerable<IDomainEvent>>(), It.IsAny<CancellationToken>()),
+            Times.Once);
     }
 
     public void Dispose()

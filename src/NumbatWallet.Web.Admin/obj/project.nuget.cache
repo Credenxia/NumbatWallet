@@ -1,8 +1,31 @@
 {
   "version": 2,
-  "dgSpecHash": "M/o4eBQnRM8=",
+  "dgSpecHash": "7xG0c0YhleM=",
   "success": true,
   "projectFilePath": "/Users/rodrigolmiranda/repo/NumbatWallet/src/NumbatWallet.Web.Admin/NumbatWallet.Web.Admin.csproj",
-  "expectedPackageFiles": [],
+  "expectedPackageFiles": [
+    "/Users/rodrigolmiranda/.nuget/packages/azure.core/1.46.1/azure.core.1.46.1.nupkg.sha512",
+    "/Users/rodrigolmiranda/.nuget/packages/azure.identity/1.14.1/azure.identity.1.14.1.nupkg.sha512",
+    "/Users/rodrigolmiranda/.nuget/packages/azure.security.keyvault.secrets/4.7.0/azure.security.keyvault.secrets.4.7.0.nupkg.sha512",
+    "/Users/rodrigolmiranda/.nuget/packages/azure.storage.blobs/12.24.0/azure.storage.blobs.12.24.0.nupkg.sha512",
+    "/Users/rodrigolmiranda/.nuget/packages/azure.storage.common/12.23.0/azure.storage.common.12.23.0.nupkg.sha512",
+    "/Users/rodrigolmiranda/.nuget/packages/microsoft.bcl.asyncinterfaces/8.0.0/microsoft.bcl.asyncinterfaces.8.0.0.nupkg.sha512",
+    "/Users/rodrigolmiranda/.nuget/packages/microsoft.entityframeworkcore/9.0.0/microsoft.entityframeworkcore.9.0.0.nupkg.sha512",
+    "/Users/rodrigolmiranda/.nuget/packages/microsoft.entityframeworkcore.abstractions/9.0.0/microsoft.entityframeworkcore.abstractions.9.0.0.nupkg.sha512",
+    "/Users/rodrigolmiranda/.nuget/packages/microsoft.entityframeworkcore.analyzers/9.0.0/microsoft.entityframeworkcore.analyzers.9.0.0.nupkg.sha512",
+    "/Users/rodrigolmiranda/.nuget/packages/microsoft.entityframeworkcore.relational/9.0.0/microsoft.entityframeworkcore.relational.9.0.0.nupkg.sha512",
+    "/Users/rodrigolmiranda/.nuget/packages/microsoft.extensions.caching.stackexchangeredis/9.0.0/microsoft.extensions.caching.stackexchangeredis.9.0.0.nupkg.sha512",
+    "/Users/rodrigolmiranda/.nuget/packages/microsoft.identity.client/4.71.1/microsoft.identity.client.4.71.1.nupkg.sha512",
+    "/Users/rodrigolmiranda/.nuget/packages/microsoft.identity.client.extensions.msal/4.71.1/microsoft.identity.client.extensions.msal.4.71.1.nupkg.sha512",
+    "/Users/rodrigolmiranda/.nuget/packages/microsoft.identitymodel.abstractions/6.35.0/microsoft.identitymodel.abstractions.6.35.0.nupkg.sha512",
+    "/Users/rodrigolmiranda/.nuget/packages/npgsql/9.0.2/npgsql.9.0.2.nupkg.sha512",
+    "/Users/rodrigolmiranda/.nuget/packages/npgsql.entityframeworkcore.postgresql/9.0.2/npgsql.entityframeworkcore.postgresql.9.0.2.nupkg.sha512",
+    "/Users/rodrigolmiranda/.nuget/packages/pipelines.sockets.unofficial/2.2.8/pipelines.sockets.unofficial.2.2.8.nupkg.sha512",
+    "/Users/rodrigolmiranda/.nuget/packages/stackexchange.redis/2.7.27/stackexchange.redis.2.7.27.nupkg.sha512",
+    "/Users/rodrigolmiranda/.nuget/packages/system.clientmodel/1.4.1/system.clientmodel.1.4.1.nupkg.sha512",
+    "/Users/rodrigolmiranda/.nuget/packages/system.io.hashing/6.0.0/system.io.hashing.6.0.0.nupkg.sha512",
+    "/Users/rodrigolmiranda/.nuget/packages/system.memory.data/6.0.1/system.memory.data.6.0.1.nupkg.sha512",
+    "/Users/rodrigolmiranda/.nuget/packages/system.security.cryptography.protecteddata/4.5.0/system.security.cryptography.protecteddata.4.5.0.nupkg.sha512"
+  ],
   "logs": []
 }

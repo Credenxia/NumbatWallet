@@ -3,6 +3,7 @@ using NumbatWallet.SharedKernel.Enums;
 using NumbatWallet.SharedKernel.Results;
 using NumbatWallet.SharedKernel.Guards;
 using NumbatWallet.SharedKernel.Interfaces;
+using NumbatWallet.SharedKernel.Attributes;
 
 namespace NumbatWallet.Domain.Aggregates;
 
@@ -10,9 +11,16 @@ public sealed class Credential : AuditableEntity<Guid>, ITenantAware
 {
     public Guid WalletId { get; private set; }
     public Guid IssuerId { get; private set; }
+
+    [DataClassification(DataClassification.Official, "Credential")]
     public string CredentialType { get; private set; }
+
+    [DataClassification(DataClassification.Protected, "Credential")]
     public string CredentialData { get; private set; }
+
+    [DataClassification(DataClassification.Official, "Credential")]
     public string SchemaId { get; private set; }
+
     public CredentialStatus Status { get; private set; }
     public DateTimeOffset IssuedAt { get; private set; }
     public DateTimeOffset? ExpiresAt { get; private set; }

@@ -1,8 +1,10 @@
+using NumbatWallet.Domain.Events;
 using NumbatWallet.SharedKernel.Primitives;
 using NumbatWallet.SharedKernel.Enums;
 using NumbatWallet.SharedKernel.Results;
 using NumbatWallet.SharedKernel.Guards;
 using NumbatWallet.SharedKernel.Interfaces;
+using NumbatWallet.SharedKernel.Attributes;
 
 namespace NumbatWallet.Domain.Aggregates;
 
@@ -12,8 +14,13 @@ public sealed class Wallet : AuditableEntity<Guid>, ITenantAware
 
     public Guid PersonId { get; private set; }
     public Guid TenantId { get; set; }
+
+    [DataClassification(DataClassification.Official, "Wallet")]
     public string WalletName { get; private set; }
+
     public string Name => WalletName; // Alias for compatibility
+
+    [DataClassification(DataClassification.Official, "Wallet")]
     public string WalletDid { get; private set; }
     public WalletStatus Status { get; private set; }
     public string? SuspensionReason { get; private set; }
@@ -53,6 +60,13 @@ public sealed class Wallet : AuditableEntity<Guid>, ITenantAware
                 personId,
                 Guid.Empty, // Will be set by DbContext
                 walletName);
+
+            // Raise domain event
+            wallet.AddDomainEvent(new WalletCreatedEvent(
+                wallet.Id,
+                wallet.PersonId,
+                wallet.TenantId,
+                wallet.WalletDid));
 
             return Result.Success(wallet);
         }

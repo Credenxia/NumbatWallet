@@ -9,34 +9,29 @@ public class IssuerTests
     public void Issuer_Create_ShouldInitializeCorrectly()
     {
         // Arrange
-        var tenantId = Guid.NewGuid();
         var name = "WA Department of Transport";
-        var description = "Official issuer of driver licenses";
-        var issuerDid = "did:wa:issuer:transport";
-        var publicKey = "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQ...";
-        var trustedDomains = new[] { "transport.wa.gov.au", "*.wa.gov.au" };
+        var code = "WA-DOT";
+        var trustedDomain = "transport.wa.gov.au";
 
         // Act
         var result = Issuer.Create(
-            tenantId,
             name,
-            description,
-            issuerDid,
-            publicKey,
-            trustedDomains
+            code,
+            trustedDomain
         );
 
         // Assert
         Assert.True(result.IsSuccess);
         var issuer = result.Value;
         Assert.NotEqual(Guid.Empty, issuer.Id);
-        Assert.Equal(tenantId, issuer.TenantId);
+        Assert.Equal(Guid.Empty, issuer.TenantId); // Will be set by DbContext
         Assert.Equal(name, issuer.Name);
-        Assert.Equal(description, issuer.Description);
-        Assert.Equal(issuerDid, issuer.IssuerDid);
-        Assert.Equal(publicKey, issuer.PublicKey);
+        Assert.Equal(code, issuer.Code);
+        Assert.Equal($"did:web:{trustedDomain}", issuer.IssuerDid);
+        Assert.Equal(string.Empty, issuer.PublicKey); // To be set later
+        Assert.Equal(trustedDomain, issuer.TrustedDomain);
         Assert.True(issuer.IsActive);
-        Assert.Contains("transport.wa.gov.au", issuer.GetTrustedDomains());
+        Assert.Contains(trustedDomain, issuer.GetTrustedDomains());
         Assert.Empty(issuer.GetSupportedCredentialTypes());
     }
 
@@ -230,13 +225,16 @@ public class IssuerTests
 
     private static Issuer CreateTestIssuer()
     {
-        return Issuer.Create(
-            Guid.NewGuid(),
+        var issuer = Issuer.Create(
             "Test Issuer",
-            "Test Description",
-            "did:wa:issuer:test",
-            "TestPublicKey",
-            new[] { "test.wa.gov.au" }
+            "TEST-CODE",
+            "test.wa.gov.au"
         ).Value;
+
+        // Set additional properties using methods
+        issuer.UpdateDetails("Test Issuer", "Test Description");
+        issuer.UpdatePublicKey("TestPublicKey");
+
+        return issuer;
     }
 }

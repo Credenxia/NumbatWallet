@@ -4,6 +4,7 @@ using NumbatWallet.SharedKernel.Enums;
 using NumbatWallet.SharedKernel.Results;
 using NumbatWallet.SharedKernel.Guards;
 using NumbatWallet.SharedKernel.Interfaces;
+using NumbatWallet.SharedKernel.Attributes;
 
 namespace NumbatWallet.Domain.Aggregates;
 
@@ -14,11 +15,21 @@ public sealed class Person : AuditableEntity<Guid>, ITenantAware
     private DateTimeOffset? _emailCodeExpiry;
     private DateTimeOffset? _phoneCodeExpiry;
 
+    [DataClassification(DataClassification.OfficialSensitive, "Contact")]
     public Email Email { get; private set; }
+
+    [DataClassification(DataClassification.OfficialSensitive, "Contact")]
     public PhoneNumber PhoneNumber { get; private set; }
+
+    [DataClassification(DataClassification.OfficialSensitive, "Identity")]
     public string FirstName { get; private set; }
+
+    [DataClassification(DataClassification.OfficialSensitive, "Identity")]
     public string LastName { get; private set; }
+
+    [DataClassification(DataClassification.OfficialSensitive, "Identity")]
     public DateOnly DateOfBirth { get; private set; }
+
     public VerificationStatus EmailVerificationStatus { get; private set; }
     public VerificationStatus PhoneVerificationStatus { get; private set; }
     public bool IsVerified => EmailVerificationStatus == VerificationStatus.Verified

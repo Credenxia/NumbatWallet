@@ -50,7 +50,7 @@ public class EnumsTests
     public void DataClassification_ShouldHaveExpectedValues()
     {
         // Assert - Australian PSPF/ISM classifications
-        Assert.Equal(0, (int)DataClassification.Unclassified);
+        Assert.Equal(0, (int)DataClassification.Unofficial);
         Assert.Equal(1, (int)DataClassification.Official);
         Assert.Equal(2, (int)DataClassification.OfficialSensitive);
         Assert.Equal(3, (int)DataClassification.Protected);

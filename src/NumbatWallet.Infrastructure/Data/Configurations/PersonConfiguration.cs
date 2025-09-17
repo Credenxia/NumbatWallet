@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using NumbatWallet.Domain.Aggregates;
 using NumbatWallet.Domain.ValueObjects;
+using NumbatWallet.Infrastructure.Data.Converters;
 
 namespace NumbatWallet.Infrastructure.Data.Configurations;
 
@@ -15,18 +16,26 @@ public class PersonConfiguration : IEntityTypeConfiguration<Person>
         builder.Property(p => p.Id)
             .ValueGeneratedNever();
 
+        // Protected fields stored as JSONB
         builder.Property(p => p.FirstName)
             .IsRequired()
-            .HasMaxLength(128);
+            .HasColumnType("jsonb")
+            .HasConversion(new ProtectedFieldConverter());
 
         builder.Property(p => p.LastName)
             .IsRequired()
-            .HasMaxLength(128);
+            .HasColumnType("jsonb")
+            .HasConversion(new ProtectedFieldConverter());
 
-        builder.Property(p => p.DateOfBirth);
+        // DateOfBirth is also sensitive - store as protected JSONB
+        builder.Property(p => p.DateOfBirth)
+            .HasColumnType("jsonb")
+            .HasConversion(
+                v => new ProtectedFieldConverter().ConvertToProviderTyped(v.ToString("yyyy-MM-dd")),
+                v => DateOnly.Parse(new ProtectedFieldConverter().ConvertFromProviderTyped(v)));
 
-        builder.Property(p => p.IsVerified)
-            .IsRequired();
+        // IsVerified is a computed property - ignore it
+        builder.Ignore(p => p.IsVerified);
 
         builder.Property(p => p.VerifiedAt);
 
@@ -48,16 +57,17 @@ public class PersonConfiguration : IEntityTypeConfiguration<Person>
         builder.Property(p => p.ModifiedBy)
             .HasMaxLength(256);
 
-        // Value objects
+        // Value objects - stored as protected JSONB
         builder.OwnsOne(p => p.Email, email =>
         {
             email.Property(e => e.Value)
                 .HasColumnName("Email")
                 .IsRequired()
-                .HasMaxLength(256);
+                .HasColumnType("jsonb")
+                .HasConversion(new ProtectedFieldConverter());
 
-            email.HasIndex(e => e.Value)
-                .IsUnique();
+            // Index on the searchable token (will be added via interceptor)
+            email.HasIndex(e => e.Value);
         });
 
         builder.OwnsOne(p => p.PhoneNumber, phone =>
@@ -65,15 +75,15 @@ public class PersonConfiguration : IEntityTypeConfiguration<Person>
             phone.Property(ph => ph.Value)
                 .HasColumnName("PhoneNumber")
                 .IsRequired()
-                .HasMaxLength(50);
+                .HasColumnType("jsonb")
+                .HasConversion(new ProtectedFieldConverter());
 
+            // Index on the searchable token (will be added via interceptor)
             phone.HasIndex(ph => ph.Value);
         });
 
         // Indexes
         builder.HasIndex(p => p.TenantId);
-        builder.HasIndex(p => p.IsVerified);
-        builder.HasIndex(p => new { p.TenantId, p.IsVerified });
 
         // Ignore domain events
         builder.Ignore(p => p.DomainEvents);

@@ -36,6 +36,13 @@ public class NumbatWalletDbContext : DbContext, IUnitOfWork
     public DbSet<Person> Persons => Set<Person>();
     public DbSet<Issuer> Issuers => Set<Issuer>();
 
+    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+    {
+        // Add interceptors for protection and auditing
+        // These would be configured in the DI container in production
+        base.OnConfiguring(optionsBuilder);
+    }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -48,6 +55,9 @@ public class NumbatWalletDbContext : DbContext, IUnitOfWork
         modelBuilder.Entity<Credential>().HasQueryFilter(c => c.TenantId == _tenantService.TenantId);
         modelBuilder.Entity<Person>().HasQueryFilter(p => p.TenantId == _tenantService.TenantId);
         modelBuilder.Entity<Issuer>().HasQueryFilter(i => i.TenantId == _tenantService.TenantId);
+
+        // Configure JSONB for PostgreSQL
+        modelBuilder.HasPostgresExtension("pgcrypto"); // For encryption functions if needed
     }
 
     public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)

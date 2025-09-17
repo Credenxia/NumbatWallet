@@ -3,6 +3,8 @@ using NumbatWallet.SharedKernel.Primitives;
 using NumbatWallet.SharedKernel.Results;
 using NumbatWallet.SharedKernel.Guards;
 using NumbatWallet.SharedKernel.Interfaces;
+using NumbatWallet.SharedKernel.Attributes;
+using NumbatWallet.SharedKernel.Enums;
 
 namespace NumbatWallet.Domain.Aggregates;
 
@@ -12,11 +14,23 @@ public sealed partial class Issuer : AuditableEntity<Guid>, ITenantAware
     private readonly Dictionary<string, string> _supportedCredentialTypes = new();
 
     public Guid TenantId { get; set; }
+
+    [DataClassification(DataClassification.Official, "Organization")]
     public string Name { get; private set; }
+
+    [DataClassification(DataClassification.Official, "Organization")]
     public string Code { get; private set; }
+
+    [DataClassification(DataClassification.Official, "Organization")]
     public string Description { get; private set; }
+
+    [DataClassification(DataClassification.Official, "Organization")]
     public string IssuerDid { get; private set; }
+
+    [DataClassification(DataClassification.Official, "Security")]
     public string PublicKey { get; private set; }
+
+    [DataClassification(DataClassification.Official, "Security")]
     public string TrustedDomain { get; private set; }
     public bool IsActive { get; private set; }
     public string? DeactivationReason { get; private set; }

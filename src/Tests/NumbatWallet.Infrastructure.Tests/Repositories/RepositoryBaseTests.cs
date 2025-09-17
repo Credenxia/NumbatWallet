@@ -105,6 +105,7 @@ public class RepositoryBaseTests : IDisposable
 
         // Assert
         var result = await _context.Wallets.FindAsync(wallet.Id);
+        Assert.NotNull(result);
         Assert.Equal("Updated Name", result.Name);
     }
 

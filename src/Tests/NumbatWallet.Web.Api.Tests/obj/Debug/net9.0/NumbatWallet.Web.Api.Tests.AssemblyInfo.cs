@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("NumbatWallet.Web.Api.Tests")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+3b1793047210df598a97fbff8a89cf93085bb746")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+023254a9e554416d68b8d44fcb70854edfc756de")]
 [assembly: System.Reflection.AssemblyProductAttribute("NumbatWallet.Web.Api.Tests")]
 [assembly: System.Reflection.AssemblyTitleAttribute("NumbatWallet.Web.Api.Tests")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

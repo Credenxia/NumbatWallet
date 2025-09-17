@@ -18,3 +18,5 @@
 /Users/rodrigolmiranda/repo/NumbatWallet/src/NumbatWallet.Infrastructure/obj/Debug/net9.0/refint/NumbatWallet.Infrastructure.dll
 /Users/rodrigolmiranda/repo/NumbatWallet/src/NumbatWallet.Infrastructure/obj/Debug/net9.0/NumbatWallet.Infrastructure.pdb
 /Users/rodrigolmiranda/repo/NumbatWallet/src/NumbatWallet.Infrastructure/obj/Debug/net9.0/ref/NumbatWallet.Infrastructure.dll
+/Users/rodrigolmiranda/repo/NumbatWallet/src/NumbatWallet.Infrastructure/bin/Debug/net9.0/NumbatWallet.Infrastructure.runtimeconfig.json
+/Users/rodrigolmiranda/repo/NumbatWallet/src/NumbatWallet.Infrastructure/obj/Debug/net9.0/NumbatWallet.Infrastructure.genruntimeconfig.cache

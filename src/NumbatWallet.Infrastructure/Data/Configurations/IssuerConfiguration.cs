@@ -22,12 +22,26 @@ public class IssuerConfiguration : IEntityTypeConfiguration<Issuer>
             .IsRequired()
             .HasMaxLength(64);
 
+        builder.Property(i => i.Description)
+            .HasMaxLength(1000);
+
+        builder.Property(i => i.IssuerDid)
+            .IsRequired()
+            .HasMaxLength(512);
+
+        builder.Property(i => i.PublicKey)
+            .IsRequired()
+            .HasMaxLength(4000);
+
         builder.Property(i => i.TrustedDomain)
             .IsRequired()
             .HasMaxLength(256);
 
         builder.Property(i => i.IsActive)
             .IsRequired();
+
+        builder.Property(i => i.DeactivationReason)
+            .HasMaxLength(500);
 
         builder.Property(i => i.TenantId)
             .IsRequired();
