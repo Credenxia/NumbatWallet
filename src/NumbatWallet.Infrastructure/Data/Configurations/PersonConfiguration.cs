@@ -10,6 +10,7 @@ public class PersonConfiguration : IEntityTypeConfiguration<Person>
 {
     public void Configure(EntityTypeBuilder<Person> builder)
     {
+        // Table will be named "persons" due to snake_case convention
         builder.ToTable("Persons");
 
         builder.HasKey(p => p.Id);

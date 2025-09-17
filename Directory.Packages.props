@@ -1,0 +1,97 @@
+<Project>
+  <!-- Central Package Version Management -->
+  <!-- All package versions are managed here to ensure consistency across projects -->
+
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- ASP.NET Core & .NET -->
+    <PackageVersion Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.0" />
+    <PackageVersion Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="9.0.0" />
+    <PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly" Version="9.0.0" />
+    <PackageVersion Include="Microsoft.AspNetCore.Mvc.Versioning" Version="5.1.0" />
+    <PackageVersion Include="Microsoft.AspNetCore.Mvc.Versioning.ApiExplorer" Version="5.1.0" />
+    <PackageVersion Include="Microsoft.Identity.Web" Version="2.20.0" />
+    <PackageVersion Include="Microsoft.Identity.Web.UI" Version="2.20.0" />
+
+    <!-- Entity Framework Core -->
+    <PackageVersion Include="Microsoft.EntityFrameworkCore" Version="9.0.1" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.1" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.InMemory" Version="9.0.1" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Relational" Version="9.0.1" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Tools" Version="9.0.1" />
+    <PackageVersion Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.2" />
+    <PackageVersion Include="EFCore.NamingConventions" Version="9.0.0" />
+
+    <!-- Azure Services -->
+    <PackageVersion Include="Azure.Identity" Version="1.14.1" />
+    <PackageVersion Include="Azure.Security.KeyVault.Secrets" Version="4.7.0" />
+    <PackageVersion Include="Azure.Storage.Blobs" Version="12.24.0" />
+    <PackageVersion Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.22.0" />
+
+    <!-- Redis -->
+    <PackageVersion Include="Microsoft.Extensions.Caching.StackExchangeRedis" Version="9.0.0" />
+    <PackageVersion Include="StackExchange.Redis" Version="2.8.0" />
+
+    <!-- GraphQL (HotChocolate) -->
+    <PackageVersion Include="HotChocolate.AspNetCore" Version="13.9.0" />
+    <PackageVersion Include="HotChocolate.AspNetCore.Authorization" Version="13.9.0" />
+    <PackageVersion Include="HotChocolate.Data" Version="13.9.0" />
+    <PackageVersion Include="HotChocolate.Data.EntityFramework" Version="13.9.0" />
+
+    <!-- Logging -->
+    <PackageVersion Include="Serilog" Version="4.2.0" />
+    <PackageVersion Include="Serilog.AspNetCore" Version="8.0.5" />
+    <PackageVersion Include="Serilog.Extensions.Hosting" Version="8.0.0" />
+    <PackageVersion Include="Serilog.Settings.Configuration" Version="8.0.4" />
+    <PackageVersion Include="Serilog.Sinks.ApplicationInsights" Version="4.0.0" />
+    <PackageVersion Include="Serilog.Sinks.Console" Version="6.0.0" />
+    <PackageVersion Include="Serilog.Sinks.File" Version="6.0.0" />
+    <PackageVersion Include="Serilog.Sinks.Seq" Version="8.0.0" />
+
+    <!-- Validation & Mapping -->
+    <PackageVersion Include="AutoMapper" Version="13.0.1" />
+    <PackageVersion Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="12.0.1" />
+    <PackageVersion Include="FluentValidation" Version="11.11.0" />
+    <PackageVersion Include="FluentValidation.AspNetCore" Version="11.3.0" />
+    <PackageVersion Include="FluentValidation.DependencyInjectionExtensions" Version="11.11.0" />
+
+    <!-- API Documentation -->
+    <PackageVersion Include="Swashbuckle.AspNetCore" Version="7.2.0" />
+    <PackageVersion Include="Swashbuckle.AspNetCore.Annotations" Version="7.2.0" />
+
+    <!-- Health Checks -->
+    <PackageVersion Include="AspNetCore.HealthChecks.NpgSql" Version="9.0.0" />
+    <PackageVersion Include="AspNetCore.HealthChecks.Redis" Version="9.0.0" />
+    <PackageVersion Include="AspNetCore.HealthChecks.UI" Version="9.0.1" />
+    <PackageVersion Include="AspNetCore.HealthChecks.UI.Client" Version="9.0.1" />
+    <PackageVersion Include="AspNetCore.HealthChecks.UI.InMemory.Storage" Version="9.0.1" />
+
+    <!-- Testing -->
+    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
+    <PackageVersion Include="xunit" Version="2.9.2" />
+    <PackageVersion Include="xunit.runner.visualstudio" Version="2.8.2" />
+    <PackageVersion Include="Moq" Version="4.20.70" />
+    <PackageVersion Include="FluentAssertions" Version="7.1.0" />
+    <PackageVersion Include="coverlet.collector" Version="6.0.2" />
+    <PackageVersion Include="Testcontainers" Version="4.2.0" />
+    <PackageVersion Include="Testcontainers.PostgreSql" Version="4.2.0" />
+
+    <!-- Utilities -->
+    <PackageVersion Include="Scrutor" Version="5.0.2" />
+    <PackageVersion Include="Polly" Version="8.5.2" />
+    <PackageVersion Include="System.Text.Json" Version="9.0.0" />
+
+    <!-- Aspire -->
+    <PackageVersion Include="Aspire.Hosting" Version="9.4.2" />
+    <PackageVersion Include="Aspire.Hosting.AppHost" Version="9.4.2" />
+    <PackageVersion Include="Aspire.Hosting.Azure" Version="9.4.2" />
+    <PackageVersion Include="Aspire.Hosting.PostgreSQL" Version="9.4.2" />
+    <PackageVersion Include="Aspire.Hosting.Redis" Version="9.4.2" />
+
+    <!-- Source Generators & Analyzers -->
+    <PackageVersion Include="Microsoft.SourceLink.GitHub" Version="8.0.0" />
+  </ItemGroup>
+</Project>
