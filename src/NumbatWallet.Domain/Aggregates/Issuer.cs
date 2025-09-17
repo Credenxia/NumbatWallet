@@ -13,57 +13,66 @@ public sealed partial class Issuer : AuditableEntity<Guid>, ITenantAware
 
     public Guid TenantId { get; set; }
     public string Name { get; private set; }
+    public string Code { get; private set; }
     public string Description { get; private set; }
     public string IssuerDid { get; private set; }
     public string PublicKey { get; private set; }
+    public string TrustedDomain { get; private set; }
     public bool IsActive { get; private set; }
     public string? DeactivationReason { get; private set; }
 
     public IReadOnlyCollection<string> GetTrustedDomains() => _trustedDomains.AsReadOnly();
     public IReadOnlyCollection<string> GetSupportedCredentialTypes() => _supportedCredentialTypes.Keys.ToList().AsReadOnly();
 
+#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring as nullable.
+    private Issuer() : base(Guid.Empty)
+    {
+        // Required for EF Core
+    }
+#pragma warning restore CS8618
+
     private Issuer(
         Guid tenantId,
         string name,
+        string code,
         string description,
         string issuerDid,
         string publicKey,
+        string trustedDomain,
         IEnumerable<string> trustedDomains)
         : base(Guid.NewGuid())
     {
         TenantId = tenantId;
         Name = name;
+        Code = code;
         Description = description;
         IssuerDid = issuerDid;
         PublicKey = publicKey;
+        TrustedDomain = trustedDomain;
         IsActive = true;
         _trustedDomains.AddRange(trustedDomains);
     }
 
     public static Result<Issuer> Create(
-        Guid tenantId,
         string name,
-        string description,
-        string issuerDid,
-        string publicKey,
-        IEnumerable<string> trustedDomains)
+        string code,
+        string trustedDomain)
     {
         try
         {
-            Guard.AgainstEmptyGuid(tenantId, nameof(tenantId));
             Guard.AgainstNullOrWhiteSpace(name, nameof(name));
-            Guard.AgainstNullOrWhiteSpace(description, nameof(description));
-            Guard.AgainstNullOrWhiteSpace(issuerDid, nameof(issuerDid));
-            Guard.AgainstNullOrWhiteSpace(publicKey, nameof(publicKey));
-            Guard.AgainstNull(trustedDomains, nameof(trustedDomains));
+            Guard.AgainstNullOrWhiteSpace(code, nameof(code));
+            Guard.AgainstNullOrWhiteSpace(trustedDomain, nameof(trustedDomain));
 
             var issuer = new Issuer(
-                tenantId,
+                Guid.Empty, // Will be set by DbContext
                 name,
-                description,
-                issuerDid,
-                publicKey,
-                trustedDomains);
+                code,
+                string.Empty, // Description
+                $"did:web:{trustedDomain}", // IssuerDid
+                string.Empty, // PublicKey - to be set later
+                trustedDomain,
+                new[] { trustedDomain });
 
             return Result.Success(issuer);
         }

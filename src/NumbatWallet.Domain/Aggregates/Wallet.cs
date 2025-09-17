@@ -13,11 +13,19 @@ public sealed class Wallet : AuditableEntity<Guid>, ITenantAware
     public Guid PersonId { get; private set; }
     public Guid TenantId { get; set; }
     public string WalletName { get; private set; }
+    public string Name => WalletName; // Alias for compatibility
     public string WalletDid { get; private set; }
     public WalletStatus Status { get; private set; }
     public string? SuspensionReason { get; private set; }
     public string? LockReason { get; private set; }
     public IReadOnlyCollection<Guid> GetCredentials() => _credentialIds.AsReadOnly();
+
+#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring as nullable.
+    private Wallet() : base(Guid.Empty)
+    {
+        // Required for EF Core
+    }
+#pragma warning restore CS8618
 
     private Wallet(
         Guid personId,
@@ -34,18 +42,16 @@ public sealed class Wallet : AuditableEntity<Guid>, ITenantAware
 
     public static Result<Wallet> Create(
         Guid personId,
-        Guid tenantId,
         string walletName)
     {
         try
         {
             Guard.AgainstEmptyGuid(personId, nameof(personId));
-            Guard.AgainstEmptyGuid(tenantId, nameof(tenantId));
             Guard.AgainstNullOrWhiteSpace(walletName, nameof(walletName));
 
             var wallet = new Wallet(
                 personId,
-                tenantId,
+                Guid.Empty, // Will be set by DbContext
                 walletName);
 
             return Result.Success(wallet);

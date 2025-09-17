@@ -11,18 +11,16 @@ public class WalletTests
     {
         // Arrange
         var personId = Guid.NewGuid();
-        var tenantId = Guid.NewGuid();
         var walletName = "My Digital Wallet";
 
         // Act
-        var result = Wallet.Create(personId, tenantId, walletName);
+        var result = Wallet.Create(personId, walletName);
 
         // Assert
         Assert.True(result.IsSuccess);
         var wallet = result.Value;
         Assert.NotEqual(Guid.Empty, wallet.Id);
         Assert.Equal(personId, wallet.PersonId);
-        Assert.Equal(tenantId, wallet.TenantId);
         Assert.Equal(walletName, wallet.WalletName);
         Assert.Equal(WalletStatus.Active, wallet.Status);
         Assert.NotNull(wallet.WalletDid);
@@ -231,7 +229,6 @@ public class WalletTests
     private static Wallet CreateTestWallet()
     {
         return Wallet.Create(
-            Guid.NewGuid(),
             Guid.NewGuid(),
             "Test Wallet"
         ).Value;

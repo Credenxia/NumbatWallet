@@ -3,10 +3,11 @@ using NumbatWallet.SharedKernel.Primitives;
 using NumbatWallet.SharedKernel.Enums;
 using NumbatWallet.SharedKernel.Results;
 using NumbatWallet.SharedKernel.Guards;
+using NumbatWallet.SharedKernel.Interfaces;
 
 namespace NumbatWallet.Domain.Aggregates;
 
-public sealed class Person : AuditableEntity<Guid>
+public sealed class Person : AuditableEntity<Guid>, ITenantAware
 {
     private string? _emailVerificationCode;
     private string? _phoneVerificationCode;
@@ -22,6 +23,16 @@ public sealed class Person : AuditableEntity<Guid>
     public VerificationStatus PhoneVerificationStatus { get; private set; }
     public bool IsVerified => EmailVerificationStatus == VerificationStatus.Verified
                            && PhoneVerificationStatus == VerificationStatus.Verified;
+    public DateTimeOffset? VerifiedAt { get; private set; }
+    public VerificationLevel? VerificationLevel { get; private set; }
+    public Guid TenantId { get; set; }
+
+#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring as nullable.
+    private Person() : base(Guid.Empty)
+    {
+        // Required for EF Core
+    }
+#pragma warning restore CS8618
 
     private Person(
         Email email,
@@ -38,6 +49,23 @@ public sealed class Person : AuditableEntity<Guid>
         DateOfBirth = dateOfBirth;
         EmailVerificationStatus = VerificationStatus.NotVerified;
         PhoneVerificationStatus = VerificationStatus.NotVerified;
+    }
+
+    public static Result<Person> Create(
+        string firstName,
+        string lastName,
+        string email,
+        string phoneNumber)
+    {
+        var emailResult = Email.Create(email);
+        if (emailResult.IsFailure)
+            return emailResult.Error;
+
+        var phoneResult = PhoneNumber.Create(phoneNumber);
+        if (phoneResult.IsFailure)
+            return phoneResult.Error;
+
+        return Create(emailResult.Value, phoneResult.Value, firstName, lastName, DateOnly.FromDateTime(DateTime.Now.AddYears(-25)));
     }
 
     public static Result<Person> Create(

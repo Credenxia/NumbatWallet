@@ -2,10 +2,11 @@ using NumbatWallet.SharedKernel.Primitives;
 using NumbatWallet.SharedKernel.Enums;
 using NumbatWallet.SharedKernel.Results;
 using NumbatWallet.SharedKernel.Guards;
+using NumbatWallet.SharedKernel.Interfaces;
 
 namespace NumbatWallet.Domain.Aggregates;
 
-public sealed class Credential : AuditableEntity<Guid>
+public sealed class Credential : AuditableEntity<Guid>, ITenantAware
 {
     public Guid WalletId { get; private set; }
     public Guid IssuerId { get; private set; }
@@ -18,6 +19,14 @@ public sealed class Credential : AuditableEntity<Guid>
     public DateTimeOffset? RevokedAt { get; private set; }
     public string? RevocationReason { get; private set; }
     public string? SuspensionReason { get; private set; }
+    public Guid TenantId { get; set; }
+
+#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring as nullable.
+    private Credential() : base(Guid.Empty)
+    {
+        // Required for EF Core
+    }
+#pragma warning restore CS8618
 
     private Credential(
         Guid walletId,
