@@ -98,6 +98,22 @@
           }
         }
       },
+      "Azure.Security.KeyVault.Keys/4.8.0": {
+        "type": "package",
+        "dependencies": {
+          "Azure.Core": "1.46.2"
+        },
+        "compile": {
+          "lib/net8.0/Azure.Security.KeyVault.Keys.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net8.0/Azure.Security.KeyVault.Keys.dll": {
+            "related": ".xml"
+          }
+        }
+      },
       "Azure.Security.KeyVault.Secrets/4.8.0": {
         "type": "package",
         "dependencies": {
@@ -2067,6 +2083,7 @@
           "AspNetCore.HealthChecks.NpgSql": "9.0.0",
           "AspNetCore.HealthChecks.Redis": "9.0.0",
           "Azure.Identity": "1.16.0",
+          "Azure.Security.KeyVault.Keys": "4.8.0",
           "Azure.Security.KeyVault.Secrets": "4.8.0",
           "Azure.Storage.Blobs": "12.25.0",
           "EFCore.NamingConventions": "9.0.0",
@@ -2203,6 +2220,24 @@
         "lib/net8.0/Azure.Identity.xml",
         "lib/netstandard2.0/Azure.Identity.dll",
         "lib/netstandard2.0/Azure.Identity.xml"
+      ]
+    },
+    "Azure.Security.KeyVault.Keys/4.8.0": {
+      "sha512": "3rueqKRzNZdW+gEWox07Hpxq3n+0AZdRw3QI4GC3GBzLCw9n00LXgy4upow00bAuQJ9QGX2xwzJPg2/wALPYDA==",
+      "type": "package",
+      "path": "azure.security.keyvault.keys/4.8.0",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "CHANGELOG.md",
+        "README.md",
+        "azure.security.keyvault.keys.4.8.0.nupkg.sha512",
+        "azure.security.keyvault.keys.nuspec",
+        "azureicon.png",
+        "lib/net8.0/Azure.Security.KeyVault.Keys.dll",
+        "lib/net8.0/Azure.Security.KeyVault.Keys.xml",
+        "lib/netstandard2.0/Azure.Security.KeyVault.Keys.dll",
+        "lib/netstandard2.0/Azure.Security.KeyVault.Keys.xml"
       ]
     },
     "Azure.Security.KeyVault.Secrets/4.8.0": {
@@ -4912,6 +4947,7 @@
           "AutoMapper": "13.0.1",
           "AutoMapper.Extensions.Microsoft.DependencyInjection": "12.0.1",
           "Azure.Identity": "1.16.0",
+          "Azure.Security.KeyVault.Keys": "4.8.0",
           "Azure.Security.KeyVault.Secrets": "4.8.0",
           "Azure.Storage.Blobs": "12.25.0",
           "Carter": "9.0.0",

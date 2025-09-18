@@ -207,6 +207,17 @@
           }
         }
       },
+      "Azure.Security.KeyVault.Keys/4.8.0": {
+        "dependencies": {
+          "Azure.Core": "1.47.3"
+        },
+        "runtime": {
+          "lib/net8.0/Azure.Security.KeyVault.Keys.dll": {
+            "assemblyVersion": "4.8.0.0",
+            "fileVersion": "4.800.25.32705"
+          }
+        }
+      },
       "Azure.Security.KeyVault.Secrets/4.8.0": {
         "dependencies": {
           "Azure.Core": "1.47.3"
@@ -2374,6 +2385,7 @@
           "AspNetCore.HealthChecks.NpgSql": "9.0.0",
           "AspNetCore.HealthChecks.Redis": "9.0.0",
           "Azure.Identity": "1.16.0",
+          "Azure.Security.KeyVault.Keys": "4.8.0",
           "Azure.Security.KeyVault.Secrets": "4.8.0",
           "Azure.Storage.Blobs": "12.25.0",
           "EFCore.NamingConventions": "9.0.0",
@@ -2477,6 +2489,13 @@
       "sha512": "sha512-e2ATU/n2ZDL/S8A8EdrcfKEvKc2BojCrrSpmM+JKnrSTQS32x/W0Ldu8utk+epLKwXvSJRSWtlgdo7X8hG1mCg==",
       "path": "azure.security.keyvault.certificates/4.6.0",
       "hashPath": "azure.security.keyvault.certificates.4.6.0.nupkg.sha512"
+    },
+    "Azure.Security.KeyVault.Keys/4.8.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-3rueqKRzNZdW+gEWox07Hpxq3n+0AZdRw3QI4GC3GBzLCw9n00LXgy4upow00bAuQJ9QGX2xwzJPg2/wALPYDA==",
+      "path": "azure.security.keyvault.keys/4.8.0",
+      "hashPath": "azure.security.keyvault.keys.4.8.0.nupkg.sha512"
     },
     "Azure.Security.KeyVault.Secrets/4.8.0": {
       "type": "package",

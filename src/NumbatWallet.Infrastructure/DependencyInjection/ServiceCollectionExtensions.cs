@@ -118,6 +118,10 @@ public static class ServiceCollectionExtensions
             services.AddSingleton<IKeyVaultService, AzureKeyVaultService>();
         }
 
+        // Crypto Services (Envelope Encryption)
+        services.AddSingleton<Crypto.Interfaces.IKeyWrapProvider, Crypto.KeyVaultWrapProvider>();
+        services.AddScoped<Crypto.Interfaces.ICryptoService, Crypto.CryptoService>();
+
         // Blob Storage
         var storageConnectionString = configuration["Azure:Storage:ConnectionString"];
         var storageAccountName = configuration["Azure:Storage:AccountName"];

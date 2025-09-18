@@ -208,3 +208,4 @@
 /Users/rodrigolmiranda/repo/NumbatWallet/src/Tests/NumbatWallet.Infrastructure.Tests/obj/Debug/net9.0/NumbatWallet.Infrastructure.Tests.pdb
 /Users/rodrigolmiranda/repo/NumbatWallet/src/Tests/NumbatWallet.Infrastructure.Tests/obj/Debug/net9.0/NumbatWallet.Infrastructure.Tests.genruntimeconfig.cache
 /Users/rodrigolmiranda/repo/NumbatWallet/src/Tests/NumbatWallet.Infrastructure.Tests/obj/Debug/net9.0/ref/NumbatWallet.Infrastructure.Tests.dll
+/Users/rodrigolmiranda/repo/NumbatWallet/src/Tests/NumbatWallet.Infrastructure.Tests/bin/Debug/net9.0/Azure.Security.KeyVault.Keys.dll

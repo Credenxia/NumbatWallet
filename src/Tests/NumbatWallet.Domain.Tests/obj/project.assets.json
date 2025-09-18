@@ -1216,6 +1216,7 @@
           "AutoMapper": "13.0.1",
           "AutoMapper.Extensions.Microsoft.DependencyInjection": "12.0.1",
           "Azure.Identity": "1.16.0",
+          "Azure.Security.KeyVault.Keys": "4.8.0",
           "Azure.Security.KeyVault.Secrets": "4.8.0",
           "Azure.Storage.Blobs": "12.25.0",
           "Carter": "9.0.0",

@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "nROoDxjTufw=",
+  "dgSpecHash": "QWoSaelAsOY=",
   "success": true,
   "projectFilePath": "/Users/rodrigolmiranda/repo/NumbatWallet/src/NumbatWallet.Web.Api/NumbatWallet.Web.Api.csproj",
   "expectedPackageFiles": [
@@ -14,6 +14,7 @@
     "/Users/rodrigolmiranda/.nuget/packages/azure.core/1.47.3/azure.core.1.47.3.nupkg.sha512",
     "/Users/rodrigolmiranda/.nuget/packages/azure.identity/1.16.0/azure.identity.1.16.0.nupkg.sha512",
     "/Users/rodrigolmiranda/.nuget/packages/azure.security.keyvault.certificates/4.6.0/azure.security.keyvault.certificates.4.6.0.nupkg.sha512",
+    "/Users/rodrigolmiranda/.nuget/packages/azure.security.keyvault.keys/4.8.0/azure.security.keyvault.keys.4.8.0.nupkg.sha512",
     "/Users/rodrigolmiranda/.nuget/packages/azure.security.keyvault.secrets/4.8.0/azure.security.keyvault.secrets.4.8.0.nupkg.sha512",
     "/Users/rodrigolmiranda/.nuget/packages/azure.storage.blobs/12.25.0/azure.storage.blobs.12.25.0.nupkg.sha512",
     "/Users/rodrigolmiranda/.nuget/packages/azure.storage.common/12.24.0/azure.storage.common.12.24.0.nupkg.sha512",
