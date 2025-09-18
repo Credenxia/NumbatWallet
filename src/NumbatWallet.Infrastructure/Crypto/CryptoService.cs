@@ -2,11 +2,9 @@ using System;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
-using Azure.Security.KeyVault.Secrets;
-using Azure.Identity;
 using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using NumbatWallet.Application.Interfaces;
 using NumbatWallet.Infrastructure.Crypto.Interfaces;
 using NumbatWallet.SharedKernel.Enums;
 using NumbatWallet.SharedKernel.Interfaces;
@@ -19,7 +17,7 @@ namespace NumbatWallet.Infrastructure.Crypto;
 public class CryptoService : ICryptoService
 {
     private readonly IKeyWrapProvider _wrapProvider;
-    private readonly SecretClient _secretClient;
+    private readonly IKeyVaultService _keyVaultService;
     private readonly ITenantService _tenantService;
     private readonly IMemoryCache _dekCache;
     private readonly ILogger<CryptoService> _logger;
@@ -27,19 +25,16 @@ public class CryptoService : ICryptoService
 
     public CryptoService(
         IKeyWrapProvider wrapProvider,
+        IKeyVaultService keyVaultService,
         ITenantService tenantService,
         IMemoryCache memoryCache,
-        IConfiguration configuration,
         ILogger<CryptoService> logger)
     {
         _wrapProvider = wrapProvider;
+        _keyVaultService = keyVaultService;
         _tenantService = tenantService;
         _dekCache = memoryCache;
         _logger = logger;
-
-        var kvUri = configuration["KeyVault:Uri"]
-            ?? throw new InvalidOperationException("KeyVault:Uri configuration is required");
-        _secretClient = new SecretClient(new Uri(kvUri), new DefaultAzureCredential());
     }
 
     public async Task<string> EncryptAsync(string plaintext, DataClassification classification)
@@ -176,19 +171,7 @@ public class CryptoService : ICryptoService
         // Store wrapped DEK in Key Vault
         var secretName = GetDekSecretName(tenantId);
         var secretValue = Convert.ToBase64String(wrappedDek);
-        await _secretClient.SetSecretAsync(new KeyVaultSecret(secretName, secretValue)
-        {
-            Properties =
-            {
-                ExpiresOn = DateTimeOffset.UtcNow.AddYears(1),
-                Tags =
-                {
-                    ["TenantId"] = tenantId,
-                    ["Purpose"] = "DEK",
-                    ["Version"] = DateTimeOffset.UtcNow.Ticks.ToString()
-                }
-            }
-        });
+        await _keyVaultService.SetSecretAsync(secretName, secretValue);
 
         _logger.LogInformation("Rotated DEK for tenant {TenantId}", tenantId);
 
@@ -201,13 +184,9 @@ public class CryptoService : ICryptoService
         try
         {
             var secretName = GetDekSecretName(tenantId);
-            var secret = await _secretClient.GetSecretAsync(secretName);
+            var secretValue = await _keyVaultService.GetSecretAsync(secretName);
 
-            if (secret.Value.Properties.Tags.TryGetValue("Version", out var version))
-            {
-                return int.Parse(version);
-            }
-
+            // For now, return version 1 as we don't have tag support in IKeyVaultService
             return 1;
         }
         catch
@@ -233,8 +212,12 @@ public class CryptoService : ICryptoService
 
         try
         {
-            var secret = await _secretClient.GetSecretAsync(secretName);
-            var wrappedDek = Convert.FromBase64String(secret.Value.Value);
+            var secretValue = await _keyVaultService.GetSecretAsync(secretName);
+            if (secretValue == null)
+            {
+                throw new InvalidOperationException($"DEK not found for tenant {tenantId}");
+            }
+            var wrappedDek = Convert.FromBase64String(secretValue);
 
             // Get current KEK ID
             var kekId = await GetCurrentKekIdAsync(tenantId);
@@ -285,19 +268,7 @@ public class CryptoService : ICryptoService
         // Store wrapped DEK in Key Vault
         var secretName = GetDekSecretName(tenantId);
         var secretValue = Convert.ToBase64String(wrappedDek);
-        await _secretClient.SetSecretAsync(new KeyVaultSecret(secretName, secretValue)
-        {
-            Properties =
-            {
-                ExpiresOn = DateTimeOffset.UtcNow.AddYears(1),
-                Tags =
-                {
-                    ["TenantId"] = tenantId,
-                    ["Purpose"] = "DEK",
-                    ["Version"] = "1"
-                }
-            }
-        });
+        await _keyVaultService.SetSecretAsync(secretName, secretValue);
 
         _logger.LogInformation("Created new DEK for tenant {TenantId}", tenantId);
 
@@ -317,19 +288,9 @@ public class CryptoService : ICryptoService
             var kekId = await _wrapProvider.CreateKekAsync(tenantId, new KekProperties());
 
             // Store KEK ID reference
-            await _secretClient.SetSecretAsync(new KeyVaultSecret(
+            await _keyVaultService.SetSecretAsync(
                 GetKekReferenceSecretName(tenantId),
-                kekId)
-            {
-                Properties =
-                {
-                    Tags =
-                    {
-                        ["TenantId"] = tenantId,
-                        ["Purpose"] = "KEK-Reference"
-                    }
-                }
-            });
+                kekId);
 
             return kekId;
         }
@@ -338,8 +299,12 @@ public class CryptoService : ICryptoService
     private async Task<string> GetCurrentKekIdAsync(string tenantId)
     {
         var secretName = GetKekReferenceSecretName(tenantId);
-        var secret = await _secretClient.GetSecretAsync(secretName);
-        return secret.Value.Value;
+        var kekId = await _keyVaultService.GetSecretAsync(secretName);
+        if (kekId == null)
+        {
+            throw new InvalidOperationException($"KEK reference not found for tenant {tenantId}");
+        }
+        return kekId;
     }
 
     private static byte[] GenerateDek()
