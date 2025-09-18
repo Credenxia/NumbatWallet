@@ -103,7 +103,7 @@ public sealed class Person : AuditableEntity<Guid>, ITenantAware
         }
         catch (ArgumentException ex)
         {
-            return Error.Validation("Person.InvalidInput", ex.Message);
+            return DomainError.Validation("Person.InvalidInput", ex.Message);
         }
     }
 
@@ -123,7 +123,7 @@ public sealed class Person : AuditableEntity<Guid>, ITenantAware
 
             if (dateOfBirth > DateOnly.FromDateTime(DateTime.UtcNow))
             {
-                return Error.Validation("Person.InvalidDateOfBirth", "Date of birth cannot be in the future.");
+                return DomainError.Validation("Person.InvalidDateOfBirth", "Date of birth cannot be in the future.");
             }
 
             var person = new Person(
@@ -137,7 +137,7 @@ public sealed class Person : AuditableEntity<Guid>, ITenantAware
         }
         catch (ArgumentException ex)
         {
-            return Error.Validation("Person.Invalid", ex.Message);
+            return DomainError.Validation("Person.Invalid", ex.Message);
         }
     }
 
@@ -147,7 +147,7 @@ public sealed class Person : AuditableEntity<Guid>, ITenantAware
 
         if (Email.Equals(newEmail))
         {
-            return Error.BusinessRule("Person.SameEmail", "New email is the same as current email.");
+            return DomainError.BusinessRule("Person.SameEmail", "New email is the same as current email.");
         }
 
         Email = newEmail;
@@ -164,7 +164,7 @@ public sealed class Person : AuditableEntity<Guid>, ITenantAware
 
         if (PhoneNumber.Equals(newPhoneNumber))
         {
-            return Error.BusinessRule("Person.SamePhoneNumber", "New phone number is the same as current phone number.");
+            return DomainError.BusinessRule("Person.SamePhoneNumber", "New phone number is the same as current phone number.");
         }
 
         PhoneNumber = newPhoneNumber;
@@ -189,19 +189,19 @@ public sealed class Person : AuditableEntity<Guid>, ITenantAware
 
         if (_emailVerificationCode == null || _emailCodeExpiry == null)
         {
-            return Error.BusinessRule("Person.NoEmailVerification", "No email verification requested.");
+            return DomainError.BusinessRule("Person.NoEmailVerification", "No email verification requested.");
         }
 
         if (_emailCodeExpiry < DateTimeOffset.UtcNow)
         {
             EmailVerificationStatus = VerificationStatus.Failed;
-            return Error.BusinessRule("Person.EmailCodeExpired", "Email verification code has expired.");
+            return DomainError.BusinessRule("Person.EmailCodeExpired", "Email verification code has expired.");
         }
 
         if (_emailVerificationCode != code)
         {
             EmailVerificationStatus = VerificationStatus.Failed;
-            return Error.BusinessRule("Person.InvalidEmailCode", "Invalid email verification code.");
+            return DomainError.BusinessRule("Person.InvalidEmailCode", "Invalid email verification code.");
         }
 
         EmailVerificationStatus = VerificationStatus.Verified;
@@ -224,19 +224,19 @@ public sealed class Person : AuditableEntity<Guid>, ITenantAware
 
         if (_phoneVerificationCode == null || _phoneCodeExpiry == null)
         {
-            return Error.BusinessRule("Person.NoPhoneVerification", "No phone verification requested.");
+            return DomainError.BusinessRule("Person.NoPhoneVerification", "No phone verification requested.");
         }
 
         if (_phoneCodeExpiry < DateTimeOffset.UtcNow)
         {
             PhoneVerificationStatus = VerificationStatus.Failed;
-            return Error.BusinessRule("Person.PhoneCodeExpired", "Phone verification code has expired.");
+            return DomainError.BusinessRule("Person.PhoneCodeExpired", "Phone verification code has expired.");
         }
 
         if (_phoneVerificationCode != code)
         {
             PhoneVerificationStatus = VerificationStatus.Failed;
-            return Error.BusinessRule("Person.InvalidPhoneCode", "Invalid phone verification code.");
+            return DomainError.BusinessRule("Person.InvalidPhoneCode", "Invalid phone verification code.");
         }
 
         PhoneVerificationStatus = VerificationStatus.Verified;
@@ -259,7 +259,7 @@ public sealed class Person : AuditableEntity<Guid>, ITenantAware
         }
         catch (ArgumentException ex)
         {
-            return Error.Validation("Person.InvalidDetails", ex.Message);
+            return DomainError.Validation("Person.InvalidDetails", ex.Message);
         }
     }
 

@@ -79,7 +79,7 @@ public sealed class Credential : AuditableEntity<Guid>, ITenantAware
         }
         catch (ArgumentException ex)
         {
-            return Error.Validation("Credential.Invalid", ex.Message);
+            return DomainError.Validation("Credential.Invalid", ex.Message);
         }
     }
 
@@ -87,17 +87,17 @@ public sealed class Credential : AuditableEntity<Guid>, ITenantAware
     {
         if (Status == CredentialStatus.Active)
         {
-            return Error.BusinessRule("Credential.AlreadyActive", "Credential is already active.");
+            return DomainError.BusinessRule("Credential.AlreadyActive", "Credential is already active.");
         }
 
         if (Status == CredentialStatus.Revoked)
         {
-            return Error.BusinessRule("Credential.Revoked", "Cannot activate a revoked credential.");
+            return DomainError.BusinessRule("Credential.Revoked", "Cannot activate a revoked credential.");
         }
 
         if (IsExpired())
         {
-            return Error.BusinessRule("Credential.Expired", "Cannot activate an expired credential.");
+            return DomainError.BusinessRule("Credential.Expired", "Cannot activate an expired credential.");
         }
 
         Status = CredentialStatus.Active;
@@ -110,12 +110,12 @@ public sealed class Credential : AuditableEntity<Guid>, ITenantAware
 
         if (Status == CredentialStatus.Revoked)
         {
-            return Error.BusinessRule("Credential.Revoked", "Cannot suspend a revoked credential.");
+            return DomainError.BusinessRule("Credential.Revoked", "Cannot suspend a revoked credential.");
         }
 
         if (Status == CredentialStatus.Suspended)
         {
-            return Error.BusinessRule("Credential.AlreadySuspended", "Credential is already suspended.");
+            return DomainError.BusinessRule("Credential.AlreadySuspended", "Credential is already suspended.");
         }
 
         Status = CredentialStatus.Suspended;
@@ -129,7 +129,7 @@ public sealed class Credential : AuditableEntity<Guid>, ITenantAware
 
         if (Status == CredentialStatus.Revoked)
         {
-            return Error.BusinessRule("Credential.AlreadyRevoked", "Credential is already revoked.");
+            return DomainError.BusinessRule("Credential.AlreadyRevoked", "Credential is already revoked.");
         }
 
         Status = CredentialStatus.Revoked;
@@ -156,7 +156,7 @@ public sealed class Credential : AuditableEntity<Guid>, ITenantAware
 
         if (Status == CredentialStatus.Revoked)
         {
-            return Error.BusinessRule("Credential.Revoked", "Cannot update data of a revoked credential.");
+            return DomainError.BusinessRule("Credential.Revoked", "Cannot update data of a revoked credential.");
         }
 
         CredentialData = newData;

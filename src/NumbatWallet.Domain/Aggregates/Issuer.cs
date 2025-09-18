@@ -127,7 +127,7 @@ public sealed partial class Issuer : AuditableEntity<Guid>, ITenantAware
         }
         catch (ArgumentException ex)
         {
-            return Error.Validation("Issuer.Invalid", ex.Message);
+            return DomainError.Validation("Issuer.Invalid", ex.Message);
         }
     }
 
@@ -138,12 +138,12 @@ public sealed partial class Issuer : AuditableEntity<Guid>, ITenantAware
 
         if (_supportedCredentialTypes.ContainsKey(credentialType))
         {
-            return Error.BusinessRule("Issuer.CredentialTypeExists", "Credential type is already supported.");
+            return DomainError.BusinessRule("Issuer.CredentialTypeExists", "Credential type is already supported.");
         }
 
         if (!IsActive)
         {
-            return Error.BusinessRule("Issuer.NotActive", "Cannot add credential types to inactive issuer.");
+            return DomainError.BusinessRule("Issuer.NotActive", "Cannot add credential types to inactive issuer.");
         }
 
         _supportedCredentialTypes.Add(credentialType, schemaUrl);
@@ -156,7 +156,7 @@ public sealed partial class Issuer : AuditableEntity<Guid>, ITenantAware
 
         if (!_supportedCredentialTypes.ContainsKey(credentialType))
         {
-            return Error.BusinessRule("Issuer.CredentialTypeNotFound", "Credential type is not supported.");
+            return DomainError.BusinessRule("Issuer.CredentialTypeNotFound", "Credential type is not supported.");
         }
 
         _supportedCredentialTypes.Remove(credentialType);
@@ -179,7 +179,7 @@ public sealed partial class Issuer : AuditableEntity<Guid>, ITenantAware
 
         if (_trustedDomains.Contains(domain))
         {
-            return Error.BusinessRule("Issuer.DomainExists", "Domain is already trusted.");
+            return DomainError.BusinessRule("Issuer.DomainExists", "Domain is already trusted.");
         }
 
         _trustedDomains.Add(domain);
@@ -192,7 +192,7 @@ public sealed partial class Issuer : AuditableEntity<Guid>, ITenantAware
 
         if (!_trustedDomains.Contains(domain))
         {
-            return Error.BusinessRule("Issuer.DomainNotFound", "Domain is not in trusted list.");
+            return DomainError.BusinessRule("Issuer.DomainNotFound", "Domain is not in trusted list.");
         }
 
         _trustedDomains.Remove(domain);
@@ -228,7 +228,7 @@ public sealed partial class Issuer : AuditableEntity<Guid>, ITenantAware
 
         if (PublicKey == newPublicKey)
         {
-            return Error.BusinessRule("Issuer.SamePublicKey", "New public key is the same as current key.");
+            return DomainError.BusinessRule("Issuer.SamePublicKey", "New public key is the same as current key.");
         }
 
         PublicKey = newPublicKey;
@@ -251,7 +251,7 @@ public sealed partial class Issuer : AuditableEntity<Guid>, ITenantAware
 
         if (!IsActive)
         {
-            return Error.BusinessRule("Issuer.AlreadyInactive", "Issuer is already inactive.");
+            return DomainError.BusinessRule("Issuer.AlreadyInactive", "Issuer is already inactive.");
         }
 
         IsActive = false;
@@ -263,7 +263,7 @@ public sealed partial class Issuer : AuditableEntity<Guid>, ITenantAware
     {
         if (IsActive)
         {
-            return Error.BusinessRule("Issuer.AlreadyActive", "Issuer is already active.");
+            return DomainError.BusinessRule("Issuer.AlreadyActive", "Issuer is already active.");
         }
 
         IsActive = true;

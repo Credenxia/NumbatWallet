@@ -76,7 +76,7 @@ public sealed class Wallet : AuditableEntity<Guid>, ITenantAware
         }
         catch (ArgumentException ex)
         {
-            return Error.Validation("Wallet.Invalid", ex.Message);
+            return DomainError.Validation("Wallet.Invalid", ex.Message);
         }
     }
 
@@ -86,12 +86,12 @@ public sealed class Wallet : AuditableEntity<Guid>, ITenantAware
 
         if (_credentialIds.Contains(credentialId))
         {
-            return Error.BusinessRule("Wallet.CredentialExists", "Credential already exists in wallet.");
+            return DomainError.BusinessRule("Wallet.CredentialExists", "Credential already exists in wallet.");
         }
 
         if (Status != WalletStatus.Active)
         {
-            return Error.BusinessRule("Wallet.NotActive", "Cannot add credentials to inactive wallet.");
+            return DomainError.BusinessRule("Wallet.NotActive", "Cannot add credentials to inactive wallet.");
         }
 
         _credentialIds.Add(credentialId);
@@ -104,7 +104,7 @@ public sealed class Wallet : AuditableEntity<Guid>, ITenantAware
 
         if (!_credentialIds.Contains(credentialId))
         {
-            return Error.BusinessRule("Wallet.CredentialNotFound", "Credential not found in wallet.");
+            return DomainError.BusinessRule("Wallet.CredentialNotFound", "Credential not found in wallet.");
         }
 
         _credentialIds.Remove(credentialId);
@@ -117,12 +117,12 @@ public sealed class Wallet : AuditableEntity<Guid>, ITenantAware
 
         if (Status == WalletStatus.Suspended)
         {
-            return Error.BusinessRule("Wallet.AlreadySuspended", "Wallet is already suspended.");
+            return DomainError.BusinessRule("Wallet.AlreadySuspended", "Wallet is already suspended.");
         }
 
         if (Status == WalletStatus.Locked)
         {
-            return Error.BusinessRule("Wallet.Locked", "Cannot suspend a locked wallet.");
+            return DomainError.BusinessRule("Wallet.Locked", "Cannot suspend a locked wallet.");
         }
 
         Status = WalletStatus.Suspended;
@@ -134,12 +134,12 @@ public sealed class Wallet : AuditableEntity<Guid>, ITenantAware
     {
         if (Status == WalletStatus.Active)
         {
-            return Error.BusinessRule("Wallet.AlreadyActive", "Wallet is already active.");
+            return DomainError.BusinessRule("Wallet.AlreadyActive", "Wallet is already active.");
         }
 
         if (Status == WalletStatus.Locked)
         {
-            return Error.BusinessRule("Wallet.Locked", "Cannot reactivate a locked wallet. Unlock it first.");
+            return DomainError.BusinessRule("Wallet.Locked", "Cannot reactivate a locked wallet. Unlock it first.");
         }
 
         Status = WalletStatus.Active;
@@ -153,7 +153,7 @@ public sealed class Wallet : AuditableEntity<Guid>, ITenantAware
 
         if (Status == WalletStatus.Locked)
         {
-            return Error.BusinessRule("Wallet.AlreadyLocked", "Wallet is already locked.");
+            return DomainError.BusinessRule("Wallet.AlreadyLocked", "Wallet is already locked.");
         }
 
         Status = WalletStatus.Locked;
@@ -165,7 +165,7 @@ public sealed class Wallet : AuditableEntity<Guid>, ITenantAware
     {
         if (Status != WalletStatus.Locked)
         {
-            return Error.BusinessRule("Wallet.NotLocked", "Wallet is not locked.");
+            return DomainError.BusinessRule("Wallet.NotLocked", "Wallet is not locked.");
         }
 
         Status = WalletStatus.Active;
@@ -179,7 +179,7 @@ public sealed class Wallet : AuditableEntity<Guid>, ITenantAware
 
         if (WalletName == newName)
         {
-            return Error.BusinessRule("Wallet.SameName", "New name is the same as current name.");
+            return DomainError.BusinessRule("Wallet.SameName", "New name is the same as current name.");
         }
 
         WalletName = newName;
