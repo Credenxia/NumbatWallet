@@ -27,7 +27,7 @@ public sealed class Credential : AuditableEntity<Guid>, ITenantAware
     public DateTimeOffset? RevokedAt { get; private set; }
     public string? RevocationReason { get; private set; }
     public string? SuspensionReason { get; private set; }
-    public Guid TenantId { get; set; }
+    public string TenantId { get; set; } = string.Empty;
 
 #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring as nullable.
     private Credential() : base(Guid.Empty)

@@ -1,10 +1,11 @@
+using Microsoft.AspNetCore.Authentication.OpenIdConnect;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Identity.Web;
+using Microsoft.Identity.Web.UI;
 using NumbatWallet.Application.DependencyInjection;
 using NumbatWallet.Infrastructure.DependencyInjection;
 using NumbatWallet.Infrastructure.Data;
 using NumbatWallet.Web.Admin.Components;
-using Microsoft.AspNetCore.Authentication.OpenIdConnect;
-using Microsoft.Identity.Web;
-using Microsoft.Identity.Web.UI;
 using Serilog;
 
 // Configure Serilog
@@ -23,7 +24,6 @@ try
         .ReadFrom.Configuration(context.Configuration)
         .ReadFrom.Services(services)
         .Enrich.FromLogContext()
-        .Enrich.WithMachineName()
         .Enrich.WithEnvironmentName()
         .WriteTo.Console());
 
@@ -99,7 +99,7 @@ try
         }
         else
         {
-            await dbContext.Database.MigrateAsync();
+            dbContext.Database.Migrate();
         }
     }
 

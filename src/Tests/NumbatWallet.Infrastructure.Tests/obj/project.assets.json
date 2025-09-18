@@ -2,6 +2,66 @@
   "version": 3,
   "targets": {
     "net9.0": {
+      "AspNetCore.HealthChecks.NpgSql/9.0.0": {
+        "type": "package",
+        "dependencies": {
+          "Microsoft.Extensions.Diagnostics.HealthChecks": "8.0.11",
+          "Npgsql": "8.0.3"
+        },
+        "compile": {
+          "lib/net8.0/HealthChecks.NpgSql.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net8.0/HealthChecks.NpgSql.dll": {
+            "related": ".xml"
+          }
+        }
+      },
+      "AspNetCore.HealthChecks.Redis/9.0.0": {
+        "type": "package",
+        "dependencies": {
+          "Microsoft.Extensions.Diagnostics.HealthChecks": "8.0.11",
+          "StackExchange.Redis": "2.7.4"
+        },
+        "compile": {
+          "lib/net8.0/HealthChecks.Redis.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net8.0/HealthChecks.Redis.dll": {
+            "related": ".xml"
+          }
+        }
+      },
+      "AutoMapper/12.0.1": {
+        "type": "package",
+        "compile": {
+          "lib/netstandard2.1/AutoMapper.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/netstandard2.1/AutoMapper.dll": {
+            "related": ".xml"
+          }
+        }
+      },
+      "AutoMapper.Extensions.Microsoft.DependencyInjection/12.0.1": {
+        "type": "package",
+        "dependencies": {
+          "AutoMapper": "[12.0.1]",
+          "Microsoft.Extensions.Options": "6.0.0"
+        },
+        "compile": {
+          "lib/netstandard2.1/AutoMapper.Extensions.Microsoft.DependencyInjection.dll": {}
+        },
+        "runtime": {
+          "lib/netstandard2.1/AutoMapper.Extensions.Microsoft.DependencyInjection.dll": {}
+        }
+      },
       "Azure.Core/1.46.1": {
         "type": "package",
         "dependencies": {
@@ -130,6 +190,20 @@
           "lib/net9.0/Docker.DotNet.X509.dll": {}
         }
       },
+      "EFCore.NamingConventions/9.0.0": {
+        "type": "package",
+        "dependencies": {
+          "Microsoft.EntityFrameworkCore": "[9.0.0, 10.0.0)",
+          "Microsoft.EntityFrameworkCore.Relational": "[9.0.0, 10.0.0)",
+          "Microsoft.Extensions.DependencyInjection.Abstractions": "9.0.0"
+        },
+        "compile": {
+          "lib/net8.0/EFCore.NamingConventions.dll": {}
+        },
+        "runtime": {
+          "lib/net8.0/EFCore.NamingConventions.dll": {}
+        }
+      },
       "FluentAssertions/7.1.0": {
         "type": "package",
         "dependencies": {
@@ -146,6 +220,36 @@
           }
         }
       },
+      "FluentValidation/11.11.0": {
+        "type": "package",
+        "compile": {
+          "lib/net8.0/FluentValidation.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net8.0/FluentValidation.dll": {
+            "related": ".xml"
+          }
+        }
+      },
+      "FluentValidation.DependencyInjectionExtensions/11.11.0": {
+        "type": "package",
+        "dependencies": {
+          "FluentValidation": "11.11.0",
+          "Microsoft.Extensions.Dependencyinjection.Abstractions": "2.1.0"
+        },
+        "compile": {
+          "lib/netstandard2.1/FluentValidation.DependencyInjectionExtensions.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/netstandard2.1/FluentValidation.DependencyInjectionExtensions.dll": {
+            "related": ".xml"
+          }
+        }
+      },
       "Microsoft.Bcl.AsyncInterfaces/8.0.0": {
         "type": "package",
         "compile": {
@@ -157,6 +261,17 @@
           "lib/netstandard2.1/Microsoft.Bcl.AsyncInterfaces.dll": {
             "related": ".xml"
           }
+        }
+      },
+      "Microsoft.Build.Tasks.Git/8.0.0": {
+        "type": "package",
+        "build": {
+          "build/Microsoft.Build.Tasks.Git.props": {},
+          "build/Microsoft.Build.Tasks.Git.targets": {}
+        },
+        "buildMultiTargeting": {
+          "buildMultiTargeting/Microsoft.Build.Tasks.Git.props": {},
+          "buildMultiTargeting/Microsoft.Build.Tasks.Git.targets": {}
         }
       },
       "Microsoft.CodeCoverage/17.12.0": {
@@ -362,6 +477,116 @@
           "buildTransitive/net8.0/_._": {}
         }
       },
+      "Microsoft.Extensions.DependencyModel/8.0.2": {
+        "type": "package",
+        "compile": {
+          "lib/net8.0/Microsoft.Extensions.DependencyModel.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net8.0/Microsoft.Extensions.DependencyModel.dll": {
+            "related": ".xml"
+          }
+        },
+        "build": {
+          "buildTransitive/net6.0/_._": {}
+        }
+      },
+      "Microsoft.Extensions.Diagnostics.Abstractions/9.0.0": {
+        "type": "package",
+        "dependencies": {
+          "Microsoft.Extensions.DependencyInjection.Abstractions": "9.0.0",
+          "Microsoft.Extensions.Options": "9.0.0"
+        },
+        "compile": {
+          "lib/net9.0/Microsoft.Extensions.Diagnostics.Abstractions.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net9.0/Microsoft.Extensions.Diagnostics.Abstractions.dll": {
+            "related": ".xml"
+          }
+        },
+        "build": {
+          "buildTransitive/net8.0/_._": {}
+        }
+      },
+      "Microsoft.Extensions.Diagnostics.HealthChecks/9.0.0": {
+        "type": "package",
+        "dependencies": {
+          "Microsoft.Extensions.Diagnostics.HealthChecks.Abstractions": "9.0.0",
+          "Microsoft.Extensions.Hosting.Abstractions": "9.0.0",
+          "Microsoft.Extensions.Logging.Abstractions": "9.0.0",
+          "Microsoft.Extensions.Options": "9.0.0"
+        },
+        "compile": {
+          "lib/net9.0/Microsoft.Extensions.Diagnostics.HealthChecks.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net9.0/Microsoft.Extensions.Diagnostics.HealthChecks.dll": {
+            "related": ".xml"
+          }
+        }
+      },
+      "Microsoft.Extensions.Diagnostics.HealthChecks.Abstractions/9.0.0": {
+        "type": "package",
+        "compile": {
+          "lib/net9.0/Microsoft.Extensions.Diagnostics.HealthChecks.Abstractions.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net9.0/Microsoft.Extensions.Diagnostics.HealthChecks.Abstractions.dll": {
+            "related": ".xml"
+          }
+        }
+      },
+      "Microsoft.Extensions.FileProviders.Abstractions/9.0.0": {
+        "type": "package",
+        "dependencies": {
+          "Microsoft.Extensions.Primitives": "9.0.0"
+        },
+        "compile": {
+          "lib/net9.0/Microsoft.Extensions.FileProviders.Abstractions.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net9.0/Microsoft.Extensions.FileProviders.Abstractions.dll": {
+            "related": ".xml"
+          }
+        },
+        "build": {
+          "buildTransitive/net8.0/_._": {}
+        }
+      },
+      "Microsoft.Extensions.Hosting.Abstractions/9.0.0": {
+        "type": "package",
+        "dependencies": {
+          "Microsoft.Extensions.Configuration.Abstractions": "9.0.0",
+          "Microsoft.Extensions.DependencyInjection.Abstractions": "9.0.0",
+          "Microsoft.Extensions.Diagnostics.Abstractions": "9.0.0",
+          "Microsoft.Extensions.FileProviders.Abstractions": "9.0.0",
+          "Microsoft.Extensions.Logging.Abstractions": "9.0.0"
+        },
+        "compile": {
+          "lib/net9.0/Microsoft.Extensions.Hosting.Abstractions.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net9.0/Microsoft.Extensions.Hosting.Abstractions.dll": {
+            "related": ".xml"
+          }
+        },
+        "build": {
+          "buildTransitive/net8.0/_._": {}
+        }
+      },
       "Microsoft.Extensions.Logging/9.0.1": {
         "type": "package",
         "dependencies": {
@@ -502,6 +727,32 @@
         },
         "buildMultiTargeting": {
           "buildMultiTargeting/Microsoft.NET.Test.Sdk.props": {}
+        }
+      },
+      "Microsoft.SourceLink.Common/8.0.0": {
+        "type": "package",
+        "build": {
+          "build/Microsoft.SourceLink.Common.props": {},
+          "build/Microsoft.SourceLink.Common.targets": {}
+        },
+        "buildMultiTargeting": {
+          "buildMultiTargeting/Microsoft.SourceLink.Common.props": {},
+          "buildMultiTargeting/Microsoft.SourceLink.Common.targets": {}
+        }
+      },
+      "Microsoft.SourceLink.GitHub/8.0.0": {
+        "type": "package",
+        "dependencies": {
+          "Microsoft.Build.Tasks.Git": "8.0.0",
+          "Microsoft.SourceLink.Common": "8.0.0"
+        },
+        "build": {
+          "build/Microsoft.SourceLink.GitHub.props": {},
+          "build/Microsoft.SourceLink.GitHub.targets": {}
+        },
+        "buildMultiTargeting": {
+          "buildMultiTargeting/Microsoft.SourceLink.GitHub.props": {},
+          "buildMultiTargeting/Microsoft.SourceLink.GitHub.targets": {}
         }
       },
       "Microsoft.TestPlatform.ObjectModel/17.12.0": {
@@ -845,6 +1096,23 @@
         "runtime": {
           "lib/net5.0/Pipelines.Sockets.Unofficial.dll": {
             "related": ".xml"
+          }
+        }
+      },
+      "Scrutor/5.0.2": {
+        "type": "package",
+        "dependencies": {
+          "Microsoft.Extensions.DependencyInjection.Abstractions": "8.0.1",
+          "Microsoft.Extensions.DependencyModel": "8.0.2"
+        },
+        "compile": {
+          "lib/net8.0/Scrutor.dll": {
+            "related": ".pdb;.xml"
+          }
+        },
+        "runtime": {
+          "lib/net8.0/Scrutor.dll": {
+            "related": ".pdb;.xml"
           }
         }
       },
@@ -1210,12 +1478,17 @@
           "build/net6.0/xunit.runner.visualstudio.props": {}
         }
       },
-      "NumbatWallet.Application/1.0.0": {
+      "NumbatWallet.Application/1.0.0-preview": {
         "type": "project",
         "framework": ".NETCoreApp,Version=v9.0",
         "dependencies": {
-          "NumbatWallet.Domain": "1.0.0",
-          "NumbatWallet.SharedKernel": "1.0.0"
+          "AutoMapper.Extensions.Microsoft.DependencyInjection": "12.0.1",
+          "FluentValidation.DependencyInjectionExtensions": "11.11.0",
+          "Microsoft.Extensions.DependencyInjection.Abstractions": "9.0.0",
+          "Microsoft.Extensions.Logging.Abstractions": "9.0.0",
+          "NumbatWallet.Domain": "1.0.0-preview",
+          "NumbatWallet.SharedKernel": "1.0.0-preview",
+          "Scrutor": "5.0.2"
         },
         "compile": {
           "bin/placeholder/NumbatWallet.Application.dll": {}
@@ -1224,11 +1497,11 @@
           "bin/placeholder/NumbatWallet.Application.dll": {}
         }
       },
-      "NumbatWallet.Domain/1.0.0": {
+      "NumbatWallet.Domain/1.0.0-preview": {
         "type": "project",
         "framework": ".NETCoreApp,Version=v9.0",
         "dependencies": {
-          "NumbatWallet.SharedKernel": "1.0.0"
+          "NumbatWallet.SharedKernel": "1.0.0-preview"
         },
         "compile": {
           "bin/placeholder/NumbatWallet.Domain.dll": {}
@@ -1237,18 +1510,22 @@
           "bin/placeholder/NumbatWallet.Domain.dll": {}
         }
       },
-      "NumbatWallet.Infrastructure/1.0.0": {
+      "NumbatWallet.Infrastructure/1.0.0-preview": {
         "type": "project",
         "framework": ".NETCoreApp,Version=v9.0",
         "dependencies": {
+          "AspNetCore.HealthChecks.NpgSql": "9.0.0",
+          "AspNetCore.HealthChecks.Redis": "9.0.0",
           "Azure.Identity": "1.14.1",
           "Azure.Security.KeyVault.Secrets": "4.7.0",
           "Azure.Storage.Blobs": "12.24.0",
+          "EFCore.NamingConventions": "9.0.0",
           "Microsoft.Extensions.Caching.StackExchangeRedis": "9.0.0",
+          "Microsoft.Extensions.Diagnostics.HealthChecks": "9.0.0",
           "Npgsql.EntityFrameworkCore.PostgreSQL": "9.0.2",
-          "NumbatWallet.Application": "1.0.0",
-          "NumbatWallet.Domain": "1.0.0",
-          "NumbatWallet.SharedKernel": "1.0.0"
+          "NumbatWallet.Application": "1.0.0-preview",
+          "NumbatWallet.Domain": "1.0.0-preview",
+          "NumbatWallet.SharedKernel": "1.0.0-preview"
         },
         "compile": {
           "bin/placeholder/NumbatWallet.Infrastructure.dll": {}
@@ -1257,7 +1534,7 @@
           "bin/placeholder/NumbatWallet.Infrastructure.dll": {}
         }
       },
-      "NumbatWallet.SharedKernel/1.0.0": {
+      "NumbatWallet.SharedKernel/1.0.0-preview": {
         "type": "project",
         "framework": ".NETCoreApp,Version=v9.0",
         "compile": {
@@ -1270,6 +1547,68 @@
     }
   },
   "libraries": {
+    "AspNetCore.HealthChecks.NpgSql/9.0.0": {
+      "sha512": "npc58/AD5zuVxERdhCl2Kb7WnL37mwX42SJcXIwvmEig0/dugOLg3SIwtfvvh3TnvTwR/sk5LYNkkPaBdks61A==",
+      "type": "package",
+      "path": "aspnetcore.healthchecks.npgsql/9.0.0",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "README.md",
+        "aspnetcore.healthchecks.npgsql.9.0.0.nupkg.sha512",
+        "aspnetcore.healthchecks.npgsql.nuspec",
+        "icon.png",
+        "lib/net8.0/HealthChecks.NpgSql.dll",
+        "lib/net8.0/HealthChecks.NpgSql.xml",
+        "lib/netstandard2.0/HealthChecks.NpgSql.dll",
+        "lib/netstandard2.0/HealthChecks.NpgSql.xml"
+      ]
+    },
+    "AspNetCore.HealthChecks.Redis/9.0.0": {
+      "sha512": "yNH0h8GLRbAf+PU5HNVLZ5hNeyq9mDVmRKO9xuZsme/znUYoBJlQvI0gq45gaZNlLncCHkMhR4o90MuT+gxxPw==",
+      "type": "package",
+      "path": "aspnetcore.healthchecks.redis/9.0.0",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "aspnetcore.healthchecks.redis.9.0.0.nupkg.sha512",
+        "aspnetcore.healthchecks.redis.nuspec",
+        "icon.png",
+        "lib/net8.0/HealthChecks.Redis.dll",
+        "lib/net8.0/HealthChecks.Redis.xml",
+        "lib/netstandard2.0/HealthChecks.Redis.dll",
+        "lib/netstandard2.0/HealthChecks.Redis.xml"
+      ]
+    },
+    "AutoMapper/12.0.1": {
+      "sha512": "hvV62vl6Hp/WfQ24yzo3Co9+OPl8wH8hApwVtgWpiAynVJkUcs7xvehnSftawL8Pe8FrPffBRM3hwzLQqWDNjA==",
+      "type": "package",
+      "path": "automapper/12.0.1",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "README.md",
+        "automapper.12.0.1.nupkg.sha512",
+        "automapper.nuspec",
+        "icon.png",
+        "lib/netstandard2.1/AutoMapper.dll",
+        "lib/netstandard2.1/AutoMapper.xml"
+      ]
+    },
+    "AutoMapper.Extensions.Microsoft.DependencyInjection/12.0.1": {
+      "sha512": "+g/K+Vpe3gGMKGzjslMOdqNlkikScDjWfVvmWTayrDHaG/n2pPmFBMa+jKX1r/h6BDGFdkyRjAuhFE3ykW+r1g==",
+      "type": "package",
+      "path": "automapper.extensions.microsoft.dependencyinjection/12.0.1",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "README.md",
+        "automapper.extensions.microsoft.dependencyinjection.12.0.1.nupkg.sha512",
+        "automapper.extensions.microsoft.dependencyinjection.nuspec",
+        "icon.png",
+        "lib/netstandard2.1/AutoMapper.Extensions.Microsoft.DependencyInjection.dll"
+      ]
+    },
     "Azure.Core/1.46.1": {
       "sha512": "iE5DPOlGsN5kCkF4gN+vasN1RihO0Ypie92oQ5tohQYiokmnrrhLnee+3zcE8n7vB6ZAzhPTfUGAEXX/qHGkYA==",
       "type": "package",
@@ -1498,6 +1837,18 @@
         "lib/netstandard2.1/Docker.DotNet.X509.dll"
       ]
     },
+    "EFCore.NamingConventions/9.0.0": {
+      "sha512": "heKIYzPdEWx+Ba4xuG6jfEssW9rEi7I0lX38eoN7wo7qgg9uw7nn8UEmDQfwGEYPzSDpetCVANnDr5tqt2Asjg==",
+      "type": "package",
+      "path": "efcore.namingconventions/9.0.0",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "efcore.namingconventions.9.0.0.nupkg.sha512",
+        "efcore.namingconventions.nuspec",
+        "lib/net8.0/EFCore.NamingConventions.dll"
+      ]
+    },
     "FluentAssertions/7.1.0": {
       "sha512": "98Dt8m2ZYAjxAzoVGnv+yYh441lhM/SLIxWXp9aZU1rF0mRtA8W49GzTPhwQcclqAiRnjeM0VydVkM1OwKF4NQ==",
       "type": "package",
@@ -1522,6 +1873,48 @@
         "lib/netstandard2.1/FluentAssertions.xml"
       ]
     },
+    "FluentValidation/11.11.0": {
+      "sha512": "cyIVdQBwSipxWG8MA3Rqox7iNbUNUTK5bfJi9tIdm4CAfH71Oo5ABLP4/QyrUwuakqpUEPGtE43BDddvEehuYw==",
+      "type": "package",
+      "path": "fluentvalidation/11.11.0",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "README.md",
+        "fluent-validation-icon.png",
+        "fluentvalidation.11.11.0.nupkg.sha512",
+        "fluentvalidation.nuspec",
+        "lib/net5.0/FluentValidation.dll",
+        "lib/net5.0/FluentValidation.xml",
+        "lib/net6.0/FluentValidation.dll",
+        "lib/net6.0/FluentValidation.xml",
+        "lib/net7.0/FluentValidation.dll",
+        "lib/net7.0/FluentValidation.xml",
+        "lib/net8.0/FluentValidation.dll",
+        "lib/net8.0/FluentValidation.xml",
+        "lib/netstandard2.0/FluentValidation.dll",
+        "lib/netstandard2.0/FluentValidation.xml",
+        "lib/netstandard2.1/FluentValidation.dll",
+        "lib/netstandard2.1/FluentValidation.xml"
+      ]
+    },
+    "FluentValidation.DependencyInjectionExtensions/11.11.0": {
+      "sha512": "viTKWaMbL3yJYgGI0DiCeavNbE9UPMWFVK2XS9nYXGbm3NDMd0/L5ER4wBzmTtW3BYh3SrlSXm9RACiKZ6stlA==",
+      "type": "package",
+      "path": "fluentvalidation.dependencyinjectionextensions/11.11.0",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "README.md",
+        "fluent-validation-icon.png",
+        "fluentvalidation.dependencyinjectionextensions.11.11.0.nupkg.sha512",
+        "fluentvalidation.dependencyinjectionextensions.nuspec",
+        "lib/netstandard2.0/FluentValidation.DependencyInjectionExtensions.dll",
+        "lib/netstandard2.0/FluentValidation.DependencyInjectionExtensions.xml",
+        "lib/netstandard2.1/FluentValidation.DependencyInjectionExtensions.dll",
+        "lib/netstandard2.1/FluentValidation.DependencyInjectionExtensions.xml"
+      ]
+    },
     "Microsoft.Bcl.AsyncInterfaces/8.0.0": {
       "sha512": "3WA9q9yVqJp222P3x1wYIGDAkpjAku0TMUaaQV22g6L67AI0LdOIrVS7Ht2vJfLHGSPVuqN94vIr15qn+HEkHw==",
       "type": "package",
@@ -1544,6 +1937,52 @@
         "microsoft.bcl.asyncinterfaces.8.0.0.nupkg.sha512",
         "microsoft.bcl.asyncinterfaces.nuspec",
         "useSharedDesignerContext.txt"
+      ]
+    },
+    "Microsoft.Build.Tasks.Git/8.0.0": {
+      "sha512": "bZKfSIKJRXLTuSzLudMFte/8CempWjVamNUR5eHJizsy+iuOuO/k2gnh7W0dHJmYY0tBf+gUErfluCv5mySAOQ==",
+      "type": "package",
+      "path": "microsoft.build.tasks.git/8.0.0",
+      "hasTools": true,
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "Icon.png",
+        "build/Microsoft.Build.Tasks.Git.props",
+        "build/Microsoft.Build.Tasks.Git.targets",
+        "buildMultiTargeting/Microsoft.Build.Tasks.Git.props",
+        "buildMultiTargeting/Microsoft.Build.Tasks.Git.targets",
+        "microsoft.build.tasks.git.8.0.0.nupkg.sha512",
+        "microsoft.build.tasks.git.nuspec",
+        "tools/core/Microsoft.Build.Tasks.Git.dll",
+        "tools/core/cs/Microsoft.Build.Tasks.Git.resources.dll",
+        "tools/core/de/Microsoft.Build.Tasks.Git.resources.dll",
+        "tools/core/es/Microsoft.Build.Tasks.Git.resources.dll",
+        "tools/core/fr/Microsoft.Build.Tasks.Git.resources.dll",
+        "tools/core/it/Microsoft.Build.Tasks.Git.resources.dll",
+        "tools/core/ja/Microsoft.Build.Tasks.Git.resources.dll",
+        "tools/core/ko/Microsoft.Build.Tasks.Git.resources.dll",
+        "tools/core/pl/Microsoft.Build.Tasks.Git.resources.dll",
+        "tools/core/pt-BR/Microsoft.Build.Tasks.Git.resources.dll",
+        "tools/core/ru/Microsoft.Build.Tasks.Git.resources.dll",
+        "tools/core/tr/Microsoft.Build.Tasks.Git.resources.dll",
+        "tools/core/zh-Hans/Microsoft.Build.Tasks.Git.resources.dll",
+        "tools/core/zh-Hant/Microsoft.Build.Tasks.Git.resources.dll",
+        "tools/net472/Microsoft.Build.Tasks.Git.dll",
+        "tools/net472/System.Collections.Immutable.dll",
+        "tools/net472/cs/Microsoft.Build.Tasks.Git.resources.dll",
+        "tools/net472/de/Microsoft.Build.Tasks.Git.resources.dll",
+        "tools/net472/es/Microsoft.Build.Tasks.Git.resources.dll",
+        "tools/net472/fr/Microsoft.Build.Tasks.Git.resources.dll",
+        "tools/net472/it/Microsoft.Build.Tasks.Git.resources.dll",
+        "tools/net472/ja/Microsoft.Build.Tasks.Git.resources.dll",
+        "tools/net472/ko/Microsoft.Build.Tasks.Git.resources.dll",
+        "tools/net472/pl/Microsoft.Build.Tasks.Git.resources.dll",
+        "tools/net472/pt-BR/Microsoft.Build.Tasks.Git.resources.dll",
+        "tools/net472/ru/Microsoft.Build.Tasks.Git.resources.dll",
+        "tools/net472/tr/Microsoft.Build.Tasks.Git.resources.dll",
+        "tools/net472/zh-Hans/Microsoft.Build.Tasks.Git.resources.dll",
+        "tools/net472/zh-Hant/Microsoft.Build.Tasks.Git.resources.dll"
       ]
     },
     "Microsoft.CodeCoverage/17.12.0": {
@@ -1852,6 +2291,159 @@
         "useSharedDesignerContext.txt"
       ]
     },
+    "Microsoft.Extensions.DependencyModel/8.0.2": {
+      "sha512": "mUBDZZRgZrSyFOsJ2qJJ9fXfqd/kXJwf3AiDoqLD9m6TjY5OO/vLNOb9fb4juC0487eq4hcGN/M2Rh/CKS7QYw==",
+      "type": "package",
+      "path": "microsoft.extensions.dependencymodel/8.0.2",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "Icon.png",
+        "LICENSE.TXT",
+        "PACKAGE.md",
+        "THIRD-PARTY-NOTICES.TXT",
+        "buildTransitive/net461/Microsoft.Extensions.DependencyModel.targets",
+        "buildTransitive/net462/_._",
+        "buildTransitive/net6.0/_._",
+        "buildTransitive/netcoreapp2.0/Microsoft.Extensions.DependencyModel.targets",
+        "lib/net462/Microsoft.Extensions.DependencyModel.dll",
+        "lib/net462/Microsoft.Extensions.DependencyModel.xml",
+        "lib/net6.0/Microsoft.Extensions.DependencyModel.dll",
+        "lib/net6.0/Microsoft.Extensions.DependencyModel.xml",
+        "lib/net7.0/Microsoft.Extensions.DependencyModel.dll",
+        "lib/net7.0/Microsoft.Extensions.DependencyModel.xml",
+        "lib/net8.0/Microsoft.Extensions.DependencyModel.dll",
+        "lib/net8.0/Microsoft.Extensions.DependencyModel.xml",
+        "lib/netstandard2.0/Microsoft.Extensions.DependencyModel.dll",
+        "lib/netstandard2.0/Microsoft.Extensions.DependencyModel.xml",
+        "microsoft.extensions.dependencymodel.8.0.2.nupkg.sha512",
+        "microsoft.extensions.dependencymodel.nuspec",
+        "useSharedDesignerContext.txt"
+      ]
+    },
+    "Microsoft.Extensions.Diagnostics.Abstractions/9.0.0": {
+      "sha512": "1K8P7XzuzX8W8pmXcZjcrqS6x5eSSdvhQohmcpgiQNY/HlDAlnrhR9dvlURfFz428A+RTCJpUyB+aKTA6AgVcQ==",
+      "type": "package",
+      "path": "microsoft.extensions.diagnostics.abstractions/9.0.0",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "Icon.png",
+        "LICENSE.TXT",
+        "THIRD-PARTY-NOTICES.TXT",
+        "buildTransitive/net461/Microsoft.Extensions.Diagnostics.Abstractions.targets",
+        "buildTransitive/net462/_._",
+        "buildTransitive/net8.0/_._",
+        "buildTransitive/netcoreapp2.0/Microsoft.Extensions.Diagnostics.Abstractions.targets",
+        "lib/net462/Microsoft.Extensions.Diagnostics.Abstractions.dll",
+        "lib/net462/Microsoft.Extensions.Diagnostics.Abstractions.xml",
+        "lib/net8.0/Microsoft.Extensions.Diagnostics.Abstractions.dll",
+        "lib/net8.0/Microsoft.Extensions.Diagnostics.Abstractions.xml",
+        "lib/net9.0/Microsoft.Extensions.Diagnostics.Abstractions.dll",
+        "lib/net9.0/Microsoft.Extensions.Diagnostics.Abstractions.xml",
+        "lib/netstandard2.0/Microsoft.Extensions.Diagnostics.Abstractions.dll",
+        "lib/netstandard2.0/Microsoft.Extensions.Diagnostics.Abstractions.xml",
+        "microsoft.extensions.diagnostics.abstractions.9.0.0.nupkg.sha512",
+        "microsoft.extensions.diagnostics.abstractions.nuspec",
+        "useSharedDesignerContext.txt"
+      ]
+    },
+    "Microsoft.Extensions.Diagnostics.HealthChecks/9.0.0": {
+      "sha512": "cxsK9/Dx7Ka9sfiA1nY8XlSzIaWff5FNRw0+ls8yR+aGzmnah5JGKsTHgQrehjMwGAVud/pjiUZ9MWizfUSkTQ==",
+      "type": "package",
+      "path": "microsoft.extensions.diagnostics.healthchecks/9.0.0",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "Icon.png",
+        "THIRD-PARTY-NOTICES.TXT",
+        "lib/net462/Microsoft.Extensions.Diagnostics.HealthChecks.dll",
+        "lib/net462/Microsoft.Extensions.Diagnostics.HealthChecks.xml",
+        "lib/net9.0/Microsoft.Extensions.Diagnostics.HealthChecks.dll",
+        "lib/net9.0/Microsoft.Extensions.Diagnostics.HealthChecks.xml",
+        "lib/netstandard2.0/Microsoft.Extensions.Diagnostics.HealthChecks.dll",
+        "lib/netstandard2.0/Microsoft.Extensions.Diagnostics.HealthChecks.xml",
+        "microsoft.extensions.diagnostics.healthchecks.9.0.0.nupkg.sha512",
+        "microsoft.extensions.diagnostics.healthchecks.nuspec"
+      ]
+    },
+    "Microsoft.Extensions.Diagnostics.HealthChecks.Abstractions/9.0.0": {
+      "sha512": "H1IbHm/MnUgEV0N07WrkPBIIoX7isP6IPaqUdZ3CwbMcUVDGIu+okamW28kyDRfIiZqbTbyHuNIkr4ZSHPyvDw==",
+      "type": "package",
+      "path": "microsoft.extensions.diagnostics.healthchecks.abstractions/9.0.0",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "Icon.png",
+        "THIRD-PARTY-NOTICES.TXT",
+        "lib/net462/Microsoft.Extensions.Diagnostics.HealthChecks.Abstractions.dll",
+        "lib/net462/Microsoft.Extensions.Diagnostics.HealthChecks.Abstractions.xml",
+        "lib/net9.0/Microsoft.Extensions.Diagnostics.HealthChecks.Abstractions.dll",
+        "lib/net9.0/Microsoft.Extensions.Diagnostics.HealthChecks.Abstractions.xml",
+        "lib/netstandard2.0/Microsoft.Extensions.Diagnostics.HealthChecks.Abstractions.dll",
+        "lib/netstandard2.0/Microsoft.Extensions.Diagnostics.HealthChecks.Abstractions.xml",
+        "microsoft.extensions.diagnostics.healthchecks.abstractions.9.0.0.nupkg.sha512",
+        "microsoft.extensions.diagnostics.healthchecks.abstractions.nuspec"
+      ]
+    },
+    "Microsoft.Extensions.FileProviders.Abstractions/9.0.0": {
+      "sha512": "uK439QzYR0q2emLVtYzwyK3x+T5bTY4yWsd/k/ZUS9LR6Sflp8MIdhGXW8kQCd86dQD4tLqvcbLkku8qHY263Q==",
+      "type": "package",
+      "path": "microsoft.extensions.fileproviders.abstractions/9.0.0",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "Icon.png",
+        "LICENSE.TXT",
+        "PACKAGE.md",
+        "THIRD-PARTY-NOTICES.TXT",
+        "buildTransitive/net461/Microsoft.Extensions.FileProviders.Abstractions.targets",
+        "buildTransitive/net462/_._",
+        "buildTransitive/net8.0/_._",
+        "buildTransitive/netcoreapp2.0/Microsoft.Extensions.FileProviders.Abstractions.targets",
+        "lib/net462/Microsoft.Extensions.FileProviders.Abstractions.dll",
+        "lib/net462/Microsoft.Extensions.FileProviders.Abstractions.xml",
+        "lib/net8.0/Microsoft.Extensions.FileProviders.Abstractions.dll",
+        "lib/net8.0/Microsoft.Extensions.FileProviders.Abstractions.xml",
+        "lib/net9.0/Microsoft.Extensions.FileProviders.Abstractions.dll",
+        "lib/net9.0/Microsoft.Extensions.FileProviders.Abstractions.xml",
+        "lib/netstandard2.0/Microsoft.Extensions.FileProviders.Abstractions.dll",
+        "lib/netstandard2.0/Microsoft.Extensions.FileProviders.Abstractions.xml",
+        "microsoft.extensions.fileproviders.abstractions.9.0.0.nupkg.sha512",
+        "microsoft.extensions.fileproviders.abstractions.nuspec",
+        "useSharedDesignerContext.txt"
+      ]
+    },
+    "Microsoft.Extensions.Hosting.Abstractions/9.0.0": {
+      "sha512": "yUKJgu81ExjvqbNWqZKshBbLntZMbMVz/P7Way2SBx7bMqA08Mfdc9O7hWDKAiSp+zPUGT6LKcSCQIPeDK+CCw==",
+      "type": "package",
+      "path": "microsoft.extensions.hosting.abstractions/9.0.0",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "Icon.png",
+        "LICENSE.TXT",
+        "PACKAGE.md",
+        "THIRD-PARTY-NOTICES.TXT",
+        "buildTransitive/net461/Microsoft.Extensions.Hosting.Abstractions.targets",
+        "buildTransitive/net462/_._",
+        "buildTransitive/net8.0/_._",
+        "buildTransitive/netcoreapp2.0/Microsoft.Extensions.Hosting.Abstractions.targets",
+        "lib/net462/Microsoft.Extensions.Hosting.Abstractions.dll",
+        "lib/net462/Microsoft.Extensions.Hosting.Abstractions.xml",
+        "lib/net8.0/Microsoft.Extensions.Hosting.Abstractions.dll",
+        "lib/net8.0/Microsoft.Extensions.Hosting.Abstractions.xml",
+        "lib/net9.0/Microsoft.Extensions.Hosting.Abstractions.dll",
+        "lib/net9.0/Microsoft.Extensions.Hosting.Abstractions.xml",
+        "lib/netstandard2.0/Microsoft.Extensions.Hosting.Abstractions.dll",
+        "lib/netstandard2.0/Microsoft.Extensions.Hosting.Abstractions.xml",
+        "lib/netstandard2.1/Microsoft.Extensions.Hosting.Abstractions.dll",
+        "lib/netstandard2.1/Microsoft.Extensions.Hosting.Abstractions.xml",
+        "microsoft.extensions.hosting.abstractions.9.0.0.nupkg.sha512",
+        "microsoft.extensions.hosting.abstractions.nuspec",
+        "useSharedDesignerContext.txt"
+      ]
+    },
     "Microsoft.Extensions.Logging/9.0.1": {
       "sha512": "E/k5r7S44DOW+08xQPnNbO8DKAQHhkspDboTThNJ6Z3/QBb4LC6gStNWzVmy3IvW7sUD+iJKf4fj0xEkqE7vnQ==",
       "type": "package",
@@ -2110,6 +2702,97 @@
         "lib/netcoreapp3.1/_._",
         "microsoft.net.test.sdk.17.12.0.nupkg.sha512",
         "microsoft.net.test.sdk.nuspec"
+      ]
+    },
+    "Microsoft.SourceLink.Common/8.0.0": {
+      "sha512": "dk9JPxTCIevS75HyEQ0E4OVAFhB2N+V9ShCXf8Q6FkUQZDkgLI12y679Nym1YqsiSysuQskT7Z+6nUf3yab6Vw==",
+      "type": "package",
+      "path": "microsoft.sourcelink.common/8.0.0",
+      "hasTools": true,
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "Icon.png",
+        "build/InitializeSourceControlInformation.targets",
+        "build/Microsoft.SourceLink.Common.props",
+        "build/Microsoft.SourceLink.Common.targets",
+        "buildMultiTargeting/Microsoft.SourceLink.Common.props",
+        "buildMultiTargeting/Microsoft.SourceLink.Common.targets",
+        "microsoft.sourcelink.common.8.0.0.nupkg.sha512",
+        "microsoft.sourcelink.common.nuspec",
+        "tools/core/Microsoft.SourceLink.Common.dll",
+        "tools/core/cs/Microsoft.SourceLink.Common.resources.dll",
+        "tools/core/de/Microsoft.SourceLink.Common.resources.dll",
+        "tools/core/es/Microsoft.SourceLink.Common.resources.dll",
+        "tools/core/fr/Microsoft.SourceLink.Common.resources.dll",
+        "tools/core/it/Microsoft.SourceLink.Common.resources.dll",
+        "tools/core/ja/Microsoft.SourceLink.Common.resources.dll",
+        "tools/core/ko/Microsoft.SourceLink.Common.resources.dll",
+        "tools/core/pl/Microsoft.SourceLink.Common.resources.dll",
+        "tools/core/pt-BR/Microsoft.SourceLink.Common.resources.dll",
+        "tools/core/ru/Microsoft.SourceLink.Common.resources.dll",
+        "tools/core/tr/Microsoft.SourceLink.Common.resources.dll",
+        "tools/core/zh-Hans/Microsoft.SourceLink.Common.resources.dll",
+        "tools/core/zh-Hant/Microsoft.SourceLink.Common.resources.dll",
+        "tools/net472/Microsoft.SourceLink.Common.dll",
+        "tools/net472/cs/Microsoft.SourceLink.Common.resources.dll",
+        "tools/net472/de/Microsoft.SourceLink.Common.resources.dll",
+        "tools/net472/es/Microsoft.SourceLink.Common.resources.dll",
+        "tools/net472/fr/Microsoft.SourceLink.Common.resources.dll",
+        "tools/net472/it/Microsoft.SourceLink.Common.resources.dll",
+        "tools/net472/ja/Microsoft.SourceLink.Common.resources.dll",
+        "tools/net472/ko/Microsoft.SourceLink.Common.resources.dll",
+        "tools/net472/pl/Microsoft.SourceLink.Common.resources.dll",
+        "tools/net472/pt-BR/Microsoft.SourceLink.Common.resources.dll",
+        "tools/net472/ru/Microsoft.SourceLink.Common.resources.dll",
+        "tools/net472/tr/Microsoft.SourceLink.Common.resources.dll",
+        "tools/net472/zh-Hans/Microsoft.SourceLink.Common.resources.dll",
+        "tools/net472/zh-Hant/Microsoft.SourceLink.Common.resources.dll"
+      ]
+    },
+    "Microsoft.SourceLink.GitHub/8.0.0": {
+      "sha512": "G5q7OqtwIyGTkeIOAc3u2ZuV/kicQaec5EaRnc0pIeSnh9LUjj+PYQrJYBURvDt7twGl2PKA7nSN0kz1Zw5bnQ==",
+      "type": "package",
+      "path": "microsoft.sourcelink.github/8.0.0",
+      "hasTools": true,
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "Icon.png",
+        "build/Microsoft.SourceLink.GitHub.props",
+        "build/Microsoft.SourceLink.GitHub.targets",
+        "buildMultiTargeting/Microsoft.SourceLink.GitHub.props",
+        "buildMultiTargeting/Microsoft.SourceLink.GitHub.targets",
+        "microsoft.sourcelink.github.8.0.0.nupkg.sha512",
+        "microsoft.sourcelink.github.nuspec",
+        "tools/core/Microsoft.SourceLink.GitHub.dll",
+        "tools/core/cs/Microsoft.SourceLink.GitHub.resources.dll",
+        "tools/core/de/Microsoft.SourceLink.GitHub.resources.dll",
+        "tools/core/es/Microsoft.SourceLink.GitHub.resources.dll",
+        "tools/core/fr/Microsoft.SourceLink.GitHub.resources.dll",
+        "tools/core/it/Microsoft.SourceLink.GitHub.resources.dll",
+        "tools/core/ja/Microsoft.SourceLink.GitHub.resources.dll",
+        "tools/core/ko/Microsoft.SourceLink.GitHub.resources.dll",
+        "tools/core/pl/Microsoft.SourceLink.GitHub.resources.dll",
+        "tools/core/pt-BR/Microsoft.SourceLink.GitHub.resources.dll",
+        "tools/core/ru/Microsoft.SourceLink.GitHub.resources.dll",
+        "tools/core/tr/Microsoft.SourceLink.GitHub.resources.dll",
+        "tools/core/zh-Hans/Microsoft.SourceLink.GitHub.resources.dll",
+        "tools/core/zh-Hant/Microsoft.SourceLink.GitHub.resources.dll",
+        "tools/net472/Microsoft.SourceLink.GitHub.dll",
+        "tools/net472/cs/Microsoft.SourceLink.GitHub.resources.dll",
+        "tools/net472/de/Microsoft.SourceLink.GitHub.resources.dll",
+        "tools/net472/es/Microsoft.SourceLink.GitHub.resources.dll",
+        "tools/net472/fr/Microsoft.SourceLink.GitHub.resources.dll",
+        "tools/net472/it/Microsoft.SourceLink.GitHub.resources.dll",
+        "tools/net472/ja/Microsoft.SourceLink.GitHub.resources.dll",
+        "tools/net472/ko/Microsoft.SourceLink.GitHub.resources.dll",
+        "tools/net472/pl/Microsoft.SourceLink.GitHub.resources.dll",
+        "tools/net472/pt-BR/Microsoft.SourceLink.GitHub.resources.dll",
+        "tools/net472/ru/Microsoft.SourceLink.GitHub.resources.dll",
+        "tools/net472/tr/Microsoft.SourceLink.GitHub.resources.dll",
+        "tools/net472/zh-Hans/Microsoft.SourceLink.GitHub.resources.dll",
+        "tools/net472/zh-Hant/Microsoft.SourceLink.GitHub.resources.dll"
       ]
     },
     "Microsoft.TestPlatform.ObjectModel/17.12.0": {
@@ -2410,6 +3093,27 @@
         "lib/netstandard2.1/Pipelines.Sockets.Unofficial.xml",
         "pipelines.sockets.unofficial.2.2.8.nupkg.sha512",
         "pipelines.sockets.unofficial.nuspec"
+      ]
+    },
+    "Scrutor/5.0.2": {
+      "sha512": "GkmAfKlp9//FJmssFoF8u5+LEiKsrvKKitYuWgKKq0AILK4l2hASqv09WyKyiNJ3BKRlh/ZwoEV+8yi77AkAgg==",
+      "type": "package",
+      "path": "scrutor/5.0.2",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "README.md",
+        "lib/net462/Scrutor.dll",
+        "lib/net462/Scrutor.pdb",
+        "lib/net462/Scrutor.xml",
+        "lib/net8.0/Scrutor.dll",
+        "lib/net8.0/Scrutor.pdb",
+        "lib/net8.0/Scrutor.xml",
+        "lib/netstandard2.0/Scrutor.dll",
+        "lib/netstandard2.0/Scrutor.pdb",
+        "lib/netstandard2.0/Scrutor.xml",
+        "scrutor.5.0.2.nupkg.sha512",
+        "scrutor.nuspec"
       ]
     },
     "SharpZipLib/1.4.2": {
@@ -2918,22 +3622,22 @@
         "xunit.runner.visualstudio.nuspec"
       ]
     },
-    "NumbatWallet.Application/1.0.0": {
+    "NumbatWallet.Application/1.0.0-preview": {
       "type": "project",
       "path": "../../NumbatWallet.Application/NumbatWallet.Application.csproj",
       "msbuildProject": "../../NumbatWallet.Application/NumbatWallet.Application.csproj"
     },
-    "NumbatWallet.Domain/1.0.0": {
+    "NumbatWallet.Domain/1.0.0-preview": {
       "type": "project",
       "path": "../../NumbatWallet.Domain/NumbatWallet.Domain.csproj",
       "msbuildProject": "../../NumbatWallet.Domain/NumbatWallet.Domain.csproj"
     },
-    "NumbatWallet.Infrastructure/1.0.0": {
+    "NumbatWallet.Infrastructure/1.0.0-preview": {
       "type": "project",
       "path": "../../NumbatWallet.Infrastructure/NumbatWallet.Infrastructure.csproj",
       "msbuildProject": "../../NumbatWallet.Infrastructure/NumbatWallet.Infrastructure.csproj"
     },
-    "NumbatWallet.SharedKernel/1.0.0": {
+    "NumbatWallet.SharedKernel/1.0.0-preview": {
       "type": "project",
       "path": "../../NumbatWallet.SharedKernel/NumbatWallet.SharedKernel.csproj",
       "msbuildProject": "../../NumbatWallet.SharedKernel/NumbatWallet.SharedKernel.csproj"
@@ -2945,10 +3649,11 @@
       "Microsoft.EntityFrameworkCore.InMemory >= 9.0.1",
       "Microsoft.EntityFrameworkCore.Relational >= 9.0.1",
       "Microsoft.NET.Test.Sdk >= 17.12.0",
+      "Microsoft.SourceLink.GitHub >= 8.0.0",
       "Moq >= 4.20.70",
-      "NumbatWallet.Domain >= 1.0.0",
-      "NumbatWallet.Infrastructure >= 1.0.0",
-      "NumbatWallet.SharedKernel >= 1.0.0",
+      "NumbatWallet.Domain >= 1.0.0-preview",
+      "NumbatWallet.Infrastructure >= 1.0.0-preview",
+      "NumbatWallet.SharedKernel >= 1.0.0-preview",
       "Testcontainers.PostgreSql >= 4.2.0",
       "coverlet.collector >= 6.0.2",
       "xunit >= 2.9.2",
@@ -2959,7 +3664,7 @@
     "/Users/rodrigolmiranda/.nuget/packages/": {}
   },
   "project": {
-    "version": "1.0.0",
+    "version": "1.0.0-preview",
     "restore": {
       "projectUniqueName": "/Users/rodrigolmiranda/repo/NumbatWallet/src/Tests/NumbatWallet.Infrastructure.Tests/NumbatWallet.Infrastructure.Tests.csproj",
       "projectName": "NumbatWallet.Infrastructure.Tests",
@@ -2967,6 +3672,7 @@
       "packagesPath": "/Users/rodrigolmiranda/.nuget/packages/",
       "outputPath": "/Users/rodrigolmiranda/repo/NumbatWallet/src/Tests/NumbatWallet.Infrastructure.Tests/obj/",
       "projectStyle": "PackageReference",
+      "centralPackageVersionsManagementEnabled": true,
       "configFilePaths": [
         "/Users/rodrigolmiranda/.nuget/NuGet/NuGet.Config"
       ],
@@ -3011,40 +3717,123 @@
         "dependencies": {
           "FluentAssertions": {
             "target": "Package",
-            "version": "[7.1.0, )"
+            "version": "[7.1.0, )",
+            "versionCentrallyManaged": true
           },
           "Microsoft.EntityFrameworkCore.InMemory": {
             "target": "Package",
-            "version": "[9.0.1, )"
+            "version": "[9.0.1, )",
+            "versionCentrallyManaged": true
           },
           "Microsoft.EntityFrameworkCore.Relational": {
             "target": "Package",
-            "version": "[9.0.1, )"
+            "version": "[9.0.1, )",
+            "versionCentrallyManaged": true
           },
           "Microsoft.NET.Test.Sdk": {
             "target": "Package",
-            "version": "[17.12.0, )"
+            "version": "[17.12.0, )",
+            "versionCentrallyManaged": true
+          },
+          "Microsoft.SourceLink.GitHub": {
+            "suppressParent": "All",
+            "target": "Package",
+            "version": "[8.0.0, )",
+            "versionCentrallyManaged": true
           },
           "Moq": {
             "target": "Package",
-            "version": "[4.20.70, )"
+            "version": "[4.20.70, )",
+            "versionCentrallyManaged": true
           },
           "Testcontainers.PostgreSql": {
             "target": "Package",
-            "version": "[4.2.0, )"
+            "version": "[4.2.0, )",
+            "versionCentrallyManaged": true
           },
           "coverlet.collector": {
             "target": "Package",
-            "version": "[6.0.2, )"
+            "version": "[6.0.2, )",
+            "versionCentrallyManaged": true
           },
           "xunit": {
             "target": "Package",
-            "version": "[2.9.2, )"
+            "version": "[2.9.2, )",
+            "versionCentrallyManaged": true
           },
           "xunit.runner.visualstudio": {
             "target": "Package",
-            "version": "[2.8.2, )"
+            "version": "[2.8.2, )",
+            "versionCentrallyManaged": true
           }
+        },
+        "centralPackageVersions": {
+          "Aspire.Hosting": "9.4.2",
+          "Aspire.Hosting.AppHost": "9.4.2",
+          "Aspire.Hosting.Azure": "9.4.2",
+          "Aspire.Hosting.PostgreSQL": "9.4.2",
+          "Aspire.Hosting.Redis": "9.4.2",
+          "AspNetCore.HealthChecks.NpgSql": "9.0.0",
+          "AspNetCore.HealthChecks.Redis": "9.0.0",
+          "AspNetCore.HealthChecks.UI": "9.0.1",
+          "AspNetCore.HealthChecks.UI.Client": "9.0.1",
+          "AspNetCore.HealthChecks.UI.InMemory.Storage": "9.0.1",
+          "AutoMapper": "13.0.1",
+          "AutoMapper.Extensions.Microsoft.DependencyInjection": "12.0.1",
+          "Azure.Identity": "1.14.1",
+          "Azure.Security.KeyVault.Secrets": "4.7.0",
+          "Azure.Storage.Blobs": "12.24.0",
+          "coverlet.collector": "6.0.2",
+          "EFCore.NamingConventions": "9.0.0",
+          "FluentAssertions": "7.1.0",
+          "FluentValidation": "11.11.0",
+          "FluentValidation.AspNetCore": "11.3.0",
+          "FluentValidation.DependencyInjectionExtensions": "11.11.0",
+          "HotChocolate.AspNetCore": "13.9.0",
+          "HotChocolate.AspNetCore.Authorization": "13.9.0",
+          "HotChocolate.Data": "13.9.0",
+          "HotChocolate.Data.EntityFramework": "13.9.0",
+          "Microsoft.ApplicationInsights.AspNetCore": "2.22.0",
+          "Microsoft.AspNetCore.Authentication.JwtBearer": "9.0.0",
+          "Microsoft.AspNetCore.Authentication.OpenIdConnect": "9.0.0",
+          "Microsoft.AspNetCore.Components.WebAssembly": "9.0.0",
+          "Microsoft.AspNetCore.Mvc.Versioning": "5.1.0",
+          "Microsoft.AspNetCore.Mvc.Versioning.ApiExplorer": "5.1.0",
+          "Microsoft.AspNetCore.OpenApi": "9.0.0",
+          "Microsoft.EntityFrameworkCore": "9.0.1",
+          "Microsoft.EntityFrameworkCore.Design": "9.0.1",
+          "Microsoft.EntityFrameworkCore.InMemory": "9.0.1",
+          "Microsoft.EntityFrameworkCore.Relational": "9.0.1",
+          "Microsoft.EntityFrameworkCore.Tools": "9.0.1",
+          "Microsoft.Extensions.Caching.StackExchangeRedis": "9.0.0",
+          "Microsoft.Extensions.DependencyInjection.Abstractions": "9.0.0",
+          "Microsoft.Extensions.Diagnostics.HealthChecks": "9.0.0",
+          "Microsoft.Extensions.Logging.Abstractions": "9.0.0",
+          "Microsoft.Identity.Web": "2.20.0",
+          "Microsoft.Identity.Web.UI": "2.20.0",
+          "Microsoft.NET.Test.Sdk": "17.12.0",
+          "Microsoft.SourceLink.GitHub": "8.0.0",
+          "Moq": "4.20.70",
+          "Npgsql.EntityFrameworkCore.PostgreSQL": "9.0.2",
+          "Polly": "8.5.2",
+          "Scrutor": "5.0.2",
+          "Serilog": "4.2.0",
+          "Serilog.AspNetCore": "8.0.5",
+          "Serilog.Enrichers.Environment": "3.0.1",
+          "Serilog.Extensions.Hosting": "8.0.0",
+          "Serilog.Settings.Configuration": "8.0.4",
+          "Serilog.Sinks.ApplicationInsights": "4.0.0",
+          "Serilog.Sinks.Console": "6.0.0",
+          "Serilog.Sinks.File": "6.0.0",
+          "Serilog.Sinks.Seq": "8.0.0",
+          "StackExchange.Redis": "2.8.0",
+          "Swashbuckle.AspNetCore": "7.2.0",
+          "Swashbuckle.AspNetCore.Annotations": "7.2.0",
+          "System.Text.Json": "9.0.0",
+          "Testcontainers": "4.2.0",
+          "Testcontainers.PostgreSql": "4.2.0",
+          "xunit": "2.9.2",
+          "xunit.runner.visualstudio": "2.8.2"
         },
         "imports": [
           "net461",

@@ -6,7 +6,7 @@
   "compilationOptions": {},
   "targets": {
     ".NETCoreApp,Version=v9.0": {
-      "NumbatWallet.SharedKernel/1.0.0": {
+      "NumbatWallet.SharedKernel/1.0.0-preview": {
         "runtime": {
           "NumbatWallet.SharedKernel.dll": {}
         }
@@ -14,7 +14,7 @@
     }
   },
   "libraries": {
-    "NumbatWallet.SharedKernel/1.0.0": {
+    "NumbatWallet.SharedKernel/1.0.0-preview": {
       "type": "project",
       "serviceable": false,
       "sha512": ""

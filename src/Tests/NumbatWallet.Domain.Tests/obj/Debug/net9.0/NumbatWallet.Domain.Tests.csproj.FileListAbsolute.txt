@@ -102,3 +102,7 @@
 /Users/rodrigolmiranda/repo/NumbatWallet/src/Tests/NumbatWallet.Domain.Tests/obj/Debug/net9.0/NumbatWallet.Domain.Tests.pdb
 /Users/rodrigolmiranda/repo/NumbatWallet/src/Tests/NumbatWallet.Domain.Tests/obj/Debug/net9.0/NumbatWallet.Domain.Tests.genruntimeconfig.cache
 /Users/rodrigolmiranda/repo/NumbatWallet/src/Tests/NumbatWallet.Domain.Tests/obj/Debug/net9.0/ref/NumbatWallet.Domain.Tests.dll
+/Users/rodrigolmiranda/repo/NumbatWallet/src/Tests/NumbatWallet.Domain.Tests/bin/Debug/net9.0/NumbatWallet.Domain.Tests.xml
+/Users/rodrigolmiranda/repo/NumbatWallet/src/Tests/NumbatWallet.Domain.Tests/bin/Debug/net9.0/NumbatWallet.Domain.xml
+/Users/rodrigolmiranda/repo/NumbatWallet/src/Tests/NumbatWallet.Domain.Tests/bin/Debug/net9.0/NumbatWallet.SharedKernel.xml
+/Users/rodrigolmiranda/repo/NumbatWallet/src/Tests/NumbatWallet.Domain.Tests/obj/Debug/net9.0/NumbatWallet.Domain.Tests.xml

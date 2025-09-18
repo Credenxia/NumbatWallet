@@ -1,12 +1,15 @@
 {
   "version": 2,
-  "dgSpecHash": "/lmIdPtq9BQ=",
+  "dgSpecHash": "VUtiSd2ncA8=",
   "success": true,
   "projectFilePath": "/Users/rodrigolmiranda/repo/NumbatWallet/src/Tests/NumbatWallet.SharedKernel.Tests/NumbatWallet.SharedKernel.Tests.csproj",
   "expectedPackageFiles": [
     "/Users/rodrigolmiranda/.nuget/packages/coverlet.collector/6.0.2/coverlet.collector.6.0.2.nupkg.sha512",
+    "/Users/rodrigolmiranda/.nuget/packages/microsoft.build.tasks.git/8.0.0/microsoft.build.tasks.git.8.0.0.nupkg.sha512",
     "/Users/rodrigolmiranda/.nuget/packages/microsoft.codecoverage/17.12.0/microsoft.codecoverage.17.12.0.nupkg.sha512",
     "/Users/rodrigolmiranda/.nuget/packages/microsoft.net.test.sdk/17.12.0/microsoft.net.test.sdk.17.12.0.nupkg.sha512",
+    "/Users/rodrigolmiranda/.nuget/packages/microsoft.sourcelink.common/8.0.0/microsoft.sourcelink.common.8.0.0.nupkg.sha512",
+    "/Users/rodrigolmiranda/.nuget/packages/microsoft.sourcelink.github/8.0.0/microsoft.sourcelink.github.8.0.0.nupkg.sha512",
     "/Users/rodrigolmiranda/.nuget/packages/microsoft.testplatform.objectmodel/17.12.0/microsoft.testplatform.objectmodel.17.12.0.nupkg.sha512",
     "/Users/rodrigolmiranda/.nuget/packages/microsoft.testplatform.testhost/17.12.0/microsoft.testplatform.testhost.17.12.0.nupkg.sha512",
     "/Users/rodrigolmiranda/.nuget/packages/newtonsoft.json/13.0.1/newtonsoft.json.13.0.1.nupkg.sha512",

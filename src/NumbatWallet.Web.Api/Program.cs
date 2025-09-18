@@ -6,7 +6,6 @@ using Serilog;
 // Configure Serilog
 Log.Logger = new LoggerConfiguration()
     .WriteTo.Console()
-    .WriteTo.ApplicationInsights(TelemetryConverter.Traces)
     .CreateBootstrapLogger();
 
 try
@@ -20,10 +19,8 @@ try
         .ReadFrom.Configuration(context.Configuration)
         .ReadFrom.Services(services)
         .Enrich.FromLogContext()
-        .Enrich.WithMachineName()
         .Enrich.WithEnvironmentName()
-        .WriteTo.Console()
-        .WriteTo.ApplicationInsights(services.GetRequiredService<TelemetryConfiguration>(), TelemetryConverter.Traces));
+        .WriteTo.Console());
 
     // Add services to the container using our extension methods
     builder.Services.AddApplication();

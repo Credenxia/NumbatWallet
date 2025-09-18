@@ -1,8 +1,12 @@
 {
   "version": 2,
-  "dgSpecHash": "JXE1rV3ToP4=",
+  "dgSpecHash": "ar+mrSoDFMs=",
   "success": true,
   "projectFilePath": "/Users/rodrigolmiranda/repo/NumbatWallet/src/NumbatWallet.SharedKernel/NumbatWallet.SharedKernel.csproj",
-  "expectedPackageFiles": [],
+  "expectedPackageFiles": [
+    "/Users/rodrigolmiranda/.nuget/packages/microsoft.build.tasks.git/8.0.0/microsoft.build.tasks.git.8.0.0.nupkg.sha512",
+    "/Users/rodrigolmiranda/.nuget/packages/microsoft.sourcelink.common/8.0.0/microsoft.sourcelink.common.8.0.0.nupkg.sha512",
+    "/Users/rodrigolmiranda/.nuget/packages/microsoft.sourcelink.github/8.0.0/microsoft.sourcelink.github.8.0.0.nupkg.sha512"
+  ],
   "logs": []
 }

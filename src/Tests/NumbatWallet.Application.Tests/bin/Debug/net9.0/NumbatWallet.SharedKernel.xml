@@ -1,0 +1,264 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>NumbatWallet.SharedKernel</name>
+    </assembly>
+    <members>
+        <member name="T:NumbatWallet.SharedKernel.Attributes.DataClassificationAttribute">
+            <summary>
+            Attribute to mark properties with their data classification level.
+            Classification drives display and audit requirements, while tenant policies control actual protection.
+            </summary>
+        </member>
+        <member name="P:NumbatWallet.SharedKernel.Attributes.DataClassificationAttribute.Classification">
+            <summary>
+            The classification level of the data
+            </summary>
+        </member>
+        <member name="P:NumbatWallet.SharedKernel.Attributes.DataClassificationAttribute.Purpose">
+            <summary>
+            Optional purpose or context for the field (e.g., "Identity", "Contact", "Financial")
+            Used for compliance mapping and audit categorization
+            </summary>
+        </member>
+        <member name="M:NumbatWallet.SharedKernel.Attributes.DataClassificationAttribute.#ctor(NumbatWallet.SharedKernel.Enums.DataClassification,System.String)">
+            <summary>
+            Creates a new DataClassificationAttribute
+            </summary>
+            <param name="classification">The data classification level</param>
+            <param name="purpose">Optional purpose/context for the field</param>
+        </member>
+        <member name="T:NumbatWallet.SharedKernel.Enums.DataClassification">
+            <summary>
+            Data classification levels aligned with Australian Government PSPF/ISM standards
+            </summary>
+        </member>
+        <member name="F:NumbatWallet.SharedKernel.Enums.DataClassification.Unofficial">
+            <summary>
+            Public, non-government data that can be freely shared
+            </summary>
+        </member>
+        <member name="F:NumbatWallet.SharedKernel.Enums.DataClassification.Official">
+            <summary>
+            Routine government business information
+            </summary>
+        </member>
+        <member name="F:NumbatWallet.SharedKernel.Enums.DataClassification.OfficialSensitive">
+            <summary>
+            Sensitive information including PII and commercially sensitive data
+            Requires enhanced protection measures
+            </summary>
+        </member>
+        <member name="F:NumbatWallet.SharedKernel.Enums.DataClassification.Protected">
+            <summary>
+            High-value information requiring strong access controls
+            Includes financial data, health records, legal documents
+            </summary>
+        </member>
+        <member name="F:NumbatWallet.SharedKernel.Enums.DataClassification.Secret">
+            <summary>
+            National security information (not used in POA)
+            </summary>
+        </member>
+        <member name="F:NumbatWallet.SharedKernel.Enums.DataClassification.TopSecret">
+            <summary>
+            Highest classification level (not used in POA)
+            </summary>
+        </member>
+        <member name="T:NumbatWallet.SharedKernel.Enums.PurgeAction">
+            <summary>
+            Defines the action to take when purging data based on retention policy
+            </summary>
+        </member>
+        <member name="F:NumbatWallet.SharedKernel.Enums.PurgeAction.Delete">
+            <summary>
+            Completely remove the record from the database
+            </summary>
+        </member>
+        <member name="F:NumbatWallet.SharedKernel.Enums.PurgeAction.Anonymize">
+            <summary>
+            Replace sensitive data with anonymous values
+            </summary>
+        </member>
+        <member name="F:NumbatWallet.SharedKernel.Enums.PurgeAction.Archive">
+            <summary>
+            Move data to cold storage/archive
+            </summary>
+        </member>
+        <member name="F:NumbatWallet.SharedKernel.Enums.PurgeAction.ReduceAccuracy">
+            <summary>
+            Reduce data accuracy (e.g., keep only year from date of birth)
+            </summary>
+        </member>
+        <member name="F:NumbatWallet.SharedKernel.Enums.PurgeAction.CryptoShred">
+            <summary>
+            Crypto-shred by destroying encryption keys
+            </summary>
+        </member>
+        <member name="F:NumbatWallet.SharedKernel.Enums.PurgeAction.SoftDelete">
+            <summary>
+            Mark as deleted but retain for compliance
+            </summary>
+        </member>
+        <member name="T:NumbatWallet.SharedKernel.Enums.PurgeStrategy">
+            <summary>
+            Defines when and how data purging should occur
+            </summary>
+        </member>
+        <member name="F:NumbatWallet.SharedKernel.Enums.PurgeStrategy.Immediate">
+            <summary>
+            Purge immediately when retention period expires
+            </summary>
+        </member>
+        <member name="F:NumbatWallet.SharedKernel.Enums.PurgeStrategy.Scheduled">
+            <summary>
+            Purge during scheduled maintenance window
+            </summary>
+        </member>
+        <member name="F:NumbatWallet.SharedKernel.Enums.PurgeStrategy.OnDemand">
+            <summary>
+            Purge only when manually triggered
+            </summary>
+        </member>
+        <member name="F:NumbatWallet.SharedKernel.Enums.PurgeStrategy.Batched">
+            <summary>
+            Purge in batches to minimize performance impact
+            </summary>
+        </member>
+        <member name="F:NumbatWallet.SharedKernel.Enums.PurgeStrategy.Never">
+            <summary>
+            Never purge (regulatory requirement)
+            </summary>
+        </member>
+        <member name="T:NumbatWallet.SharedKernel.Enums.RedactionPattern">
+            <summary>
+            Defines how sensitive data should be redacted for display
+            </summary>
+        </member>
+        <member name="F:NumbatWallet.SharedKernel.Enums.RedactionPattern.Full">
+            <summary>
+            Fully redacted: ****
+            </summary>
+        </member>
+        <member name="F:NumbatWallet.SharedKernel.Enums.RedactionPattern.ShowFirst">
+            <summary>
+            Show first character: J***
+            </summary>
+        </member>
+        <member name="F:NumbatWallet.SharedKernel.Enums.RedactionPattern.ShowLast">
+            <summary>
+            Show last character: ***n
+            </summary>
+        </member>
+        <member name="F:NumbatWallet.SharedKernel.Enums.RedactionPattern.ShowFirstLast">
+            <summary>
+            Show first and last: J***n
+            </summary>
+        </member>
+        <member name="F:NumbatWallet.SharedKernel.Enums.RedactionPattern.ShowFirstThree">
+            <summary>
+            Show first three characters: Joh***
+            </summary>
+        </member>
+        <member name="F:NumbatWallet.SharedKernel.Enums.RedactionPattern.ShowDomain">
+            <summary>
+            Show domain only for emails: ***@example.com
+            </summary>
+        </member>
+        <member name="F:NumbatWallet.SharedKernel.Enums.RedactionPattern.ShowYear">
+            <summary>
+            Show year only for dates: **/**/1990
+            </summary>
+        </member>
+        <member name="F:NumbatWallet.SharedKernel.Enums.RedactionPattern.ShowLastFour">
+            <summary>
+            Show last four digits: ****1234
+            </summary>
+        </member>
+        <member name="F:NumbatWallet.SharedKernel.Enums.RedactionPattern.Custom">
+            <summary>
+            Custom pattern defined by tenant policy
+            </summary>
+        </member>
+        <member name="T:NumbatWallet.SharedKernel.Enums.SearchStrategy">
+            <summary>
+            Defines the search strategy for tokenized fields
+            </summary>
+        </member>
+        <member name="F:NumbatWallet.SharedKernel.Enums.SearchStrategy.None">
+            <summary>
+            No search capability for this field
+            </summary>
+        </member>
+        <member name="F:NumbatWallet.SharedKernel.Enums.SearchStrategy.Exact">
+            <summary>
+            Exact match only using full value hash
+            </summary>
+        </member>
+        <member name="F:NumbatWallet.SharedKernel.Enums.SearchStrategy.Prefix">
+            <summary>
+            Prefix search with progressive tokens (1-5 characters)
+            </summary>
+        </member>
+        <member name="F:NumbatWallet.SharedKernel.Enums.SearchStrategy.Phonetic">
+            <summary>
+            Phonetic search using Soundex/Metaphone for name variations
+            </summary>
+        </member>
+        <member name="F:NumbatWallet.SharedKernel.Enums.SearchStrategy.Fuzzy">
+            <summary>
+            Fuzzy search with edit distance tolerance
+            </summary>
+        </member>
+        <member name="F:NumbatWallet.SharedKernel.Enums.SearchStrategy.FullText">
+            <summary>
+            Full-text search (only for unencrypted fields)
+            </summary>
+        </member>
+        <member name="F:NumbatWallet.SharedKernel.Enums.SearchStrategy.ExactAndPrefix">
+            <summary>
+            Combination of exact and prefix
+            </summary>
+        </member>
+        <member name="T:NumbatWallet.SharedKernel.Models.ApiResponse`1">
+            <summary>
+            Standard API response wrapper
+            </summary>
+        </member>
+        <member name="T:NumbatWallet.SharedKernel.Models.BulkOperationResult`1">
+            <summary>
+            Result of bulk operations
+            </summary>
+        </member>
+        <member name="T:NumbatWallet.SharedKernel.Models.SearchRequest">
+            <summary>
+            Standard search request model
+            </summary>
+        </member>
+        <member name="T:NumbatWallet.SharedKernel.Models.ValidationResult">
+            <summary>
+            Validation result model
+            </summary>
+        </member>
+        <member name="T:NumbatWallet.SharedKernel.Specifications.AndSpecification`1">
+            <summary>
+            Combines two specifications with AND logic
+            </summary>
+        </member>
+        <member name="T:NumbatWallet.SharedKernel.Specifications.NotSpecification`1">
+            <summary>
+            Negates a specification
+            </summary>
+        </member>
+        <member name="T:NumbatWallet.SharedKernel.Specifications.OrSpecification`1">
+            <summary>
+            Combines two specifications with OR logic
+            </summary>
+        </member>
+        <member name="T:NumbatWallet.SharedKernel.Specifications.ReplaceExpressionVisitor">
+            <summary>
+            Helper class to replace parameters in expressions
+            </summary>
+        </member>
+    </members>
+</doc>

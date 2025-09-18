@@ -40,15 +40,16 @@ public class NumbatWalletDbContext : DbContext, IUnitOfWork
     {
         // Add interceptors for protection and auditing
         // These would be configured in the DI container in production
+
+        // Apply snake_case naming convention for PostgreSQL
+        optionsBuilder.UseSnakeCaseNamingConvention();
+
         base.OnConfiguring(optionsBuilder);
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
-
-        // Apply snake_case naming convention for PostgreSQL
-        modelBuilder.UseSnakeCaseNamingConvention();
 
         // Apply configurations from assembly
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(NumbatWalletDbContext).Assembly);

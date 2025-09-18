@@ -96,3 +96,5 @@
 /Users/rodrigolmiranda/repo/NumbatWallet/src/Tests/NumbatWallet.Web.Api.Tests/obj/Debug/net9.0/NumbatWallet.Web.Api.Tests.pdb
 /Users/rodrigolmiranda/repo/NumbatWallet/src/Tests/NumbatWallet.Web.Api.Tests/obj/Debug/net9.0/NumbatWallet.Web.Api.Tests.genruntimeconfig.cache
 /Users/rodrigolmiranda/repo/NumbatWallet/src/Tests/NumbatWallet.Web.Api.Tests/obj/Debug/net9.0/ref/NumbatWallet.Web.Api.Tests.dll
+/Users/rodrigolmiranda/repo/NumbatWallet/src/Tests/NumbatWallet.Web.Api.Tests/bin/Debug/net9.0/NumbatWallet.Web.Api.Tests.xml
+/Users/rodrigolmiranda/repo/NumbatWallet/src/Tests/NumbatWallet.Web.Api.Tests/obj/Debug/net9.0/NumbatWallet.Web.Api.Tests.xml

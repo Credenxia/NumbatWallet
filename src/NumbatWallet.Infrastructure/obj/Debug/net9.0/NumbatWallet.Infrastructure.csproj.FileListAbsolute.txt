@@ -20,3 +20,8 @@
 /Users/rodrigolmiranda/repo/NumbatWallet/src/NumbatWallet.Infrastructure/obj/Debug/net9.0/ref/NumbatWallet.Infrastructure.dll
 /Users/rodrigolmiranda/repo/NumbatWallet/src/NumbatWallet.Infrastructure/bin/Debug/net9.0/NumbatWallet.Infrastructure.runtimeconfig.json
 /Users/rodrigolmiranda/repo/NumbatWallet/src/NumbatWallet.Infrastructure/obj/Debug/net9.0/NumbatWallet.Infrastructure.genruntimeconfig.cache
+/Users/rodrigolmiranda/repo/NumbatWallet/src/NumbatWallet.Infrastructure/bin/Debug/net9.0/NumbatWallet.Infrastructure.xml
+/Users/rodrigolmiranda/repo/NumbatWallet/src/NumbatWallet.Infrastructure/bin/Debug/net9.0/NumbatWallet.Application.xml
+/Users/rodrigolmiranda/repo/NumbatWallet/src/NumbatWallet.Infrastructure/bin/Debug/net9.0/NumbatWallet.Domain.xml
+/Users/rodrigolmiranda/repo/NumbatWallet/src/NumbatWallet.Infrastructure/bin/Debug/net9.0/NumbatWallet.SharedKernel.xml
+/Users/rodrigolmiranda/repo/NumbatWallet/src/NumbatWallet.Infrastructure/obj/Debug/net9.0/NumbatWallet.Infrastructure.xml

@@ -1,58 +1,58 @@
 using System.Text.RegularExpressions;
-using NumbatWallet.SharedKernel.Primitives;
-using NumbatWallet.SharedKernel.Results;
+using NumbatWallet.SharedKernel.Base;
+using NumbatWallet.SharedKernel.Utilities;
 
 namespace NumbatWallet.Domain.ValueObjects;
 
-public sealed partial class PhoneNumber : ValueObject
+public class PhoneNumber : ValueObject
 {
-    private static readonly Regex PhoneRegex = PhoneValidationRegex();
+    private static readonly Regex PhoneRegex = new(
+        @"^\+?[1-9]\d{1,14}$",
+        RegexOptions.Compiled);
 
-    public string Value { get; }
-
-    private PhoneNumber(string value)
+    private PhoneNumber(string value, string? countryCode)
     {
         Value = value;
+        CountryCode = countryCode;
     }
 
-    public static Result<PhoneNumber> Create(string? phoneNumber)
+    public string Value { get; }
+    public string? CountryCode { get; }
+
+    public static PhoneNumber Create(string phoneNumber, string? countryCode = null)
     {
-        if (string.IsNullOrWhiteSpace(phoneNumber))
+        Guard.AgainstNullOrWhiteSpace(phoneNumber, nameof(phoneNumber));
+
+        // Remove all non-digit characters except the leading +
+        var cleaned = Regex.Replace(phoneNumber, @"[^\d+]", "");
+
+        // Ensure it starts with + if country code is provided
+        if (!string.IsNullOrEmpty(countryCode) && !cleaned.StartsWith("+"))
         {
-            return Error.Validation("PhoneNumber.Empty", "Phone number cannot be empty.");
+            cleaned = $"+{countryCode}{cleaned}";
         }
 
-        if (!PhoneRegex.IsMatch(phoneNumber))
+        if (!PhoneRegex.IsMatch(cleaned))
         {
-            return Error.Validation("PhoneNumber.Invalid", "Phone number must start with + and contain only digits (minimum 7 digits).");
+            throw new ArgumentException($"Invalid phone number format: {phoneNumber}", nameof(phoneNumber));
         }
 
-        return new PhoneNumber(phoneNumber);
+        return new PhoneNumber(cleaned, countryCode);
     }
 
-    public string GetCountryCode()
+    public string GetFormatted()
     {
-        // Extract country code (1-3 digits after +)
-        if (Value.Length > 1)
+        if (Value.Length == 10) // US format
         {
-            // Simple extraction - could be enhanced with libphonenumber
-            if (Value.StartsWith("+1")) return "1";
-            if (Value.StartsWith("+61")) return "61";
-            if (Value.StartsWith("+44")) return "44";
-
-            // Default: take first 2 digits after +
-            return Value.Length > 2 ? Value[1..3] : Value[1..];
+            return $"({Value[0..3]}) {Value[3..6]}-{Value[6..10]}";
         }
-        return string.Empty;
+        return Value;
     }
 
-    protected override IEnumerable<object?> GetEqualityComponents()
+    protected override IEnumerable<object?> GetAtomicValues()
     {
         yield return Value;
     }
 
     public override string ToString() => Value;
-
-    [GeneratedRegex(@"^\+\d{7,15}$", RegexOptions.Compiled)]
-    private static partial Regex PhoneValidationRegex();
 }

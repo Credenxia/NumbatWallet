@@ -14,3 +14,6 @@
 /Users/rodrigolmiranda/repo/NumbatWallet/src/NumbatWallet.Domain/obj/Debug/net9.0/refint/NumbatWallet.Domain.dll
 /Users/rodrigolmiranda/repo/NumbatWallet/src/NumbatWallet.Domain/obj/Debug/net9.0/NumbatWallet.Domain.pdb
 /Users/rodrigolmiranda/repo/NumbatWallet/src/NumbatWallet.Domain/obj/Debug/net9.0/ref/NumbatWallet.Domain.dll
+/Users/rodrigolmiranda/repo/NumbatWallet/src/NumbatWallet.Domain/bin/Debug/net9.0/NumbatWallet.Domain.xml
+/Users/rodrigolmiranda/repo/NumbatWallet/src/NumbatWallet.Domain/bin/Debug/net9.0/NumbatWallet.SharedKernel.xml
+/Users/rodrigolmiranda/repo/NumbatWallet/src/NumbatWallet.Domain/obj/Debug/net9.0/NumbatWallet.Domain.xml

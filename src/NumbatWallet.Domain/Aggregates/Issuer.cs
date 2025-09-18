@@ -13,7 +13,7 @@ public sealed partial class Issuer : AuditableEntity<Guid>, ITenantAware
     private readonly List<string> _trustedDomains = new();
     private readonly Dictionary<string, string> _supportedCredentialTypes = new();
 
-    public Guid TenantId { get; set; }
+    public string TenantId { get; set; } = string.Empty;
 
     [DataClassification(DataClassification.Official, "Organization")]
     public string Name { get; private set; }
@@ -31,9 +31,20 @@ public sealed partial class Issuer : AuditableEntity<Guid>, ITenantAware
     public string PublicKey { get; private set; }
 
     [DataClassification(DataClassification.Official, "Security")]
+    public string Endpoint { get; private set; }
+
+    [DataClassification(DataClassification.Official, "Security")]
     public string TrustedDomain { get; private set; }
     public bool IsActive { get; private set; }
     public string? DeactivationReason { get; private set; }
+    public IssuerStatus Status { get; private set; }
+    public bool IsTrusted { get; private set; }
+    public int TrustLevel { get; private set; }
+    public string? Jurisdiction { get; private set; }
+    public string? WebsiteUrl { get; private set; }
+    public DateTimeOffset? CertificateExpiresAt { get; private set; }
+    public IReadOnlyCollection<RevocationRegistry> RevocationRegistries { get; } = new List<RevocationRegistry>();
+    public IReadOnlyCollection<SupportedCredentialType> SupportedCredentialTypes { get; } = new List<SupportedCredentialType>();
 
     public IReadOnlyCollection<string> GetTrustedDomains() => _trustedDomains.AsReadOnly();
     public IReadOnlyCollection<string> GetSupportedCredentialTypes() => _supportedCredentialTypes.Keys.ToList().AsReadOnly();
@@ -44,6 +55,30 @@ public sealed partial class Issuer : AuditableEntity<Guid>, ITenantAware
         // Required for EF Core
     }
 #pragma warning restore CS8618
+
+    // Public constructor for string tenantId
+    public Issuer(
+        string name,
+        string code,
+        string issuerDid,
+        string publicKey,
+        string endpoint,
+        string tenantId)
+        : base(Guid.NewGuid())
+    {
+        Name = name;
+        Code = code;
+        IssuerDid = issuerDid;
+        PublicKey = publicKey;
+        Endpoint = endpoint;
+        TenantId = tenantId;
+        Status = IssuerStatus.Pending;
+        IsTrusted = false;
+        TrustLevel = 0;
+        IsActive = true;
+        TrustedDomain = string.Empty;
+        Description = string.Empty;
+    }
 
     private Issuer(
         Guid tenantId,
@@ -56,7 +91,7 @@ public sealed partial class Issuer : AuditableEntity<Guid>, ITenantAware
         IEnumerable<string> trustedDomains)
         : base(Guid.NewGuid())
     {
-        TenantId = tenantId;
+        TenantId = tenantId.ToString();
         Name = name;
         Code = code;
         Description = description;

@@ -15,6 +15,9 @@
   <ImportGroup Condition=" '$(ExcludeRestorePackageImports)' != 'true' ">
     <Import Project="$(NuGetPackageRoot)xunit.runner.visualstudio/2.8.2/build/net6.0/xunit.runner.visualstudio.props" Condition="Exists('$(NuGetPackageRoot)xunit.runner.visualstudio/2.8.2/build/net6.0/xunit.runner.visualstudio.props')" />
     <Import Project="$(NuGetPackageRoot)xunit.core/2.9.2/build/xunit.core.props" Condition="Exists('$(NuGetPackageRoot)xunit.core/2.9.2/build/xunit.core.props')" />
+    <Import Project="$(NuGetPackageRoot)microsoft.sourcelink.common/8.0.0/build/Microsoft.SourceLink.Common.props" Condition="Exists('$(NuGetPackageRoot)microsoft.sourcelink.common/8.0.0/build/Microsoft.SourceLink.Common.props')" />
+    <Import Project="$(NuGetPackageRoot)microsoft.build.tasks.git/8.0.0/build/Microsoft.Build.Tasks.Git.props" Condition="Exists('$(NuGetPackageRoot)microsoft.build.tasks.git/8.0.0/build/Microsoft.Build.Tasks.Git.props')" />
+    <Import Project="$(NuGetPackageRoot)microsoft.sourcelink.github/8.0.0/build/Microsoft.SourceLink.GitHub.props" Condition="Exists('$(NuGetPackageRoot)microsoft.sourcelink.github/8.0.0/build/Microsoft.SourceLink.GitHub.props')" />
     <Import Project="$(NuGetPackageRoot)microsoft.entityframeworkcore/9.0.1/buildTransitive/net8.0/Microsoft.EntityFrameworkCore.props" Condition="Exists('$(NuGetPackageRoot)microsoft.entityframeworkcore/9.0.1/buildTransitive/net8.0/Microsoft.EntityFrameworkCore.props')" />
     <Import Project="$(NuGetPackageRoot)microsoft.testplatform.testhost/17.12.0/build/netcoreapp3.1/Microsoft.TestPlatform.TestHost.props" Condition="Exists('$(NuGetPackageRoot)microsoft.testplatform.testhost/17.12.0/build/netcoreapp3.1/Microsoft.TestPlatform.TestHost.props')" />
     <Import Project="$(NuGetPackageRoot)microsoft.codecoverage/17.12.0/build/netstandard2.0/Microsoft.CodeCoverage.props" Condition="Exists('$(NuGetPackageRoot)microsoft.codecoverage/17.12.0/build/netstandard2.0/Microsoft.CodeCoverage.props')" />
@@ -22,5 +25,8 @@
   </ImportGroup>
   <PropertyGroup Condition=" '$(ExcludeRestorePackageImports)' != 'true' ">
     <Pkgxunit_analyzers Condition=" '$(Pkgxunit_analyzers)' == '' ">/Users/rodrigolmiranda/.nuget/packages/xunit.analyzers/1.16.0</Pkgxunit_analyzers>
+    <PkgMicrosoft_SourceLink_Common Condition=" '$(PkgMicrosoft_SourceLink_Common)' == '' ">/Users/rodrigolmiranda/.nuget/packages/microsoft.sourcelink.common/8.0.0</PkgMicrosoft_SourceLink_Common>
+    <PkgMicrosoft_Build_Tasks_Git Condition=" '$(PkgMicrosoft_Build_Tasks_Git)' == '' ">/Users/rodrigolmiranda/.nuget/packages/microsoft.build.tasks.git/8.0.0</PkgMicrosoft_Build_Tasks_Git>
+    <PkgMicrosoft_SourceLink_GitHub Condition=" '$(PkgMicrosoft_SourceLink_GitHub)' == '' ">/Users/rodrigolmiranda/.nuget/packages/microsoft.sourcelink.github/8.0.0</PkgMicrosoft_SourceLink_GitHub>
   </PropertyGroup>
 </Project>

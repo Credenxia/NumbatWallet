@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>NumbatWallet.Infrastructure</name>
+    </assembly>
+    <members>
+        <member name="T:NumbatWallet.Infrastructure.Data.Converters.ProtectedFieldConverter">
+            <summary>
+            Value converter for storing protected fields as JSONB in PostgreSQL
+            </summary>
+        </member>
+        <member name="T:NumbatWallet.Infrastructure.Data.Converters.ProtectedFieldData">
+            <summary>
+            Internal structure for JSONB storage
+            </summary>
+        </member>
+        <member name="T:NumbatWallet.Infrastructure.Data.Interceptors.AuditInterceptor">
+            <summary>
+            Interceptor that logs access to protected fields based on data classification
+            </summary>
+        </member>
+        <member name="T:NumbatWallet.Infrastructure.Data.Interceptors.ProtectionInterceptor">
+            <summary>
+            Interceptor that applies protection (encryption/tokenization) based on tenant policies
+            </summary>
+        </member>
+    </members>
+</doc>

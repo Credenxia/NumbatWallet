@@ -6,10 +6,10 @@
   "compilationOptions": {},
   "targets": {
     ".NETCoreApp,Version=v9.0": {
-      "NumbatWallet.SharedKernel.Tests/1.0.0": {
+      "NumbatWallet.SharedKernel.Tests/1.0.0-preview": {
         "dependencies": {
           "Microsoft.NET.Test.Sdk": "17.12.0",
-          "NumbatWallet.SharedKernel": "1.0.0",
+          "NumbatWallet.SharedKernel": "1.0.0-preview",
           "xunit": "2.9.2"
         },
         "runtime": {
@@ -331,7 +331,7 @@
           }
         }
       },
-      "NumbatWallet.SharedKernel/1.0.0": {
+      "NumbatWallet.SharedKernel/1.0.0-preview": {
         "runtime": {
           "NumbatWallet.SharedKernel.dll": {
             "assemblyVersion": "1.0.0.0",
@@ -342,7 +342,7 @@
     }
   },
   "libraries": {
-    "NumbatWallet.SharedKernel.Tests/1.0.0": {
+    "NumbatWallet.SharedKernel.Tests/1.0.0-preview": {
       "type": "project",
       "serviceable": false,
       "sha512": ""
@@ -424,7 +424,7 @@
       "path": "xunit.extensibility.execution/2.9.2",
       "hashPath": "xunit.extensibility.execution.2.9.2.nupkg.sha512"
     },
-    "NumbatWallet.SharedKernel/1.0.0": {
+    "NumbatWallet.SharedKernel/1.0.0-preview": {
       "type": "project",
       "serviceable": false,
       "sha512": ""

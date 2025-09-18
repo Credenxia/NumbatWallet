@@ -8,6 +8,17 @@
           "build/netstandard2.0/coverlet.collector.targets": {}
         }
       },
+      "Microsoft.Build.Tasks.Git/8.0.0": {
+        "type": "package",
+        "build": {
+          "build/Microsoft.Build.Tasks.Git.props": {},
+          "build/Microsoft.Build.Tasks.Git.targets": {}
+        },
+        "buildMultiTargeting": {
+          "buildMultiTargeting/Microsoft.Build.Tasks.Git.props": {},
+          "buildMultiTargeting/Microsoft.Build.Tasks.Git.targets": {}
+        }
+      },
       "Microsoft.CodeCoverage/17.12.0": {
         "type": "package",
         "compile": {
@@ -39,6 +50,32 @@
         },
         "buildMultiTargeting": {
           "buildMultiTargeting/Microsoft.NET.Test.Sdk.props": {}
+        }
+      },
+      "Microsoft.SourceLink.Common/8.0.0": {
+        "type": "package",
+        "build": {
+          "build/Microsoft.SourceLink.Common.props": {},
+          "build/Microsoft.SourceLink.Common.targets": {}
+        },
+        "buildMultiTargeting": {
+          "buildMultiTargeting/Microsoft.SourceLink.Common.props": {},
+          "buildMultiTargeting/Microsoft.SourceLink.Common.targets": {}
+        }
+      },
+      "Microsoft.SourceLink.GitHub/8.0.0": {
+        "type": "package",
+        "dependencies": {
+          "Microsoft.Build.Tasks.Git": "8.0.0",
+          "Microsoft.SourceLink.Common": "8.0.0"
+        },
+        "build": {
+          "build/Microsoft.SourceLink.GitHub.props": {},
+          "build/Microsoft.SourceLink.GitHub.targets": {}
+        },
+        "buildMultiTargeting": {
+          "buildMultiTargeting/Microsoft.SourceLink.GitHub.props": {},
+          "buildMultiTargeting/Microsoft.SourceLink.GitHub.targets": {}
         }
       },
       "Microsoft.TestPlatform.ObjectModel/17.12.0": {
@@ -396,7 +433,7 @@
           "build/net6.0/xunit.runner.visualstudio.props": {}
         }
       },
-      "NumbatWallet.SharedKernel/1.0.0": {
+      "NumbatWallet.SharedKernel/1.0.0-preview": {
         "type": "project",
         "framework": ".NETCoreApp,Version=v9.0",
         "compile": {
@@ -477,6 +514,52 @@
         "coverlet-icon.png",
         "coverlet.collector.6.0.2.nupkg.sha512",
         "coverlet.collector.nuspec"
+      ]
+    },
+    "Microsoft.Build.Tasks.Git/8.0.0": {
+      "sha512": "bZKfSIKJRXLTuSzLudMFte/8CempWjVamNUR5eHJizsy+iuOuO/k2gnh7W0dHJmYY0tBf+gUErfluCv5mySAOQ==",
+      "type": "package",
+      "path": "microsoft.build.tasks.git/8.0.0",
+      "hasTools": true,
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "Icon.png",
+        "build/Microsoft.Build.Tasks.Git.props",
+        "build/Microsoft.Build.Tasks.Git.targets",
+        "buildMultiTargeting/Microsoft.Build.Tasks.Git.props",
+        "buildMultiTargeting/Microsoft.Build.Tasks.Git.targets",
+        "microsoft.build.tasks.git.8.0.0.nupkg.sha512",
+        "microsoft.build.tasks.git.nuspec",
+        "tools/core/Microsoft.Build.Tasks.Git.dll",
+        "tools/core/cs/Microsoft.Build.Tasks.Git.resources.dll",
+        "tools/core/de/Microsoft.Build.Tasks.Git.resources.dll",
+        "tools/core/es/Microsoft.Build.Tasks.Git.resources.dll",
+        "tools/core/fr/Microsoft.Build.Tasks.Git.resources.dll",
+        "tools/core/it/Microsoft.Build.Tasks.Git.resources.dll",
+        "tools/core/ja/Microsoft.Build.Tasks.Git.resources.dll",
+        "tools/core/ko/Microsoft.Build.Tasks.Git.resources.dll",
+        "tools/core/pl/Microsoft.Build.Tasks.Git.resources.dll",
+        "tools/core/pt-BR/Microsoft.Build.Tasks.Git.resources.dll",
+        "tools/core/ru/Microsoft.Build.Tasks.Git.resources.dll",
+        "tools/core/tr/Microsoft.Build.Tasks.Git.resources.dll",
+        "tools/core/zh-Hans/Microsoft.Build.Tasks.Git.resources.dll",
+        "tools/core/zh-Hant/Microsoft.Build.Tasks.Git.resources.dll",
+        "tools/net472/Microsoft.Build.Tasks.Git.dll",
+        "tools/net472/System.Collections.Immutable.dll",
+        "tools/net472/cs/Microsoft.Build.Tasks.Git.resources.dll",
+        "tools/net472/de/Microsoft.Build.Tasks.Git.resources.dll",
+        "tools/net472/es/Microsoft.Build.Tasks.Git.resources.dll",
+        "tools/net472/fr/Microsoft.Build.Tasks.Git.resources.dll",
+        "tools/net472/it/Microsoft.Build.Tasks.Git.resources.dll",
+        "tools/net472/ja/Microsoft.Build.Tasks.Git.resources.dll",
+        "tools/net472/ko/Microsoft.Build.Tasks.Git.resources.dll",
+        "tools/net472/pl/Microsoft.Build.Tasks.Git.resources.dll",
+        "tools/net472/pt-BR/Microsoft.Build.Tasks.Git.resources.dll",
+        "tools/net472/ru/Microsoft.Build.Tasks.Git.resources.dll",
+        "tools/net472/tr/Microsoft.Build.Tasks.Git.resources.dll",
+        "tools/net472/zh-Hans/Microsoft.Build.Tasks.Git.resources.dll",
+        "tools/net472/zh-Hant/Microsoft.Build.Tasks.Git.resources.dll"
       ]
     },
     "Microsoft.CodeCoverage/17.12.0": {
@@ -565,6 +648,97 @@
         "lib/netcoreapp3.1/_._",
         "microsoft.net.test.sdk.17.12.0.nupkg.sha512",
         "microsoft.net.test.sdk.nuspec"
+      ]
+    },
+    "Microsoft.SourceLink.Common/8.0.0": {
+      "sha512": "dk9JPxTCIevS75HyEQ0E4OVAFhB2N+V9ShCXf8Q6FkUQZDkgLI12y679Nym1YqsiSysuQskT7Z+6nUf3yab6Vw==",
+      "type": "package",
+      "path": "microsoft.sourcelink.common/8.0.0",
+      "hasTools": true,
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "Icon.png",
+        "build/InitializeSourceControlInformation.targets",
+        "build/Microsoft.SourceLink.Common.props",
+        "build/Microsoft.SourceLink.Common.targets",
+        "buildMultiTargeting/Microsoft.SourceLink.Common.props",
+        "buildMultiTargeting/Microsoft.SourceLink.Common.targets",
+        "microsoft.sourcelink.common.8.0.0.nupkg.sha512",
+        "microsoft.sourcelink.common.nuspec",
+        "tools/core/Microsoft.SourceLink.Common.dll",
+        "tools/core/cs/Microsoft.SourceLink.Common.resources.dll",
+        "tools/core/de/Microsoft.SourceLink.Common.resources.dll",
+        "tools/core/es/Microsoft.SourceLink.Common.resources.dll",
+        "tools/core/fr/Microsoft.SourceLink.Common.resources.dll",
+        "tools/core/it/Microsoft.SourceLink.Common.resources.dll",
+        "tools/core/ja/Microsoft.SourceLink.Common.resources.dll",
+        "tools/core/ko/Microsoft.SourceLink.Common.resources.dll",
+        "tools/core/pl/Microsoft.SourceLink.Common.resources.dll",
+        "tools/core/pt-BR/Microsoft.SourceLink.Common.resources.dll",
+        "tools/core/ru/Microsoft.SourceLink.Common.resources.dll",
+        "tools/core/tr/Microsoft.SourceLink.Common.resources.dll",
+        "tools/core/zh-Hans/Microsoft.SourceLink.Common.resources.dll",
+        "tools/core/zh-Hant/Microsoft.SourceLink.Common.resources.dll",
+        "tools/net472/Microsoft.SourceLink.Common.dll",
+        "tools/net472/cs/Microsoft.SourceLink.Common.resources.dll",
+        "tools/net472/de/Microsoft.SourceLink.Common.resources.dll",
+        "tools/net472/es/Microsoft.SourceLink.Common.resources.dll",
+        "tools/net472/fr/Microsoft.SourceLink.Common.resources.dll",
+        "tools/net472/it/Microsoft.SourceLink.Common.resources.dll",
+        "tools/net472/ja/Microsoft.SourceLink.Common.resources.dll",
+        "tools/net472/ko/Microsoft.SourceLink.Common.resources.dll",
+        "tools/net472/pl/Microsoft.SourceLink.Common.resources.dll",
+        "tools/net472/pt-BR/Microsoft.SourceLink.Common.resources.dll",
+        "tools/net472/ru/Microsoft.SourceLink.Common.resources.dll",
+        "tools/net472/tr/Microsoft.SourceLink.Common.resources.dll",
+        "tools/net472/zh-Hans/Microsoft.SourceLink.Common.resources.dll",
+        "tools/net472/zh-Hant/Microsoft.SourceLink.Common.resources.dll"
+      ]
+    },
+    "Microsoft.SourceLink.GitHub/8.0.0": {
+      "sha512": "G5q7OqtwIyGTkeIOAc3u2ZuV/kicQaec5EaRnc0pIeSnh9LUjj+PYQrJYBURvDt7twGl2PKA7nSN0kz1Zw5bnQ==",
+      "type": "package",
+      "path": "microsoft.sourcelink.github/8.0.0",
+      "hasTools": true,
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "Icon.png",
+        "build/Microsoft.SourceLink.GitHub.props",
+        "build/Microsoft.SourceLink.GitHub.targets",
+        "buildMultiTargeting/Microsoft.SourceLink.GitHub.props",
+        "buildMultiTargeting/Microsoft.SourceLink.GitHub.targets",
+        "microsoft.sourcelink.github.8.0.0.nupkg.sha512",
+        "microsoft.sourcelink.github.nuspec",
+        "tools/core/Microsoft.SourceLink.GitHub.dll",
+        "tools/core/cs/Microsoft.SourceLink.GitHub.resources.dll",
+        "tools/core/de/Microsoft.SourceLink.GitHub.resources.dll",
+        "tools/core/es/Microsoft.SourceLink.GitHub.resources.dll",
+        "tools/core/fr/Microsoft.SourceLink.GitHub.resources.dll",
+        "tools/core/it/Microsoft.SourceLink.GitHub.resources.dll",
+        "tools/core/ja/Microsoft.SourceLink.GitHub.resources.dll",
+        "tools/core/ko/Microsoft.SourceLink.GitHub.resources.dll",
+        "tools/core/pl/Microsoft.SourceLink.GitHub.resources.dll",
+        "tools/core/pt-BR/Microsoft.SourceLink.GitHub.resources.dll",
+        "tools/core/ru/Microsoft.SourceLink.GitHub.resources.dll",
+        "tools/core/tr/Microsoft.SourceLink.GitHub.resources.dll",
+        "tools/core/zh-Hans/Microsoft.SourceLink.GitHub.resources.dll",
+        "tools/core/zh-Hant/Microsoft.SourceLink.GitHub.resources.dll",
+        "tools/net472/Microsoft.SourceLink.GitHub.dll",
+        "tools/net472/cs/Microsoft.SourceLink.GitHub.resources.dll",
+        "tools/net472/de/Microsoft.SourceLink.GitHub.resources.dll",
+        "tools/net472/es/Microsoft.SourceLink.GitHub.resources.dll",
+        "tools/net472/fr/Microsoft.SourceLink.GitHub.resources.dll",
+        "tools/net472/it/Microsoft.SourceLink.GitHub.resources.dll",
+        "tools/net472/ja/Microsoft.SourceLink.GitHub.resources.dll",
+        "tools/net472/ko/Microsoft.SourceLink.GitHub.resources.dll",
+        "tools/net472/pl/Microsoft.SourceLink.GitHub.resources.dll",
+        "tools/net472/pt-BR/Microsoft.SourceLink.GitHub.resources.dll",
+        "tools/net472/ru/Microsoft.SourceLink.GitHub.resources.dll",
+        "tools/net472/tr/Microsoft.SourceLink.GitHub.resources.dll",
+        "tools/net472/zh-Hans/Microsoft.SourceLink.GitHub.resources.dll",
+        "tools/net472/zh-Hant/Microsoft.SourceLink.GitHub.resources.dll"
       ]
     },
     "Microsoft.TestPlatform.ObjectModel/17.12.0": {
@@ -906,7 +1080,7 @@
         "xunit.runner.visualstudio.nuspec"
       ]
     },
-    "NumbatWallet.SharedKernel/1.0.0": {
+    "NumbatWallet.SharedKernel/1.0.0-preview": {
       "type": "project",
       "path": "../../NumbatWallet.SharedKernel/NumbatWallet.SharedKernel.csproj",
       "msbuildProject": "../../NumbatWallet.SharedKernel/NumbatWallet.SharedKernel.csproj"
@@ -915,7 +1089,8 @@
   "projectFileDependencyGroups": {
     "net9.0": [
       "Microsoft.NET.Test.Sdk >= 17.12.0",
-      "NumbatWallet.SharedKernel >= 1.0.0",
+      "Microsoft.SourceLink.GitHub >= 8.0.0",
+      "NumbatWallet.SharedKernel >= 1.0.0-preview",
       "coverlet.collector >= 6.0.2",
       "xunit >= 2.9.2",
       "xunit.runner.visualstudio >= 2.8.2"
@@ -925,7 +1100,7 @@
     "/Users/rodrigolmiranda/.nuget/packages/": {}
   },
   "project": {
-    "version": "1.0.0",
+    "version": "1.0.0-preview",
     "restore": {
       "projectUniqueName": "/Users/rodrigolmiranda/repo/NumbatWallet/src/Tests/NumbatWallet.SharedKernel.Tests/NumbatWallet.SharedKernel.Tests.csproj",
       "projectName": "NumbatWallet.SharedKernel.Tests",
@@ -933,6 +1108,7 @@
       "packagesPath": "/Users/rodrigolmiranda/.nuget/packages/",
       "outputPath": "/Users/rodrigolmiranda/repo/NumbatWallet/src/Tests/NumbatWallet.SharedKernel.Tests/obj/",
       "projectStyle": "PackageReference",
+      "centralPackageVersionsManagementEnabled": true,
       "configFilePaths": [
         "/Users/rodrigolmiranda/.nuget/NuGet/NuGet.Config"
       ],
@@ -971,20 +1147,98 @@
         "dependencies": {
           "Microsoft.NET.Test.Sdk": {
             "target": "Package",
-            "version": "[17.12.0, )"
+            "version": "[17.12.0, )",
+            "versionCentrallyManaged": true
+          },
+          "Microsoft.SourceLink.GitHub": {
+            "suppressParent": "All",
+            "target": "Package",
+            "version": "[8.0.0, )",
+            "versionCentrallyManaged": true
           },
           "coverlet.collector": {
             "target": "Package",
-            "version": "[6.0.2, )"
+            "version": "[6.0.2, )",
+            "versionCentrallyManaged": true
           },
           "xunit": {
             "target": "Package",
-            "version": "[2.9.2, )"
+            "version": "[2.9.2, )",
+            "versionCentrallyManaged": true
           },
           "xunit.runner.visualstudio": {
             "target": "Package",
-            "version": "[2.8.2, )"
+            "version": "[2.8.2, )",
+            "versionCentrallyManaged": true
           }
+        },
+        "centralPackageVersions": {
+          "Aspire.Hosting": "9.4.2",
+          "Aspire.Hosting.AppHost": "9.4.2",
+          "Aspire.Hosting.Azure": "9.4.2",
+          "Aspire.Hosting.PostgreSQL": "9.4.2",
+          "Aspire.Hosting.Redis": "9.4.2",
+          "AspNetCore.HealthChecks.NpgSql": "9.0.0",
+          "AspNetCore.HealthChecks.Redis": "9.0.0",
+          "AspNetCore.HealthChecks.UI": "9.0.1",
+          "AspNetCore.HealthChecks.UI.Client": "9.0.1",
+          "AspNetCore.HealthChecks.UI.InMemory.Storage": "9.0.1",
+          "AutoMapper": "13.0.1",
+          "AutoMapper.Extensions.Microsoft.DependencyInjection": "12.0.1",
+          "Azure.Identity": "1.14.1",
+          "Azure.Security.KeyVault.Secrets": "4.7.0",
+          "Azure.Storage.Blobs": "12.24.0",
+          "coverlet.collector": "6.0.2",
+          "EFCore.NamingConventions": "9.0.0",
+          "FluentAssertions": "7.1.0",
+          "FluentValidation": "11.11.0",
+          "FluentValidation.AspNetCore": "11.3.0",
+          "FluentValidation.DependencyInjectionExtensions": "11.11.0",
+          "HotChocolate.AspNetCore": "13.9.0",
+          "HotChocolate.AspNetCore.Authorization": "13.9.0",
+          "HotChocolate.Data": "13.9.0",
+          "HotChocolate.Data.EntityFramework": "13.9.0",
+          "Microsoft.ApplicationInsights.AspNetCore": "2.22.0",
+          "Microsoft.AspNetCore.Authentication.JwtBearer": "9.0.0",
+          "Microsoft.AspNetCore.Authentication.OpenIdConnect": "9.0.0",
+          "Microsoft.AspNetCore.Components.WebAssembly": "9.0.0",
+          "Microsoft.AspNetCore.Mvc.Versioning": "5.1.0",
+          "Microsoft.AspNetCore.Mvc.Versioning.ApiExplorer": "5.1.0",
+          "Microsoft.AspNetCore.OpenApi": "9.0.0",
+          "Microsoft.EntityFrameworkCore": "9.0.1",
+          "Microsoft.EntityFrameworkCore.Design": "9.0.1",
+          "Microsoft.EntityFrameworkCore.InMemory": "9.0.1",
+          "Microsoft.EntityFrameworkCore.Relational": "9.0.1",
+          "Microsoft.EntityFrameworkCore.Tools": "9.0.1",
+          "Microsoft.Extensions.Caching.StackExchangeRedis": "9.0.0",
+          "Microsoft.Extensions.DependencyInjection.Abstractions": "9.0.0",
+          "Microsoft.Extensions.Diagnostics.HealthChecks": "9.0.0",
+          "Microsoft.Extensions.Logging.Abstractions": "9.0.0",
+          "Microsoft.Identity.Web": "2.20.0",
+          "Microsoft.Identity.Web.UI": "2.20.0",
+          "Microsoft.NET.Test.Sdk": "17.12.0",
+          "Microsoft.SourceLink.GitHub": "8.0.0",
+          "Moq": "4.20.70",
+          "Npgsql.EntityFrameworkCore.PostgreSQL": "9.0.2",
+          "Polly": "8.5.2",
+          "Scrutor": "5.0.2",
+          "Serilog": "4.2.0",
+          "Serilog.AspNetCore": "8.0.5",
+          "Serilog.Enrichers.Environment": "3.0.1",
+          "Serilog.Extensions.Hosting": "8.0.0",
+          "Serilog.Settings.Configuration": "8.0.4",
+          "Serilog.Sinks.ApplicationInsights": "4.0.0",
+          "Serilog.Sinks.Console": "6.0.0",
+          "Serilog.Sinks.File": "6.0.0",
+          "Serilog.Sinks.Seq": "8.0.0",
+          "StackExchange.Redis": "2.8.0",
+          "Swashbuckle.AspNetCore": "7.2.0",
+          "Swashbuckle.AspNetCore.Annotations": "7.2.0",
+          "System.Text.Json": "9.0.0",
+          "Testcontainers": "4.2.0",
+          "Testcontainers.PostgreSql": "4.2.0",
+          "xunit": "2.9.2",
+          "xunit.runner.visualstudio": "2.8.2"
         },
         "imports": [
           "net461",

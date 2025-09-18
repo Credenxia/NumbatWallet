@@ -13,7 +13,7 @@ public sealed class Wallet : AuditableEntity<Guid>, ITenantAware
     private readonly List<Guid> _credentialIds = new();
 
     public Guid PersonId { get; private set; }
-    public Guid TenantId { get; set; }
+    public string TenantId { get; set; } = string.Empty;
 
     [DataClassification(DataClassification.Official, "Wallet")]
     public string WalletName { get; private set; }
@@ -25,7 +25,10 @@ public sealed class Wallet : AuditableEntity<Guid>, ITenantAware
     public WalletStatus Status { get; private set; }
     public string? SuspensionReason { get; private set; }
     public string? LockReason { get; private set; }
+    public string? ExternalId { get; private set; }
+    public DateTimeOffset? ExpiresAt { get; private set; }
     public IReadOnlyCollection<Guid> GetCredentials() => _credentialIds.AsReadOnly();
+    public IReadOnlyCollection<Credential> Credentials { get; } = new List<Credential>();
 
 #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring as nullable.
     private Wallet() : base(Guid.Empty)
@@ -36,7 +39,7 @@ public sealed class Wallet : AuditableEntity<Guid>, ITenantAware
 
     private Wallet(
         Guid personId,
-        Guid tenantId,
+        string tenantId,
         string walletName)
         : base(Guid.NewGuid())
     {
@@ -58,7 +61,7 @@ public sealed class Wallet : AuditableEntity<Guid>, ITenantAware
 
             var wallet = new Wallet(
                 personId,
-                Guid.Empty, // Will be set by DbContext
+                string.Empty, // Will be set by DbContext
                 walletName);
 
             // Raise domain event
@@ -66,7 +69,8 @@ public sealed class Wallet : AuditableEntity<Guid>, ITenantAware
                 wallet.Id,
                 wallet.PersonId,
                 wallet.TenantId,
-                wallet.WalletDid));
+                wallet.WalletDid,
+                DateTimeOffset.UtcNow));
 
             return Result.Success(wallet);
         }

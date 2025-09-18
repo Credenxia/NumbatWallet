@@ -30,13 +30,17 @@ public sealed class Person : AuditableEntity<Guid>, ITenantAware
     [DataClassification(DataClassification.OfficialSensitive, "Identity")]
     public DateOnly DateOfBirth { get; private set; }
 
+    public string ExternalId { get; private set; }
+    public string? MobileNumber { get; private set; }
+    public DateTimeOffset? EmailVerifiedAt { get; private set; }
+
     public VerificationStatus EmailVerificationStatus { get; private set; }
     public VerificationStatus PhoneVerificationStatus { get; private set; }
     public bool IsVerified => EmailVerificationStatus == VerificationStatus.Verified
                            && PhoneVerificationStatus == VerificationStatus.Verified;
     public DateTimeOffset? VerifiedAt { get; private set; }
     public VerificationLevel? VerificationLevel { get; private set; }
-    public Guid TenantId { get; set; }
+    public string TenantId { get; set; } = string.Empty;
 
 #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring as nullable.
     private Person() : base(Guid.Empty)
@@ -44,6 +48,27 @@ public sealed class Person : AuditableEntity<Guid>, ITenantAware
         // Required for EF Core
     }
 #pragma warning restore CS8618
+
+    // Public constructor for seeding
+    public Person(
+        string firstName,
+        string lastName,
+        DateOnly dateOfBirth,
+        string email,
+        string externalId,
+        string tenantId)
+        : base(Guid.NewGuid())
+    {
+        FirstName = firstName;
+        LastName = lastName;
+        DateOfBirth = dateOfBirth;
+        Email = Email.Create(email);
+        ExternalId = externalId;
+        TenantId = tenantId;
+        EmailVerificationStatus = VerificationStatus.NotVerified;
+        PhoneVerificationStatus = VerificationStatus.NotVerified;
+        PhoneNumber = PhoneNumber.Create("+61400000000"); // Default placeholder
+    }
 
     private Person(
         Email email,
@@ -58,6 +83,7 @@ public sealed class Person : AuditableEntity<Guid>, ITenantAware
         FirstName = firstName;
         LastName = lastName;
         DateOfBirth = dateOfBirth;
+        ExternalId = Guid.NewGuid().ToString();
         EmailVerificationStatus = VerificationStatus.NotVerified;
         PhoneVerificationStatus = VerificationStatus.NotVerified;
     }
@@ -68,15 +94,17 @@ public sealed class Person : AuditableEntity<Guid>, ITenantAware
         string email,
         string phoneNumber)
     {
-        var emailResult = Email.Create(email);
-        if (emailResult.IsFailure)
-            return emailResult.Error;
+        try
+        {
+            var emailValue = Email.Create(email);
+            var phoneValue = PhoneNumber.Create(phoneNumber);
 
-        var phoneResult = PhoneNumber.Create(phoneNumber);
-        if (phoneResult.IsFailure)
-            return phoneResult.Error;
-
-        return Create(emailResult.Value, phoneResult.Value, firstName, lastName, DateOnly.FromDateTime(DateTime.Now.AddYears(-25)));
+            return Create(emailValue, phoneValue, firstName, lastName, DateOnly.FromDateTime(DateTime.Now.AddYears(-25)));
+        }
+        catch (ArgumentException ex)
+        {
+            return Error.Validation("Person.InvalidInput", ex.Message);
+        }
     }
 
     public static Result<Person> Create(

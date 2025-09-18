@@ -1,7 +1,8 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Identity.Web;
 using Microsoft.OpenApi.Models;
-using NumbatWallet.Web.Api.GraphQL;
+// TODO: Implement GraphQL types
+// using NumbatWallet.Web.Api.GraphQL;
 using HotChocolate.Execution.Configuration;
 
 namespace NumbatWallet.Web.Api.DependencyInjection;
@@ -136,7 +137,7 @@ public static class ServiceCollectionExtensions
 
             // Include XML comments
             var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
-            var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+            var xmlPath = System.IO.Path.Combine(AppContext.BaseDirectory, xmlFile);
             if (File.Exists(xmlPath))
             {
                 options.IncludeXmlComments(xmlPath);
@@ -153,17 +154,17 @@ public static class ServiceCollectionExtensions
         return services
             .AddGraphQLServer()
             .AddAuthorization()
-            .AddQueryType<Query>()
-            .AddMutationType<Mutation>()
-            .AddSubscriptionType<Subscription>()
-            .AddType<WalletType>()
-            .AddType<CredentialType>()
-            .AddType<PersonType>()
-            .AddType<IssuerType>()
+            // TODO: Implement GraphQL types
+            // .AddQueryType<Query>()
+            // .AddMutationType<Mutation>()
+            // .AddSubscriptionType<Subscription>()
+            // .AddType<WalletType>()
+            // .AddType<CredentialType>()
+            // .AddType<PersonType>()
+            // .AddType<IssuerType>()
             .AddFiltering()
             .AddSorting()
             .AddProjections()
-            .AddErrorFilter<GraphQLErrorFilter>()
             .ModifyRequestOptions(opt =>
             {
                 opt.IncludeExceptionDetails = configuration.GetValue<bool>("GraphQL:IncludeExceptionDetails");

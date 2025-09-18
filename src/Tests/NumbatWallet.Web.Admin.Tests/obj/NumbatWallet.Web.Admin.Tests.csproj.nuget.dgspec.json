@@ -5,7 +5,7 @@
   },
   "projects": {
     "/Users/rodrigolmiranda/repo/NumbatWallet/src/Tests/NumbatWallet.Web.Admin.Tests/NumbatWallet.Web.Admin.Tests.csproj": {
-      "version": "1.0.0",
+      "version": "1.0.0-preview",
       "restore": {
         "projectUniqueName": "/Users/rodrigolmiranda/repo/NumbatWallet/src/Tests/NumbatWallet.Web.Admin.Tests/NumbatWallet.Web.Admin.Tests.csproj",
         "projectName": "NumbatWallet.Web.Admin.Tests",
@@ -13,6 +13,7 @@
         "packagesPath": "/Users/rodrigolmiranda/.nuget/packages/",
         "outputPath": "/Users/rodrigolmiranda/repo/NumbatWallet/src/Tests/NumbatWallet.Web.Admin.Tests/obj/",
         "projectStyle": "PackageReference",
+        "centralPackageVersionsManagementEnabled": true,
         "configFilePaths": [
           "/Users/rodrigolmiranda/.nuget/NuGet/NuGet.Config"
         ],
@@ -47,20 +48,98 @@
           "dependencies": {
             "Microsoft.NET.Test.Sdk": {
               "target": "Package",
-              "version": "[17.12.0, )"
+              "version": "[17.12.0, )",
+              "versionCentrallyManaged": true
+            },
+            "Microsoft.SourceLink.GitHub": {
+              "suppressParent": "All",
+              "target": "Package",
+              "version": "[8.0.0, )",
+              "versionCentrallyManaged": true
             },
             "coverlet.collector": {
               "target": "Package",
-              "version": "[6.0.2, )"
+              "version": "[6.0.2, )",
+              "versionCentrallyManaged": true
             },
             "xunit": {
               "target": "Package",
-              "version": "[2.9.2, )"
+              "version": "[2.9.2, )",
+              "versionCentrallyManaged": true
             },
             "xunit.runner.visualstudio": {
               "target": "Package",
-              "version": "[2.8.2, )"
+              "version": "[2.8.2, )",
+              "versionCentrallyManaged": true
             }
+          },
+          "centralPackageVersions": {
+            "Aspire.Hosting": "9.4.2",
+            "Aspire.Hosting.AppHost": "9.4.2",
+            "Aspire.Hosting.Azure": "9.4.2",
+            "Aspire.Hosting.PostgreSQL": "9.4.2",
+            "Aspire.Hosting.Redis": "9.4.2",
+            "AspNetCore.HealthChecks.NpgSql": "9.0.0",
+            "AspNetCore.HealthChecks.Redis": "9.0.0",
+            "AspNetCore.HealthChecks.UI": "9.0.1",
+            "AspNetCore.HealthChecks.UI.Client": "9.0.1",
+            "AspNetCore.HealthChecks.UI.InMemory.Storage": "9.0.1",
+            "AutoMapper": "13.0.1",
+            "AutoMapper.Extensions.Microsoft.DependencyInjection": "12.0.1",
+            "Azure.Identity": "1.14.1",
+            "Azure.Security.KeyVault.Secrets": "4.7.0",
+            "Azure.Storage.Blobs": "12.24.0",
+            "coverlet.collector": "6.0.2",
+            "EFCore.NamingConventions": "9.0.0",
+            "FluentAssertions": "7.1.0",
+            "FluentValidation": "11.11.0",
+            "FluentValidation.AspNetCore": "11.3.0",
+            "FluentValidation.DependencyInjectionExtensions": "11.11.0",
+            "HotChocolate.AspNetCore": "13.9.0",
+            "HotChocolate.AspNetCore.Authorization": "13.9.0",
+            "HotChocolate.Data": "13.9.0",
+            "HotChocolate.Data.EntityFramework": "13.9.0",
+            "Microsoft.ApplicationInsights.AspNetCore": "2.22.0",
+            "Microsoft.AspNetCore.Authentication.JwtBearer": "9.0.0",
+            "Microsoft.AspNetCore.Authentication.OpenIdConnect": "9.0.0",
+            "Microsoft.AspNetCore.Components.WebAssembly": "9.0.0",
+            "Microsoft.AspNetCore.Mvc.Versioning": "5.1.0",
+            "Microsoft.AspNetCore.Mvc.Versioning.ApiExplorer": "5.1.0",
+            "Microsoft.AspNetCore.OpenApi": "9.0.0",
+            "Microsoft.EntityFrameworkCore": "9.0.1",
+            "Microsoft.EntityFrameworkCore.Design": "9.0.1",
+            "Microsoft.EntityFrameworkCore.InMemory": "9.0.1",
+            "Microsoft.EntityFrameworkCore.Relational": "9.0.1",
+            "Microsoft.EntityFrameworkCore.Tools": "9.0.1",
+            "Microsoft.Extensions.Caching.StackExchangeRedis": "9.0.0",
+            "Microsoft.Extensions.DependencyInjection.Abstractions": "9.0.0",
+            "Microsoft.Extensions.Diagnostics.HealthChecks": "9.0.0",
+            "Microsoft.Extensions.Logging.Abstractions": "9.0.0",
+            "Microsoft.Identity.Web": "2.20.0",
+            "Microsoft.Identity.Web.UI": "2.20.0",
+            "Microsoft.NET.Test.Sdk": "17.12.0",
+            "Microsoft.SourceLink.GitHub": "8.0.0",
+            "Moq": "4.20.70",
+            "Npgsql.EntityFrameworkCore.PostgreSQL": "9.0.2",
+            "Polly": "8.5.2",
+            "Scrutor": "5.0.2",
+            "Serilog": "4.2.0",
+            "Serilog.AspNetCore": "8.0.5",
+            "Serilog.Enrichers.Environment": "3.0.1",
+            "Serilog.Extensions.Hosting": "8.0.0",
+            "Serilog.Settings.Configuration": "8.0.4",
+            "Serilog.Sinks.ApplicationInsights": "4.0.0",
+            "Serilog.Sinks.Console": "6.0.0",
+            "Serilog.Sinks.File": "6.0.0",
+            "Serilog.Sinks.Seq": "8.0.0",
+            "StackExchange.Redis": "2.8.0",
+            "Swashbuckle.AspNetCore": "7.2.0",
+            "Swashbuckle.AspNetCore.Annotations": "7.2.0",
+            "System.Text.Json": "9.0.0",
+            "Testcontainers": "4.2.0",
+            "Testcontainers.PostgreSql": "4.2.0",
+            "xunit": "2.9.2",
+            "xunit.runner.visualstudio": "2.8.2"
           },
           "imports": [
             "net461",

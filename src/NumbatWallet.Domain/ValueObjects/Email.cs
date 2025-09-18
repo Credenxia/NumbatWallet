@@ -1,42 +1,44 @@
 using System.Text.RegularExpressions;
-using NumbatWallet.SharedKernel.Primitives;
-using NumbatWallet.SharedKernel.Results;
+using NumbatWallet.SharedKernel.Base;
+using NumbatWallet.SharedKernel.Utilities;
 
 namespace NumbatWallet.Domain.ValueObjects;
 
-public sealed partial class Email : ValueObject
+public class Email : ValueObject
 {
-    private static readonly Regex EmailRegex = EmailValidationRegex();
-
-    public string Value { get; }
+    private static readonly Regex EmailRegex = new(
+        @"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$",
+        RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
     private Email(string value)
     {
-        Value = value.ToLowerInvariant();
+        Value = value;
     }
 
-    public static Result<Email> Create(string? email)
+    public string Value { get; }
+    public string Domain => Value.Split('@')[1];
+    public string LocalPart => Value.Split('@')[0];
+
+    public static Email Create(string email)
     {
-        if (string.IsNullOrWhiteSpace(email))
+        Guard.AgainstNullOrWhiteSpace(email, nameof(email));
+
+        var normalizedEmail = email.Trim().ToLowerInvariant();
+
+        if (!EmailRegex.IsMatch(normalizedEmail))
         {
-            return Error.Validation("Email.Empty", "Email cannot be empty.");
+            throw new ArgumentException($"Invalid email format: {email}", nameof(email));
         }
 
-        if (!EmailRegex.IsMatch(email))
-        {
-            return Error.Validation("Email.Invalid", "Email format is invalid.");
-        }
-
-        return new Email(email);
+        return new Email(normalizedEmail);
     }
 
-    protected override IEnumerable<object?> GetEqualityComponents()
+    protected override IEnumerable<object?> GetAtomicValues()
     {
         yield return Value;
     }
 
     public override string ToString() => Value;
 
-    [GeneratedRegex(@"^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$", RegexOptions.Compiled)]
-    private static partial Regex EmailValidationRegex();
+    public static implicit operator string(Email email) => email.Value;
 }
