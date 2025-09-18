@@ -4,6 +4,110 @@
         <name>NumbatWallet.Application</name>
     </assembly>
     <members>
+        <member name="T:NumbatWallet.Application.CQRS.Dispatcher">
+            <summary>
+            Default implementation of the CQRS dispatcher
+            </summary>
+        </member>
+        <member name="M:NumbatWallet.Application.CQRS.Dispatcher.SendAsync``1(NumbatWallet.Application.CQRS.Interfaces.ICommand{``0},System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:NumbatWallet.Application.CQRS.Dispatcher.SendAsync(NumbatWallet.Application.CQRS.Interfaces.ICommand,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:NumbatWallet.Application.CQRS.Dispatcher.QueryAsync``1(NumbatWallet.Application.CQRS.Interfaces.IQuery{``0},System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="T:NumbatWallet.Application.CQRS.Interfaces.ICommand">
+            <summary>
+            Marker interface for commands that don't return a result
+            </summary>
+        </member>
+        <member name="T:NumbatWallet.Application.CQRS.Interfaces.ICommand`1">
+            <summary>
+            Marker interface for commands that return a result
+            </summary>
+            <typeparam name="TResult">The type of result returned by the command</typeparam>
+        </member>
+        <member name="T:NumbatWallet.Application.CQRS.Interfaces.ICommandHandler`1">
+            <summary>
+            Handler for commands that don't return a result
+            </summary>
+            <typeparam name="TCommand">The type of command to handle</typeparam>
+        </member>
+        <member name="M:NumbatWallet.Application.CQRS.Interfaces.ICommandHandler`1.HandleAsync(`0,System.Threading.CancellationToken)">
+            <summary>
+            Handles the command
+            </summary>
+            <param name="command">The command to handle</param>
+            <param name="cancellationToken">Cancellation token</param>
+        </member>
+        <member name="T:NumbatWallet.Application.CQRS.Interfaces.ICommandHandler`2">
+            <summary>
+            Handler for commands that return a result
+            </summary>
+            <typeparam name="TCommand">The type of command to handle</typeparam>
+            <typeparam name="TResult">The type of result returned</typeparam>
+        </member>
+        <member name="M:NumbatWallet.Application.CQRS.Interfaces.ICommandHandler`2.HandleAsync(`0,System.Threading.CancellationToken)">
+            <summary>
+            Handles the command and returns a result
+            </summary>
+            <param name="command">The command to handle</param>
+            <param name="cancellationToken">Cancellation token</param>
+            <returns>The command result</returns>
+        </member>
+        <member name="T:NumbatWallet.Application.CQRS.Interfaces.IDispatcher">
+            <summary>
+            Dispatcher for CQRS commands and queries
+            </summary>
+        </member>
+        <member name="M:NumbatWallet.Application.CQRS.Interfaces.IDispatcher.SendAsync``1(NumbatWallet.Application.CQRS.Interfaces.ICommand{``0},System.Threading.CancellationToken)">
+            <summary>
+            Sends a command that returns a result
+            </summary>
+            <typeparam name="TResult">The type of result</typeparam>
+            <param name="command">The command to send</param>
+            <param name="cancellationToken">Cancellation token</param>
+            <returns>The command result</returns>
+        </member>
+        <member name="M:NumbatWallet.Application.CQRS.Interfaces.IDispatcher.SendAsync(NumbatWallet.Application.CQRS.Interfaces.ICommand,System.Threading.CancellationToken)">
+            <summary>
+            Sends a command that doesn't return a result
+            </summary>
+            <param name="command">The command to send</param>
+            <param name="cancellationToken">Cancellation token</param>
+        </member>
+        <member name="M:NumbatWallet.Application.CQRS.Interfaces.IDispatcher.QueryAsync``1(NumbatWallet.Application.CQRS.Interfaces.IQuery{``0},System.Threading.CancellationToken)">
+            <summary>
+            Executes a query and returns a result
+            </summary>
+            <typeparam name="TResult">The type of result</typeparam>
+            <param name="query">The query to execute</param>
+            <param name="cancellationToken">Cancellation token</param>
+            <returns>The query result</returns>
+        </member>
+        <member name="T:NumbatWallet.Application.CQRS.Interfaces.IQuery`1">
+            <summary>
+            Marker interface for queries
+            </summary>
+            <typeparam name="TResult">The type of result returned by the query</typeparam>
+        </member>
+        <member name="T:NumbatWallet.Application.CQRS.Interfaces.IQueryHandler`2">
+            <summary>
+            Handler for queries
+            </summary>
+            <typeparam name="TQuery">The type of query to handle</typeparam>
+            <typeparam name="TResult">The type of result returned</typeparam>
+        </member>
+        <member name="M:NumbatWallet.Application.CQRS.Interfaces.IQueryHandler`2.HandleAsync(`0,System.Threading.CancellationToken)">
+            <summary>
+            Handles the query and returns a result
+            </summary>
+            <param name="query">The query to handle</param>
+            <param name="cancellationToken">Cancellation token</param>
+            <returns>The query result</returns>
+        </member>
         <member name="T:NumbatWallet.Application.Interfaces.IAuditService">
             <summary>
             Service for logging and managing audit trails for data access

@@ -28,6 +28,17 @@
             <param name="classification">The data classification level</param>
             <param name="purpose">Optional purpose/context for the field</param>
         </member>
+        <member name="T:NumbatWallet.SharedKernel.Base.ValueObject">
+            <summary>
+            Base class for implementing value objects in Domain-Driven Design.
+            Value objects are immutable and are compared by their values rather than identity.
+            </summary>
+        </member>
+        <member name="M:NumbatWallet.SharedKernel.Base.ValueObject.GetAtomicValues">
+            <summary>
+            Gets the atomic values that make up this value object.
+            </summary>
+        </member>
         <member name="T:NumbatWallet.SharedKernel.Enums.DataClassification">
             <summary>
             Data classification levels aligned with Australian Government PSPF/ISM standards
@@ -258,6 +269,96 @@
         <member name="T:NumbatWallet.SharedKernel.Specifications.ReplaceExpressionVisitor">
             <summary>
             Helper class to replace parameters in expressions
+            </summary>
+        </member>
+        <member name="T:NumbatWallet.SharedKernel.Utilities.Guard">
+            <summary>
+            Guard clauses for parameter validation
+            </summary>
+        </member>
+        <member name="M:NumbatWallet.SharedKernel.Utilities.Guard.AgainstNull``1(``0,System.String)">
+            <summary>
+            Throws if input is null
+            </summary>
+        </member>
+        <member name="M:NumbatWallet.SharedKernel.Utilities.Guard.AgainstNullOrWhiteSpace(System.String,System.String)">
+            <summary>
+            Throws if string is null or whitespace
+            </summary>
+        </member>
+        <member name="M:NumbatWallet.SharedKernel.Utilities.Guard.AgainstNullOrEmpty(System.String,System.String)">
+            <summary>
+            Throws if string is null or empty
+            </summary>
+        </member>
+        <member name="M:NumbatWallet.SharedKernel.Utilities.Guard.AgainstOutOfRange(System.Int32,System.Int32,System.Int32,System.String)">
+            <summary>
+            Throws if input is less than minimum
+            </summary>
+        </member>
+        <member name="M:NumbatWallet.SharedKernel.Utilities.Guard.AgainstOutOfRange(System.Decimal,System.Decimal,System.Decimal,System.String)">
+            <summary>
+            Throws if input is less than minimum
+            </summary>
+        </member>
+        <member name="M:NumbatWallet.SharedKernel.Utilities.Guard.AgainstNegative(System.Int32,System.String)">
+            <summary>
+            Throws if input is negative
+            </summary>
+        </member>
+        <member name="M:NumbatWallet.SharedKernel.Utilities.Guard.AgainstNegative(System.Decimal,System.String)">
+            <summary>
+            Throws if input is negative
+            </summary>
+        </member>
+        <member name="M:NumbatWallet.SharedKernel.Utilities.Guard.AgainstZero(System.Int32,System.String)">
+            <summary>
+            Throws if input is zero
+            </summary>
+        </member>
+        <member name="M:NumbatWallet.SharedKernel.Utilities.Guard.AgainstZero(System.Decimal,System.String)">
+            <summary>
+            Throws if input is zero
+            </summary>
+        </member>
+        <member name="M:NumbatWallet.SharedKernel.Utilities.Guard.AgainstInvalidFormat(System.String,System.String,System.String)">
+            <summary>
+            Throws if input does not match regex pattern
+            </summary>
+        </member>
+        <member name="M:NumbatWallet.SharedKernel.Utilities.Guard.AgainstMaxLength(System.String,System.Int32,System.String)">
+            <summary>
+            Throws if string exceeds maximum length
+            </summary>
+        </member>
+        <member name="M:NumbatWallet.SharedKernel.Utilities.Guard.AgainstNullOrEmpty``1(System.Collections.Generic.IEnumerable{``0},System.String)">
+            <summary>
+            Throws if collection is null or empty
+            </summary>
+        </member>
+        <member name="M:NumbatWallet.SharedKernel.Utilities.Guard.AgainstFutureDate(System.DateTime,System.String)">
+            <summary>
+            Throws if date is in the future
+            </summary>
+        </member>
+        <member name="M:NumbatWallet.SharedKernel.Utilities.Guard.AgainstPastDate(System.DateTime,System.String)">
+            <summary>
+            Throws if date is in the past
+            </summary>
+        </member>
+        <member name="M:NumbatWallet.SharedKernel.Utilities.Guard.AgainstFutureDate(System.DateTimeOffset,System.String)">
+            <summary>
+            Throws if date is in the future
+            </summary>
+        </member>
+        <member name="M:NumbatWallet.SharedKernel.Utilities.Guard.AgainstPastDate(System.DateTimeOffset,System.String)">
+            <summary>
+            Throws if date is in the past
+            </summary>
+        </member>
+        <member name="M:NumbatWallet.SharedKernel.Utilities.Guard.AgainstEmptyGuid(System.Guid,System.String)">
+            <summary>
+            Throws if Guid is empty
             </summary>
         </member>
     </members>
