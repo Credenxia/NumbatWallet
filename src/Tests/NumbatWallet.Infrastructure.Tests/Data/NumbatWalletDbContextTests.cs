@@ -128,8 +128,10 @@ public class NumbatWalletDbContextTests : IDisposable
     {
         // Arrange
         var tenantId = _tenantServiceMock.Object.TenantId;
-        var wallet1 = Wallet.Create(Guid.NewGuid(), "Wallet 1").Value;
-        var wallet2 = Wallet.Create(Guid.NewGuid(), "Wallet 2").Value;
+        var personId1 = Guid.NewGuid();
+        var personId2 = Guid.NewGuid();
+        var wallet1 = Wallet.Create(personId1, "Wallet 1").Value;
+        var wallet2 = Wallet.Create(personId2, "Wallet 2").Value;
 
         // Act
         _context.Wallets.Add(wallet1);
@@ -149,7 +151,8 @@ public class NumbatWalletDbContextTests : IDisposable
         var userId = _currentUserServiceMock.Object.UserId;
         _dateTimeServiceMock.Setup(x => x.UtcNow).Returns(now);
 
-        var wallet = Wallet.Create(Guid.NewGuid(), "Test Wallet").Value;
+        var personId = Guid.NewGuid();
+        var wallet = Wallet.Create(personId, "Test Wallet").Value;
 
         // Act
         _context.Wallets.Add(wallet);
@@ -164,7 +167,8 @@ public class NumbatWalletDbContextTests : IDisposable
     public async Task DbContext_ShouldDispatchDomainEvents()
     {
         // Arrange
-        var wallet = Wallet.Create(Guid.NewGuid(), "Test Wallet").Value;
+        var personId = Guid.NewGuid();
+        var wallet = Wallet.Create(personId, "Test Wallet").Value;
 
         // Act
         _context.Wallets.Add(wallet);

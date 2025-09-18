@@ -29,5 +29,17 @@
             Interceptor that applies protection (encryption/tokenization) based on tenant policies
             </summary>
         </member>
+        <member name="T:NumbatWallet.Infrastructure.Data.Migrations.InitialSchema">
+            <inheritdoc />
+        </member>
+        <member name="M:NumbatWallet.Infrastructure.Data.Migrations.InitialSchema.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:NumbatWallet.Infrastructure.Data.Migrations.InitialSchema.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:NumbatWallet.Infrastructure.Data.Migrations.InitialSchema.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
     </members>
 </doc>

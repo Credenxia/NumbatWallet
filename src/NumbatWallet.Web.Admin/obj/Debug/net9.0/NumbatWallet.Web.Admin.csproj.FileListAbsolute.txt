@@ -175,3 +175,5 @@
 /Users/rodrigolmiranda/repo/NumbatWallet/src/NumbatWallet.Web.Admin/obj/Debug/net9.0/NumbatWallet.Web.Admin.pdb
 /Users/rodrigolmiranda/repo/NumbatWallet/src/NumbatWallet.Web.Admin/obj/Debug/net9.0/NumbatWallet.Web.Admin.genruntimeconfig.cache
 /Users/rodrigolmiranda/repo/NumbatWallet/src/NumbatWallet.Web.Admin/obj/Debug/net9.0/ref/NumbatWallet.Web.Admin.dll
+/Users/rodrigolmiranda/repo/NumbatWallet/src/NumbatWallet.Web.Admin/bin/Debug/net9.0/Castle.Core.dll
+/Users/rodrigolmiranda/repo/NumbatWallet/src/NumbatWallet.Web.Admin/bin/Debug/net9.0/Moq.dll

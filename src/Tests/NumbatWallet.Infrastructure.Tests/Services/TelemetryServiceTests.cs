@@ -41,7 +41,7 @@ public class TelemetryServiceTests : IDisposable
         var telemetryConfig = new TelemetryConfiguration
         {
             TelemetryChannel = _telemetryChannelMock.Object,
-            InstrumentationKey = "test-key"
+            ConnectionString = "InstrumentationKey=test-key;EndpointSuffix=applicationinsights.azure.net"
         };
 
         _telemetryClient = new TelemetryClient(telemetryConfig);
@@ -124,7 +124,7 @@ public class TelemetryServiceTests : IDisposable
                 It.IsAny<RedactionPattern>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync((string value, PiiType _, RedactionPattern __, CancellationToken ___) =>
-                value.Contains("@") ? "***@example.com" : value);
+                value.Contains('@') ? "***@example.com" : value);
 
         // Act
         await _sut.LogSecurityEventAsync(eventType, severity, details);
@@ -310,7 +310,7 @@ public class TelemetryServiceTests : IDisposable
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync((string value, PiiType piiType, RedactionPattern pattern, CancellationToken _) =>
                 {
-                    if (value.Contains("@"))
+                    if (value.Contains('@'))
                     {
                         return value.Replace("john.doe", "***");
                     }

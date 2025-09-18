@@ -1464,6 +1464,7 @@
           "Microsoft.Extensions.Caching.StackExchangeRedis": "9.0.9",
           "Microsoft.Extensions.Diagnostics.HealthChecks": "9.0.9",
           "Microsoft.Extensions.Http": "9.0.9",
+          "Moq": "4.20.72",
           "Npgsql.EntityFrameworkCore.PostgreSQL": "9.0.4",
           "NumbatWallet.Application": "1.0.0-preview",
           "NumbatWallet.Domain": "1.0.0-preview",

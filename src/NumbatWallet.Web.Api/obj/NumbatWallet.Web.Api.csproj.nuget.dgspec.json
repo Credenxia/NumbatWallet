@@ -122,6 +122,8 @@
             "Microsoft.AspNetCore.Mvc.Versioning.ApiExplorer": "5.1.0",
             "Microsoft.AspNetCore.OpenApi": "9.0.9",
             "Microsoft.CodeAnalysis.Common": "4.11.0",
+            "Microsoft.CodeAnalysis.CSharp.Workspaces": "4.11.0",
+            "Microsoft.CodeAnalysis.Workspaces.MSBuild": "4.11.0",
             "Microsoft.EntityFrameworkCore": "9.0.9",
             "Microsoft.EntityFrameworkCore.Design": "9.0.9",
             "Microsoft.EntityFrameworkCore.InMemory": "9.0.9",
@@ -559,6 +561,8 @@
             "Microsoft.AspNetCore.Mvc.Versioning.ApiExplorer": "5.1.0",
             "Microsoft.AspNetCore.OpenApi": "9.0.9",
             "Microsoft.CodeAnalysis.Common": "4.11.0",
+            "Microsoft.CodeAnalysis.CSharp.Workspaces": "4.11.0",
+            "Microsoft.CodeAnalysis.Workspaces.MSBuild": "4.11.0",
             "Microsoft.EntityFrameworkCore": "9.0.9",
             "Microsoft.EntityFrameworkCore.Design": "9.0.9",
             "Microsoft.EntityFrameworkCore.InMemory": "9.0.9",
@@ -1091,6 +1095,8 @@
             "Microsoft.AspNetCore.Mvc.Versioning.ApiExplorer": "5.1.0",
             "Microsoft.AspNetCore.OpenApi": "9.0.9",
             "Microsoft.CodeAnalysis.Common": "4.11.0",
+            "Microsoft.CodeAnalysis.CSharp.Workspaces": "4.11.0",
+            "Microsoft.CodeAnalysis.Workspaces.MSBuild": "4.11.0",
             "Microsoft.EntityFrameworkCore": "9.0.9",
             "Microsoft.EntityFrameworkCore.Design": "9.0.9",
             "Microsoft.EntityFrameworkCore.InMemory": "9.0.9",
@@ -1524,6 +1530,8 @@
             "Microsoft.AspNetCore.Mvc.Versioning.ApiExplorer": "5.1.0",
             "Microsoft.AspNetCore.OpenApi": "9.0.9",
             "Microsoft.CodeAnalysis.Common": "4.11.0",
+            "Microsoft.CodeAnalysis.CSharp.Workspaces": "4.11.0",
+            "Microsoft.CodeAnalysis.Workspaces.MSBuild": "4.11.0",
             "Microsoft.EntityFrameworkCore": "9.0.9",
             "Microsoft.EntityFrameworkCore.Design": "9.0.9",
             "Microsoft.EntityFrameworkCore.InMemory": "9.0.9",
@@ -1971,7 +1979,17 @@
               "version": "[9.0.9, )",
               "versionCentrallyManaged": true
             },
+            "Microsoft.CodeAnalysis.CSharp.Workspaces": {
+              "target": "Package",
+              "version": "[4.11.0, )",
+              "versionCentrallyManaged": true
+            },
             "Microsoft.CodeAnalysis.Common": {
+              "target": "Package",
+              "version": "[4.11.0, )",
+              "versionCentrallyManaged": true
+            },
+            "Microsoft.CodeAnalysis.Workspaces.MSBuild": {
               "target": "Package",
               "version": "[4.11.0, )",
               "versionCentrallyManaged": true
@@ -2052,6 +2070,8 @@
             "Microsoft.AspNetCore.Mvc.Versioning.ApiExplorer": "5.1.0",
             "Microsoft.AspNetCore.OpenApi": "9.0.9",
             "Microsoft.CodeAnalysis.Common": "4.11.0",
+            "Microsoft.CodeAnalysis.CSharp.Workspaces": "4.11.0",
+            "Microsoft.CodeAnalysis.Workspaces.MSBuild": "4.11.0",
             "Microsoft.EntityFrameworkCore": "9.0.9",
             "Microsoft.EntityFrameworkCore.Design": "9.0.9",
             "Microsoft.EntityFrameworkCore.InMemory": "9.0.9",

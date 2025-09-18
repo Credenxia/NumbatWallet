@@ -10,11 +10,11 @@ using FluentAssertions;
 
 namespace NumbatWallet.Infrastructure.Tests.Services;
 
-public class HmacSearchTokenServiceTests
+public class HmacSearchTokenServiceTests : IDisposable
 {
     private readonly Mock<IKeyVaultService> _keyVaultServiceMock;
     private readonly Mock<ICurrentTenantService> _currentTenantServiceMock;
-    private readonly IMemoryCache _memoryCache;
+    private readonly MemoryCache _memoryCache;
     private readonly Mock<ILogger<HmacSearchTokenService>> _loggerMock;
     private readonly HmacSearchTokenService _sut;
 
@@ -294,8 +294,17 @@ public class HmacSearchTokenServiceTests
         result["2"].Should().NotBeEmpty();
     }
 
+    private void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            _memoryCache?.Dispose();
+        }
+    }
+
     public void Dispose()
     {
-        _memoryCache?.Dispose();
+        Dispose(true);
+        GC.SuppressFinalize(this);
     }
 }

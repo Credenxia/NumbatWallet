@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyCopyrightAttribute("Copyright © 2025 Government of Western Australia")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0-preview+cd2ee023eb715135de2f81dfca16e5a6161d2863")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0-preview+08e91339cc81343fc839d09711c4600167205432")]
 [assembly: System.Reflection.AssemblyProductAttribute("NumbatWallet Digital Wallet Solution")]
 [assembly: System.Reflection.AssemblyTitleAttribute("NumbatWallet.SharedKernel")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

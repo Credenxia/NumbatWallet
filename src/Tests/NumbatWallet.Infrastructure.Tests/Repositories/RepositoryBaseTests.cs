@@ -47,7 +47,8 @@ public class RepositoryBaseTests : IDisposable
     public async Task GetByIdAsync_ShouldReturnEntity()
     {
         // Arrange
-        var wallet = Wallet.Create(Guid.NewGuid(), "Test Wallet").Value;
+        var personId = Guid.NewGuid();
+        var wallet = Wallet.Create(personId, "Test Wallet").Value;
         await _context.Wallets.AddAsync(wallet);
         await _context.SaveChangesAsync();
 
@@ -63,8 +64,10 @@ public class RepositoryBaseTests : IDisposable
     public async Task GetAllAsync_ShouldReturnAllEntities()
     {
         // Arrange
-        var wallet1 = Wallet.Create(Guid.NewGuid(), "Wallet 1").Value;
-        var wallet2 = Wallet.Create(Guid.NewGuid(), "Wallet 2").Value;
+        var personId1 = Guid.NewGuid();
+        var personId2 = Guid.NewGuid();
+        var wallet1 = Wallet.Create(personId1, "Wallet 1").Value;
+        var wallet2 = Wallet.Create(personId2, "Wallet 2").Value;
         await _context.Wallets.AddRangeAsync(wallet1, wallet2);
         await _context.SaveChangesAsync();
 
@@ -79,7 +82,8 @@ public class RepositoryBaseTests : IDisposable
     public async Task AddAsync_ShouldAddEntity()
     {
         // Arrange
-        var wallet = Wallet.Create(Guid.NewGuid(), "New Wallet").Value;
+        var personId = Guid.NewGuid();
+        var wallet = Wallet.Create(personId, "New Wallet").Value;
 
         // Act
         await _repository.AddAsync(wallet);
@@ -94,7 +98,8 @@ public class RepositoryBaseTests : IDisposable
     public async Task UpdateAsync_ShouldUpdateEntity()
     {
         // Arrange
-        var wallet = Wallet.Create(Guid.NewGuid(), "Original Name").Value;
+        var personId = Guid.NewGuid();
+        var wallet = Wallet.Create(personId, "Original Name").Value;
         await _context.Wallets.AddAsync(wallet);
         await _context.SaveChangesAsync();
 
@@ -113,7 +118,8 @@ public class RepositoryBaseTests : IDisposable
     public async Task DeleteAsync_ShouldRemoveEntity()
     {
         // Arrange
-        var wallet = Wallet.Create(Guid.NewGuid(), "To Delete").Value;
+        var personId = Guid.NewGuid();
+        var wallet = Wallet.Create(personId, "To Delete").Value;
         await _context.Wallets.AddAsync(wallet);
         await _context.SaveChangesAsync();
 
