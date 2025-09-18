@@ -7,7 +7,6 @@ using NumbatWallet.Application.Common.Exceptions;
 using NumbatWallet.Application.CQRS.Interfaces;
 using NumbatWallet.Application.DTOs;
 using NumbatWallet.Domain.Repositories;
-using NumbatWallet.Domain.ValueObjects;
 
 namespace NumbatWallet.Application.Commands.Credentials;
 
@@ -54,7 +53,7 @@ public class VerifyCredentialCommandHandler : ICommandHandler<VerifyCredentialCo
         var verificationDetails = new Dictionary<string, object>();
 
         // Get credential
-        var credentialId = CredentialId.From(command.CredentialId);
+        var credentialId = Guid.Parse(command.CredentialId);
         var credential = await _credentialRepository.GetByIdAsync(credentialId, cancellationToken);
 
         if (credential == null)

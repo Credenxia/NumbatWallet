@@ -6,7 +6,6 @@ using NumbatWallet.Application.Common.Exceptions;
 using NumbatWallet.Application.CQRS.Interfaces;
 using NumbatWallet.SharedKernel.Interfaces;
 using NumbatWallet.Domain.Repositories;
-using NumbatWallet.Domain.ValueObjects;
 
 namespace NumbatWallet.Application.Commands.Credentials;
 
@@ -40,7 +39,7 @@ public class RevokeCredentialCommandHandler : ICommandHandler<RevokeCredentialCo
         _logger.LogInformation("Processing RevokeCredentialCommand for credential {CredentialId}", command.CredentialId);
 
         // Get credential
-        var credentialId = CredentialId.From(command.CredentialId);
+        var credentialId = Guid.Parse(command.CredentialId);
         var credential = await _credentialRepository.GetByIdAsync(credentialId, cancellationToken);
 
         if (credential == null)
@@ -64,7 +63,7 @@ public class RevokeCredentialCommandHandler : ICommandHandler<RevokeCredentialCo
 
         // Update credential
         await _credentialRepository.UpdateAsync(credential, cancellationToken);
-        await _unitOfWork.CommitAsync(cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         _logger.LogInformation("Credential {CredentialId} revoked successfully", credential.Id);
 
