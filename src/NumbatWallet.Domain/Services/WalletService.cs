@@ -67,7 +67,7 @@ public class WalletDomainService : IWalletDomainService
         var wallet = walletResult.Value;
 
         // Set tenant ID
-        wallet.TenantId = tenantId;
+        wallet.SetTenantId(tenantId);
 
         // Add creation event
         wallet.AddDomainEvent(new WalletCreatedEvent(
@@ -148,7 +148,9 @@ public class WalletDomainService : IWalletDomainService
             var isUnique = await IsWalletDidUniqueAsync(walletDid, cancellationToken);
 
             if (isUnique)
+            {
                 return walletDid;
+            }
 
             attempts++;
         } while (attempts < maxAttempts);

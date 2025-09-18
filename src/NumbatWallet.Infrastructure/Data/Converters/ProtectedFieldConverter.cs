@@ -38,7 +38,9 @@ public class ProtectedFieldConverter : ValueConverter<string, string>
     private static string ConvertFromJson(string json)
     {
         if (string.IsNullOrEmpty(json))
+        {
             return string.Empty;
+        }
 
         try
         {
@@ -55,10 +57,14 @@ public class ProtectedFieldConverter : ValueConverter<string, string>
     private static string GetRedactedValue(string value)
     {
         if (string.IsNullOrEmpty(value))
+        {
             return string.Empty;
+        }
 
         if (value.Length <= 1)
+        {
             return "*";
+        }
 
         // Default redaction: show first and last character
         return $"{value[0]}{new string('*', Math.Min(value.Length - 2, 5))}{value[^1]}";

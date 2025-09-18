@@ -79,9 +79,9 @@ public class IssuerSearchSpecification : Specification<Issuer>
         {
             var lowerSearchTerm = searchTerm.ToLowerInvariant();
             AddCriteria(i =>
-                i.Name.ToLower().Contains(lowerSearchTerm) ||
-                i.IssuerDid.ToLower().Contains(lowerSearchTerm) ||
-                (i.Description != null && i.Description.ToLower().Contains(lowerSearchTerm)));
+                i.Name.ToLowerInvariant().Contains(lowerSearchTerm) ||
+                i.IssuerDid.ToLowerInvariant().Contains(lowerSearchTerm) ||
+                (i.Description != null && i.Description.ToLowerInvariant().Contains(lowerSearchTerm)));
         }
 
         ApplyOrderBy(i => i.Name);

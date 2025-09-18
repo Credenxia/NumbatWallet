@@ -287,6 +287,18 @@ git commit -m "POA-XXX: Implement feature with TDD"
 
 The backend development follows these milestones in chronological order:
 
+### PreDev Milestones (Critical Foundation - Do Before Implementation)
+1. **001-PreDev-Standards** - Establish coding standards and credential formats
+   - Issue #62: POA-121: Add JWT-VC and JSON-LD support
+   - Issue #63: POA-123: Implement credential manifest support
+2. **002-PreDev-PKI** - Setup PKI and security infrastructure
+   - Issue #64: POA-125: Set up IACA root certificates
+   - Issue #65: POA-126: Implement Document Signing Certificates
+   - Issue #66: POA-127: Create trust list management
+   - Issue #67: POA-128: Implement HSM integration
+   - Issue #69: POA-130: Create revocation registry
+   - Issue #70: POA-131: Implement key rotation policies
+
 ### Backend Milestones (Sep 19 - Oct 3, 2025)
 1. **011-Backend-Foundation** (Sep 19) - Domain entities, value objects, base patterns
 2. **012-Backend-Domain** (Sep 24) - Aggregates, domain services, domain events

@@ -36,14 +36,20 @@ public class CredentialDomainService : ICredentialDomainService
     {
         var issuer = await _issuerRepository.GetByIdAsync(issuerId, cancellationToken);
         if (issuer == null)
+        {
             return false;
+        }
 
         // Check if issuer is active and trusted
         if (issuer.Status != IssuerStatus.Active)
+        {
             return false;
+        }
 
         if (!issuer.IsTrusted)
+        {
             return false;
+        }
 
         // Check if issuer supports this credential type
         return await _issuerRepository.CanIssueCredentialTypeAsync(issuerId, credentialType, cancellationToken);
@@ -57,12 +63,16 @@ public class CredentialDomainService : ICredentialDomainService
         // Validate issuer can issue this credential type
         var canIssue = await CanIssueCredentialAsync(issuer.Id, credential.CredentialType, cancellationToken);
         if (!canIssue)
+        {
             return false;
+        }
 
         // Validate wallet exists and is active
         var wallet = await _walletRepository.GetByIdAsync(credential.WalletId, cancellationToken);
         if (wallet == null || wallet.Status != WalletStatus.Active)
+        {
             return false;
+        }
 
         // Validate credential is not already issued to this wallet
         var existingCredentials = await _credentialRepository.GetByWalletIdAsync(credential.WalletId, cancellationToken);
@@ -109,7 +119,9 @@ public class CredentialDomainService : ICredentialDomainService
     public Task<bool> IsCredentialExpiredAsync(Credential credential, CancellationToken cancellationToken = default)
     {
         if (credential.ExpiresAt == null)
+        {
             return Task.FromResult(false);
+        }
 
         return Task.FromResult(credential.ExpiresAt.Value <= DateTimeOffset.UtcNow);
     }
@@ -118,11 +130,15 @@ public class CredentialDomainService : ICredentialDomainService
     {
         // Only the issuer can revoke their own credentials
         if (credential.IssuerId != issuerId)
+        {
             return false;
+        }
 
         // Can't revoke already revoked credentials
         if (credential.Status == CredentialStatus.Revoked)
+        {
             return false;
+        }
 
         // Verify issuer still exists and is active
         var issuer = await _issuerRepository.GetByIdAsync(issuerId, cancellationToken);

@@ -15,9 +15,15 @@ public class Email : ValueObject
         Value = value;
     }
 
-    public string Value { get; }
-    public string Domain => Value.Split('@')[1];
-    public string LocalPart => Value.Split('@')[0];
+    // EF Core constructor
+    private Email()
+    {
+        Value = string.Empty;
+    }
+
+    public string Value { get; private set; }
+    public string Domain => Value.Contains('@') ? Value.Split('@')[1] : string.Empty;
+    public string LocalPart => Value.Contains('@') ? Value.Split('@')[0] : string.Empty;
 
     public static Email Create(string email)
     {

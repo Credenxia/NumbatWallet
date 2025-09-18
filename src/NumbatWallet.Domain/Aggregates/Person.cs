@@ -41,7 +41,7 @@ public sealed class Person : AuditableEntity<Guid>, ITenantAware
     public DateTimeOffset? VerifiedAt { get; private set; }
     public VerificationLevel? VerificationLevel { get; private set; }
     public PersonStatus Status { get; private set; }
-    public string TenantId { get; set; } = string.Empty;
+    public string TenantId { get; private set; } = string.Empty;
 
     // Navigation properties
     private readonly List<Wallet> _wallets = new();
@@ -276,7 +276,10 @@ public sealed class Person : AuditableEntity<Guid>, ITenantAware
     {
         var today = DateOnly.FromDateTime(DateTime.UtcNow);
         var age = today.Year - DateOfBirth.Year;
-        if (DateOfBirth > today.AddYears(-age)) age--;
+        if (DateOfBirth > today.AddYears(-age))
+        {
+            age--;
+        }
         return age;
     }
 
@@ -288,9 +291,21 @@ public sealed class Person : AuditableEntity<Guid>, ITenantAware
         PhoneVerificationStatus = VerificationStatus.Verified;
     }
 
+    public void SetTenantId(string tenantId)
+    {
+        Guard.AgainstNullOrWhiteSpace(tenantId, nameof(tenantId));
+        TenantId = tenantId;
+    }
+
     private static string GenerateVerificationCode()
     {
-        var random = new Random();
-        return random.Next(100000, 999999).ToString();
+        // Use cryptographically secure random number generator
+        using var rng = System.Security.Cryptography.RandomNumberGenerator.Create();
+        var bytes = new byte[4];
+        rng.GetBytes(bytes);
+
+        // Convert to a 6-digit number (100000-999999)
+        var value = BitConverter.ToUInt32(bytes, 0) % 900000 + 100000;
+        return value.ToString(System.Globalization.CultureInfo.InvariantCulture);
     }
 }

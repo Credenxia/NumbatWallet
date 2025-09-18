@@ -1,10 +1,13 @@
 /Users/rodrigolmiranda/repo/NumbatWallet/src/NumbatWallet.Application/bin/Debug/net9.0/NumbatWallet.Application.deps.json
 /Users/rodrigolmiranda/repo/NumbatWallet/src/NumbatWallet.Application/bin/Debug/net9.0/NumbatWallet.Application.dll
 /Users/rodrigolmiranda/repo/NumbatWallet/src/NumbatWallet.Application/bin/Debug/net9.0/NumbatWallet.Application.pdb
+/Users/rodrigolmiranda/repo/NumbatWallet/src/NumbatWallet.Application/bin/Debug/net9.0/NumbatWallet.Application.xml
 /Users/rodrigolmiranda/repo/NumbatWallet/src/NumbatWallet.Application/bin/Debug/net9.0/NumbatWallet.Domain.dll
 /Users/rodrigolmiranda/repo/NumbatWallet/src/NumbatWallet.Application/bin/Debug/net9.0/NumbatWallet.SharedKernel.dll
 /Users/rodrigolmiranda/repo/NumbatWallet/src/NumbatWallet.Application/bin/Debug/net9.0/NumbatWallet.Domain.pdb
+/Users/rodrigolmiranda/repo/NumbatWallet/src/NumbatWallet.Application/bin/Debug/net9.0/NumbatWallet.Domain.xml
 /Users/rodrigolmiranda/repo/NumbatWallet/src/NumbatWallet.Application/bin/Debug/net9.0/NumbatWallet.SharedKernel.pdb
+/Users/rodrigolmiranda/repo/NumbatWallet/src/NumbatWallet.Application/bin/Debug/net9.0/NumbatWallet.SharedKernel.xml
 /Users/rodrigolmiranda/repo/NumbatWallet/src/NumbatWallet.Application/obj/Debug/net9.0/NumbatWallet.Application.csproj.AssemblyReference.cache
 /Users/rodrigolmiranda/repo/NumbatWallet/src/NumbatWallet.Application/obj/Debug/net9.0/NumbatWallet.Application.GeneratedMSBuildEditorConfig.editorconfig
 /Users/rodrigolmiranda/repo/NumbatWallet/src/NumbatWallet.Application/obj/Debug/net9.0/NumbatWallet.Application.AssemblyInfoInputs.cache
@@ -14,9 +17,6 @@
 /Users/rodrigolmiranda/repo/NumbatWallet/src/NumbatWallet.Application/obj/Debug/net9.0/NumbatWa.7EEE3E29.Up2Date
 /Users/rodrigolmiranda/repo/NumbatWallet/src/NumbatWallet.Application/obj/Debug/net9.0/NumbatWallet.Application.dll
 /Users/rodrigolmiranda/repo/NumbatWallet/src/NumbatWallet.Application/obj/Debug/net9.0/refint/NumbatWallet.Application.dll
+/Users/rodrigolmiranda/repo/NumbatWallet/src/NumbatWallet.Application/obj/Debug/net9.0/NumbatWallet.Application.xml
 /Users/rodrigolmiranda/repo/NumbatWallet/src/NumbatWallet.Application/obj/Debug/net9.0/NumbatWallet.Application.pdb
 /Users/rodrigolmiranda/repo/NumbatWallet/src/NumbatWallet.Application/obj/Debug/net9.0/ref/NumbatWallet.Application.dll
-/Users/rodrigolmiranda/repo/NumbatWallet/src/NumbatWallet.Application/bin/Debug/net9.0/NumbatWallet.Application.xml
-/Users/rodrigolmiranda/repo/NumbatWallet/src/NumbatWallet.Application/bin/Debug/net9.0/NumbatWallet.Domain.xml
-/Users/rodrigolmiranda/repo/NumbatWallet/src/NumbatWallet.Application/bin/Debug/net9.0/NumbatWallet.SharedKernel.xml
-/Users/rodrigolmiranda/repo/NumbatWallet/src/NumbatWallet.Application/obj/Debug/net9.0/NumbatWallet.Application.xml

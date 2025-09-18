@@ -13,6 +13,9 @@ public sealed class Credential : AuditableEntity<Guid>, ITenantAware
     public Guid IssuerId { get; private set; }
 
     [DataClassification(DataClassification.Official, "Credential")]
+    public string CredentialId { get; private set; }
+
+    [DataClassification(DataClassification.Official, "Credential")]
     public string CredentialType { get; private set; }
 
     [DataClassification(DataClassification.Protected, "Credential")]
@@ -27,7 +30,7 @@ public sealed class Credential : AuditableEntity<Guid>, ITenantAware
     public DateTimeOffset? RevokedAt { get; private set; }
     public string? RevocationReason { get; private set; }
     public string? SuspensionReason { get; private set; }
-    public string TenantId { get; set; } = string.Empty;
+    public string TenantId { get; private set; } = string.Empty;
 
     // Navigation properties
     public Wallet? Wallet { get; private set; }
@@ -52,6 +55,7 @@ public sealed class Credential : AuditableEntity<Guid>, ITenantAware
     {
         WalletId = walletId;
         IssuerId = issuerId;
+        CredentialId = $"cred_{Guid.NewGuid():N}";
         CredentialType = credentialType;
         CredentialData = credentialData;
         SchemaId = schemaId;
@@ -87,6 +91,12 @@ public sealed class Credential : AuditableEntity<Guid>, ITenantAware
         {
             return DomainError.Validation("Credential.Invalid", ex.Message);
         }
+    }
+
+    public void SetTenantId(string tenantId)
+    {
+        Guard.AgainstNullOrWhiteSpace(tenantId, nameof(tenantId));
+        TenantId = tenantId;
     }
 
     public Result Activate()

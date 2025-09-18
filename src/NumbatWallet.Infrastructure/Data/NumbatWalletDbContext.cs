@@ -55,10 +55,11 @@ public class NumbatWalletDbContext : DbContext, IUnitOfWork
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(NumbatWalletDbContext).Assembly);
 
         // Apply global query filters for multi-tenancy
-        modelBuilder.Entity<Wallet>().HasQueryFilter(w => w.TenantId == _tenantService.TenantId);
-        modelBuilder.Entity<Credential>().HasQueryFilter(c => c.TenantId == _tenantService.TenantId);
-        modelBuilder.Entity<Person>().HasQueryFilter(p => p.TenantId == _tenantService.TenantId);
-        modelBuilder.Entity<Issuer>().HasQueryFilter(i => i.TenantId == _tenantService.TenantId);
+        var tenantId = _tenantService.TenantId.ToString();
+        modelBuilder.Entity<Wallet>().HasQueryFilter(w => w.TenantId == tenantId);
+        modelBuilder.Entity<Credential>().HasQueryFilter(c => c.TenantId == tenantId);
+        modelBuilder.Entity<Person>().HasQueryFilter(p => p.TenantId == tenantId);
+        modelBuilder.Entity<Issuer>().HasQueryFilter(i => i.TenantId == tenantId);
 
         // Configure JSONB for PostgreSQL
         modelBuilder.HasPostgresExtension("pgcrypto"); // For encryption functions if needed
@@ -76,7 +77,11 @@ public class NumbatWalletDbContext : DbContext, IUnitOfWork
 
                 if (entry.Entity is ITenantAware tenantEntity)
                 {
-                    tenantEntity.TenantId = _tenantService.TenantId;
+                    var tenantIdString = _tenantService.TenantId == Guid.Empty ? null : _tenantService.TenantId.ToString();
+                    if (!string.IsNullOrEmpty(tenantIdString))
+                    {
+                        tenantEntity.SetTenantId(tenantIdString);
+                    }
                 }
             }
             else if (entry.State == EntityState.Modified)
@@ -110,14 +115,20 @@ public class NumbatWalletDbContext : DbContext, IUnitOfWork
 
     public async Task BeginTransactionAsync(CancellationToken cancellationToken = default)
     {
-        if (_currentTransaction != null) return;
+        if (_currentTransaction != null)
+        {
+            return;
+        }
 
         _currentTransaction = await Database.BeginTransactionAsync(cancellationToken);
     }
 
     public async Task CommitTransactionAsync(CancellationToken cancellationToken = default)
     {
-        if (_currentTransaction == null) throw new InvalidOperationException("No transaction started");
+        if (_currentTransaction == null)
+        {
+            throw new InvalidOperationException("No transaction started");
+        }
 
         try
         {

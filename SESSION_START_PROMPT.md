@@ -9,11 +9,14 @@ Use this prompt to start each development session with Claude Code:
 **"I'm starting a development session for NumbatWallet backend. Please:**
 
 ### 1. Session Initialization
-- Review the backend milestones in CLAUDE.md (011-Backend-Foundation through 017-Backend-Admin)
+- Review ALL milestones in CLAUDE.md:
+  - PreDev milestones (001-PreDev-Standards, 002-PreDev-PKI) - CRITICAL FOUNDATION
+  - Backend milestones (011-Backend-Foundation through 017-Backend-Admin)
 - Check GitHub Project #18 for current milestone status
 - List all open issues for the current and upcoming milestones
 - Identify any blocking dependencies between issues
 - Check for any failing tests or build warnings from previous session
+- **IMPORTANT**: PreDev standards should be established FIRST to avoid refactoring
 
 ### 2. Work Planning
 - Create a session plan in `/tmp/session_plan_[date].md` with:

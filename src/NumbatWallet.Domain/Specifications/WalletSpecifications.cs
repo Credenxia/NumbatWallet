@@ -64,8 +64,8 @@ public class WalletSearchSpecification : Specification<Wallet>
         {
             var lowerSearchTerm = searchTerm.ToLowerInvariant();
             AddCriteria(w =>
-                w.WalletDid.ToLower().Contains(lowerSearchTerm) ||
-                w.ExternalId != null && w.ExternalId.ToLower().Contains(lowerSearchTerm));
+                w.WalletDid.ToLowerInvariant().Contains(lowerSearchTerm) ||
+                w.ExternalId != null && w.ExternalId.ToLowerInvariant().Contains(lowerSearchTerm));
         }
     }
 }

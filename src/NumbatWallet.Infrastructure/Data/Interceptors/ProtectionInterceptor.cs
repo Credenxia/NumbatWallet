@@ -29,7 +29,9 @@ public class ProtectionInterceptor : SaveChangesInterceptor
         CancellationToken cancellationToken = default)
     {
         if (eventData.Context is null)
+        {
             return await base.SavingChangesAsync(eventData, result, cancellationToken);
+        }
 
         // Get services from DI
         using var scope = _serviceProvider.CreateScope();
@@ -40,7 +42,9 @@ public class ProtectionInterceptor : SaveChangesInterceptor
 
         // Only apply protection if services are available
         if (protectionService == null || searchTokenService == null || tenantPolicyService == null)
+        {
             return await base.SavingChangesAsync(eventData, result, cancellationToken);
+        }
 
         var tenantId = tenantService.TenantId;
 
@@ -75,11 +79,17 @@ public class ProtectionInterceptor : SaveChangesInterceptor
         foreach (var property in entry.Properties)
         {
             var propertyInfo = entityType.GetProperty(property.Metadata.Name);
-            if (propertyInfo == null) continue;
+            if (propertyInfo == null)
+            {
+                continue;
+            }
 
             // Check if property has DataClassification attribute
             var classificationAttr = propertyInfo.GetCustomAttribute<DataClassificationAttribute>();
-            if (classificationAttr == null) continue;
+            if (classificationAttr == null)
+            {
+                continue;
+            }
 
             // Get the field policy from tenant configuration
             var fieldPolicy = await tenantPolicyService.GetFieldPolicyAsync(
@@ -89,11 +99,16 @@ public class ProtectionInterceptor : SaveChangesInterceptor
 
             // Skip if no protection required for this field
             if (!fieldPolicy.EnableEncryption && !fieldPolicy.EnableTokenization)
+            {
                 continue;
+            }
 
             // Get the current value
             var currentValue = property.CurrentValue;
-            if (currentValue == null) continue;
+            if (currentValue == null)
+            {
+                continue;
+            }
 
             // Apply protection based on policy
             if (currentValue is string stringValue)
@@ -142,6 +157,10 @@ public class ProtectionInterceptor : SaveChangesInterceptor
     {
         // Synchronous version - just call async version
         var task = SavingChangesAsync(eventData, result);
-        return task.GetAwaiter().GetResult();
+        if (task.IsCompleted)
+        {
+            return task.Result;
+        }
+        return task.AsTask().GetAwaiter().GetResult();
     }
 }

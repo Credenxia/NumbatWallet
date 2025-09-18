@@ -1,6 +1,7 @@
 /Users/rodrigolmiranda/repo/NumbatWallet/src/NumbatWallet.SharedKernel/bin/Debug/net9.0/NumbatWallet.SharedKernel.deps.json
 /Users/rodrigolmiranda/repo/NumbatWallet/src/NumbatWallet.SharedKernel/bin/Debug/net9.0/NumbatWallet.SharedKernel.dll
 /Users/rodrigolmiranda/repo/NumbatWallet/src/NumbatWallet.SharedKernel/bin/Debug/net9.0/NumbatWallet.SharedKernel.pdb
+/Users/rodrigolmiranda/repo/NumbatWallet/src/NumbatWallet.SharedKernel/bin/Debug/net9.0/NumbatWallet.SharedKernel.xml
 /Users/rodrigolmiranda/repo/NumbatWallet/src/NumbatWallet.SharedKernel/obj/Debug/net9.0/NumbatWallet.SharedKernel.GeneratedMSBuildEditorConfig.editorconfig
 /Users/rodrigolmiranda/repo/NumbatWallet/src/NumbatWallet.SharedKernel/obj/Debug/net9.0/NumbatWallet.SharedKernel.AssemblyInfoInputs.cache
 /Users/rodrigolmiranda/repo/NumbatWallet/src/NumbatWallet.SharedKernel/obj/Debug/net9.0/NumbatWallet.SharedKernel.AssemblyInfo.cs
@@ -8,7 +9,6 @@
 /Users/rodrigolmiranda/repo/NumbatWallet/src/NumbatWallet.SharedKernel/obj/Debug/net9.0/NumbatWallet.SharedKernel.sourcelink.json
 /Users/rodrigolmiranda/repo/NumbatWallet/src/NumbatWallet.SharedKernel/obj/Debug/net9.0/NumbatWallet.SharedKernel.dll
 /Users/rodrigolmiranda/repo/NumbatWallet/src/NumbatWallet.SharedKernel/obj/Debug/net9.0/refint/NumbatWallet.SharedKernel.dll
+/Users/rodrigolmiranda/repo/NumbatWallet/src/NumbatWallet.SharedKernel/obj/Debug/net9.0/NumbatWallet.SharedKernel.xml
 /Users/rodrigolmiranda/repo/NumbatWallet/src/NumbatWallet.SharedKernel/obj/Debug/net9.0/NumbatWallet.SharedKernel.pdb
 /Users/rodrigolmiranda/repo/NumbatWallet/src/NumbatWallet.SharedKernel/obj/Debug/net9.0/ref/NumbatWallet.SharedKernel.dll
-/Users/rodrigolmiranda/repo/NumbatWallet/src/NumbatWallet.SharedKernel/bin/Debug/net9.0/NumbatWallet.SharedKernel.xml
-/Users/rodrigolmiranda/repo/NumbatWallet/src/NumbatWallet.SharedKernel/obj/Debug/net9.0/NumbatWallet.SharedKernel.xml

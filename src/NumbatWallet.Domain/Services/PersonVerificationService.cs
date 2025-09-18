@@ -120,11 +120,15 @@ public class PersonVerificationService : IPersonVerificationService
     {
         // Check person is verified
         if (!person.IsVerified)
+        {
             return false;
+        }
 
         // Check person is active
         if (person.Status != PersonStatus.Active && person.Status != PersonStatus.Verified)
+        {
             return false;
+        }
 
         // Check person doesn't already have an active wallet
         var wallets = await _walletRepository.GetByPersonIdAsync(person.Id, cancellationToken);
@@ -139,7 +143,9 @@ public class PersonVerificationService : IPersonVerificationService
         CancellationToken cancellationToken)
     {
         if (!verificationData.ContainsKey("verificationCode"))
+        {
             return false;
+        }
 
         var providedCode = verificationData["verificationCode"]?.ToString();
         var expectedCode = verificationData.ContainsKey("expectedCode")
@@ -156,7 +162,9 @@ public class PersonVerificationService : IPersonVerificationService
         CancellationToken cancellationToken)
     {
         if (!verificationData.ContainsKey("smsCode"))
+        {
             return false;
+        }
 
         var providedCode = verificationData["smsCode"]?.ToString();
         var expectedCode = verificationData.ContainsKey("expectedCode")

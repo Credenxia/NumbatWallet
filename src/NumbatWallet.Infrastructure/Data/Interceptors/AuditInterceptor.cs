@@ -32,7 +32,9 @@ public class AuditInterceptor : SaveChangesInterceptor
         CancellationToken cancellationToken = default)
     {
         if (eventData.Context is null)
+        {
             return await base.SavingChangesAsync(eventData, result, cancellationToken);
+        }
 
         using var scope = _serviceProvider.CreateScope();
         var auditService = scope.ServiceProvider.GetService<IAuditService>();
@@ -40,18 +42,24 @@ public class AuditInterceptor : SaveChangesInterceptor
         var tenantService = scope.ServiceProvider.GetRequiredService<ITenantService>();
 
         if (auditService == null)
+        {
             return await base.SavingChangesAsync(eventData, result, cancellationToken);
+        }
 
         var auditEntries = new List<AuditEntry>();
 
         foreach (var entry in eventData.Context.ChangeTracker.Entries())
         {
             if (entry.State == EntityState.Unchanged || entry.State == EntityState.Detached)
+            {
                 continue;
+            }
 
             var auditEntry = CreateAuditEntry(entry, currentUserService.UserId, tenantService.TenantId);
             if (auditEntry != null)
+            {
                 auditEntries.Add(auditEntry);
+            }
         }
 
         // Log audit entries
@@ -95,19 +103,28 @@ public class AuditInterceptor : SaveChangesInterceptor
         foreach (var property in entry.Properties)
         {
             if (!property.IsModified && entry.State != EntityState.Added)
+            {
                 continue;
+            }
 
             var propertyInfo = entityType.GetProperty(property.Metadata.Name);
-            if (propertyInfo == null) continue;
+            if (propertyInfo == null)
+            {
+                continue;
+            }
 
             var classificationAttr = propertyInfo.GetCustomAttribute<DataClassificationAttribute>();
             var classification = classificationAttr?.Classification ?? DataClassification.Unofficial;
 
             if (classification > maxClassification)
+            {
                 maxClassification = classification;
+            }
 
             if (classification >= DataClassification.OfficialSensitive)
+            {
                 hasSensitiveData = true;
+            }
 
             var auditInfo = new PropertyAuditInfo
             {
@@ -132,7 +149,9 @@ public class AuditInterceptor : SaveChangesInterceptor
     {
         var keyProperties = entry.Metadata.FindPrimaryKey()?.Properties;
         if (keyProperties == null || !keyProperties.Any())
+        {
             return "Unknown";
+        }
 
         var keyValues = keyProperties
             .Select(p => entry.Property(p.Name).CurrentValue?.ToString() ?? "null");
@@ -142,25 +161,32 @@ public class AuditInterceptor : SaveChangesInterceptor
 
     private string GetRedactedValue(object? value, DataClassification classification)
     {
-        if (value == null) return "null";
+        if (value == null)
+        {
+            return "null";
+        }
 
         // For highly sensitive data, don't log the actual value
         if (classification >= DataClassification.Protected)
+        {
             return "***REDACTED***";
+        }
 
         // For sensitive data, log a partial value
         if (classification >= DataClassification.OfficialSensitive)
         {
             var stringValue = value.ToString() ?? "";
             if (stringValue.Length <= 2)
+            {
                 return "**";
+            }
 
             return $"{stringValue[0]}***{stringValue[^1]}";
         }
 
         // For non-sensitive data, log the full value (truncated if too long)
         var fullValue = value.ToString() ?? "";
-        return fullValue.Length > 100 ? fullValue.Substring(0, 97) + "..." : fullValue;
+        return fullValue.Length > 100 ? string.Concat(fullValue.AsSpan(0, 97), "...") : fullValue;
     }
 }
 

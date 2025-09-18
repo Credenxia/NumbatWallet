@@ -6,12 +6,16 @@ namespace NumbatWallet.Domain.Tests.ValueObjects;
 public class PhoneNumberNullTests
 {
     [Fact]
-    public void PhoneNumber_WithNull_ShouldFail()
+    public void PhoneNumber_WithNull_ShouldThrowArgumentException()
     {
-        // Act
-        var phone = PhoneNumber.Create(null);
+        // Act & Assert
+        Assert.Throws<ArgumentException>(() => PhoneNumber.Create(null!));
+    }
 
-        // Assert
-        Assert.True(phone.IsFailure);
+    [Fact]
+    public void PhoneNumber_WithEmptyString_ShouldThrowArgumentException()
+    {
+        // Act & Assert
+        Assert.Throws<ArgumentException>(() => PhoneNumber.Create(string.Empty));
     }
 }

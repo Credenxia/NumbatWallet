@@ -11,8 +11,8 @@ public class PersonTests
     public void Person_Create_ShouldInitializeCorrectly()
     {
         // Arrange
-        var email = Email.Create("john.doe@example.com").Value;
-        var phone = PhoneNumber.Create("+61412345678").Value;
+        var email = Email.Create("john.doe@example.com");
+        var phone = PhoneNumber.Create("+61412345678");
         var firstName = "John";
         var lastName = "Doe";
         var dateOfBirth = new DateOnly(1990, 1, 1);
@@ -46,7 +46,7 @@ public class PersonTests
         // Arrange
         var person = CreateTestPerson();
         person.VerifyEmail("123456"); // Verify original email
-        var newEmail = Email.Create("new.email@example.com").Value;
+        var newEmail = Email.Create("new.email@example.com");
 
         // Act
         var result = person.UpdateEmail(newEmail);
@@ -63,7 +63,7 @@ public class PersonTests
         // Arrange
         var person = CreateTestPerson();
         person.VerifyPhone("123456"); // Verify original phone
-        var newPhone = PhoneNumber.Create("+61498765432").Value;
+        var newPhone = PhoneNumber.Create("+61498765432");
 
         // Act
         var result = person.UpdatePhoneNumber(newPhone);
@@ -205,8 +205,8 @@ public class PersonTests
         // Arrange
         var dateOfBirth = DateOnly.FromDateTime(DateTime.UtcNow.AddYears(-25));
         var person = Person.Create(
-            Email.Create("test@example.com").Value,
-            PhoneNumber.Create("+61412345678").Value,
+            Email.Create("test@example.com"),
+            PhoneNumber.Create("+61412345678"),
             "Test",
             "User",
             dateOfBirth
@@ -222,8 +222,8 @@ public class PersonTests
     private static Person CreateTestPerson()
     {
         return Person.Create(
-            Email.Create("test@example.com").Value,
-            PhoneNumber.Create("+61412345678").Value,
+            Email.Create("test@example.com"),
+            PhoneNumber.Create("+61412345678"),
             "John",
             "Doe",
             new DateOnly(1990, 1, 1)

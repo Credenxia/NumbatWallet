@@ -6,12 +6,16 @@ namespace NumbatWallet.Domain.Tests.ValueObjects;
 public class EmailNullTests
 {
     [Fact]
-    public void Email_WithNull_ShouldFail()
+    public void Email_WithNull_ShouldThrowArgumentException()
     {
-        // Act
-        var email = Email.Create(null);
+        // Act & Assert
+        Assert.Throws<ArgumentException>(() => Email.Create(null!));
+    }
 
-        // Assert
-        Assert.True(email.IsFailure);
+    [Fact]
+    public void Email_WithEmptyString_ShouldThrowArgumentException()
+    {
+        // Act & Assert
+        Assert.Throws<ArgumentException>(() => Email.Create(string.Empty));
     }
 }

@@ -13,7 +13,8 @@ public sealed partial class Issuer : AuditableEntity<Guid>, ITenantAware
     private readonly List<string> _trustedDomains = new();
     private readonly Dictionary<string, string> _supportedCredentialTypes = new();
 
-    public string TenantId { get; set; } = string.Empty;
+    public string TenantId { get; private set; } = string.Empty;
+    public string? ExternalId { get; private set; }
 
     [DataClassification(DataClassification.Official, "Organization")]
     public string Name { get; private set; }
@@ -91,7 +92,7 @@ public sealed partial class Issuer : AuditableEntity<Guid>, ITenantAware
         IEnumerable<string> trustedDomains)
         : base(Guid.NewGuid())
     {
-        TenantId = tenantId.ToString();
+        TenantId = tenantId == Guid.Empty ? string.Empty : tenantId.ToString();
         Name = name;
         Code = code;
         Description = description;
@@ -133,6 +134,12 @@ public sealed partial class Issuer : AuditableEntity<Guid>, ITenantAware
         {
             return DomainError.Validation("Issuer.Invalid", ex.Message);
         }
+    }
+
+    public void SetTenantId(string tenantId)
+    {
+        Guard.AgainstNullOrWhiteSpace(tenantId, nameof(tenantId));
+        TenantId = tenantId;
     }
 
     public Result AddSupportedCredentialType(string credentialType, string schemaUrl)
@@ -206,20 +213,26 @@ public sealed partial class Issuer : AuditableEntity<Guid>, ITenantAware
     public bool IsDomainTrusted(string domain)
     {
         if (string.IsNullOrWhiteSpace(domain))
+        {
             return false;
+        }
 
         // Check exact match
         if (_trustedDomains.Contains(domain))
+        {
             return true;
+        }
 
         // Check wildcard patterns
         foreach (var trustedDomain in _trustedDomains)
         {
-            if (trustedDomain.StartsWith("*."))
+            if (trustedDomain.StartsWith("*.", StringComparison.Ordinal))
             {
                 var pattern = WildcardToRegex(trustedDomain);
                 if (Regex.IsMatch(domain, pattern, RegexOptions.IgnoreCase))
+                {
                     return true;
+                }
             }
         }
 
@@ -273,6 +286,50 @@ public sealed partial class Issuer : AuditableEntity<Guid>, ITenantAware
         IsActive = true;
         DeactivationReason = null;
         return Result.Success();
+    }
+
+    public Result RemoveTrust()
+    {
+        if (!IsTrusted)
+        {
+            return DomainError.BusinessRule("Issuer.NotTrusted", "Issuer is not trusted.");
+        }
+
+        IsTrusted = false;
+        TrustLevel = 0;
+        return Result.Success();
+    }
+
+    public Result MarkAsTrusted(int trustLevel)
+    {
+        if (trustLevel < 0 || trustLevel > 10)
+        {
+            return DomainError.Validation("Issuer.InvalidTrustLevel", "Trust level must be between 0 and 10.");
+        }
+
+        if (!IsActive)
+        {
+            return DomainError.BusinessRule("Issuer.NotActive", "Cannot mark inactive issuer as trusted.");
+        }
+
+        IsTrusted = true;
+        TrustLevel = trustLevel;
+        return Result.Success();
+    }
+
+    public void SetExternalId(string? externalId)
+    {
+        ExternalId = externalId;
+    }
+
+    public void SetJurisdiction(string? jurisdiction)
+    {
+        Jurisdiction = jurisdiction;
+    }
+
+    public void SetWebsiteUrl(string? websiteUrl)
+    {
+        WebsiteUrl = websiteUrl;
     }
 
     private static string WildcardToRegex(string pattern)

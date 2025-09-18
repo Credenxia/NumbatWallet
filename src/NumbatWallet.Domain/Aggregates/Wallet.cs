@@ -13,7 +13,7 @@ public sealed class Wallet : AuditableEntity<Guid>, ITenantAware
     private readonly List<Guid> _credentialIds = new();
 
     public Guid PersonId { get; private set; }
-    public string TenantId { get; set; } = string.Empty;
+    public string TenantId { get; private set; } = string.Empty;
 
     [DataClassification(DataClassification.Official, "Wallet")]
     public string WalletName { get; private set; }
@@ -78,6 +78,12 @@ public sealed class Wallet : AuditableEntity<Guid>, ITenantAware
         {
             return DomainError.Validation("Wallet.Invalid", ex.Message);
         }
+    }
+
+    public void SetTenantId(string tenantId)
+    {
+        Guard.AgainstNullOrWhiteSpace(tenantId, nameof(tenantId));
+        TenantId = tenantId;
     }
 
     public Result AddCredential(Guid credentialId)

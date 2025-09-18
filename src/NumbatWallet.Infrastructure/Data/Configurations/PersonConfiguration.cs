@@ -74,10 +74,14 @@ public class PersonConfiguration : IEntityTypeConfiguration<Person>
         builder.OwnsOne(p => p.PhoneNumber, phone =>
         {
             phone.Property(ph => ph.Value)
-                .HasColumnName("PhoneNumber")
+                .HasColumnName("PhoneNumberValue")
                 .IsRequired()
-                .HasColumnType("jsonb")
+                .HasMaxLength(20)
                 .HasConversion(new ProtectedFieldConverter());
+
+            phone.Property(ph => ph.CountryCode)
+                .HasColumnName("PhoneNumberCountryCode")
+                .HasMaxLength(5);
 
             // Index on the searchable token (will be added via interceptor)
             phone.HasIndex(ph => ph.Value);

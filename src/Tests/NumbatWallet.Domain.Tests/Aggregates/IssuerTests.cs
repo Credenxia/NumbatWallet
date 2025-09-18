@@ -24,7 +24,7 @@ public class IssuerTests
         Assert.True(result.IsSuccess);
         var issuer = result.Value;
         Assert.NotEqual(Guid.Empty, issuer.Id);
-        Assert.Equal(Guid.Empty, issuer.TenantId); // Will be set by DbContext
+        Assert.Equal(string.Empty, issuer.TenantId); // Will be set by DbContext
         Assert.Equal(name, issuer.Name);
         Assert.Equal(code, issuer.Code);
         Assert.Equal($"did:web:{trustedDomain}", issuer.IssuerDid);

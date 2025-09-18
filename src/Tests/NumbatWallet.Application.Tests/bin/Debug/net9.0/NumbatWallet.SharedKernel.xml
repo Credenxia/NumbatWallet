@@ -8,6 +8,7 @@
             <summary>
             Attribute to mark properties with their data classification level.
             Classification drives display and audit requirements, while tenant policies control actual protection.
+            Aligned with Australian Protective Security Policy Framework (PSPF) and Information Security Manual (ISM).
             </summary>
         </member>
         <member name="P:NumbatWallet.SharedKernel.Attributes.DataClassificationAttribute.Classification">
@@ -21,12 +22,43 @@
             Used for compliance mapping and audit categorization
             </summary>
         </member>
+        <member name="P:NumbatWallet.SharedKernel.Attributes.DataClassificationAttribute.RequiresEncryption">
+            <summary>
+            Whether this data requires encryption at rest and in transit
+            </summary>
+        </member>
+        <member name="P:NumbatWallet.SharedKernel.Attributes.DataClassificationAttribute.RequiresAudit">
+            <summary>
+            Whether access to this data requires audit logging
+            </summary>
+        </member>
+        <member name="P:NumbatWallet.SharedKernel.Attributes.DataClassificationAttribute.RetentionDays">
+            <summary>
+            Default retention period in days (-1 for indefinite)
+            </summary>
+        </member>
         <member name="M:NumbatWallet.SharedKernel.Attributes.DataClassificationAttribute.#ctor(NumbatWallet.SharedKernel.Enums.DataClassification,System.String)">
             <summary>
-            Creates a new DataClassificationAttribute
+            Creates a new DataClassificationAttribute with automatic configuration based on classification level
             </summary>
             <param name="classification">The data classification level</param>
             <param name="purpose">Optional purpose/context for the field</param>
+        </member>
+        <member name="T:NumbatWallet.SharedKernel.Attributes.HandlingCaveatsAttribute">
+            <summary>
+            Attribute to specify handling caveats for classified information
+            </summary>
+        </member>
+        <member name="P:NumbatWallet.SharedKernel.Attributes.HandlingCaveatsAttribute.Caveats">
+            <summary>
+            The handling caveats that apply to this data
+            </summary>
+        </member>
+        <member name="M:NumbatWallet.SharedKernel.Attributes.HandlingCaveatsAttribute.#ctor(System.String[])">
+            <summary>
+            Creates a new HandlingCaveatsAttribute
+            </summary>
+            <param name="caveats">Handling caveats (e.g., "FOR-OFFICIAL-USE-ONLY", "CABINET-IN-CONFIDENCE")</param>
         </member>
         <member name="T:NumbatWallet.SharedKernel.Base.ValueObject">
             <summary>
@@ -74,6 +106,86 @@
         <member name="F:NumbatWallet.SharedKernel.Enums.DataClassification.TopSecret">
             <summary>
             Highest classification level (not used in POA)
+            </summary>
+        </member>
+        <member name="T:NumbatWallet.SharedKernel.Enums.PiiType">
+            <summary>
+            Types of Personally Identifiable Information (PII)
+            </summary>
+        </member>
+        <member name="F:NumbatWallet.SharedKernel.Enums.PiiType.None">
+            <summary>
+            Not PII
+            </summary>
+        </member>
+        <member name="F:NumbatWallet.SharedKernel.Enums.PiiType.Email">
+            <summary>
+            Email address
+            </summary>
+        </member>
+        <member name="F:NumbatWallet.SharedKernel.Enums.PiiType.Phone">
+            <summary>
+            Phone number
+            </summary>
+        </member>
+        <member name="F:NumbatWallet.SharedKernel.Enums.PiiType.Name">
+            <summary>
+            Person's name (first, last, or full)
+            </summary>
+        </member>
+        <member name="F:NumbatWallet.SharedKernel.Enums.PiiType.Address">
+            <summary>
+            Physical or postal address
+            </summary>
+        </member>
+        <member name="F:NumbatWallet.SharedKernel.Enums.PiiType.DateOfBirth">
+            <summary>
+            Date of birth
+            </summary>
+        </member>
+        <member name="F:NumbatWallet.SharedKernel.Enums.PiiType.TaxId">
+            <summary>
+            Tax file number, SSN, or similar
+            </summary>
+        </member>
+        <member name="F:NumbatWallet.SharedKernel.Enums.PiiType.PaymentCard">
+            <summary>
+            Payment card number
+            </summary>
+        </member>
+        <member name="F:NumbatWallet.SharedKernel.Enums.PiiType.AccountNumber">
+            <summary>
+            Bank account number
+            </summary>
+        </member>
+        <member name="F:NumbatWallet.SharedKernel.Enums.PiiType.IpAddress">
+            <summary>
+            IP address
+            </summary>
+        </member>
+        <member name="F:NumbatWallet.SharedKernel.Enums.PiiType.BiometricData">
+            <summary>
+            Biometric data (fingerprints, face, etc.)
+            </summary>
+        </member>
+        <member name="F:NumbatWallet.SharedKernel.Enums.PiiType.HealthData">
+            <summary>
+            Health or medical data
+            </summary>
+        </member>
+        <member name="F:NumbatWallet.SharedKernel.Enums.PiiType.GovernmentId">
+            <summary>
+            Government-issued ID (passport, driver's license, etc.)
+            </summary>
+        </member>
+        <member name="F:NumbatWallet.SharedKernel.Enums.PiiType.NationalId">
+            <summary>
+            National ID or similar identifier
+            </summary>
+        </member>
+        <member name="F:NumbatWallet.SharedKernel.Enums.PiiType.VehicleRegistration">
+            <summary>
+            Vehicle registration number
             </summary>
         </member>
         <member name="T:NumbatWallet.SharedKernel.Enums.PurgeAction">
@@ -270,6 +382,14 @@
             <summary>
             Helper class to replace parameters in expressions
             </summary>
+        </member>
+        <member name="M:NumbatWallet.SharedKernel.Specifications.SpecificationExtensions.ToExpression``1(NumbatWallet.SharedKernel.Specifications.ISpecification{``0})">
+            <summary>
+            Converts an ISpecification to its underlying Expression for use with LINQ queries.
+            </summary>
+            <typeparam name="T">The entity type</typeparam>
+            <param name="specification">The specification to convert</param>
+            <returns>The expression representing the specification criteria</returns>
         </member>
         <member name="T:NumbatWallet.SharedKernel.Utilities.Guard">
             <summary>

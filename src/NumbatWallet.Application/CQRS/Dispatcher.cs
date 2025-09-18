@@ -21,8 +21,7 @@ public class Dispatcher : IDispatcher
     /// <inheritdoc />
     public async Task<TResult> SendAsync<TResult>(ICommand<TResult> command, CancellationToken cancellationToken = default)
     {
-        if (command == null)
-            throw new ArgumentNullException(nameof(command));
+        ArgumentNullException.ThrowIfNull(command);
 
         var commandType = command.GetType();
         var handlerType = typeof(ICommandHandler<,>).MakeGenericType(commandType, typeof(TResult));
@@ -40,11 +39,15 @@ public class Dispatcher : IDispatcher
         {
             var handleMethod = handlerType.GetMethod("HandleAsync");
             if (handleMethod == null)
+            {
                 throw new InvalidOperationException($"HandleAsync method not found on handler for {commandType.Name}");
+            }
 
             var task = handleMethod.Invoke(handler, new object[] { command, cancellationToken }) as Task<TResult>;
             if (task == null)
+            {
                 throw new InvalidOperationException($"HandleAsync did not return a Task<{typeof(TResult).Name}>");
+            }
 
             var result = await task;
 
@@ -61,8 +64,7 @@ public class Dispatcher : IDispatcher
     /// <inheritdoc />
     public async Task SendAsync(ICommand command, CancellationToken cancellationToken = default)
     {
-        if (command == null)
-            throw new ArgumentNullException(nameof(command));
+        ArgumentNullException.ThrowIfNull(command);
 
         var commandType = command.GetType();
         var handlerType = typeof(ICommandHandler<>).MakeGenericType(commandType);
@@ -80,11 +82,15 @@ public class Dispatcher : IDispatcher
         {
             var handleMethod = handlerType.GetMethod("HandleAsync");
             if (handleMethod == null)
+            {
                 throw new InvalidOperationException($"HandleAsync method not found on handler for {commandType.Name}");
+            }
 
             var task = handleMethod.Invoke(handler, new object[] { command, cancellationToken }) as Task;
             if (task == null)
+            {
                 throw new InvalidOperationException("HandleAsync did not return a Task");
+            }
 
             await task;
 
@@ -100,8 +106,7 @@ public class Dispatcher : IDispatcher
     /// <inheritdoc />
     public async Task<TResult> QueryAsync<TResult>(IQuery<TResult> query, CancellationToken cancellationToken = default)
     {
-        if (query == null)
-            throw new ArgumentNullException(nameof(query));
+        ArgumentNullException.ThrowIfNull(query);
 
         var queryType = query.GetType();
         var handlerType = typeof(IQueryHandler<,>).MakeGenericType(queryType, typeof(TResult));
@@ -119,11 +124,15 @@ public class Dispatcher : IDispatcher
         {
             var handleMethod = handlerType.GetMethod("HandleAsync");
             if (handleMethod == null)
+            {
                 throw new InvalidOperationException($"HandleAsync method not found on handler for {queryType.Name}");
+            }
 
             var task = handleMethod.Invoke(handler, new object[] { query, cancellationToken }) as Task<TResult>;
             if (task == null)
+            {
                 throw new InvalidOperationException($"HandleAsync did not return a Task<{typeof(TResult).Name}>");
+            }
 
             var result = await task;
 

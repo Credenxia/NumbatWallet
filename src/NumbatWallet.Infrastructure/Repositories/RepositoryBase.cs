@@ -11,30 +11,30 @@ public class RepositoryBase<TEntity, TKey> : IRepository<TEntity, TKey>
     where TEntity : Entity<TKey>
     where TKey : IEquatable<TKey>
 {
-    protected readonly NumbatWalletDbContext _context;
-    protected readonly DbSet<TEntity> _dbSet;
+    protected NumbatWalletDbContext Context { get; }
+    protected DbSet<TEntity> DbSet { get; }
 
     public RepositoryBase(NumbatWalletDbContext context)
     {
-        _context = context;
-        _dbSet = _context.Set<TEntity>();
+        Context = context;
+        DbSet = context.Set<TEntity>();
     }
 
     public async Task<TEntity?> GetByIdAsync(TKey id, CancellationToken cancellationToken = default)
     {
-        return await _dbSet.FindAsync(new object?[] { id }, cancellationToken);
+        return await DbSet.FindAsync(new object?[] { id }, cancellationToken);
     }
 
     public async Task<IEnumerable<TEntity>> GetAllAsync(CancellationToken cancellationToken = default)
     {
-        return await _dbSet.ToListAsync(cancellationToken);
+        return await DbSet.ToListAsync(cancellationToken);
     }
 
     public async Task<IEnumerable<TEntity>> FindAsync(
         Expression<Func<TEntity, bool>> predicate,
         CancellationToken cancellationToken = default)
     {
-        return await _dbSet.Where(predicate).ToListAsync(cancellationToken);
+        return await DbSet.Where(predicate).ToListAsync(cancellationToken);
     }
 
     public async Task<IEnumerable<TEntity>> FindAsync(
@@ -48,7 +48,7 @@ public class RepositoryBase<TEntity, TKey> : IRepository<TEntity, TKey>
         Expression<Func<TEntity, bool>> predicate,
         CancellationToken cancellationToken = default)
     {
-        return await _dbSet.FirstOrDefaultAsync(predicate, cancellationToken);
+        return await DbSet.FirstOrDefaultAsync(predicate, cancellationToken);
     }
 
     public async Task<TEntity?> FirstOrDefaultAsync(
@@ -62,7 +62,7 @@ public class RepositoryBase<TEntity, TKey> : IRepository<TEntity, TKey>
         Expression<Func<TEntity, bool>> predicate,
         CancellationToken cancellationToken = default)
     {
-        return await _dbSet.AnyAsync(predicate, cancellationToken);
+        return await DbSet.AnyAsync(predicate, cancellationToken);
     }
 
     public async Task<bool> AnyAsync(
@@ -74,14 +74,14 @@ public class RepositoryBase<TEntity, TKey> : IRepository<TEntity, TKey>
 
     public async Task<int> CountAsync(CancellationToken cancellationToken = default)
     {
-        return await _dbSet.CountAsync(cancellationToken);
+        return await DbSet.CountAsync(cancellationToken);
     }
 
     public async Task<int> CountAsync(
         Expression<Func<TEntity, bool>> predicate,
         CancellationToken cancellationToken = default)
     {
-        return await _dbSet.CountAsync(predicate, cancellationToken);
+        return await DbSet.CountAsync(predicate, cancellationToken);
     }
 
     public async Task<int> CountAsync(
@@ -93,36 +93,36 @@ public class RepositoryBase<TEntity, TKey> : IRepository<TEntity, TKey>
 
     public async Task<TEntity> AddAsync(TEntity entity, CancellationToken cancellationToken = default)
     {
-        await _dbSet.AddAsync(entity, cancellationToken);
+        await DbSet.AddAsync(entity, cancellationToken);
         return entity;
     }
 
     public async Task AddRangeAsync(IEnumerable<TEntity> entities, CancellationToken cancellationToken = default)
     {
-        await _dbSet.AddRangeAsync(entities, cancellationToken);
+        await DbSet.AddRangeAsync(entities, cancellationToken);
     }
 
     public Task UpdateAsync(TEntity entity, CancellationToken cancellationToken = default)
     {
-        _dbSet.Update(entity);
+        DbSet.Update(entity);
         return Task.CompletedTask;
     }
 
     public Task UpdateRangeAsync(IEnumerable<TEntity> entities, CancellationToken cancellationToken = default)
     {
-        _dbSet.UpdateRange(entities);
+        DbSet.UpdateRange(entities);
         return Task.CompletedTask;
     }
 
     public Task DeleteAsync(TEntity entity, CancellationToken cancellationToken = default)
     {
-        _dbSet.Remove(entity);
+        DbSet.Remove(entity);
         return Task.CompletedTask;
     }
 
     public Task DeleteRangeAsync(IEnumerable<TEntity> entities, CancellationToken cancellationToken = default)
     {
-        _dbSet.RemoveRange(entities);
+        DbSet.RemoveRange(entities);
         return Task.CompletedTask;
     }
 
@@ -134,6 +134,6 @@ public class RepositoryBase<TEntity, TKey> : IRepository<TEntity, TKey>
 
     protected IQueryable<TEntity> ApplySpecification(ISpecification<TEntity> specification)
     {
-        return _dbSet.Where(specification.Criteria);
+        return DbSet.Where(specification.Criteria);
     }
 }

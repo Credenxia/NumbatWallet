@@ -239,7 +239,7 @@ public class AzureBlobStorageService : IBlobStorageService
             var blobClient = containerClient.GetBlobClient(blobName);
 
             var properties = await blobClient.GetPropertiesAsync(cancellationToken: cancellationToken);
-            return properties.Value.Metadata;
+            return new Dictionary<string, string>(properties.Value.Metadata);
         }
         catch (Exception ex)
         {

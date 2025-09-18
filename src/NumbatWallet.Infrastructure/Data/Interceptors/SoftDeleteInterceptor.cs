@@ -37,7 +37,10 @@ public class SoftDeleteInterceptor : SaveChangesInterceptor
 
     private void ApplySoftDelete(DbContext? context)
     {
-        if (context == null) return;
+        if (context == null)
+        {
+            return;
+        }
 
         var entries = context.ChangeTracker
             .Entries<ISoftDeletable>()
@@ -78,7 +81,7 @@ public static class SoftDeleteQueryExtensions
         }
     }
 
-    private static LambdaExpression GetSoftDeleteFilter<TEntity>()
+    private static Expression<Func<TEntity, bool>> GetSoftDeleteFilter<TEntity>()
         where TEntity : class, ISoftDeletable
     {
         Expression<Func<TEntity, bool>> filter = e => !e.IsDeleted;

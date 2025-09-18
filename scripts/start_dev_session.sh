@@ -55,7 +55,17 @@ echo "---------------------------"
 # Get current date for comparison
 CURRENT_DATE=$(date +%Y-%m-%d)
 
-echo "Backend milestones and their status:"
+echo "Critical milestones and their status:"
+echo "PreDev Standards (FOUNDATION - DO FIRST):"
+gh api /repos/Credenxia/NumbatWallet/milestones | \
+  jq -r '.[] | select(.title | contains("PreDev")) |
+  "\(.title) | Due: \(.due_on // "No date") | Open: \(.open_issues) | Closed: \(.closed_issues)"' | \
+  while IFS='|' read -r title due open closed; do
+    printf "%-30s Due: %-12s Issues: %s/%s\n" "$title" "${due:0:10}" "$closed" "$((open + closed))"
+  done
+
+echo
+echo "Backend milestones:"
 gh api /repos/Credenxia/NumbatWallet/milestones | \
   jq -r '.[] | select(.title | contains("Backend") or contains("IaC") or contains("Admin")) |
   "\(.title) | Due: \(.due_on // "No date") | Open: \(.open_issues) | Closed: \(.closed_issues)"' | \
@@ -147,6 +157,7 @@ echo
 echo "========================================="
 echo "REMINDERS"
 echo "========================================="
+echo "🔐 PREDEV STANDARDS FIRST - Avoid refactoring later!"
 echo "📝 TDD IS MANDATORY - Write tests first!"
 echo "⚠️  Zero warnings tolerance - Fix immediately!"
 echo "🎯 Update TodoWrite throughout the session"

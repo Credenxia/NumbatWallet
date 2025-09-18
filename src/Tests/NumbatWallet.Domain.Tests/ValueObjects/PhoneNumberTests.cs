@@ -16,34 +16,39 @@ public class PhoneNumberTests
         var phone = PhoneNumber.Create(validPhone);
 
         // Assert
-        Assert.True(phone.IsSuccess);
-        Assert.Equal(validPhone, phone.Value.Value);
+        Assert.NotNull(phone);
+        Assert.Equal(validPhone, phone.Value);
     }
 
     [Theory]
     [InlineData("")]
     [InlineData(" ")]
+    public void PhoneNumber_WithNullOrWhitespace_ShouldThrowArgumentException(string invalidPhone)
+    {
+        // Act & Assert
+        Assert.Throws<ArgumentException>(() => PhoneNumber.Create(invalidPhone));
+    }
+
+    [Theory]
     [InlineData("123456")] // Too short
     [InlineData("0412345678")] // Missing country code
     [InlineData("61412345678")] // Missing +
     [InlineData("+123")] // Too short
     [InlineData("+abc123")] // Contains letters
-    public void PhoneNumber_WithInvalidValue_ShouldFail(string invalidPhone)
+    public void PhoneNumber_WithInvalidFormat_ShouldThrowArgumentException(string invalidPhone)
     {
-        // Act
-        var phone = PhoneNumber.Create(invalidPhone);
-
-        // Assert
-        Assert.True(phone.IsFailure);
+        // Act & Assert
+        var ex = Assert.Throws<ArgumentException>(() => PhoneNumber.Create(invalidPhone));
+        Assert.Contains("Invalid phone number format", ex.Message);
     }
 
     [Fact]
     public void PhoneNumber_Equality_ShouldWork()
     {
         // Arrange
-        var phone1 = PhoneNumber.Create("+61412345678").Value;
-        var phone2 = PhoneNumber.Create("+61412345678").Value;
-        var phone3 = PhoneNumber.Create("+61498765432").Value;
+        var phone1 = PhoneNumber.Create("+61412345678");
+        var phone2 = PhoneNumber.Create("+61412345678");
+        var phone3 = PhoneNumber.Create("+61498765432");
 
         // Act & Assert
         Assert.Equal(phone1, phone2);
@@ -51,15 +56,62 @@ public class PhoneNumberTests
     }
 
     [Fact]
-    public void PhoneNumber_GetCountryCode_ShouldExtractCorrectly()
+    public void PhoneNumber_WithCountryCode_ShouldFormatCorrectly()
     {
-        // Arrange
-        var phone = PhoneNumber.Create("+61412345678").Value;
-
-        // Act
-        var countryCode = phone.GetCountryCode();
+        // Arrange & Act
+        var phone = PhoneNumber.Create("412345678", "61");
 
         // Assert
-        Assert.Equal("61", countryCode);
+        Assert.Equal("+61412345678", phone.Value);
+    }
+
+    [Fact]
+    public void PhoneNumber_WithSpacesAndDashes_ShouldClean()
+    {
+        // Arrange & Act
+        var phone = PhoneNumber.Create("+61 4-123-456-78");
+
+        // Assert
+        Assert.Equal("+61412345678", phone.Value);
+    }
+
+    [Fact]
+    public void PhoneNumber_ToString_ShouldReturnValue()
+    {
+        // Arrange
+        var phone = PhoneNumber.Create("+61412345678");
+
+        // Act
+        var result = phone.ToString();
+
+        // Assert
+        Assert.Equal("+61412345678", result);
+    }
+
+    [Fact]
+    public void PhoneNumber_GetFormatted_WithUSNumber_ShouldFormatCorrectly()
+    {
+        // Arrange
+        var phone = PhoneNumber.Create("+11234567890"); // US number with country code
+
+        // Act
+        var formatted = phone.GetFormatted();
+
+        // Assert
+        // For international numbers, we typically return as-is or with basic formatting
+        Assert.Equal("+1 123 456 7890", formatted);
+    }
+
+    [Fact]
+    public void PhoneNumber_GetFormatted_WithAustralianNumber_ShouldFormatCorrectly()
+    {
+        // Arrange
+        var phone = PhoneNumber.Create("+61412345678");
+
+        // Act
+        var formatted = phone.GetFormatted();
+
+        // Assert
+        Assert.Equal("+61 412 345 678", formatted);
     }
 }

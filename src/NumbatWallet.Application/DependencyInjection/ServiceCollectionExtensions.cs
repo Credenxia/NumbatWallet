@@ -1,5 +1,9 @@
 using Microsoft.Extensions.DependencyInjection;
+using NumbatWallet.Application.CQRS;
+using NumbatWallet.Application.CQRS.Interfaces;
 using System.Reflection;
+using FluentValidation;
+using Scrutor;
 
 namespace NumbatWallet.Application.DependencyInjection;
 
@@ -13,24 +17,34 @@ public static class ServiceCollectionExtensions
         services.AddAutoMapper(assembly);
 
         // Register FluentValidation validators
-        // TODO: Uncomment when validators are implemented
-        // services.AddValidatorsFromAssembly(assembly);
+        services.AddValidatorsFromAssembly(assembly);
 
         // Register custom CQRS implementation (no MediatR as per issue #154)
-        // TODO: Implement CommandDispatcher and QueryDispatcher
-        // services.AddScoped<ICommandDispatcher, CommandDispatcher>();
-        // services.AddScoped<IQueryDispatcher, QueryDispatcher>();
+        services.AddScoped<IDispatcher, Dispatcher>();
 
-        // Register all command handlers
-        // TODO: Implement command handlers
-        // services.Scan(scan => scan
-        //     .FromAssemblies(assembly)
-        //     .AddClasses(classes => classes.AssignableTo(typeof(ICommandHandler<>)))
-        //     .AsImplementedInterfaces()
-        //     .WithScopedLifetime());
+        // Auto-register all command handlers
+        services.Scan(scan => scan
+            .FromAssemblies(assembly)
+            .AddClasses(classes => classes.AssignableTo(typeof(ICommandHandler<>)))
+            .AsImplementedInterfaces()
+            .WithScopedLifetime());
+
+        // Auto-register all command handlers with results
+        services.Scan(scan => scan
+            .FromAssemblies(assembly)
+            .AddClasses(classes => classes.AssignableTo(typeof(ICommandHandler<,>)))
+            .AsImplementedInterfaces()
+            .WithScopedLifetime());
+
+        // Auto-register all query handlers
+        services.Scan(scan => scan
+            .FromAssemblies(assembly)
+            .AddClasses(classes => classes.AssignableTo(typeof(IQueryHandler<,>)))
+            .AsImplementedInterfaces()
+            .WithScopedLifetime());
 
         // Register Application Services
-        // TODO: Implement application services
+        // TODO: Implement application services when commands/queries are created
         // services.AddScoped<IWalletService, WalletService>();
         // services.AddScoped<ICredentialService, CredentialService>();
 

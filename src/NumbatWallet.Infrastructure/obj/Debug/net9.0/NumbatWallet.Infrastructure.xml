@@ -14,6 +14,11 @@
             Internal structure for JSONB storage
             </summary>
         </member>
+        <member name="T:NumbatWallet.Infrastructure.Data.DesignTimeDbContextFactory">
+            <summary>
+            Factory for creating DbContext at design time for EF Core tools
+            </summary>
+        </member>
         <member name="T:NumbatWallet.Infrastructure.Data.Interceptors.AuditInterceptor">
             <summary>
             Interceptor that logs access to protected fields based on data classification

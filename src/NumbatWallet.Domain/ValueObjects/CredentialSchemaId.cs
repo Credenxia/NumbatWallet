@@ -19,10 +19,17 @@ public class CredentialSchemaId : ValueObject
         Uri = new Uri(value);
     }
 
-    public string Value { get; }
-    public Uri Uri { get; }
-    public string Host => Uri.Host;
-    public string Path => Uri.AbsolutePath;
+    // EF Core constructor
+    private CredentialSchemaId()
+    {
+        Value = string.Empty;
+        Uri = new Uri("http://example.com");
+    }
+
+    public string Value { get; private set; }
+    public Uri Uri { get; private set; }
+    public string Host => Uri?.Host ?? string.Empty;
+    public string Path => Uri?.AbsolutePath ?? string.Empty;
 
     public static CredentialSchemaId Create(string schemaId)
     {

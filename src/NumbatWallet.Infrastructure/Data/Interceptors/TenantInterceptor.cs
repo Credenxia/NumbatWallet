@@ -33,10 +33,16 @@ public class TenantInterceptor : SaveChangesInterceptor
 
     private void ApplyTenantFilter(DbContext? context)
     {
-        if (context == null) return;
+        if (context == null)
+        {
+            return;
+        }
 
         var tenantId = _currentTenantService.TenantId;
-        if (string.IsNullOrEmpty(tenantId)) return;
+        if (string.IsNullOrEmpty(tenantId))
+        {
+            return;
+        }
 
         // Set TenantId for new entities
         var addedEntries = context.ChangeTracker
@@ -47,7 +53,7 @@ public class TenantInterceptor : SaveChangesInterceptor
         {
             if (string.IsNullOrEmpty(entry.Entity.TenantId))
             {
-                entry.Entity.TenantId = tenantId;
+                entry.Entity.SetTenantId(tenantId);
             }
             else if (entry.Entity.TenantId != tenantId)
             {
@@ -96,7 +102,7 @@ public static class TenantQueryExtensions
         }
     }
 
-    private static LambdaExpression GetTenantFilter<TEntity>(ICurrentTenantService currentTenantService)
+    private static Expression<Func<TEntity, bool>> GetTenantFilter<TEntity>(ICurrentTenantService currentTenantService)
         where TEntity : class, ITenantAware
     {
         Expression<Func<TEntity, bool>> filter = e => e.TenantId == currentTenantService.TenantId;

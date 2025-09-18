@@ -37,4 +37,5 @@ public interface IWalletRepository : IRepository<Wallet, Guid>
     // Validation
     Task<bool> IsDidUniqueAsync(string did, Guid? excludeId = null, CancellationToken cancellationToken = default);
     Task<bool> HasActiveWalletAsync(Guid personId, CancellationToken cancellationToken = default);
+    Task<bool> ExistsAsync(Guid personId, string walletName, CancellationToken cancellationToken = default);
 }

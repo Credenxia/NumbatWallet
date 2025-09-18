@@ -24,12 +24,23 @@ public class Address : ValueObject
         Country = country;
     }
 
-    public string StreetLine1 { get; }
-    public string? StreetLine2 { get; }
-    public string City { get; }
-    public string State { get; }
-    public string PostalCode { get; }
-    public string Country { get; }
+    // EF Core constructor
+    private Address()
+    {
+        StreetLine1 = string.Empty;
+        StreetLine2 = null;
+        City = string.Empty;
+        State = string.Empty;
+        PostalCode = string.Empty;
+        Country = string.Empty;
+    }
+
+    public string StreetLine1 { get; private set; }
+    public string? StreetLine2 { get; private set; }
+    public string City { get; private set; }
+    public string State { get; private set; }
+    public string PostalCode { get; private set; }
+    public string Country { get; private set; }
 
     public static Address Create(
         string streetLine1,
@@ -68,7 +79,9 @@ public class Address : ValueObject
         var lines = new List<string> { StreetLine1 };
 
         if (!string.IsNullOrWhiteSpace(StreetLine2))
+        {
             lines.Add(StreetLine2);
+        }
 
         lines.Add($"{City}, {State} {PostalCode}");
         lines.Add(Country);

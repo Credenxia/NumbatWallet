@@ -159,11 +159,15 @@ public class VerificationDomainService : IVerificationDomainService
         // Get issuer's schema for this credential type
         var issuer = await _issuerRepository.GetByIdAsync(credential.IssuerId, cancellationToken);
         if (issuer == null)
+        {
             return false;
+        }
 
         var schemaId = issuer.GetSchemaForCredentialType(credential.CredentialType);
         if (string.IsNullOrEmpty(schemaId))
+        {
             return false;
+        }
 
         // Validate credential matches schema
         // This is simplified - real implementation would validate against JSON Schema

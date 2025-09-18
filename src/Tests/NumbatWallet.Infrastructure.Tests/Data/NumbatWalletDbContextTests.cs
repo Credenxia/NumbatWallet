@@ -138,7 +138,7 @@ public class NumbatWalletDbContextTests : IDisposable
 
         // Assert
         var wallets = await _context.Wallets.ToListAsync();
-        Assert.All(wallets, w => Assert.Equal(tenantId, w.TenantId));
+        Assert.All(wallets, w => Assert.Equal(tenantId.ToString(), w.TenantId));
     }
 
     [Fact]

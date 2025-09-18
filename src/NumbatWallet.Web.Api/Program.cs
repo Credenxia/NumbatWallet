@@ -1,4 +1,6 @@
+using Microsoft.EntityFrameworkCore;
 using NumbatWallet.Application.DependencyInjection;
+using NumbatWallet.Infrastructure.Data;
 using NumbatWallet.Infrastructure.DependencyInjection;
 using NumbatWallet.Web.Api.DependencyInjection;
 using Serilog;
@@ -19,7 +21,7 @@ try
         .ReadFrom.Configuration(context.Configuration)
         .ReadFrom.Services(services)
         .Enrich.FromLogContext()
-        .Enrich.WithEnvironmentName()
+        .Enrich.WithProperty("Environment", context.HostingEnvironment.EnvironmentName)
         .WriteTo.Console());
 
     // Add services to the container using our extension methods
@@ -32,11 +34,12 @@ try
 
     // Add health checks
     builder.Services.AddInfrastructureHealthChecks(builder.Configuration);
-    builder.Services.AddHealthChecksUI(setup =>
-    {
-        setup.SetEvaluationTimeInSeconds(30);
-        setup.MaximumHistoryEntriesPerEndpoint(50);
-    }).AddInMemoryStorage();
+    // TODO: Add HealthChecksUI when package is installed
+    // builder.Services.AddHealthChecksUI(setup =>
+    // {
+    //     setup.SetEvaluationTimeInSeconds(30);
+    //     setup.MaximumHistoryEntriesPerEndpoint(50);
+    // }).AddInMemoryStorage();
 
     var app = builder.Build();
 
@@ -67,7 +70,8 @@ try
     app.MapControllers();
     app.MapGraphQL();
     app.MapHealthChecks("/health");
-    app.MapHealthChecksUI(options => options.UIPath = "/health-ui");
+    // TODO: Add HealthChecksUI endpoint when package is installed
+    // app.MapHealthChecksUI(options => options.UIPath = "/health-ui");
 
     // Ensure database is created and migrations are applied
     using (var scope = app.Services.CreateScope())

@@ -18,7 +18,9 @@ public class CurrentTenantService : ICurrentTenantService
         get
         {
             if (!string.IsNullOrEmpty(_tenantId))
+            {
                 return _tenantId;
+            }
 
             // Try to get from HTTP context (header, claim, or route)
             var context = _httpContextAccessor.HttpContext;
@@ -40,11 +42,17 @@ public class CurrentTenantService : ICurrentTenantService
                     return _tenantId;
                 }
 
-                // Check route data
-                if (context.Request.RouteValues.TryGetValue("tenantId", out var routeTenantId))
+                // Check path for tenant ID (e.g., /api/tenant/xyz/...)
+                var path = context.Request.Path.Value;
+                if (!string.IsNullOrEmpty(path))
                 {
-                    _tenantId = routeTenantId?.ToString();
-                    return _tenantId;
+                    var segments = path.Split('/', StringSplitOptions.RemoveEmptyEntries);
+                    var tenantIndex = Array.IndexOf(segments, "tenant");
+                    if (tenantIndex >= 0 && tenantIndex < segments.Length - 1)
+                    {
+                        _tenantId = segments[tenantIndex + 1];
+                        return _tenantId;
+                    }
                 }
             }
 

@@ -268,20 +268,3 @@ public class IdentityVerificationApiClient : IIdentityVerificationApiClient
         }
     }
 }
-
-// DTOs for verification results
-public class IdentityVerificationResult
-{
-    public bool IsVerified { get; set; }
-    public string? VerificationId { get; set; }
-    public Dictionary<string, string>? Details { get; set; }
-    public string? Error { get; set; }
-}
-
-public class DocumentVerificationResult
-{
-    public bool IsValid { get; set; }
-    public string? DocumentId { get; set; }
-    public Dictionary<string, string>? ExtractedData { get; set; }
-    public string? Error { get; set; }
-}

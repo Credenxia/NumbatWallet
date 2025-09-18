@@ -22,9 +22,17 @@ public class Did : ValueObject
         MethodSpecificId = parts[2];
     }
 
-    public string Value { get; }
-    public string Method { get; }
-    public string MethodSpecificId { get; }
+    // EF Core constructor
+    private Did()
+    {
+        Value = string.Empty;
+        Method = string.Empty;
+        MethodSpecificId = string.Empty;
+    }
+
+    public string Value { get; private set; }
+    public string Method { get; private set; }
+    public string MethodSpecificId { get; private set; }
 
     public static Did Create(string did)
     {
@@ -38,7 +46,7 @@ public class Did : ValueObject
         return new Did(did);
     }
 
-    public static Did CreateNew(string method, string id)
+    public static Did Generate(string method, string id)
     {
         Guard.AgainstNullOrWhiteSpace(method, nameof(method));
         Guard.AgainstNullOrWhiteSpace(id, nameof(id));
