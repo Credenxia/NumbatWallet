@@ -2,7 +2,7 @@ using System;
 using System.Threading.Tasks;
 using NumbatWallet.SharedKernel.Enums;
 
-namespace NumbatWallet.Infrastructure.Crypto.Interfaces;
+namespace NumbatWallet.Application.Interfaces;
 
 /// <summary>
 /// Provides encryption and decryption services using envelope encryption

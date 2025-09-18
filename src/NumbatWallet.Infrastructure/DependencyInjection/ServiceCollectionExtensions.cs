@@ -120,7 +120,7 @@ public static class ServiceCollectionExtensions
 
         // Crypto Services (Envelope Encryption)
         services.AddSingleton<Crypto.Interfaces.IKeyWrapProvider, Crypto.KeyVaultWrapProvider>();
-        services.AddScoped<Crypto.Interfaces.ICryptoService, Crypto.CryptoService>();
+        services.AddScoped<Application.Interfaces.ICryptoService, Crypto.CryptoService>();
 
         // Blob Storage
         var storageConnectionString = configuration["Azure:Storage:ConnectionString"];
