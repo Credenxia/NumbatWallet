@@ -40,7 +40,12 @@ public sealed class Person : AuditableEntity<Guid>, ITenantAware
                            && PhoneVerificationStatus == VerificationStatus.Verified;
     public DateTimeOffset? VerifiedAt { get; private set; }
     public VerificationLevel? VerificationLevel { get; private set; }
+    public PersonStatus Status { get; private set; }
     public string TenantId { get; set; } = string.Empty;
+
+    // Navigation properties
+    private readonly List<Wallet> _wallets = new();
+    public IReadOnlyCollection<Wallet> Wallets => _wallets.AsReadOnly();
 
 #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring as nullable.
     private Person() : base(Guid.Empty)
@@ -68,6 +73,7 @@ public sealed class Person : AuditableEntity<Guid>, ITenantAware
         EmailVerificationStatus = VerificationStatus.NotVerified;
         PhoneVerificationStatus = VerificationStatus.NotVerified;
         PhoneNumber = PhoneNumber.Create("+61400000000"); // Default placeholder
+        Status = PersonStatus.PendingVerification;
     }
 
     private Person(
@@ -86,6 +92,7 @@ public sealed class Person : AuditableEntity<Guid>, ITenantAware
         ExternalId = Guid.NewGuid().ToString();
         EmailVerificationStatus = VerificationStatus.NotVerified;
         PhoneVerificationStatus = VerificationStatus.NotVerified;
+        Status = PersonStatus.PendingVerification;
     }
 
     public static Result<Person> Create(
@@ -271,6 +278,14 @@ public sealed class Person : AuditableEntity<Guid>, ITenantAware
         var age = today.Year - DateOfBirth.Year;
         if (DateOfBirth > today.AddYears(-age)) age--;
         return age;
+    }
+
+    public void MarkAsVerified()
+    {
+        Status = PersonStatus.Verified;
+        VerifiedAt = DateTimeOffset.UtcNow;
+        EmailVerificationStatus = VerificationStatus.Verified;
+        PhoneVerificationStatus = VerificationStatus.Verified;
     }
 
     private static string GenerateVerificationCode()

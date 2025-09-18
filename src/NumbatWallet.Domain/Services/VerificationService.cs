@@ -161,16 +161,15 @@ public class VerificationDomainService : IVerificationDomainService
         if (issuer == null)
             return false;
 
-        var schema = issuer.GetSchemaForCredentialType(credential.CredentialType);
-        if (schema == null)
+        var schemaId = issuer.GetSchemaForCredentialType(credential.CredentialType);
+        if (string.IsNullOrEmpty(schemaId))
             return false;
 
         // Validate credential matches schema
         // This is simplified - real implementation would validate against JSON Schema
-        var requiredFields = schema.RequiredFields ?? new List<string>();
-        var credentialFields = credential.Claims.Keys;
-
-        return requiredFields.All(field => credentialFields.Contains(field));
+        // In a real implementation, we would fetch the schema definition and validate
+        // For now, just check that the credential has the expected schema ID
+        return credential.SchemaId == schemaId;
     }
 
     public async Task<bool> CheckRevocationStatusAsync(

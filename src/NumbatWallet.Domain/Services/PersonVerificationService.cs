@@ -89,7 +89,7 @@ public class PersonVerificationService : IPersonVerificationService
         if (result.IsVerified)
         {
             // Update person verification status
-            person.MarkAsVerified(method.ToString(), Guid.NewGuid().ToString());
+            person.MarkAsVerified();
 
             // Add verification event
             person.AddDomainEvent(new PersonVerifiedEvent(

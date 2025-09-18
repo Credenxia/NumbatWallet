@@ -23,7 +23,7 @@ public class CredentialByWalletSpecification : Specification<Credential>
             AddCriteria(c => c.Status != CredentialStatus.Revoked);
         }
 
-        AddInclude(c => c.Issuer);
+        AddInclude(c => c.Issuer!);
         ApplyOrderByDescending(c => c.IssuedAt);
     }
 }
@@ -33,7 +33,7 @@ public class CredentialByIssuerSpecification : Specification<Credential>
     public CredentialByIssuerSpecification(Guid issuerId)
     {
         AddCriteria(c => c.IssuerId == issuerId);
-        AddInclude(c => c.Wallet);
+        AddInclude(c => c.Wallet!);
     }
 }
 
@@ -79,7 +79,7 @@ public class RevokedCredentialSpecification : Specification<Credential>
     public RevokedCredentialSpecification()
     {
         AddCriteria(c => c.Status == CredentialStatus.Revoked);
-        AddInclude(c => c.Issuer);
+        AddInclude(c => c.Issuer!);
     }
 }
 
@@ -99,6 +99,6 @@ public class VerifiableCredentialSpecification : Specification<Credential>
     {
         AddCriteria(c => c.Status == CredentialStatus.Active &&
                          (c.ExpiresAt == null || c.ExpiresAt.Value > DateTimeOffset.UtcNow));
-        AddInclude(c => c.Issuer);
+        AddInclude(c => c.Issuer!);
     }
 }

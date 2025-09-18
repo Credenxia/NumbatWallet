@@ -29,6 +29,12 @@ public sealed class Credential : AuditableEntity<Guid>, ITenantAware
     public string? SuspensionReason { get; private set; }
     public string TenantId { get; set; } = string.Empty;
 
+    // Navigation properties
+    public Wallet? Wallet { get; private set; }
+    public Issuer? Issuer { get; private set; }
+    private readonly Dictionary<string, object> _claims = new();
+    public IReadOnlyDictionary<string, object> Claims => _claims;
+
 #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring as nullable.
     private Credential() : base(Guid.Empty)
     {

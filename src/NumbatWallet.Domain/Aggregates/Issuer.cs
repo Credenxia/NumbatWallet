@@ -100,6 +100,10 @@ public sealed partial class Issuer : AuditableEntity<Guid>, ITenantAware
         TrustedDomain = trustedDomain;
         IsActive = true;
         _trustedDomains.AddRange(trustedDomains);
+        Endpoint = string.Empty; // Initialize Endpoint
+        Status = IssuerStatus.Pending;
+        IsTrusted = false;
+        TrustLevel = 0;
     }
 
     public static Result<Issuer> Create(

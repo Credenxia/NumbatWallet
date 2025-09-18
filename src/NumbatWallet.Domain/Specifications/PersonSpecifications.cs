@@ -33,7 +33,7 @@ public class PersonByEmailSpecification : Specification<Person>
     public PersonByEmailSpecification(string email)
     {
         var normalizedEmail = email.Trim().ToLowerInvariant();
-        AddCriteria(p => p.Email.ToLower() == normalizedEmail);
+        AddCriteria(p => p.Email.Value.ToLowerInvariant() == normalizedEmail);
     }
 }
 
@@ -71,10 +71,10 @@ public class PersonSearchSpecification : Specification<Person>
         {
             var lowerSearchTerm = searchTerm.ToLowerInvariant();
             AddCriteria(p =>
-                p.FirstName.ToLower().Contains(lowerSearchTerm) ||
-                p.LastName.ToLower().Contains(lowerSearchTerm) ||
-                p.Email.ToLower().Contains(lowerSearchTerm) ||
-                (p.ExternalId != null && p.ExternalId.ToLower().Contains(lowerSearchTerm)));
+                p.FirstName.ToLowerInvariant().Contains(lowerSearchTerm) ||
+                p.LastName.ToLowerInvariant().Contains(lowerSearchTerm) ||
+                p.Email.Value.ToLowerInvariant().Contains(lowerSearchTerm) ||
+                (p.ExternalId != null && p.ExternalId.ToLowerInvariant().Contains(lowerSearchTerm)));
         }
 
         ApplyOrderBy(p => p.LastName);
