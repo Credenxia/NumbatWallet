@@ -2,6 +2,7 @@
 
   <ItemGroup>
     <PackageReference Include="libphonenumber-csharp" />
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" />
   </ItemGroup>
 
   <ItemGroup>

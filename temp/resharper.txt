@@ -1,0 +1,40 @@
+Solution NumbatWallet.sln
+    Project NumbatWallet.Application
+      src\NumbatWallet.Application\Behaviors\ValidationBehavior.cs: Using directive is not required by the code and can be safely removed
+      src\NumbatWallet.Application\Behaviors\ValidationBehavior.cs:2 Using directive is not required by the code and can be safely removed
+      src\NumbatWallet.Application\Behaviors\ValidationBehavior.cs:3 Using directive is not required by the code and can be safely removed
+      src\NumbatWallet.Application\Behaviors\ValidationBehavior.cs:4 Using directive is not required by the code and can be safely removed
+      src\NumbatWallet.Application\Behaviors\ValidationBehavior.cs:7 Using directive is not required by the code and can be safely removed
+      src\NumbatWallet.Application\Commands\Credentials\IssueCredentialCommand.cs: Using directive is not required by the code and can be safely removed
+      src\NumbatWallet.Application\Commands\Credentials\IssueCredentialCommand.cs:2 Using directive is not required by the code and can be safely removed
+      src\NumbatWallet.Application\Commands\Credentials\IssueCredentialCommand.cs:3 Using directive is not required by the code and can be safely removed
+      src\NumbatWallet.Application\Commands\Credentials\IssueCredentialCommand.cs:4 Using directive is not required by the code and can be safely removed
+      src\NumbatWallet.Application\Commands\Credentials\IssueCredentialCommand.cs:5 Using directive is not required by the code and can be safely removed
+      src\NumbatWallet.Application\Commands\Credentials\IssueCredentialCommand.cs:38 Field '_tenantService' is assigned but its value is never used
+      src\NumbatWallet.Application\Commands\Credentials\RevokeCredentialCommand.cs: Using directive is not required by the code and can be safely removed
+      src\NumbatWallet.Application\Commands\Credentials\RevokeCredentialCommand.cs:2 Using directive is not required by the code and can be safely removed
+      src\NumbatWallet.Application\Commands\Credentials\RevokeCredentialCommand.cs:3 Using directive is not required by the code and can be safely removed
+      src\NumbatWallet.Application\Commands\Credentials\RevokeCredentialCommand.cs:51 Qualifier is redundant
+      src\NumbatWallet.Application\Commands\Credentials\VerifyCredentialCommand.cs: Using directive is not required by the code and can be safely removed
+      src\NumbatWallet.Application\Commands\Credentials\VerifyCredentialCommand.cs:2 Using directive is not required by the code and can be safely removed
+      src\NumbatWallet.Application\Commands\Credentials\VerifyCredentialCommand.cs:3 Using directive is not required by the code and can be safely removed
+      src\NumbatWallet.Application\Commands\Credentials\VerifyCredentialCommand.cs:4 Using directive is not required by the code and can be safely removed
+      src\NumbatWallet.Application\Commands\Credentials\VerifyCredentialCommand.cs:8 Using directive is not required by the code and can be safely removed
+      src\NumbatWallet.Application\Commands\Credentials\VerifyCredentialCommand.cs:65 Qualifier is redundant
+      src\NumbatWallet.Application\Commands\Wallets\CreateWalletCommand.cs: Using directive is not required by the code and can be safely removed
+      src\NumbatWallet.Application\Commands\Wallets\CreateWalletCommand.cs:2 Using directive is not required by the code and can be safely removed
+      src\NumbatWallet.Application\Commands\Wallets\CreateWalletCommand.cs:3 Using directive is not required by the code and can be safely removed
+      src\NumbatWallet.Application\Commands\Wallets\CreateWalletCommand.cs:4 Using directive is not required by the code and can be safely removed
+      src\NumbatWallet.Application\Commands\Wallets\CreateWalletCommand.cs:5 Using directive is not required by the code and can be safely removed
+      src\NumbatWallet.Application\Commands\Wallets\CreateWalletCommand.cs:12 Using directive is not required by the code and can be safely removed
+      src\NumbatWallet.Application\Commands\Wallets\CreateWalletCommand.cs:59 Qualifier is redundant
+      src\NumbatWallet.Application\Commands\Wallets\CreateWalletCommand.cs:62 Qualifier is redundant
+      src\NumbatWallet.Application\Commands\Wallets\CreateWalletCommand.cs:98 Qualifier is redundant
+      src\NumbatWallet.Application\Commands\Wallets\CreateWalletCommand.cs:99 Qualifier is redundant
+      src\NumbatWallet.Application\Commands\Wallets\DeleteWalletCommand.cs: Using directive is not required by the code and can be safely removed
+      src\NumbatWallet.Application\Commands\Wallets\DeleteWalletCommand.cs:2 Using directive is not required by the code and can be safely removed
+      src\NumbatWallet.Application\Commands\Wallets\DeleteWalletCommand.cs:3 Using directive is not required by the code and can be safely removed
+      src\NumbatWallet.Application\Commands\Wallets\DeleteWalletCommand.cs:58 Qualifier is redundant
+      src\NumbatWallet.Application\CQRS\Dispatcher.cs: Using directive is not required by the code and can be safely removed
+    
+  

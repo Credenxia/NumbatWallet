@@ -86,7 +86,7 @@ public class CreateWalletCommandHandler : ICommandHandler<CreateWalletCommand, W
         return MapToDto(wallet, person);
     }
 
-    private static WalletDto MapToDto(Wallet wallet, Person person)
+    private static WalletDto MapToDto(Wallet wallet, Domain.Aggregates.Person person)
     {
         return new WalletDto
         {
