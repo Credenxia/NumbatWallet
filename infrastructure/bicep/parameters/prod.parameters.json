@@ -1,0 +1,62 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "environment": {
+      "value": "prod"
+    },
+    "location": {
+      "value": "australiaeast"
+    },
+    "locationCode": {
+      "value": "aue"
+    },
+    "applicationName": {
+      "value": "numbatwallet"
+    },
+    "administratorObjectId": {
+      "value": "" // To be filled with actual Azure AD admin object ID
+    },
+    "managedIdentityObjectId": {
+      "value": "" // To be filled after managed identity creation
+    },
+    "existingVnetResourceGroup": {
+      "value": "" // To be filled with existing VNet RG if applicable
+    },
+    "existingVnetName": {
+      "value": "" // To be filled with existing VNet name if applicable
+    },
+    "privateEndpointSubnetId": {
+      "value": "" // To be filled with subnet ID for private endpoints
+    },
+    "postgresAdminUsername": {
+      "value": "nwadmin"
+    },
+    "postgresAdminPassword": {
+      "reference": {
+        "keyVault": {
+          "id": "/subscriptions/{subscriptionId}/resourceGroups/rg-numbatwallet-prod-aue/providers/Microsoft.KeyVault/vaults/kv-numbatwallet-prod-aue"
+        },
+        "secretName": "PostgresAdminPassword"
+      }
+    },
+    "enablePrivateEndpoints": {
+      "value": true
+    },
+    "allowedIpAddresses": {
+      "value": []
+    },
+    "tags": {
+      "value": {
+        "Application": "NumbatWallet",
+        "Environment": "Production",
+        "ManagedBy": "Bicep",
+        "CostCenter": "Digital-Services",
+        "Owner": "WA-Government",
+        "Compliance": "TDIF",
+        "DataClassification": "Sensitive",
+        "SLA": "99.5"
+      }
+    }
+  }
+}

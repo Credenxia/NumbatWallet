@@ -3,6 +3,7 @@ using NumbatWallet.Application.DependencyInjection;
 using NumbatWallet.Infrastructure.Data;
 using NumbatWallet.Infrastructure.DependencyInjection;
 using NumbatWallet.Web.Api.DependencyInjection;
+using NumbatWallet.Web.Api.Extensions;
 using Serilog;
 
 // Configure Serilog
@@ -33,13 +34,10 @@ try
     builder.Services.AddGraphQL(builder.Configuration);
 
     // Add health checks
-    builder.Services.AddInfrastructureHealthChecks(builder.Configuration);
-    // TODO: Add HealthChecksUI when package is installed
-    // builder.Services.AddHealthChecksUI(setup =>
-    // {
-    //     setup.SetEvaluationTimeInSeconds(30);
-    //     setup.MaximumHistoryEntriesPerEndpoint(50);
-    // }).AddInMemoryStorage();
+    builder.Services.AddCustomHealthChecks(builder.Configuration);
+
+    // Add Swagger documentation
+    builder.Services.AddSwaggerDocumentation();
 
     var app = builder.Build();
 
@@ -47,18 +45,15 @@ try
     if (app.Environment.IsDevelopment())
     {
         app.UseDeveloperExceptionPage();
-        app.UseSwagger();
-        app.UseSwaggerUI(c =>
-        {
-            c.SwaggerEndpoint("/swagger/v1/swagger.json", "NumbatWallet API v1");
-            c.RoutePrefix = "swagger";
-        });
     }
     else
     {
         app.UseExceptionHandler("/error");
         app.UseHsts();
     }
+
+    // Enable Swagger for all environments (can be restricted later)
+    app.UseSwaggerDocumentation();
 
     app.UseHttpsRedirection();
     app.UseSerilogRequestLogging();
@@ -69,9 +64,7 @@ try
     // Map endpoints
     app.MapControllers();
     app.MapGraphQL();
-    app.MapHealthChecks("/health");
-    // TODO: Add HealthChecksUI endpoint when package is installed
-    // app.MapHealthChecksUI(options => options.UIPath = "/health-ui");
+    app.MapHealthChecks();
 
     // Ensure database is created and migrations are applied
     using (var scope = app.Services.CreateScope())

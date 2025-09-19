@@ -20,10 +20,24 @@ public class CredentialRepository : RepositoryBase<Credential, Guid>, ICredentia
             .FirstOrDefaultAsync(c => c.CredentialId == did, cancellationToken);
     }
 
+    async Task<IEnumerable<Credential>> ICredentialRepository.GetByWalletIdAsync(Guid walletId, CancellationToken cancellationToken)
+    {
+        return await DbSet
+            .Where(c => c.WalletId == walletId)
+            .ToListAsync(cancellationToken);
+    }
+
     public async Task<IReadOnlyList<Credential>> GetByWalletIdAsync(Guid walletId, CancellationToken cancellationToken = default)
     {
         return await DbSet
             .Where(c => c.WalletId == walletId)
+            .ToListAsync(cancellationToken);
+    }
+
+    async Task<IEnumerable<Credential>> ICredentialRepository.GetByIssuerIdAsync(Guid issuerId, CancellationToken cancellationToken)
+    {
+        return await DbSet
+            .Where(c => c.IssuerId == issuerId)
             .ToListAsync(cancellationToken);
     }
 
@@ -41,10 +55,42 @@ public class CredentialRepository : RepositoryBase<Credential, Guid>, ICredentia
             .ToListAsync(cancellationToken);
     }
 
+    async Task<IEnumerable<Credential>> ICredentialRepository.GetActiveCredentialsAsync(Guid walletId, CancellationToken cancellationToken)
+    {
+        return await DbSet
+            .Where(c => c.WalletId == walletId && c.Status == CredentialStatus.Active)
+            .ToListAsync(cancellationToken);
+    }
+
     public async Task<IReadOnlyList<Credential>> GetActiveCredentialsAsync(Guid walletId, CancellationToken cancellationToken = default)
     {
         return await DbSet
             .Where(c => c.WalletId == walletId && c.Status == CredentialStatus.Active)
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<IEnumerable<Credential>> GetExpiredCredentialsAsync(CancellationToken cancellationToken = default)
+    {
+        return await DbSet
+            .Where(c => c.Status == CredentialStatus.Active &&
+                       c.ExpiresAt.HasValue &&
+                       c.ExpiresAt.Value <= DateTimeOffset.UtcNow)
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<Credential?> GetByWalletAndTypeAsync(Guid walletId, string credentialType, CancellationToken cancellationToken = default)
+    {
+        return await DbSet
+            .FirstOrDefaultAsync(c => c.WalletId == walletId &&
+                                     c.CredentialType == credentialType &&
+                                     c.Status == CredentialStatus.Active,
+                                cancellationToken);
+    }
+
+    async Task<IEnumerable<Credential>> ICredentialRepository.FindAsync(ISpecification<Credential> specification, CancellationToken cancellationToken)
+    {
+        return await DbSet
+            .Where(specification.ToExpression())
             .ToListAsync(cancellationToken);
     }
 

@@ -61,10 +61,7 @@ public class CredentialManifestParser
 
     public string Serialize(CredentialManifest manifest)
     {
-        if (manifest == null)
-        {
-            throw new ArgumentNullException(nameof(manifest));
-        }
+        ArgumentNullException.ThrowIfNull(manifest);
 
         return JsonSerializer.Serialize(manifest, _options);
     }

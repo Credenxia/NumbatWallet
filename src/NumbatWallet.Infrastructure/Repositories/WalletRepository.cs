@@ -14,10 +14,23 @@ public class WalletRepository : RepositoryBase<Wallet, Guid>, IWalletRepository
     {
     }
 
+    async Task<Wallet?> IWalletRepository.GetByDidAsync(string did, CancellationToken cancellationToken)
+    {
+        return await DbSet
+            .FirstOrDefaultAsync(w => w.WalletDid == did, cancellationToken);
+    }
+
     public async Task<Wallet?> GetByDidAsync(string did, CancellationToken cancellationToken = default)
     {
         return await DbSet
             .FirstOrDefaultAsync(w => w.WalletDid == did, cancellationToken);
+    }
+
+    async Task<IEnumerable<Wallet>> IWalletRepository.GetByPersonIdAsync(Guid personId, CancellationToken cancellationToken)
+    {
+        return await DbSet
+            .Where(w => w.PersonId == personId)
+            .ToListAsync(cancellationToken);
     }
 
     public async Task<IReadOnlyList<Wallet>> GetByPersonIdAsync(Guid personId, CancellationToken cancellationToken = default)
@@ -27,10 +40,24 @@ public class WalletRepository : RepositoryBase<Wallet, Guid>, IWalletRepository
             .ToListAsync(cancellationToken);
     }
 
+    async Task<IEnumerable<Wallet>> IWalletRepository.GetActiveWalletsAsync(CancellationToken cancellationToken)
+    {
+        return await DbSet
+            .Where(w => w.Status == WalletStatus.Active)
+            .ToListAsync(cancellationToken);
+    }
+
     public async Task<IReadOnlyList<Wallet>> GetActiveWalletsAsync(CancellationToken cancellationToken = default)
     {
         return await DbSet
             .Where(w => w.Status == WalletStatus.Active)
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<IEnumerable<Wallet>> GetByTenantIdAsync(Guid tenantId, CancellationToken cancellationToken = default)
+    {
+        return await DbSet
+            .Where(w => w.TenantId == tenantId.ToString())
             .ToListAsync(cancellationToken);
     }
 
@@ -81,6 +108,19 @@ public class WalletRepository : RepositoryBase<Wallet, Guid>, IWalletRepository
     {
         return await DbSet
             .Where(w => w.Status == status)
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<bool> WalletExistsForPersonAsync(Guid personId, Guid tenantId, CancellationToken cancellationToken = default)
+    {
+        return await DbSet
+            .AnyAsync(w => w.PersonId == personId && w.TenantId == tenantId.ToString(), cancellationToken);
+    }
+
+    async Task<IEnumerable<Wallet>> IWalletRepository.FindAsync(ISpecification<Wallet> specification, CancellationToken cancellationToken)
+    {
+        return await DbSet
+            .Where(specification.ToExpression())
             .ToListAsync(cancellationToken);
     }
 

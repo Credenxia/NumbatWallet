@@ -14,6 +14,12 @@ public class IssuerRepository : RepositoryBase<Issuer, Guid>, IIssuerRepository
     {
     }
 
+    async Task<Issuer?> IIssuerRepository.GetByDidAsync(string did, CancellationToken cancellationToken)
+    {
+        return await DbSet
+            .FirstOrDefaultAsync(i => i.IssuerDid == did, cancellationToken);
+    }
+
     public async Task<Issuer?> GetByDidAsync(string did, CancellationToken cancellationToken = default)
     {
         return await DbSet
@@ -39,7 +45,7 @@ public class IssuerRepository : RepositoryBase<Issuer, Guid>, IIssuerRepository
             .ToListAsync(cancellationToken);
     }
 
-    public async Task<IReadOnlyList<Issuer>> GetActiveIssuersAsync(CancellationToken cancellationToken = default)
+    public async Task<IEnumerable<Issuer>> GetActiveIssuersAsync(CancellationToken cancellationToken = default)
     {
         return await DbSet
             .Where(i => i.Status == IssuerStatus.Active)
@@ -59,6 +65,25 @@ public class IssuerRepository : RepositoryBase<Issuer, Guid>, IIssuerRepository
         return await DbSet
             .Include("Credentials")
             .FirstOrDefaultAsync(i => i.Id == issuerId, cancellationToken);
+    }
+
+    public async Task<IEnumerable<Issuer>> GetByTenantIdAsync(Guid tenantId, CancellationToken cancellationToken = default)
+    {
+        return await DbSet
+            .Where(i => i.TenantId == tenantId.ToString())
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<IEnumerable<Issuer>> GetIssuersBySupportedCredentialTypeAsync(string credentialType, CancellationToken cancellationToken = default)
+    {
+        return await DbSet
+            .Where(i => i.SupportedCredentialTypes.Any(ct => ct.TypeName == credentialType))
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<bool> IssuerExistsAsync(string issuerDid, CancellationToken cancellationToken = default)
+    {
+        return await DbSet.AnyAsync(i => i.IssuerDid == issuerDid, cancellationToken);
     }
 
     public async Task<IReadOnlyList<Issuer>> GetByCredentialTypeAsync(string credentialType, CancellationToken cancellationToken = default)
@@ -172,7 +197,16 @@ public class IssuerRepository : RepositoryBase<Issuer, Guid>, IIssuerRepository
             .AnyAsync(i => i.ExternalId == externalId, cancellationToken);
     }
 
-    public async Task<bool> CanIssueCredentialTypeAsync(Guid issuerId, string credentialType, CancellationToken cancellationToken = default)
+    public async Task<bool> CanIssueCredentialTypeAsync(string issuerDid, string credentialType, CancellationToken cancellationToken = default)
+    {
+        return await DbSet
+            .AnyAsync(i => i.IssuerDid == issuerDid &&
+                          i.Status == IssuerStatus.Active &&
+                          i.SupportedCredentialTypes.Any(ct => ct.TypeName == credentialType),
+                     cancellationToken);
+    }
+
+    public async Task<bool> CanIssueCredentialTypeByIdAsync(Guid issuerId, string credentialType, CancellationToken cancellationToken = default)
     {
         return await DbSet
             .AnyAsync(i => i.Id == issuerId &&

@@ -48,14 +48,13 @@ public class CreateWalletCommandHandler : ICommandHandler<CreateWalletCommand, W
             throw new EntityNotFoundException("Person", command.PersonId);
         }
 
-        // Check if person already has an active wallet
-        var existingWallets = await _walletRepository.FindAsync(
-            new Domain.Specifications.WalletByPersonSpecification(personId),
-            cancellationToken);
+        // Check if person already has a wallet (regardless of status)
+        var tenantId = person.TenantId != null ? Guid.Parse(person.TenantId) : Guid.Empty;
+        var walletExists = await _walletRepository.WalletExistsForPersonAsync(personId, tenantId, cancellationToken);
 
-        if (existingWallets.Any(w => w.Status == SharedKernel.Enums.WalletStatus.Active))
+        if (walletExists)
         {
-            throw new DomainValidationException($"Person {command.PersonId} already has an active wallet");
+            throw new ConflictException($"A wallet already exists for person {command.PersonId}");
         }
 
         // Create wallet

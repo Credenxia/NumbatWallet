@@ -1,0 +1,52 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "environment": {
+      "value": "dev"
+    },
+    "location": {
+      "value": "australiaeast"
+    },
+    "locationCode": {
+      "value": "aue"
+    },
+    "applicationName": {
+      "value": "numbatwallet"
+    },
+    "administratorObjectId": {
+      "value": "" // To be filled with actual Azure AD admin object ID
+    },
+    "managedIdentityObjectId": {
+      "value": "" // To be filled after managed identity creation
+    },
+    "postgresAdminUsername": {
+      "value": "nwadmin"
+    },
+    "postgresAdminPassword": {
+      "reference": {
+        "keyVault": {
+          "id": "" // To be filled with Key Vault resource ID
+        },
+        "secretName": "PostgresAdminPassword"
+      }
+    },
+    "enablePrivateEndpoints": {
+      "value": false
+    },
+    "allowedIpAddresses": {
+      "value": [
+        // Add developer IP addresses here for dev environment
+      ]
+    },
+    "tags": {
+      "value": {
+        "Application": "NumbatWallet",
+        "Environment": "Development",
+        "ManagedBy": "Bicep",
+        "CostCenter": "Development",
+        "Owner": "Development-Team"
+      }
+    }
+  }
+}

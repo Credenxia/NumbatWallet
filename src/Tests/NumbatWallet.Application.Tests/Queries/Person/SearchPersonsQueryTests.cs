@@ -49,9 +49,9 @@ public sealed class SearchPersonsQueryTests
         // Assert
         result.Should().NotBeNull();
         result.Should().HaveCount(1);
-        result.First().FirstName.Should().Be("John");
-        result.First().LastName.Should().Be("Doe");
-        result.First().Email.Should().Be("john@example.com");
+        result[0].FirstName.Should().Be("John");
+        result[0].LastName.Should().Be("Doe");
+        result[0].Email.Should().Be("john@example.com");
     }
 
     [Fact]

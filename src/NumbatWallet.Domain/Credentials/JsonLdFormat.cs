@@ -34,10 +34,7 @@ public class JsonLdFormat : ICredentialFormat
 
     public string SerializeCredential(Dictionary<string, object> credentialData, string? signingKey = null)
     {
-        if (credentialData == null)
-        {
-            throw new ArgumentNullException(nameof(credentialData));
-        }
+        ArgumentNullException.ThrowIfNull(credentialData);
 
         // Ensure @context is present
         if (!credentialData.ContainsKey("@context"))

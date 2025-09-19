@@ -31,12 +31,12 @@ public sealed class SearchPersonsQueryHandler : IQueryHandler<SearchPersonsQuery
             LastName = p.LastName,
             DateOfBirth = p.DateOfBirth,
             ExternalId = p.ExternalId,
-            EmailVerificationStatus = p.EmailVerificationStatus,
-            PhoneVerificationStatus = p.PhoneVerificationStatus,
+            EmailVerificationStatus = p.EmailVerificationStatus.ToString(),
+            PhoneVerificationStatus = p.PhoneVerificationStatus.ToString(),
             IsVerified = p.IsVerified,
-            Status = p.Status,
+            Status = p.Status.ToString(),
             CreatedAt = p.CreatedAt,
-            UpdatedAt = p.UpdatedAt
+            UpdatedAt = p.ModifiedAt
         }).ToList();
 
         return personDtos;

@@ -153,7 +153,7 @@ public class CreateWalletCommandHandlerTests
         _tenantServiceMock.Setup(x => x.TenantId).Returns(tenantId);
         _personRepositoryMock.Setup(x => x.GetByIdAsync(personId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(person);
-        _walletRepositoryMock.Setup(x => x.ExistsAsync(personId, command.Name, It.IsAny<CancellationToken>()))
+        _walletRepositoryMock.Setup(x => x.WalletExistsForPersonAsync(personId, tenantId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
 
         // Act

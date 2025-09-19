@@ -47,14 +47,13 @@ public sealed class CreateWalletCommandHandler : ICommandHandler<CreateWalletCom
             throw new NotFoundException(nameof(Person), command.PersonId);
         }
 
-        // Check for duplicate wallet name for this person
-        var existingWallets = await _walletRepository.GetByPersonIdAsync(
+        // Check if person already has a wallet
+        var walletExists = await _walletRepository.WalletExistsForPersonAsync(
             command.PersonId,
+            _tenantService.TenantId,
             cancellationToken);
 
-        var exists = existingWallets.Any(w => w.Name == command.Name);
-
-        if (exists)
+        if (walletExists)
         {
             throw new ConflictException($"Wallet with name '{command.Name}' already exists for this person.");
         }

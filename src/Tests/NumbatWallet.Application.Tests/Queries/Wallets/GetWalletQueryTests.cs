@@ -38,7 +38,7 @@ public class GetWalletQueryTests
         var walletId = Guid.NewGuid();
         var personId = Guid.NewGuid();
         var wallet = Wallet.Create(personId, "Test Wallet").Value;
-        var person = Person.Create("John", "Doe", "john@example.com", "+61412345678").Value;
+        var person = Domain.Aggregates.Person.Create("John", "Doe", "john@example.com", "+61412345678").Value;
 
         var query = new GetWalletQuery
         {
@@ -81,7 +81,7 @@ public class GetWalletQueryTests
         var personId = Guid.NewGuid();
         var issuerId = Guid.NewGuid();
         var wallet = Wallet.Create(personId, "Test Wallet").Value;
-        var person = Person.Create("John", "Doe", "john@example.com", "+61412345678").Value;
+        var person = Domain.Aggregates.Person.Create("John", "Doe", "john@example.com", "+61412345678").Value;
 
         var credential1 = Credential.Create(walletId, issuerId, "DriverLicence", "{}", "schema1").Value;
         var credential2 = Credential.Create(walletId, issuerId, "ProofOfAge", "{}", "schema2").Value;
@@ -172,7 +172,7 @@ public class GetWalletQueryTests
 
         _personRepositoryMock
             .Setup(x => x.GetByIdAsync(personId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync((Person?)null);
+            .ReturnsAsync((Domain.Aggregates.Person?)null);
 
         // Act
         var result = await _handler.HandleAsync(query);
