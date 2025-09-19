@@ -37,7 +37,7 @@ public class ProtectionInterceptor : SaveChangesInterceptor
         var protectionService = scope.ServiceProvider.GetService<IProtectionService>();
         var searchTokenService = scope.ServiceProvider.GetService<ISearchTokenService>();
         var tenantPolicyService = scope.ServiceProvider.GetService<ITenantPolicyService>();
-        var tenantService = scope.ServiceProvider.GetRequiredService<ITenantService>();
+        var tenantService = scope.ServiceProvider.GetRequiredService<SharedKernel.Interfaces.ITenantService>();
 
         // Only apply protection if services are available
         if (protectionService == null || searchTokenService == null || tenantPolicyService == null)

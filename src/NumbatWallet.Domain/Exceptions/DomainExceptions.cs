@@ -29,3 +29,9 @@ public class UnauthorizedException : DomainException
     public UnauthorizedException(string message)
         : base(message) { }
 }
+
+public class TenantNotFoundException : NotFoundException
+{
+    public TenantNotFoundException(string tenantId)
+        : base($"Tenant with ID '{tenantId}' was not found.") { }
+}

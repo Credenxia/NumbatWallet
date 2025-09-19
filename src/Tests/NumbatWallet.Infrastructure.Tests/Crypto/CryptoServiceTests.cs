@@ -15,7 +15,7 @@ public class CryptoServiceTests : IDisposable
 {
     private readonly Mock<IKeyWrapProvider> _wrapProviderMock;
     private readonly Mock<IKeyVaultService> _keyVaultServiceMock;
-    private readonly Mock<ITenantService> _tenantServiceMock;
+    private readonly Mock<SharedKernel.Interfaces.ITenantService> _tenantServiceMock;
     private readonly MemoryCache _memoryCache;
     private readonly Mock<ILogger<CryptoService>> _loggerMock;
 
@@ -23,7 +23,7 @@ public class CryptoServiceTests : IDisposable
     {
         _wrapProviderMock = new Mock<IKeyWrapProvider>();
         _keyVaultServiceMock = new Mock<IKeyVaultService>();
-        _tenantServiceMock = new Mock<ITenantService>();
+        _tenantServiceMock = new Mock<SharedKernel.Interfaces.ITenantService>();
         _memoryCache = new MemoryCache(new MemoryCacheOptions());
         _loggerMock = new Mock<ILogger<CryptoService>>();
 

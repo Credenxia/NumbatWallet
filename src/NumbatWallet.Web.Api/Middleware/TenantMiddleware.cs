@@ -1,10 +1,9 @@
 using System.Security.Claims;
+using NumbatWallet.Application.Interfaces;
+using NumbatWallet.Domain.Exceptions;
 
 namespace NumbatWallet.Web.Api.Middleware;
 
-/// <summary>
-/// Middleware to extract and validate tenant information from requests
-/// </summary>
 public class TenantMiddleware
 {
     private readonly RequestDelegate _next;
@@ -18,107 +17,106 @@ public class TenantMiddleware
 
     public async Task InvokeAsync(HttpContext context, ITenantService tenantService)
     {
-        var tenantId = ResolveTenantId(context);
-
-        if (!string.IsNullOrEmpty(tenantId))
+        try
         {
-            // Validate tenant exists and is active
-            var tenant = await tenantService.GetTenantAsync(tenantId);
-            if (tenant == null)
+            var tenantId = ResolveTenantId(context);
+
+            if (!string.IsNullOrEmpty(tenantId))
             {
-                _logger.LogWarning("Invalid tenant ID: {TenantId}", tenantId);
-                context.Response.StatusCode = StatusCodes.Status400BadRequest;
-                await context.Response.WriteAsync("Invalid tenant");
-                return;
+                await tenantService.SetCurrentTenantAsync(tenantId);
+                _logger.LogDebug("Tenant context set for tenant: {TenantId}", tenantId);
+
+                context.Items["TenantId"] = tenantId;
+                context.Response.Headers.Append("X-Tenant-Id", tenantId);
+            }
+            else if (RequiresTenant(context))
+            {
+                _logger.LogWarning("Tenant context required but not provided for path: {Path}", context.Request.Path);
+                throw new UnauthorizedException("Tenant context is required");
             }
 
-            if (!tenant.IsActive)
-            {
-                _logger.LogWarning("Inactive tenant accessed: {TenantId}", tenantId);
-                context.Response.StatusCode = StatusCodes.Status403Forbidden;
-                await context.Response.WriteAsync("Tenant is inactive");
-                return;
-            }
-
-            // Set tenant context
-            context.Items["TenantId"] = tenantId;
-            context.Items["Tenant"] = tenant;
-
-            // Add tenant claim if authenticated
-            if (context.User.Identity?.IsAuthenticated == true)
-            {
-                var claims = new List<Claim>(context.User.Claims)
-                {
-                    new Claim("tenant_id", tenantId)
-                };
-                var identity = new ClaimsIdentity(claims, context.User.Identity.AuthenticationType);
-                context.User = new ClaimsPrincipal(identity);
-            }
-
-            _logger.LogDebug("Tenant context set: {TenantId}", tenantId);
+            await _next(context);
         }
-
-        await _next(context);
+        catch (TenantNotFoundException ex)
+        {
+            _logger.LogError(ex, "Tenant not found");
+            context.Response.StatusCode = StatusCodes.Status404NotFound;
+            await context.Response.WriteAsJsonAsync(new { error = "Tenant not found" });
+        }
+        finally
+        {
+            if (tenantService != null)
+            {
+                await tenantService.ClearCurrentTenantAsync();
+            }
+        }
     }
 
     private string? ResolveTenantId(HttpContext context)
     {
-        // Priority order for tenant resolution:
-        // 1. From JWT claim
-        // 2. From header
-        // 3. From subdomain
-        // 4. From query string
-
-        // 1. Check JWT claim
-        if (context.User.Identity?.IsAuthenticated == true)
+        // Priority 1: Check for tenant claim in authenticated user
+        if (context.User?.Identity?.IsAuthenticated == true)
         {
-            var tenantClaim = context.User.FindFirst("tenant_id")?.Value;
-            if (!string.IsNullOrEmpty(tenantClaim))
+            var tenantClaim = context.User.FindFirst("tenant_id")
+                ?? context.User.FindFirst("tid")
+                ?? context.User.FindFirst(ClaimTypes.GroupSid);
+
+            if (tenantClaim != null)
             {
-                return tenantClaim;
+                return tenantClaim.Value;
             }
         }
 
-        // 2. Check custom header
-        if (context.Request.Headers.TryGetValue("X-Tenant-Id", out var tenantHeader))
+        // Priority 2: Check for X-Tenant-Id header
+        if (context.Request.Headers.TryGetValue("X-Tenant-Id", out var headerTenantId))
         {
-            return tenantHeader.FirstOrDefault();
+            return headerTenantId.ToString();
         }
 
-        // 3. Check subdomain (e.g., tenant1.api.numbatwallet.com)
+        // Priority 3: Check for subdomain (e.g., tenant1.api.numbatwallet.gov.au)
         var host = context.Request.Host.Host;
         if (!string.IsNullOrEmpty(host))
         {
-            var parts = host.Split('.');
-            if (parts.Length > 2 && !parts[0].Equals("api", StringComparison.OrdinalIgnoreCase))
+            var segments = host.Split('.');
+            if (segments.Length > 2 && !segments[0].Equals("api", StringComparison.OrdinalIgnoreCase))
             {
-                return parts[0].ToLowerInvariant();
+                return segments[0];
             }
         }
 
-        // 4. Check query string
-        if (context.Request.Query.TryGetValue("tenant", out var tenantQuery))
+        // Priority 4: Check route parameter (for REST endpoints)
+        if (context.Request.RouteValues.TryGetValue("tenantId", out var routeTenantId))
         {
-            return tenantQuery.FirstOrDefault();
+            return routeTenantId?.ToString();
+        }
+
+        // Priority 5: Check query parameter (fallback for testing)
+        if (context.Request.Query.TryGetValue("tenant", out var queryTenantId))
+        {
+            return queryTenantId.ToString();
         }
 
         return null;
     }
-}
 
-public interface ITenantService
-{
-    Task<TenantInfo?> GetTenantAsync(string tenantId);
-    Task<bool> ValidateTenantAsync(string tenantId);
-}
+    private bool RequiresTenant(HttpContext context)
+    {
+        var path = context.Request.Path.Value?.ToLowerInvariant() ?? "";
 
-public class TenantInfo
-{
-    public string Id { get; set; } = string.Empty;
-    public string Name { get; set; } = string.Empty;
-    public bool IsActive { get; set; }
-    public string ConnectionString { get; set; } = string.Empty;
-    public Dictionary<string, string> Settings { get; set; } = new();
+        // Endpoints that don't require tenant context
+        var tenantFreeEndpoints = new[]
+        {
+            "/health",
+            "/metrics",
+            "/swagger",
+            "/.well-known",
+            "/api/v1/auth/login",
+            "/api/v1/auth/register",
+            "/api/v1/tenants/discover"
+        };
+
+        return !tenantFreeEndpoints.Any(endpoint => path.Contains(endpoint, StringComparison.OrdinalIgnoreCase));
+    }
 }
 
 public static class TenantMiddlewareExtensions

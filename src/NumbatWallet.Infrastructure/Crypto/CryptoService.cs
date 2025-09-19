@@ -16,7 +16,7 @@ public class CryptoService : ICryptoService
 {
     private readonly IKeyWrapProvider _wrapProvider;
     private readonly IKeyVaultService _keyVaultService;
-    private readonly ITenantService _tenantService;
+    private readonly SharedKernel.Interfaces.ITenantService _tenantService;
     private readonly IMemoryCache _dekCache;
     private readonly ILogger<CryptoService> _logger;
     private readonly TimeSpan _dekCacheDuration = TimeSpan.FromMinutes(5);
@@ -24,7 +24,7 @@ public class CryptoService : ICryptoService
     public CryptoService(
         IKeyWrapProvider wrapProvider,
         IKeyVaultService keyVaultService,
-        ITenantService tenantService,
+        SharedKernel.Interfaces.ITenantService tenantService,
         IMemoryCache memoryCache,
         ILogger<CryptoService> logger)
     {

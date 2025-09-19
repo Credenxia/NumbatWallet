@@ -20,6 +20,7 @@ public static class ServiceCollectionExtensions
     {
         // Register core services for interceptors
         services.AddHttpContextAccessor();
+        services.AddMemoryCache();
         services.AddScoped<ICurrentUserService, CurrentUserService>();
         services.AddScoped<ICurrentTenantService, CurrentTenantService>();
         services.AddSingleton<IDateTimeProvider, DateTimeProvider>();
@@ -68,8 +69,8 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IIssuerRepository, IssuerRepository>();
 
         // Register Infrastructure Services
-        // TODO: Implement these services
-        // services.AddScoped<ITenantService, TenantService>();
+        services.AddScoped<Application.Interfaces.ITenantService, TenantService>();
+        services.AddScoped<IAuthenticationService, AuthenticationService>();
         // services.AddScoped<IDateTimeService, DateTimeService>();
         // services.AddScoped<IEventDispatcher, EventDispatcher>();
 

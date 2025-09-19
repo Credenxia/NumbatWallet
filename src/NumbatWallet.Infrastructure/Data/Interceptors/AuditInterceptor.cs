@@ -38,7 +38,7 @@ public class AuditInterceptor : SaveChangesInterceptor
         using var scope = _serviceProvider.CreateScope();
         var auditService = scope.ServiceProvider.GetService<IAuditService>();
         var currentUserService = scope.ServiceProvider.GetRequiredService<ICurrentUserService>();
-        var tenantService = scope.ServiceProvider.GetRequiredService<ITenantService>();
+        var tenantService = scope.ServiceProvider.GetRequiredService<SharedKernel.Interfaces.ITenantService>();
 
         if (auditService == null)
         {

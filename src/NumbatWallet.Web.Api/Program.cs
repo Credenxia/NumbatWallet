@@ -1,9 +1,11 @@
+using Carter;
 using Microsoft.EntityFrameworkCore;
 using NumbatWallet.Application.DependencyInjection;
 using NumbatWallet.Infrastructure.Data;
 using NumbatWallet.Infrastructure.DependencyInjection;
 using NumbatWallet.Web.Api.DependencyInjection;
 using NumbatWallet.Web.Api.Extensions;
+using NumbatWallet.Web.Api.Middleware;
 using Serilog;
 
 // Configure Serilog
@@ -36,11 +38,17 @@ try
     // Add GraphQL
     builder.Services.AddGraphQLServer(builder.Configuration);
 
+    // Add Carter for REST endpoints with validation
+    builder.Services.AddCarterWithValidation();
+
     // Add health checks
     builder.Services.AddCustomHealthChecks(builder.Configuration);
 
     // Add Swagger documentation
     builder.Services.AddSwaggerDocumentation();
+
+    // Add custom authentication
+    builder.Services.AddCustomAuthentication(builder.Configuration);
 
     var app = builder.Build();
 
@@ -61,12 +69,20 @@ try
     app.UseHttpsRedirection();
     app.UseSerilogRequestLogging();
     app.UseCors("AllowedOrigins");
+
+    // Add custom middleware for tenant resolution
+    app.UseTenantResolution();
+
+    // Add API key authentication if enabled
+    app.UseApiKeyAuthentication();
+
     app.UseAuthentication();
     app.UseAuthorization();
 
     // Map endpoints
     app.MapControllers();
     app.MapGraphQL();
+    app.MapCarterEndpoints(); // REST endpoints via Carter with metadata
     app.MapHealthChecks();
     app.MapDefaultEndpoints();
 

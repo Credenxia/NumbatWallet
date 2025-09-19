@@ -98,7 +98,7 @@ public class Query
     }
 
     [Authorize]
-    public async Task<WalletDto?> GetWalletByPersonId(
+    public async Task<IEnumerable<WalletDto>> GetWalletsByPersonId(
         Guid personId,
         [Service] IWalletService walletService,
         CancellationToken cancellationToken)

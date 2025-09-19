@@ -216,7 +216,12 @@ public class Mutation
         CancellationToken cancellationToken)
     {
         var result = await credentialService.VerifyCredentialAsync(credentialId, cancellationToken);
-        return (VerificationResult)result;
+        return new VerificationResult
+        {
+            IsValid = result.IsValid,
+            Errors = result.Errors,
+            Claims = result.Claims
+        };
     }
 
     [Authorize]
