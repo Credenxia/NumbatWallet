@@ -3,7 +3,7 @@
   "contentVersion": "1.0.0.0",
   "parameters": {
     "environment": {
-      "value": "prod"
+      "value": "staging"
     },
     "location": {
       "value": "australiaeast"
@@ -26,66 +26,53 @@
 
     // Network Configuration
     "vnetAddressSpace": {
-      "value": "10.0.0.0/16"
+      "value": "10.2.0.0/16"
     },
     "subnets": {
       "value": [
         {
           "name": "snet-webapp",
-          "addressPrefix": "10.0.1.0/24"
+          "addressPrefix": "10.2.1.0/24"
         },
         {
           "name": "snet-api",
-          "addressPrefix": "10.0.2.0/24"
+          "addressPrefix": "10.2.2.0/24"
         },
         {
           "name": "snet-database",
-          "addressPrefix": "10.0.3.0/24"
+          "addressPrefix": "10.2.3.0/24"
         },
         {
           "name": "snet-privateendpoints",
-          "addressPrefix": "10.0.4.0/24"
+          "addressPrefix": "10.2.4.0/24"
         },
         {
           "name": "snet-management",
-          "addressPrefix": "10.0.5.0/24"
-        },
-        {
-          "name": "snet-apim",
-          "addressPrefix": "10.0.6.0/24"
+          "addressPrefix": "10.2.5.0/24"
         }
       ]
     },
-    "existingVnetResourceGroup": {
-      "value": "" // To be filled with existing VNet RG if applicable
-    },
-    "existingVnetName": {
-      "value": "" // To be filled with existing VNet name if applicable
-    },
-    "privateEndpointSubnetId": {
-      "value": "" // To be filled with subnet ID for private endpoints
-    },
 
-    // SKU Configuration - Production with High Availability
+    // SKU Configuration - Production-like
     "appServicePlanSku": {
       "value": {
-        "name": "P3V3",
+        "name": "P1V3",
         "tier": "PremiumV3",
-        "capacity": 3
+        "capacity": 2
       }
     },
     "sqlServerSku": {
       "value": {
-        "name": "P4",
-        "tier": "Premium",
-        "capacity": 250
+        "name": "S3",
+        "tier": "Standard",
+        "capacity": 100
       }
     },
     "redisCacheSku": {
       "value": {
-        "name": "P1",
-        "family": "P",
-        "capacity": 1
+        "name": "C3",
+        "family": "C",
+        "capacity": 6
       }
     },
     "containerAppEnvironmentSku": {
@@ -102,27 +89,21 @@
     "postgresAdminPassword": {
       "reference": {
         "keyVault": {
-          "id": "/subscriptions/{subscriptionId}/resourceGroups/rg-numbatwallet-prod-aue/providers/Microsoft.KeyVault/vaults/kv-numbatwallet-prod-aue"
+          "id": "/subscriptions/{subscriptionId}/resourceGroups/rg-numbatwallet-staging-aue/providers/Microsoft.KeyVault/vaults/kv-nw-staging-aue"
         },
         "secretName": "PostgresAdminPassword"
       }
     },
     "postgresDatabaseName": {
-      "value": "numbatwallet-prod"
+      "value": "numbatwallet-staging"
     },
     "postgresBackupRetentionDays": {
-      "value": 35
+      "value": 14
     },
     "postgresGeoRedundantBackup": {
       "value": true
     },
     "postgresEnableHa": {
-      "value": true
-    },
-    "postgresEnableTde": {
-      "value": true
-    },
-    "postgresEnableAuditLogging": {
       "value": true
     },
 
@@ -134,16 +115,13 @@
       "value": true
     },
     "sessionTimeoutMinutes": {
-      "value": 30
+      "value": 60
     },
     "enableWaf": {
       "value": true
     },
-    "enableDdosProtection": {
-      "value": true
-    },
     "tlsVersion": {
-      "value": "1.3"
+      "value": "1.2"
     },
     "allowedIpAddresses": {
       "value": []
@@ -152,62 +130,40 @@
     // Application Settings
     "applicationSettings": {
       "value": {
-        "ASPNETCORE_ENVIRONMENT": "Production",
+        "ASPNETCORE_ENVIRONMENT": "Staging",
         "Logging__LogLevel__Default": "Warning",
-        "Logging__LogLevel__Microsoft": "Error",
+        "Logging__LogLevel__Microsoft": "Warning",
         "Logging__LogLevel__System": "Error",
         "DetailedErrors": "false",
         "EnableSensitiveDataLogging": "false",
-        "GraphQL__EnableIntrospection": "false",
+        "GraphQL__EnableIntrospection": "true",
         "GraphQL__EnablePlayground": "false",
         "RateLimiting__Enabled": "true",
-        "RateLimiting__PermitLimit": "30",
+        "RateLimiting__PermitLimit": "60",
         "RateLimiting__Window": "60",
-        "Cache__SlidingExpiration": "1800",
-        "Cache__AbsoluteExpiration": "3600",
+        "Cache__SlidingExpiration": "600",
         "HealthCheck__Enabled": "true",
         "Monitoring__EnableAPM": "true",
         "Monitoring__EnableMetrics": "true",
-        "Monitoring__SamplingRate": "1.0",
-        "Security__EnableSecurityHeaders": "true",
-        "Security__EnableHsts": "true",
-        "Security__HstsMaxAge": "31536000",
-        "Security__EnableCsp": "true"
+        "Monitoring__SamplingRate": "0.5"
       }
     },
 
     // High Availability Configuration
     "enableZoneRedundancy": {
-      "value": true
+      "value": false
     },
     "replicaCount": {
-      "value": 3
+      "value": 2
     },
     "enableAutoScaling": {
       "value": true
     },
     "minInstances": {
-      "value": 3
+      "value": 2
     },
     "maxInstances": {
-      "value": 10
-    },
-
-    // Disaster Recovery Configuration
-    "enableBackupVault": {
-      "value": true
-    },
-    "backupSchedule": {
-      "value": "0 2 * * *"  // Daily at 2 AM
-    },
-    "disasterRecoveryTier": {
-      "value": "Hot"
-    },
-    "rpoMinutes": {
-      "value": 15
-    },
-    "rtoMinutes": {
-      "value": 60
+      "value": 5
     },
 
     // Feature Flags
@@ -215,7 +171,7 @@
       "value": false
     },
     "enableSwagger": {
-      "value": false
+      "value": true
     },
     "enableDeveloperExceptionPage": {
       "value": false
@@ -234,15 +190,13 @@
     "tags": {
       "value": {
         "Application": "NumbatWallet",
-        "Environment": "Production",
+        "Environment": "Staging",
         "ManagedBy": "Bicep",
-        "CostCenter": "Digital-Services",
-        "Owner": "WA-Government",
+        "CostCenter": "Pre-Production",
+        "Owner": "Operations",
+        "Purpose": "UAT and Pre-Production Testing",
         "Compliance": "TDIF",
-        "DataClassification": "Sensitive",
-        "SLA": "99.5",
-        "ISO27001": "Compliant",
-        "GDPR": "Ready"
+        "DataClassification": "Sensitive"
       }
     }
   }

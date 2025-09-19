@@ -3,7 +3,7 @@
   "contentVersion": "1.0.0.0",
   "parameters": {
     "environment": {
-      "value": "dev"
+      "value": "test"
     },
     "location": {
       "value": "australiaeast"
@@ -23,37 +23,49 @@
 
     // Network Configuration
     "vnetAddressSpace": {
-      "value": "10.3.0.0/16"
+      "value": "10.1.0.0/16"
     },
     "subnets": {
       "value": [
         {
-          "name": "snet-default",
-          "addressPrefix": "10.3.1.0/24"
+          "name": "snet-webapp",
+          "addressPrefix": "10.1.1.0/24"
+        },
+        {
+          "name": "snet-api",
+          "addressPrefix": "10.1.2.0/24"
+        },
+        {
+          "name": "snet-database",
+          "addressPrefix": "10.1.3.0/24"
+        },
+        {
+          "name": "snet-privateendpoints",
+          "addressPrefix": "10.1.4.0/24"
         }
       ]
     },
 
-    // SKU Configuration - Cost-optimized for development
+    // SKU Configuration - Moderate for testing
     "appServicePlanSku": {
       "value": {
-        "name": "B3",
-        "tier": "Basic",
-        "capacity": 1
+        "name": "S2",
+        "tier": "Standard",
+        "capacity": 2
       }
     },
     "sqlServerSku": {
       "value": {
-        "name": "Basic",
-        "tier": "Basic",
-        "capacity": 5
+        "name": "S1",
+        "tier": "Standard",
+        "capacity": 20
       }
     },
     "redisCacheSku": {
       "value": {
-        "name": "C0",
+        "name": "C1",
         "family": "C",
-        "capacity": 0
+        "capacity": 1
       }
     },
     "containerAppEnvironmentSku": {
@@ -76,7 +88,7 @@
       }
     },
     "postgresDatabaseName": {
-      "value": "numbatwallet-dev"
+      "value": "numbatwallet-test"
     },
     "postgresBackupRetentionDays": {
       "value": 7
@@ -87,13 +99,13 @@
 
     // Security Configuration
     "enablePrivateEndpoints": {
-      "value": false
+      "value": true
     },
     "requireMfa": {
       "value": false
     },
     "sessionTimeoutMinutes": {
-      "value": 480
+      "value": 120
     },
     "enableWaf": {
       "value": false
@@ -103,34 +115,28 @@
     },
     "allowedIpAddresses": {
       "value": [
-        // Add developer IP addresses here for dev environment
+        // Add test environment IP addresses here
       ]
     },
 
     // Application Settings
     "applicationSettings": {
       "value": {
-        "ASPNETCORE_ENVIRONMENT": "Development",
-        "Logging__LogLevel__Default": "Debug",
-        "Logging__LogLevel__Microsoft": "Information",
-        "Logging__LogLevel__System": "Information",
+        "ASPNETCORE_ENVIRONMENT": "Test",
+        "Logging__LogLevel__Default": "Information",
+        "Logging__LogLevel__Microsoft": "Warning",
+        "Logging__LogLevel__System": "Warning",
         "DetailedErrors": "true",
-        "EnableSensitiveDataLogging": "true",
+        "EnableSensitiveDataLogging": "false",
         "GraphQL__EnableIntrospection": "true",
         "GraphQL__EnablePlayground": "true",
-        "RateLimiting__Enabled": "false",
-        "Cache__SlidingExpiration": "60",
+        "RateLimiting__Enabled": "true",
+        "RateLimiting__PermitLimit": "100",
+        "RateLimiting__Window": "60",
+        "Cache__SlidingExpiration": "300",
         "HealthCheck__Enabled": "true",
-        "HealthCheck__Path": "/health"
-      }
-    },
-
-    // Connection Strings (loaded from Key Vault in higher envs)
-    "connectionStrings": {
-      "value": {
-        "DefaultConnection": "@Microsoft.KeyVault(VaultName=kv-nw-dev-aue;SecretName=ConnectionString)",
-        "RedisConnection": "@Microsoft.KeyVault(VaultName=kv-nw-dev-aue;SecretName=RedisConnection)",
-        "StorageConnection": "@Microsoft.KeyVault(VaultName=kv-nw-dev-aue;SecretName=StorageConnection)"
+        "TestData__EnableSeedData": "true",
+        "TestData__UserCount": "100"
       }
     },
 
@@ -142,29 +148,26 @@
       "value": true
     },
     "enableDeveloperExceptionPage": {
-      "value": true
+      "value": false
     },
     "enableDetailedErrors": {
       "value": true
     },
-    "enableSqlDebugger": {
-      "value": true
-    },
     "enableAutomatedBackups": {
-      "value": false
+      "value": true
     },
 
     // Tags
     "tags": {
       "value": {
         "Application": "NumbatWallet",
-        "Environment": "Development",
+        "Environment": "Test",
         "ManagedBy": "Bicep",
-        "CostCenter": "Development",
-        "Owner": "Development-Team",
-        "Purpose": "Development and Testing",
+        "CostCenter": "QA",
+        "Owner": "QA-Team",
+        "Purpose": "Integration Testing",
         "AutoShutdown": "true",
-        "ShutdownTime": "18:00"
+        "ShutdownTime": "19:00"
       }
     }
   }
