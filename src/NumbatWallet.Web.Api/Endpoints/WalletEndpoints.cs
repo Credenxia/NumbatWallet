@@ -14,10 +14,7 @@ public class WalletEndpoints : ICarterModule
     {
         var group = app.MapGroup("/api/v1/wallets")
             .RequireAuthorization()
-            .WithTags("Wallets")
-            .ProducesValidationProblem()
-            .Produces(StatusCodes.Status401Unauthorized)
-            .Produces(StatusCodes.Status403Forbidden);
+            .WithTags("Wallets");
 
         // GET /api/v1/wallets
         group.MapGet("/", GetMyWallets)
@@ -121,7 +118,7 @@ public class WalletEndpoints : ICarterModule
     private static async Task<IResult> GetWalletById(
         [FromRoute] Guid id,
         ClaimsPrincipal user,
-        [FromServices] IQueryHandler<GetWalletByIdQuery, WalletDto> handler,
+        [FromServices] IQueryHandler<GetWalletByIdQuery, WalletDto?> handler,
         [FromServices] IWalletService walletService,
         CancellationToken cancellationToken)
     {
@@ -220,7 +217,7 @@ public class WalletEndpoints : ICarterModule
     private static async Task<IResult> BackupWallet(
         [FromRoute] Guid id,
         ClaimsPrincipal user,
-        [FromServices] ICommandHandler<BackupWalletCommand, BackupResult> handler,
+        [FromServices] ICommandHandler<BackupWalletCommand, NumbatWallet.Application.Commands.Wallets.BackupResult> handler,
         [FromServices] IWalletService walletService,
         CancellationToken cancellationToken)
     {
@@ -448,11 +445,7 @@ public record RestoreWalletRequest(
 public record UnlockWalletRequest(
     string Pin);
 
-public record BackupResult(
-    string BackupData,
-    string BackupId,
-    DateTime CreatedAt,
-    bool IsEncrypted);
+// BackupResult is defined in Application.Commands.Wallets
 
 public record WalletStatistics(
     int TotalCredentials,

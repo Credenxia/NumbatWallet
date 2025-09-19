@@ -4,6 +4,7 @@ using NumbatWallet.Application.Commands.Credentials;
 using NumbatWallet.Application.Commands.Organizations;
 using NumbatWallet.Application.Commands.Persons;
 using NumbatWallet.Application.Commands.Wallets;
+using NumbatWallet.Application.CQRS.Interfaces;
 using NumbatWallet.Application.DTOs;
 using NumbatWallet.Application.Interfaces;
 using NumbatWallet.Domain.Enums;
@@ -17,14 +18,22 @@ public class Mutation
     public async Task<PersonDto> CreatePerson(
         CreatePersonInput input,
         [Service] ICommandHandler<CreatePersonCommand, PersonDto> handler,
+        [Service] IHttpContextAccessor httpContextAccessor,
         CancellationToken cancellationToken)
     {
+        var userId = httpContextAccessor.HttpContext?.User.FindFirst("sub")?.Value
+            ?? throw new Domain.Exceptions.UnauthorizedException("User not authenticated");
+
         var command = new CreatePersonCommand(
+            input.Email,
             input.FirstName,
             input.LastName,
-            input.Email,
+            input.MiddleName,
+            input.DateOfBirth,
             input.PhoneNumber,
-            input.DateOfBirth);
+            input.CountryCode,
+            input.Address,
+            userId);
 
         return await handler.HandleAsync(command, cancellationToken);
     }
@@ -39,8 +48,11 @@ public class Mutation
             input.Id,
             input.FirstName,
             input.LastName,
-            input.Email,
-            input.PhoneNumber);
+            input.MiddleName,
+            input.DateOfBirth,
+            input.PhoneNumber,
+            input.CountryCode,
+            input.Address);
 
         return await handler.HandleAsync(command, cancellationToken);
     }
@@ -60,8 +72,12 @@ public class Mutation
     public async Task<OrganizationDto> CreateOrganization(
         CreateOrganizationInput input,
         [Service] ICommandHandler<CreateOrganizationCommand, OrganizationDto> handler,
+        [Service] IHttpContextAccessor httpContextAccessor,
         CancellationToken cancellationToken)
     {
+        var createdBy = httpContextAccessor.HttpContext?.User.FindFirst("sub")?.Value
+            ?? throw new Domain.Exceptions.UnauthorizedException("User not authenticated");
+
         var command = new CreateOrganizationCommand(
             input.Name,
             input.Identifier,
@@ -69,7 +85,8 @@ public class Mutation
             input.ContactEmail,
             input.ContactPhone,
             input.Address,
-            input.Website);
+            input.Website,
+            createdBy);
 
         return await handler.HandleAsync(command, cancellationToken);
     }
@@ -86,8 +103,7 @@ public class Mutation
             input.ContactEmail,
             input.ContactPhone,
             input.Address,
-            input.Website,
-            input.IsActive);
+            input.Website);
 
         return await handler.HandleAsync(command, cancellationToken);
     }
@@ -101,7 +117,7 @@ public class Mutation
         CancellationToken cancellationToken)
     {
         var userId = httpContextAccessor.HttpContext?.User.FindFirst("sub")?.Value
-            ?? throw new UnauthorizedAccessException("User not authenticated");
+            ?? throw new Domain.Exceptions.UnauthorizedException("User not authenticated");
 
         var command = new CreateWalletCommand(
             input.PersonId,
@@ -128,9 +144,9 @@ public class Mutation
     }
 
     [Authorize]
-    public async Task<bool> BackupWallet(
+    public async Task<BackupResult> BackupWallet(
         Guid walletId,
-        [Service] ICommandHandler<BackupWalletCommand, bool> handler,
+        [Service] ICommandHandler<BackupWalletCommand, BackupResult> handler,
         CancellationToken cancellationToken)
     {
         var command = new BackupWalletCommand(walletId);
@@ -160,7 +176,7 @@ public class Mutation
         CancellationToken cancellationToken)
     {
         var issuerId = httpContextAccessor.HttpContext?.User.FindFirst("sub")?.Value
-            ?? throw new UnauthorizedAccessException("Issuer not authenticated");
+            ?? throw new Domain.Exceptions.UnauthorizedException("Issuer not authenticated");
 
         var command = new IssueCredentialCommand(
             input.WalletId,
@@ -183,7 +199,7 @@ public class Mutation
         CancellationToken cancellationToken)
     {
         var revokerId = httpContextAccessor.HttpContext?.User.FindFirst("sub")?.Value
-            ?? throw new UnauthorizedAccessException("User not authenticated");
+            ?? throw new Domain.Exceptions.UnauthorizedException("User not authenticated");
 
         var command = new RevokeCredentialCommand(
             input.CredentialId,
@@ -199,13 +215,14 @@ public class Mutation
         [Service] ICredentialService credentialService,
         CancellationToken cancellationToken)
     {
-        return await credentialService.VerifyCredentialAsync(credentialId, cancellationToken);
+        var result = await credentialService.VerifyCredentialAsync(credentialId, cancellationToken);
+        return (VerificationResult)result;
     }
 
     [Authorize]
-    public async Task<CredentialDto> ShareCredential(
+    public async Task<ShareCredentialResult> ShareCredential(
         ShareCredentialInput input,
-        [Service] ICommandHandler<ShareCredentialCommand, CredentialDto> handler,
+        [Service] ICommandHandler<ShareCredentialCommand, ShareCredentialResult> handler,
         CancellationToken cancellationToken)
     {
         var command = new ShareCredentialCommand(
@@ -220,14 +237,14 @@ public class Mutation
 
     // Bulk Operations
     [Authorize(Roles = new[] { "Admin", "Officer" })]
-    public async Task<BulkIssueResult> BulkIssueCredentials(
+    public async Task<NumbatWallet.Application.Commands.Credentials.BulkIssueResult> BulkIssueCredentials(
         BulkIssueCredentialsInput input,
-        [Service] ICommandHandler<BulkIssueCredentialsCommand, BulkIssueResult> handler,
+        [Service] ICommandHandler<BulkIssueCredentialsCommand, NumbatWallet.Application.Commands.Credentials.BulkIssueResult> handler,
         [Service] IHttpContextAccessor httpContextAccessor,
         CancellationToken cancellationToken)
     {
         var issuerId = httpContextAccessor.HttpContext?.User.FindFirst("sub")?.Value
-            ?? throw new UnauthorizedAccessException("Issuer not authenticated");
+            ?? throw new Domain.Exceptions.UnauthorizedException("Issuer not authenticated");
 
         var command = new BulkIssueCredentialsCommand(
             input.WalletIds,
@@ -247,9 +264,12 @@ public class CreatePersonInput
 {
     public required string FirstName { get; set; }
     public required string LastName { get; set; }
+    public string? MiddleName { get; set; }
     public required string Email { get; set; }
     public string? PhoneNumber { get; set; }
-    public DateTime? DateOfBirth { get; set; }
+    public DateTime DateOfBirth { get; set; }
+    public string? CountryCode { get; set; }
+    public AddressDto? Address { get; set; }
 }
 
 public class UpdatePersonInput
@@ -257,8 +277,12 @@ public class UpdatePersonInput
     public Guid Id { get; set; }
     public string? FirstName { get; set; }
     public string? LastName { get; set; }
+    public string? MiddleName { get; set; }
     public string? Email { get; set; }
     public string? PhoneNumber { get; set; }
+    public DateTime? DateOfBirth { get; set; }
+    public string? CountryCode { get; set; }
+    public AddressDto? Address { get; set; }
 }
 
 public class CreateOrganizationInput
@@ -268,7 +292,7 @@ public class CreateOrganizationInput
     public required OrganizationType Type { get; set; }
     public required string ContactEmail { get; set; }
     public string? ContactPhone { get; set; }
-    public string? Address { get; set; }
+    public AddressDto? Address { get; set; }
     public string? Website { get; set; }
 }
 
@@ -278,7 +302,7 @@ public class UpdateOrganizationInput
     public string? Name { get; set; }
     public string? ContactEmail { get; set; }
     public string? ContactPhone { get; set; }
-    public string? Address { get; set; }
+    public AddressDto? Address { get; set; }
     public string? Website { get; set; }
     public bool? IsActive { get; set; }
 }
@@ -352,17 +376,4 @@ public class VerificationResult
     public Dictionary<string, object> Claims { get; set; } = new();
 }
 
-public class BulkIssueResult
-{
-    public int TotalRequested { get; set; }
-    public int SuccessCount { get; set; }
-    public int FailureCount { get; set; }
-    public List<Guid> IssuedCredentialIds { get; set; } = new();
-    public List<BulkIssueError> Errors { get; set; } = new();
-}
-
-public class BulkIssueError
-{
-    public Guid WalletId { get; set; }
-    public string Error { get; set; } = string.Empty;
-}
+// BulkIssueResult and BulkIssueError are defined in Application.Commands.Credentials

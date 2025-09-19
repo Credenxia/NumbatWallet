@@ -1,64 +1,44 @@
 using FluentValidation;
 using NumbatWallet.Application.Commands.Credentials;
+using NumbatWallet.Domain.Enums;
 
 namespace NumbatWallet.Application.Validators;
 
 public class IssueCredentialCommandValidator : AbstractValidator<IssueCredentialCommand>
 {
-    private readonly string[] _validCredentialTypes =
-    {
-        "DriverLicence",
-        "ProofOfAge",
-        "StudentCard",
-        "HealthCard",
-        "VaccinationCertificate",
-        "WorkingWithChildrenCheck",
-        "PoliceCheck"
-    };
-
     public IssueCredentialCommandValidator()
     {
-        RuleFor(x => x.HolderId)
-            .NotEmpty().WithMessage("HolderId is required")
-            .Must(BeAValidGuid).WithMessage("HolderId must be a valid GUID");
+        RuleFor(x => x.WalletId)
+            .NotEmpty().WithMessage("WalletId is required");
 
         RuleFor(x => x.IssuerId)
-            .NotEmpty().WithMessage("IssuerId is required")
-            .Must(BeAValidGuid).WithMessage("IssuerId must be a valid GUID");
+            .NotEmpty().WithMessage("IssuerId is required");
+
+        RuleFor(x => x.IssuerOrganizationId)
+            .NotEmpty().WithMessage("IssuerOrganizationId is required");
 
         RuleFor(x => x.CredentialType)
-            .NotEmpty().WithMessage("CredentialType is required")
-            .Must(BeAValidCredentialType)
-            .WithMessage($"CredentialType must be one of: {string.Join(", ", _validCredentialTypes)}");
+            .IsInEnum().WithMessage("Invalid credential type");
 
-        RuleFor(x => x.CredentialSubject)
-            .NotNull().WithMessage("CredentialSubject is required")
-            .Must(x => x != null && x.Count > 0).WithMessage("CredentialSubject cannot be empty")
-            .Must(x => x == null || x.Count <= 100).WithMessage("CredentialSubject cannot contain more than 100 properties");
+        RuleFor(x => x.Subject)
+            .NotEmpty().WithMessage("Subject is required")
+            .MaximumLength(500).WithMessage("Subject cannot exceed 500 characters");
 
-        When(x => x.ExpirationDate.HasValue, () =>
+        RuleFor(x => x.Claims)
+            .NotNull().WithMessage("Claims are required")
+            .Must(x => x != null && x.Count > 0).WithMessage("Claims cannot be empty")
+            .Must(x => x == null || x.Count <= 100).WithMessage("Claims cannot contain more than 100 properties");
+
+        RuleFor(x => x.ValidFrom)
+            .NotEmpty().WithMessage("ValidFrom is required");
+
+        When(x => x.ValidUntil.HasValue, () =>
         {
-            RuleFor(x => x.ExpirationDate!.Value)
-                .GreaterThan(DateTime.UtcNow)
-                .WithMessage("Expiration date must be in the future")
+            RuleFor(x => x.ValidUntil!.Value)
+                .GreaterThan(x => x.ValidFrom)
+                .WithMessage("ValidUntil must be after ValidFrom")
                 .LessThan(DateTime.UtcNow.AddYears(10))
-                .WithMessage("Expiration date cannot be more than 10 years in the future");
+                .WithMessage("ValidUntil cannot be more than 10 years in the future");
         });
-
-        When(x => x.Metadata != null, () =>
-        {
-            RuleFor(x => x.Metadata)
-                .Must(x => x!.Count <= 20).WithMessage("Metadata cannot contain more than 20 items");
-        });
-    }
-
-    private bool BeAValidGuid(string? guid)
-    {
-        return Guid.TryParse(guid, out _);
-    }
-
-    private bool BeAValidCredentialType(string credentialType)
-    {
-        return _validCredentialTypes.Contains(credentialType);
     }
 }

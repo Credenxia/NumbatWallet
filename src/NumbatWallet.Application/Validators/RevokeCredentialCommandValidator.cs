@@ -8,16 +8,14 @@ public class RevokeCredentialCommandValidator : AbstractValidator<RevokeCredenti
     public RevokeCredentialCommandValidator()
     {
         RuleFor(x => x.CredentialId)
-            .NotEmpty().WithMessage("CredentialId is required")
-            .Must(BeAValidGuid).WithMessage("CredentialId must be a valid GUID");
+            .NotEmpty().WithMessage("CredentialId is required");
 
         RuleFor(x => x.Reason)
             .NotEmpty().WithMessage("Revocation reason is required")
             .Length(5, 500).WithMessage("Revocation reason must be between 5 and 500 characters");
-    }
 
-    private bool BeAValidGuid(string? guid)
-    {
-        return Guid.TryParse(guid, out _);
+        RuleFor(x => x.RevokerId)
+            .NotEmpty().WithMessage("RevokerId is required")
+            .MaximumLength(200).WithMessage("RevokerId cannot exceed 200 characters");
     }
 }

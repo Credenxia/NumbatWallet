@@ -5,6 +5,7 @@ using HotChocolate.Subscriptions;
 using HotChocolate.Types;
 using NumbatWallet.Application.DTOs;
 using NumbatWallet.Domain.Events;
+using System.Runtime.CompilerServices;
 
 namespace NumbatWallet.Web.Api.GraphQL.Schema;
 
@@ -115,11 +116,13 @@ public class Subscription
     public async IAsyncEnumerable<NotificationEvent> OnUserNotification(
         [Service] ITopicEventReceiver eventReceiver,
         [Service] IHttpContextAccessor httpContextAccessor,
-        CancellationToken cancellationToken)
+        [EnumeratorCancellation] CancellationToken cancellationToken)
     {
         var userId = httpContextAccessor.HttpContext?.User.FindFirst("sub")?.Value;
         if (string.IsNullOrEmpty(userId))
+        {
             yield break;
+        }
 
         var stream = await eventReceiver.SubscribeAsync<NotificationEvent>(
             $"user-notification-{userId}",

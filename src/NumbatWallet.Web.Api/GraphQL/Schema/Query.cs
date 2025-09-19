@@ -2,9 +2,15 @@ using HotChocolate;
 using HotChocolate.Authorization;
 using HotChocolate.Data;
 using HotChocolate.Types;
+using NumbatWallet.Application.CQRS.Interfaces;
 using NumbatWallet.Application.DTOs;
 using NumbatWallet.Application.Interfaces;
+using NumbatWallet.Application.Queries.Credentials;
+using NumbatWallet.Application.Queries.Organizations;
+using NumbatWallet.Application.Queries.Persons;
+using NumbatWallet.Application.Queries.Wallets;
 using NumbatWallet.Domain.Entities;
+using NumbatWallet.Domain.Enums;
 using NumbatWallet.Domain.ValueObjects;
 
 namespace NumbatWallet.Web.Api.GraphQL.Schema;
@@ -111,7 +117,9 @@ public class Query
     {
         var userId = httpContextAccessor.HttpContext?.User.FindFirst("sub")?.Value;
         if (string.IsNullOrEmpty(userId))
+        {
             return Enumerable.Empty<WalletDto>().AsQueryable();
+        }
 
         var wallets = await walletService.GetByUserIdAsync(userId, cancellationToken);
         return wallets.AsQueryable();
@@ -164,7 +172,8 @@ public class Query
         [Service] IStatisticsService statisticsService,
         CancellationToken cancellationToken)
     {
-        return await statisticsService.GetDashboardStatisticsAsync(cancellationToken);
+        var result = await statisticsService.GetDashboardStatisticsAsync(cancellationToken);
+        return (DashboardStatistics)result;
     }
 
     [Authorize(Roles = new[] { "Admin", "Officer" })]
@@ -174,7 +183,8 @@ public class Query
         [Service] IStatisticsService statisticsService,
         CancellationToken cancellationToken)
     {
-        return await statisticsService.GetIssuanceStatisticsAsync(startDate, endDate, cancellationToken);
+        var results = await statisticsService.GetIssuanceStatisticsAsync(startDate, endDate, cancellationToken);
+        return results.Select(r => (IssuanceStatistics)r);
     }
 
     // Health Check Query
@@ -183,7 +193,8 @@ public class Query
         [Service] IHealthCheckService healthCheckService,
         CancellationToken cancellationToken)
     {
-        return await healthCheckService.GetHealthStatusAsync(cancellationToken);
+        var result = await healthCheckService.GetHealthStatusAsync(cancellationToken);
+        return (HealthStatus)result;
     }
 }
 

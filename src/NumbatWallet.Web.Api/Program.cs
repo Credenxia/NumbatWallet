@@ -34,7 +34,7 @@ try
     builder.Services.AddWebApi(builder.Configuration);
 
     // Add GraphQL
-    builder.Services.AddGraphQL(builder.Configuration);
+    builder.Services.AddGraphQLServer(builder.Configuration);
 
     // Add health checks
     builder.Services.AddCustomHealthChecks(builder.Configuration);

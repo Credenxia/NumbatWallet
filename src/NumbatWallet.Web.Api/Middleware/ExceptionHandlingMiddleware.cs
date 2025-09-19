@@ -13,6 +13,7 @@ public class ExceptionHandlingMiddleware
     private readonly RequestDelegate _next;
     private readonly ILogger<ExceptionHandlingMiddleware> _logger;
     private readonly IHostEnvironment _environment;
+    private readonly JsonSerializerOptions _jsonSerializerOptions;
 
     public ExceptionHandlingMiddleware(
         RequestDelegate next,
@@ -22,6 +23,11 @@ public class ExceptionHandlingMiddleware
         _next = next;
         _logger = logger;
         _environment = environment;
+        _jsonSerializerOptions = new JsonSerializerOptions
+        {
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            WriteIndented = environment.IsDevelopment()
+        };
     }
 
     public async Task InvokeAsync(HttpContext context)
@@ -47,29 +53,14 @@ public class ExceptionHandlingMiddleware
         var problemDetails = CreateProblemDetails(context, exception);
         context.Response.StatusCode = problemDetails.Status ?? StatusCodes.Status500InternalServerError;
 
-        var options = new JsonSerializerOptions
-        {
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-            WriteIndented = _environment.IsDevelopment()
-        };
-
-        await context.Response.WriteAsync(JsonSerializer.Serialize(problemDetails, options));
+        await context.Response.WriteAsync(JsonSerializer.Serialize(problemDetails, _jsonSerializerOptions));
     }
 
     private ProblemDetails CreateProblemDetails(HttpContext context, Exception exception)
     {
         var problemDetails = exception switch
         {
-            DomainException domainEx => new ProblemDetails
-            {
-                Title = "Domain Error",
-                Status = StatusCodes.Status400BadRequest,
-                Detail = domainEx.Message,
-                Type = "https://numbatwallet.wa.gov.au/errors/domain",
-                Instance = context.Request.Path
-            },
-
-            NotFoundException notFoundEx => new ProblemDetails
+            Domain.Exceptions.NotFoundException notFoundEx => new ProblemDetails
             {
                 Title = "Resource Not Found",
                 Status = StatusCodes.Status404NotFound,
@@ -78,7 +69,7 @@ public class ExceptionHandlingMiddleware
                 Instance = context.Request.Path
             },
 
-            ConflictException conflictEx => new ProblemDetails
+            Domain.Exceptions.ConflictException conflictEx => new ProblemDetails
             {
                 Title = "Conflict",
                 Status = StatusCodes.Status409Conflict,
@@ -87,12 +78,21 @@ public class ExceptionHandlingMiddleware
                 Instance = context.Request.Path
             },
 
-            UnauthorizedException unauthorizedEx => new ProblemDetails
+            Domain.Exceptions.UnauthorizedException unauthorizedEx => new ProblemDetails
             {
                 Title = "Unauthorized",
                 Status = StatusCodes.Status401Unauthorized,
                 Detail = unauthorizedEx.Message,
                 Type = "https://numbatwallet.wa.gov.au/errors/unauthorized",
+                Instance = context.Request.Path
+            },
+
+            DomainException domainEx => new ProblemDetails
+            {
+                Title = "Domain Error",
+                Status = StatusCodes.Status400BadRequest,
+                Detail = domainEx.Message,
+                Type = "https://numbatwallet.wa.gov.au/errors/domain",
                 Instance = context.Request.Path
             },
 
@@ -175,23 +175,11 @@ public class ExceptionHandlingMiddleware
 }
 
 // Custom exception types
-public class NotFoundException : Exception
-{
-    public NotFoundException(string message) : base(message) { }
-    public NotFoundException(string message, Exception innerException) : base(message, innerException) { }
-}
+// NotFoundException is now defined in NumbatWallet.Domain.Exceptions
 
-public class ConflictException : Exception
-{
-    public ConflictException(string message) : base(message) { }
-    public ConflictException(string message, Exception innerException) : base(message, innerException) { }
-}
+// ConflictException is now defined in NumbatWallet.Domain.Exceptions
 
-public class UnauthorizedException : Exception
-{
-    public UnauthorizedException(string message = "Unauthorized access") : base(message) { }
-    public UnauthorizedException(string message, Exception innerException) : base(message, innerException) { }
-}
+// UnauthorizedException is now defined as UnauthorizedException in NumbatWallet.Domain.Exceptions
 
 public class ForbiddenException : Exception
 {

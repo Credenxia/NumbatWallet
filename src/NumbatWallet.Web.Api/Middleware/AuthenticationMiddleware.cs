@@ -324,7 +324,9 @@ public class ApiKeyAuthenticationMiddleware
             }
             else
             {
-                _logger.LogWarning("Invalid API key attempted: {ApiKey}", apiKey?.Substring(0, 8) + "...");
+                var apiKeyString = apiKey.ToString() ?? string.Empty;
+                var maskedKey = apiKeyString.Length > 8 ? string.Concat(apiKeyString.AsSpan(0, 8), "...") : apiKeyString;
+                _logger.LogWarning("Invalid API key attempted: {ApiKey}", maskedKey);
             }
         }
 

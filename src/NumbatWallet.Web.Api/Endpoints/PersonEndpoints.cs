@@ -13,10 +13,7 @@ public class PersonEndpoints : ICarterModule
     {
         var group = app.MapGroup("/api/v1/persons")
             .RequireAuthorization()
-            .WithTags("Persons")
-            .ProducesValidationProblem()
-            .Produces(StatusCodes.Status401Unauthorized)
-            .Produces(StatusCodes.Status403Forbidden);
+            .WithTags("Persons");
 
         // GET /api/v1/persons
         group.MapGet("/", GetAllPersons)
@@ -87,7 +84,7 @@ public class PersonEndpoints : ICarterModule
 
     private static async Task<IResult> GetPersonById(
         [FromRoute] Guid id,
-        [FromServices] IQueryHandler<GetPersonByIdQuery, PersonDto> handler,
+        [FromServices] IQueryHandler<GetPersonByIdQuery, PersonDto?> handler,
         CancellationToken cancellationToken)
     {
         var query = new GetPersonByIdQuery(id);
@@ -105,8 +102,9 @@ public class PersonEndpoints : ICarterModule
     {
         var query = new SearchPersonsQuery(
             searchRequest.SearchTerm,
-            searchRequest.Email,
-            searchRequest.PhoneNumber);
+            null,
+            1,
+            20);
 
         var result = await handler.HandleAsync(query, cancellationToken);
         return Results.Ok(result);
@@ -211,7 +209,7 @@ public record VerifyIdentityRequest(
     string? DocumentImage,
     Dictionary<string, string> AdditionalData);
 
-public record VerificationResult(
+public record IdentityVerificationResult(
     bool IsVerified,
     string? VerificationMethod,
     DateTime VerifiedAt,

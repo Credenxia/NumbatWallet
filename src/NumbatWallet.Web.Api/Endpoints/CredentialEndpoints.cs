@@ -16,9 +16,6 @@ public class CredentialEndpoints : ICarterModule
         var group = app.MapGroup("/api/v1/credentials")
             .RequireAuthorization()
             .WithTags("Credentials")
-            .ProducesValidationProblem()
-            .Produces(StatusCodes.Status401Unauthorized)
-            .Produces(StatusCodes.Status403Forbidden)
             .RequireRateLimiting("api");
 
         // POST /api/v1/credentials/issue
@@ -113,7 +110,7 @@ public class CredentialEndpoints : ICarterModule
         CancellationToken cancellationToken)
     {
         var issuerId = user.FindFirst("sub")?.Value
-            ?? throw new UnauthorizedAccessException("Issuer not authenticated");
+            ?? throw new Domain.Exceptions.UnauthorizedException("Issuer not authenticated");
 
         var command = new IssueCredentialCommand(
             request.WalletId,
@@ -143,7 +140,7 @@ public class CredentialEndpoints : ICarterModule
         CancellationToken cancellationToken)
     {
         var issuerId = user.FindFirst("sub")?.Value
-            ?? throw new UnauthorizedAccessException("Issuer not authenticated");
+            ?? throw new Domain.Exceptions.UnauthorizedException("Issuer not authenticated");
 
         var command = new BulkIssueCredentialsCommand(
             request.WalletIds,
@@ -167,7 +164,7 @@ public class CredentialEndpoints : ICarterModule
     private static async Task<IResult> GetCredentialById(
         [FromRoute] Guid id,
         ClaimsPrincipal user,
-        [FromServices] IQueryHandler<GetCredentialByIdQuery, CredentialDto> handler,
+        [FromServices] IQueryHandler<GetCredentialByIdQuery, CredentialDto?> handler,
         [FromServices] ICredentialService credentialService,
         CancellationToken cancellationToken)
     {
@@ -216,7 +213,7 @@ public class CredentialEndpoints : ICarterModule
         CancellationToken cancellationToken)
     {
         var revokerId = user.FindFirst("sub")?.Value
-            ?? throw new UnauthorizedAccessException("User not authenticated");
+            ?? throw new Domain.Exceptions.UnauthorizedException("User not authenticated");
 
         var command = new RevokeCredentialCommand(id, request.Reason, revokerId);
 
@@ -241,7 +238,7 @@ public class CredentialEndpoints : ICarterModule
         [FromRoute] Guid id,
         [FromBody] ShareCredentialRequest request,
         ClaimsPrincipal user,
-        [FromServices] ICommandHandler<ShareCredentialCommand, ShareCredentialResult> handler,
+        [FromServices] ICommandHandler<ShareCredentialCommand, NumbatWallet.Application.Commands.Credentials.ShareCredentialResult> handler,
         [FromServices] IValidator<ShareCredentialCommand> validator,
         [FromServices] ICredentialService credentialService,
         CancellationToken cancellationToken)
@@ -320,7 +317,7 @@ public class CredentialEndpoints : ICarterModule
     private static async Task<IResult> PresentCredential(
         [FromBody] PresentCredentialRequest request,
         ClaimsPrincipal user,
-        [FromServices] ICommandHandler<PresentCredentialCommand, PresentationResult> handler,
+        [FromServices] ICommandHandler<PresentCredentialCommand, NumbatWallet.Application.Commands.Credentials.PresentationResult> handler,
         [FromServices] IValidator<PresentCredentialCommand> validator,
         CancellationToken cancellationToken)
     {
@@ -417,13 +414,5 @@ public record JwtVcValidationResult(
     Dictionary<string, object> Claims,
     List<string> ValidationErrors);
 
-public record ShareCredentialResult(
-    string ShareUrl,
-    string ShareCode,
-    DateTime ExpiresAt);
-
-public record PresentationResult(
-    string PresentationToken,
-    string VerificationUrl,
-    DateTime PresentedAt,
-    Dictionary<string, object> DisclosedClaims);
+// Note: These DTOs are duplicated from Application layer for endpoint responses
+// Consider consolidating in a shared location

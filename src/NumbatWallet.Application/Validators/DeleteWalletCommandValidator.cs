@@ -8,12 +8,6 @@ public class DeleteWalletCommandValidator : AbstractValidator<DeleteWalletComman
     public DeleteWalletCommandValidator()
     {
         RuleFor(x => x.WalletId)
-            .NotEmpty().WithMessage("WalletId is required")
-            .Must(BeAValidGuid).WithMessage("WalletId must be a valid GUID");
-    }
-
-    private bool BeAValidGuid(string? guid)
-    {
-        return Guid.TryParse(guid, out _);
+            .NotEmpty().WithMessage("WalletId is required");
     }
 }
