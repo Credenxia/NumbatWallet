@@ -1,40 +1,186 @@
 Solution NumbatWallet.sln
     Project NumbatWallet.Application
-      src\NumbatWallet.Application\Behaviors\ValidationBehavior.cs: Using directive is not required by the code and can be safely removed
-      src\NumbatWallet.Application\Behaviors\ValidationBehavior.cs:2 Using directive is not required by the code and can be safely removed
-      src\NumbatWallet.Application\Behaviors\ValidationBehavior.cs:3 Using directive is not required by the code and can be safely removed
-      src\NumbatWallet.Application\Behaviors\ValidationBehavior.cs:4 Using directive is not required by the code and can be safely removed
-      src\NumbatWallet.Application\Behaviors\ValidationBehavior.cs:7 Using directive is not required by the code and can be safely removed
-      src\NumbatWallet.Application\Commands\Credentials\IssueCredentialCommand.cs: Using directive is not required by the code and can be safely removed
-      src\NumbatWallet.Application\Commands\Credentials\IssueCredentialCommand.cs:2 Using directive is not required by the code and can be safely removed
-      src\NumbatWallet.Application\Commands\Credentials\IssueCredentialCommand.cs:3 Using directive is not required by the code and can be safely removed
-      src\NumbatWallet.Application\Commands\Credentials\IssueCredentialCommand.cs:4 Using directive is not required by the code and can be safely removed
-      src\NumbatWallet.Application\Commands\Credentials\IssueCredentialCommand.cs:5 Using directive is not required by the code and can be safely removed
-      src\NumbatWallet.Application\Commands\Credentials\IssueCredentialCommand.cs:38 Field '_tenantService' is assigned but its value is never used
-      src\NumbatWallet.Application\Commands\Credentials\RevokeCredentialCommand.cs: Using directive is not required by the code and can be safely removed
-      src\NumbatWallet.Application\Commands\Credentials\RevokeCredentialCommand.cs:2 Using directive is not required by the code and can be safely removed
-      src\NumbatWallet.Application\Commands\Credentials\RevokeCredentialCommand.cs:3 Using directive is not required by the code and can be safely removed
-      src\NumbatWallet.Application\Commands\Credentials\RevokeCredentialCommand.cs:51 Qualifier is redundant
-      src\NumbatWallet.Application\Commands\Credentials\VerifyCredentialCommand.cs: Using directive is not required by the code and can be safely removed
-      src\NumbatWallet.Application\Commands\Credentials\VerifyCredentialCommand.cs:2 Using directive is not required by the code and can be safely removed
-      src\NumbatWallet.Application\Commands\Credentials\VerifyCredentialCommand.cs:3 Using directive is not required by the code and can be safely removed
-      src\NumbatWallet.Application\Commands\Credentials\VerifyCredentialCommand.cs:4 Using directive is not required by the code and can be safely removed
-      src\NumbatWallet.Application\Commands\Credentials\VerifyCredentialCommand.cs:8 Using directive is not required by the code and can be safely removed
-      src\NumbatWallet.Application\Commands\Credentials\VerifyCredentialCommand.cs:65 Qualifier is redundant
-      src\NumbatWallet.Application\Commands\Wallets\CreateWalletCommand.cs: Using directive is not required by the code and can be safely removed
-      src\NumbatWallet.Application\Commands\Wallets\CreateWalletCommand.cs:2 Using directive is not required by the code and can be safely removed
-      src\NumbatWallet.Application\Commands\Wallets\CreateWalletCommand.cs:3 Using directive is not required by the code and can be safely removed
-      src\NumbatWallet.Application\Commands\Wallets\CreateWalletCommand.cs:4 Using directive is not required by the code and can be safely removed
-      src\NumbatWallet.Application\Commands\Wallets\CreateWalletCommand.cs:5 Using directive is not required by the code and can be safely removed
-      src\NumbatWallet.Application\Commands\Wallets\CreateWalletCommand.cs:12 Using directive is not required by the code and can be safely removed
-      src\NumbatWallet.Application\Commands\Wallets\CreateWalletCommand.cs:59 Qualifier is redundant
-      src\NumbatWallet.Application\Commands\Wallets\CreateWalletCommand.cs:62 Qualifier is redundant
-      src\NumbatWallet.Application\Commands\Wallets\CreateWalletCommand.cs:98 Qualifier is redundant
-      src\NumbatWallet.Application\Commands\Wallets\CreateWalletCommand.cs:99 Qualifier is redundant
-      src\NumbatWallet.Application\Commands\Wallets\DeleteWalletCommand.cs: Using directive is not required by the code and can be safely removed
-      src\NumbatWallet.Application\Commands\Wallets\DeleteWalletCommand.cs:2 Using directive is not required by the code and can be safely removed
-      src\NumbatWallet.Application\Commands\Wallets\DeleteWalletCommand.cs:3 Using directive is not required by the code and can be safely removed
-      src\NumbatWallet.Application\Commands\Wallets\DeleteWalletCommand.cs:58 Qualifier is redundant
-      src\NumbatWallet.Application\CQRS\Dispatcher.cs: Using directive is not required by the code and can be safely removed
+      src\NumbatWallet.Application\Commands\Credentials\IssueCredentialCommand.cs:33 Field '_tenantService' is assigned but its value is never used
+      src\NumbatWallet.Application\Common\Exceptions\ConflictException.cs:7 Redundant base constructor call
+      src\NumbatWallet.Application\Common\Exceptions\NotFoundException.cs:5 Redundant base constructor call
+      src\NumbatWallet.Application\Queries\Credentials\GetCredentialStatisticsQuery.cs:75 Possible multiple enumeration
+      src\NumbatWallet.Application\Queries\Credentials\GetCredentialStatisticsQuery.cs:76 Possible multiple enumeration
+      src\NumbatWallet.Application\Queries\Credentials\GetCredentialStatisticsQuery.cs:77 Possible multiple enumeration
+      src\NumbatWallet.Application\Queries\Credentials\GetCredentialStatisticsQuery.cs:78 Possible multiple enumeration
+      src\NumbatWallet.Application\Queries\Credentials\GetCredentialStatisticsQuery.cs:79 Possible multiple enumeration
+      src\NumbatWallet.Application\Queries\Credentials\GetCredentialStatisticsQuery.cs:82 Possible multiple enumeration
+      src\NumbatWallet.Application\Queries\Credentials\GetCredentialStatisticsQuery.cs:87 Possible multiple enumeration
+      src\NumbatWallet.Application\Queries\Credentials\GetCredentialStatisticsQuery.cs:91 Possible multiple enumeration
+      src\NumbatWallet.Application\Queries\Credentials\GetCredentialStatisticsQuery.cs:99 Possible multiple enumeration
+      src\NumbatWallet.Application\Queries\Credentials\GetCredentialStatisticsQuery.cs:184 Possible multiple enumeration
+      src\NumbatWallet.Application\Queries\Credentials\ListCredentialsQuery.cs:122 Possible multiple enumeration
+      src\NumbatWallet.Application\Queries\Credentials\ListCredentialsQuery.cs:125 Possible multiple enumeration
+      src\NumbatWallet.Application\Queries\Credentials\SearchCredentialsQuery.cs:89 Possible multiple enumeration
+      src\NumbatWallet.Application\Queries\Credentials\SearchCredentialsQuery.cs:92 Possible multiple enumeration
+      src\NumbatWallet.Application\Queries\Wallets\ListWalletsQuery.cs:94 Possible multiple enumeration
+      src\NumbatWallet.Application\Queries\Wallets\ListWalletsQuery.cs:97 Possible multiple enumeration
+    
+    Project NumbatWallet.Domain
+      src\NumbatWallet.Domain\Aggregates\Credential.cs:36 Auto-property accessor 'Wallet.set' is never used
+      src\NumbatWallet.Domain\Aggregates\Credential.cs:37 Auto-property accessor 'Issuer.set' is never used
+      src\NumbatWallet.Domain\Aggregates\Credential.cs:38 Content of collection '_claims' is never updated
+      src\NumbatWallet.Domain\Aggregates\Issuer.cs:11 Partial class with single part
+      src\NumbatWallet.Domain\Aggregates\Issuer.cs:46 Auto-property accessor 'CertificateExpiresAt.set' is never used
+      src\NumbatWallet.Domain\Aggregates\Person.cs:34 Auto-property accessor 'MobileNumber.set' is never used
+      src\NumbatWallet.Domain\Aggregates\Person.cs:35 Auto-property accessor 'EmailVerifiedAt.set' is never used
+      src\NumbatWallet.Domain\Aggregates\Person.cs:42 Auto-property accessor 'VerificationLevel.set' is never used
+      src\NumbatWallet.Domain\Aggregates\Person.cs:47 Content of collection '_wallets' is never updated
+      src\NumbatWallet.Domain\Aggregates\Wallet.cs:28 Auto-property accessor 'ExternalId.set' is never used
+      src\NumbatWallet.Domain\Aggregates\Wallet.cs:29 Auto-property accessor 'ExpiresAt.set' is never used
+      src\NumbatWallet.Domain\Credentials\CredentialFormatValidator.cs:10 Field '_jwtFormat' is assigned but its value is never used
+      src\NumbatWallet.Domain\Credentials\CredentialFormatValidator.cs:11 Field '_jsonLdFormat' is assigned but its value is never used
+      src\NumbatWallet.Domain\Credentials\CredentialFormatValidator.cs:42 Return value of pure method is not used
+      src\NumbatWallet.Domain\Credentials\CredentialFormatValidator.cs:46 Return value of pure method is not used
+      src\NumbatWallet.Domain\Credentials\CredentialGenerator.cs:10 Use 'ArgumentNullException.ThrowIfNull' instead of explicitly throwing a new exception instance
+      src\NumbatWallet.Domain\Credentials\CredentialGenerator.cs:15 Use 'ArgumentNullException.ThrowIfNull' instead of explicitly throwing a new exception instance
+      src\NumbatWallet.Domain\Credentials\CredentialManifestParser.cs:64 Use 'ArgumentNullException.ThrowIfNull' instead of explicitly throwing a new exception instance
+      src\NumbatWallet.Domain\Credentials\CredentialManifestValidator.cs:10 Expression is always false according to nullable reference types' annotations
+      src\NumbatWallet.Domain\Credentials\CredentialManifestValidator.cs:26 Expression is always false according to nullable reference types' annotations
+      src\NumbatWallet.Domain\Credentials\CredentialManifestValidator.cs:37 Expression is always false according to nullable reference types' annotations
+      src\NumbatWallet.Domain\Credentials\CredentialManifestValidator.cs:64 Expression is always false according to nullable reference types' annotations
+      src\NumbatWallet.Domain\Credentials\CredentialManifestValidator.cs:77 Expression is always false according to nullable reference types' annotations
+      src\NumbatWallet.Domain\Credentials\CredentialManifestValidator.cs:91 Expression is always false according to nullable reference types' annotations
+      src\NumbatWallet.Domain\Credentials\CredentialManifestValidator.cs:110 Expression is always false according to nullable reference types' annotations
+      src\NumbatWallet.Domain\Credentials\CredentialManifestValidator.cs:121 Expression is always false according to nullable reference types' annotations
+    
+  Solution NumbatWallet.sln
+    Project NumbatWallet.Domain
+      src\NumbatWallet.Domain\Credentials\JsonLdFormat.cs:37 Use 'ArgumentNullException.ThrowIfNull' instead of explicitly throwing a new exception instance
+      src\NumbatWallet.Domain\Credentials\JsonLdFormat.cs:135 Expression is always false according to nullable reference types' annotations
+      src\NumbatWallet.Domain\Credentials\JwtVcFormat.cs:24 Use 'ArgumentNullException.ThrowIfNull' instead of explicitly throwing a new exception instance
+      src\NumbatWallet.Domain\Credentials\PresentationValidator.cs:12 Expression is always false according to nullable reference types' annotations
+      src\NumbatWallet.Domain\Credentials\PresentationValidator.cs:12 Expression is always false according to nullable reference types' annotations
+      src\NumbatWallet.Domain\Credentials\PresentationValidator.cs:35 Expression is always false according to nullable reference types' annotations
+      src\NumbatWallet.Domain\Credentials\PresentationValidator.cs:213 Expression is always false according to nullable reference types' annotations
+      src\NumbatWallet.Domain\Entities\RevocationRegistry.cs:3 Namespace does not correspond to file location, must be: 'NumbatWallet.Domain.Entities'
+      src\NumbatWallet.Domain\Entities\SupportedCredentialType.cs:3 Namespace does not correspond to file location, must be: 'NumbatWallet.Domain.Entities'
+      src\NumbatWallet.Domain\Services\PersonVerificationService.cs:141 Parameter 'person' is never used
+      src\NumbatWallet.Domain\Services\PersonVerificationService.cs:143 Parameter 'cancellationToken' is never used
+      src\NumbatWallet.Domain\Services\PersonVerificationService.cs:160 Parameter 'person' is never used
+      src\NumbatWallet.Domain\Services\PersonVerificationService.cs:162 Parameter 'cancellationToken' is never used
+      src\NumbatWallet.Domain\Services\PersonVerificationService.cs:179 Parameter 'person' is never used
+      src\NumbatWallet.Domain\Services\PersonVerificationService.cs:181 Parameter 'cancellationToken' is never used
+      src\NumbatWallet.Domain\Services\PersonVerificationService.cs:191 Parameter 'person' is never used
+      src\NumbatWallet.Domain\Services\PersonVerificationService.cs:193 Parameter 'cancellationToken' is never used
+      src\NumbatWallet.Domain\Services\VerificationService.cs:32 Field '_credentialRepository' is assigned but its value is never used
+      src\NumbatWallet.Domain\Services\VerificationService.cs:123 Possible multiple enumeration
+      src\NumbatWallet.Domain\Services\VerificationService.cs:135 Possible multiple enumeration
+      src\NumbatWallet.Domain\Specifications\CredentialSpecifications.cs:88 Parameter 'claimValue' is never used
+      src\NumbatWallet.Domain\Specifications\IssuerSpecifications.cs:84 Expression is always true according to nullable reference types' annotations
+      src\NumbatWallet.Domain\Specifications\PersonSpecifications.cs:77 Expression is always true according to nullable reference types' annotations
+    
+    Project NumbatWallet.Infrastructure
+      src\NumbatWallet.Infrastructure\Crypto\CryptoService.cs:185 Local variable 'secretValue' is never used
+      src\NumbatWallet.Infrastructure\Crypto\CryptoService.cs:241 Parameter 'key' is never used
+      src\NumbatWallet.Infrastructure\Crypto\CryptoService.cs:241 Parameter 'reason' is never used
+      src\NumbatWallet.Infrastructure\Crypto\CryptoService.cs:241 Parameter 'state' is never used
+      src\NumbatWallet.Infrastructure\Crypto\KeyVaultWrapProvider.cs:17 The field is always assigned before being used and can be converted into a local variable
+      src\NumbatWallet.Infrastructure\Crypto\KeyVaultWrapProvider.cs:123 Local variable 'deleteOperation' is never used
+      src\NumbatWallet.Infrastructure\Data\Interceptors\AuditInterceptor.cs:84 Return type of 'CreateAuditEntry' can be made non-nullable
+      src\NumbatWallet.Infrastructure\Data\Interceptors\ProtectionInterceptor.cs:73 Parameter 'cancellationToken' is never used
+      src\NumbatWallet.Infrastructure\Data\Interceptors\ProtectionInterceptor.cs:115 Local variable 'protectedValue' is never used
+      src\NumbatWallet.Infrastructure\Data\Interceptors\ProtectionInterceptor.cs:143 Parameter 'entry' is never used
+      src\NumbatWallet.Infrastructure\Data\Interceptors\ProtectionInterceptor.cs:144 Parameter 'propertyName' is never used
+      src\NumbatWallet.Infrastructure\Data\Interceptors\ProtectionInterceptor.cs:145 Parameter 'tokens' is never used
+      src\NumbatWallet.Infrastructure\Data\MigrationHelper.cs:34 Possible multiple enumeration
+      src\NumbatWallet.Infrastructure\Data\MigrationHelper.cs:36 Possible multiple enumeration
+    
+  Solution NumbatWallet.sln
+    Project NumbatWallet.Infrastructure
+      src\NumbatWallet.Infrastructure\Data\NumbatWalletDbContext.cs:16 Field '_logger' is assigned but its value is never used
+      src\NumbatWallet.Infrastructure\Data\UnitOfWork.cs:7 Base interface 'IDisposable' is redundant because NumbatWallet.Infrastructure.Data.UnitOfWork implements 'IUnitOfWork'
+      src\NumbatWallet.Infrastructure\Data\UnitOfWork.cs:10 Field '_repositories' is assigned but its value is never used
+      src\NumbatWallet.Infrastructure\DependencyInjection\ServiceCollectionExtensions.cs:88 Parameter 'sp' is never used
+      src\NumbatWallet.Infrastructure\Repositories\IssuerRepository.cs:96 Expression is always true according to nullable reference types' annotations
+      src\NumbatWallet.Infrastructure\Repositories\PersonRepository.cs:85 Expression is always true according to nullable reference types' annotations
+      src\NumbatWallet.Infrastructure\Services\AzureBlobStorageService.cs:57 The parameter 'publicAccessType' has the same default value
+      src\NumbatWallet.Infrastructure\Services\AzureBlobStorageService.cs:286 Conditional access qualifier expression is known to be not null
+      src\NumbatWallet.Infrastructure\Services\AzureKeyVaultService.cs:126 Local variable 'deleteOperation' is never used
+      src\NumbatWallet.Infrastructure\Services\ExternalApiClient.cs:71 Initialize object properties inside the 'using' statement to ensure that the object is disposed if an exception is thrown during initialization
+      src\NumbatWallet.Infrastructure\Services\ExternalApiClient.cs:111 Initialize object properties inside the 'using' statement to ensure that the object is disposed if an exception is thrown during initialization
+      src\NumbatWallet.Infrastructure\Services\ProtectionService.cs:15 Field '_logger' is assigned but its value is never used
+      src\NumbatWallet.Infrastructure\Services\ProtectionService.cs:101 Local variable 'tenantId' is never used
+      src\NumbatWallet.Infrastructure\Services\ProtectionService.cs:177 Redundant 'switch' expression arm
+      src\NumbatWallet.Infrastructure\Services\RedisCacheService.cs:11 Field '_distributedCache' is assigned but its value is never used
+      src\NumbatWallet.Infrastructure\Services\RedisCacheService.cs:207 Possible multiple enumeration
+      src\NumbatWallet.Infrastructure\Services\RedisCacheService.cs:210 Possible multiple enumeration
+      src\NumbatWallet.Infrastructure\Services\TelemetryService.cs:18 Field '_logger' is assigned but its value is never used
+      src\NumbatWallet.Infrastructure\Services\TelemetryService.cs:416 Redundant 'switch' expression arm
+    
+    Project NumbatWallet.SharedKernel
+      src\NumbatWallet.SharedKernel\Attributes\DataClassificationAttribute.cs:84 '??' left operand is never null according to nullable reference types' annotations
+    
+  Solution NumbatWallet.sln
+    Project NumbatWallet.Application.Tests
+      src\Tests\NumbatWallet.Application.Tests\Commands\Wallets\CreateWalletCommandTests.cs:17 The field is always assigned before being used and can be converted into a local variable
+      src\Tests\NumbatWallet.Application.Tests\Commands\Wallets\CreateWalletCommandTests.cs:57 Parameter 'ct' is never used
+      src\Tests\NumbatWallet.Application.Tests\Commands\Wallets\SuspendWalletCommandTests.cs:16 The field is always assigned before being used and can be converted into a local variable
+      src\Tests\NumbatWallet.Application.Tests\Queries\Wallets\GetWalletQueryTests.cs:17 The field is always assigned before being used and can be converted into a local variable
+      src\Tests\NumbatWallet.Application.Tests\Wallets\Commands\CreateWalletCommandHandlerTests.cs:20 The field is always assigned before being used and can be converted into a local variable
+      src\Tests\NumbatWallet.Application.Tests\Wallets\Commands\CreateWalletCommandHandlerTests.cs:84 Parameter 'c' is never used
+    
+    Project NumbatWallet.Domain.Tests
+      src\Tests\NumbatWallet.Domain.Tests\Credentials\CredentialManifestTests.cs:252 Possible multiple enumeration
+      src\Tests\NumbatWallet.Domain.Tests\Credentials\CredentialManifestTests.cs:253 Possible multiple enumeration
+      src\Tests\NumbatWallet.Domain.Tests\Credentials\CredentialManifestTests.cs:254 Possible multiple enumeration
+    
+    Project NumbatWallet.Infrastructure.Tests
+      src\Tests\NumbatWallet.Infrastructure.Tests\Data\EntityConfigurationsTests.cs:137 Possible multiple enumeration
+      src\Tests\NumbatWallet.Infrastructure.Tests\Data\EntityConfigurationsTests.cs:138 Possible multiple enumeration
+      src\Tests\NumbatWallet.Infrastructure.Tests\Data\EntityConfigurationsTests.cs:143 Possible multiple enumeration
+      src\Tests\NumbatWallet.Infrastructure.Tests\Data\EntityConfigurationsTests.cs:144 Possible multiple enumeration
+      src\Tests\NumbatWallet.Infrastructure.Tests\Data\NumbatWalletDbContextTests.cs:15 The field is always assigned before being used and can be converted into a local variable
+      src\Tests\NumbatWallet.Infrastructure.Tests\Data\NumbatWalletDbContextTests.cs:20 The field is always assigned before being used and can be converted into a local variable
+      src\Tests\NumbatWallet.Infrastructure.Tests\Repositories\RepositoryBaseTests.cs:18 The field is always assigned before being used and can be converted into a local variable
+      src\Tests\NumbatWallet.Infrastructure.Tests\Repositories\RepositoryBaseTests.cs:225 Possible multiple enumeration
+      src\Tests\NumbatWallet.Infrastructure.Tests\Repositories\RepositoryBaseTests.cs:226 Possible multiple enumeration
+      src\Tests\NumbatWallet.Infrastructure.Tests\Services\HmacSearchTokenServiceTests.cs:16 The field is always assigned before being used and can be converted into a local variable
+    
+    Project NumbatWallet.SharedKernel
+      src\NumbatWallet.SharedKernel\Primitives\Entity.cs:76 Non-readonly property referenced in 'GetHashCode()'
+      src\NumbatWallet.SharedKernel\Utilities\Guard.cs:163 Possible multiple enumeration
+      src\NumbatWallet.SharedKernel\Utilities\Guard.cs:168 Possible multiple enumeration
+    
+    Project NumbatWallet.Web.Admin
+      src\NumbatWallet.Web.Admin\Components\App.razor:18 Path '/Users/rodrigolmiranda/repo/NumbatWallet/src/NumbatWallet.Web.Admin/wwwroot/_framework' is not found
+      src\NumbatWallet.Web.Admin\Components\App.razor:18 Path '/Users/rodrigolmiranda/repo/NumbatWallet/src/NumbatWallet.Web.Admin/wwwroot/_framework/blazor.web.js' is not found
+      src\NumbatWallet.Web.Admin\Components\Pages\Counter.razor:13 Name 'currentCount' does not match rule 'Instance fields (private)'. Suggested name is '_currentCount'.
+      src\NumbatWallet.Web.Admin\Components\Pages\Counter.razor:13 Initializing field by default value is redundant
+      src\NumbatWallet.Web.Admin\Components\Pages\Weather.razor:40 Name 'forecasts' does not match rule 'Instance fields (private)'. Suggested name is '_forecasts'.
+    
+  Solution NumbatWallet.sln
+    Project NumbatWallet.Infrastructure.Tests
+      src\Tests\NumbatWallet.Infrastructure.Tests\Services\ProtectionServiceTests.cs:18 The field is always assigned before being used and can be converted into a local variable
+      src\Tests\NumbatWallet.Infrastructure.Tests\Services\ProtectionServiceTests.cs:191 Parameter 'context' is never used
+      src\Tests\NumbatWallet.Infrastructure.Tests\Services\TelemetryServiceTests.cs:21 The field is always assigned before being used and can be converted into a local variable
+      src\Tests\NumbatWallet.Infrastructure.Tests\Services\TelemetryServiceTests.cs:22 The field is always assigned before being used and can be converted into a local variable
+      src\Tests\NumbatWallet.Infrastructure.Tests\Services\TelemetryServiceTests.cs:95 The nullable warning suppression expression is redundant
+      src\Tests\NumbatWallet.Infrastructure.Tests\Services\TelemetryServiceTests.cs:124 Parameter '__' is never used
+      src\Tests\NumbatWallet.Infrastructure.Tests\Services\TelemetryServiceTests.cs:124 Parameter '___' is never used
+      src\Tests\NumbatWallet.Infrastructure.Tests\Services\TelemetryServiceTests.cs:134 The nullable warning suppression expression is redundant
+      src\Tests\NumbatWallet.Infrastructure.Tests\Services\TelemetryServiceTests.cs:171 The nullable warning suppression expression is redundant
+      src\Tests\NumbatWallet.Infrastructure.Tests\Services\TelemetryServiceTests.cs:199 The nullable warning suppression expression is redundant
+      src\Tests\NumbatWallet.Infrastructure.Tests\Services\TelemetryServiceTests.cs:239 The nullable warning suppression expression is redundant
+      src\Tests\NumbatWallet.Infrastructure.Tests\Services\TelemetryServiceTests.cs:269 Parameter '__' is never used
+      src\Tests\NumbatWallet.Infrastructure.Tests\Services\TelemetryServiceTests.cs:269 Parameter '___' is never used
+      src\Tests\NumbatWallet.Infrastructure.Tests\Services\TelemetryServiceTests.cs:279 The nullable warning suppression expression is redundant
+      src\Tests\NumbatWallet.Infrastructure.Tests\Services\TelemetryServiceTests.cs:309 Parameter 'pattern' is never used
+      src\Tests\NumbatWallet.Infrastructure.Tests\Services\TelemetryServiceTests.cs:337 The nullable warning suppression expression is redundant
+      src\Tests\NumbatWallet.Infrastructure.Tests\Services\TelemetryServiceTests.cs:373 The nullable warning suppression expression is redundant
+      src\Tests\NumbatWallet.Infrastructure.Tests\Services\TelemetryServiceTests.cs:405 The nullable warning suppression expression is redundant
+      src\Tests\NumbatWallet.Infrastructure.Tests\Services\TelemetryServiceTests.cs:478 The nullable warning suppression expression is redundant
+      src\Tests\NumbatWallet.Infrastructure.Tests\Services\TelemetryServiceTests.cs:504 The nullable warning suppression expression is redundant
+      src\Tests\NumbatWallet.Infrastructure.Tests\Services\TelemetryServiceTests.cs:512 Type cast is redundant
+    
+    Project NumbatWallet.SharedKernel.Tests
+      src\Tests\NumbatWallet.SharedKernel.Tests\Enums\DataClassificationTests.cs:39 Expression is always true
+      src\Tests\NumbatWallet.SharedKernel.Tests\Enums\DataClassificationTests.cs:40 Expression is always false
+      src\Tests\NumbatWallet.SharedKernel.Tests\Enums\DataClassificationTests.cs:41 Expression is always true
+      src\Tests\NumbatWallet.SharedKernel.Tests\ValueObjectTests.cs:25 Class 'SingleValueObject' is never used
     
   

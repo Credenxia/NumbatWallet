@@ -1,15 +1,8 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Linq.Expressions;
-using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using NumbatWallet.Application.Common.Exceptions;
 using NumbatWallet.Application.CQRS.Interfaces;
-using NumbatWallet.Application.DTOs;
 using NumbatWallet.Domain.Repositories;
-using NumbatWallet.Domain.Specifications;
 using NumbatWallet.SharedKernel.Enums;
 
 namespace NumbatWallet.Application.Queries.Credentials;
@@ -125,11 +118,14 @@ public class ListCredentialsQueryHandler : IQueryHandler<ListCredentialsQuery, P
             };
         }
 
+        // Materialize the query to avoid multiple enumeration
+        var credentialsList = filteredCredentials.ToList();
+
         // Get total count
-        var totalCount = filteredCredentials.Count();
+        var totalCount = credentialsList.Count;
 
         // Apply pagination
-        var credentials = filteredCredentials
+        var credentials = credentialsList
             .Skip(query.Pagination.Skip)
             .Take(query.Pagination.PageSize)
             .ToList();

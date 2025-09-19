@@ -5,7 +5,6 @@ using NumbatWallet.Application.Interfaces;
 using NumbatWallet.Infrastructure.Services;
 using NumbatWallet.SharedKernel.Enums;
 using NumbatWallet.SharedKernel.Interfaces;
-using Xunit;
 using FluentAssertions;
 
 namespace NumbatWallet.Infrastructure.Tests.Services;

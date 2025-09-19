@@ -3,7 +3,6 @@ using NumbatWallet.Application.CQRS;
 using NumbatWallet.Application.CQRS.Interfaces;
 using System.Reflection;
 using FluentValidation;
-using Scrutor;
 
 namespace NumbatWallet.Application.DependencyInjection;
 

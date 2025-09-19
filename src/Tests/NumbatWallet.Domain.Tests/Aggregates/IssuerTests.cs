@@ -1,4 +1,3 @@
-using Xunit;
 using NumbatWallet.Domain.Aggregates;
 
 namespace NumbatWallet.Domain.Tests.Aggregates;

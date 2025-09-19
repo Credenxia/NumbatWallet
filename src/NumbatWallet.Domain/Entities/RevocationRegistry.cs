@@ -1,6 +1,6 @@
 using NumbatWallet.SharedKernel.Primitives;
 
-namespace NumbatWallet.Domain.Aggregates;
+namespace NumbatWallet.Domain.Entities;
 
 public class RevocationRegistry : Entity<Guid>
 {

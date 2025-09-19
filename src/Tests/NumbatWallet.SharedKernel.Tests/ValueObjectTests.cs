@@ -1,4 +1,3 @@
-using Xunit;
 using NumbatWallet.SharedKernel.Primitives;
 
 namespace NumbatWallet.SharedKernel.Tests;

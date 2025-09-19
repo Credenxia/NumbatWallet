@@ -22,24 +22,34 @@ public class CredentialManifestParser
     public CredentialManifest Parse(string manifestJson)
     {
         if (string.IsNullOrWhiteSpace(manifestJson))
+        {
             throw new ArgumentNullException(nameof(manifestJson));
+        }
 
         try
         {
             var manifest = JsonSerializer.Deserialize<CredentialManifest>(manifestJson, _options);
 
             if (manifest == null)
+            {
                 throw new InvalidOperationException("Failed to parse credential manifest");
+            }
 
             // Validate basic structure
             if (string.IsNullOrEmpty(manifest.Id))
+            {
                 throw new InvalidOperationException("Credential manifest must have an id");
+            }
 
             if (manifest.Issuer == null)
+            {
                 throw new InvalidOperationException("Credential manifest must have an issuer");
+            }
 
             if (manifest.OutputDescriptors == null || manifest.OutputDescriptors.Count == 0)
+            {
                 throw new InvalidOperationException("Credential manifest must have at least one output descriptor");
+            }
 
             return manifest;
         }
@@ -52,7 +62,9 @@ public class CredentialManifestParser
     public string Serialize(CredentialManifest manifest)
     {
         if (manifest == null)
+        {
             throw new ArgumentNullException(nameof(manifest));
+        }
 
         return JsonSerializer.Serialize(manifest, _options);
     }

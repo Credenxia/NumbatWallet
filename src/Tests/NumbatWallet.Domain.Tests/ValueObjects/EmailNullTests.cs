@@ -1,4 +1,3 @@
-using Xunit;
 using NumbatWallet.Domain.ValueObjects;
 
 namespace NumbatWallet.Domain.Tests.ValueObjects;

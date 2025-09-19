@@ -1,7 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using NumbatWallet.Domain.Aggregates;
-using NumbatWallet.Domain.ValueObjects;
 using NumbatWallet.Infrastructure.Data.Converters;
 
 namespace NumbatWallet.Infrastructure.Data.Configurations;

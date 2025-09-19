@@ -21,8 +21,7 @@ public class JwtVcFormat : ICredentialFormat
 
     public string SerializeCredential(Dictionary<string, object> credentialData, string? signingKey = null)
     {
-        if (credentialData == null)
-            throw new ArgumentNullException(nameof(credentialData));
+        ArgumentNullException.ThrowIfNull(credentialData);
 
         // Use a default key if none provided (for testing) - must be at least 256 bits (32 bytes)
         var key = signingKey ?? "default-test-key-must-be-at-least-32-characters-long-for-HS256";
@@ -77,7 +76,9 @@ public class JwtVcFormat : ICredentialFormat
     public Dictionary<string, object> DeserializeCredential(string serializedCredential)
     {
         if (string.IsNullOrWhiteSpace(serializedCredential))
+        {
             throw new ArgumentNullException(nameof(serializedCredential));
+        }
 
         try
         {
@@ -111,13 +112,17 @@ public class JwtVcFormat : ICredentialFormat
     public bool IsValidFormat(string serializedCredential)
     {
         if (string.IsNullOrWhiteSpace(serializedCredential))
+        {
             return false;
+        }
 
         try
         {
             var parts = serializedCredential.Split('.');
             if (parts.Length != 3)
+            {
                 return false;
+            }
 
             _tokenHandler.ReadJwtToken(serializedCredential);
             return true;

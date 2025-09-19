@@ -1,6 +1,7 @@
+using NumbatWallet.Application.Common.Exceptions;
 using NumbatWallet.Application.CQRS.Interfaces;
-using NumbatWallet.SharedKernel.Results;
-
+using NumbatWallet.Domain.Interfaces;
+using NumbatWallet.SharedKernel.Interfaces;
 namespace NumbatWallet.Application.Commands.Person;
 
 public sealed class CreatePersonCommand : ICommand<Guid>
@@ -17,49 +18,37 @@ public sealed class CreatePersonCommand : ICommand<Guid>
 public sealed class CreatePersonCommandHandler : ICommandHandler<CreatePersonCommand, Guid>
 {
     private readonly IPersonRepository _personRepository;
+    private readonly IUnitOfWork _unitOfWork;
 
-    public CreatePersonCommandHandler(IPersonRepository personRepository)
+    public CreatePersonCommandHandler(IPersonRepository personRepository, IUnitOfWork unitOfWork)
     {
         _personRepository = personRepository;
+        _unitOfWork = unitOfWork;
     }
 
-    public async Task<Result<Guid>> HandleAsync(CreatePersonCommand request, CancellationToken cancellationToken)
+    public async Task<Guid> HandleAsync(CreatePersonCommand request, CancellationToken cancellationToken)
     {
         // Check if person already exists
         var existingPerson = await _personRepository.GetByEmailAsync(request.Email, cancellationToken);
         if (existingPerson != null)
         {
-            return DomainError.Conflict("Person.EmailExists", $"Person with email {request.Email} already exists");
+            throw new ConflictException("Person.EmailExists", $"Person with email {request.Email} already exists");
         }
 
         var personResult = Domain.Aggregates.Person.Create(
-            request.Email,
-            request.PhoneNumber,
             request.FirstName,
             request.LastName,
-            request.DateOfBirth,
-            request.ExternalId,
-            request.PhoneCountryCode);
+            request.Email,
+            request.PhoneNumber);
 
         if (personResult.IsFailure)
         {
-            return personResult.Error;
+            throw new AppException(personResult.Error.Code, personResult.Error.Message);
         }
 
         await _personRepository.AddAsync(personResult.Value, cancellationToken);
-        await _personRepository.SaveChangesAsync(cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return personResult.Value.Id;
     }
-}
-
-// IPersonRepository moved to separate file
-public interface IPersonRepository
-{
-    Task<Domain.Aggregates.Person?> GetByEmailAsync(string email, CancellationToken cancellationToken = default);
-    Task<Domain.Aggregates.Person?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
-    Task AddAsync(Domain.Aggregates.Person person, CancellationToken cancellationToken = default);
-    void Update(Domain.Aggregates.Person person);
-    Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
-    Task<List<Domain.Aggregates.Person>> GetAllAsync(CancellationToken cancellationToken = default);
 }

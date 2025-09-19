@@ -1,7 +1,4 @@
-using System;
 using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -10,7 +7,6 @@ using NumbatWallet.Infrastructure.Crypto;
 using NumbatWallet.Infrastructure.Crypto.Interfaces;
 using NumbatWallet.SharedKernel.Enums;
 using NumbatWallet.SharedKernel.Interfaces;
-using Xunit;
 using FluentAssertions;
 
 namespace NumbatWallet.Infrastructure.Tests.Crypto;

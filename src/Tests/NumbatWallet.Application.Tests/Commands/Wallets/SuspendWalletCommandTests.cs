@@ -1,6 +1,3 @@
-using System;
-using System.Threading;
-using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -8,9 +5,7 @@ using NumbatWallet.Application.Commands.Wallets;
 using NumbatWallet.Application.Common.Exceptions;
 using NumbatWallet.Domain.Aggregates;
 using NumbatWallet.Domain.Repositories;
-using NumbatWallet.SharedKernel.Enums;
 using NumbatWallet.SharedKernel.Interfaces;
-using Xunit;
 
 namespace NumbatWallet.Application.Tests.Commands.Wallets;
 

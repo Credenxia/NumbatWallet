@@ -1,7 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -10,7 +6,6 @@ using NumbatWallet.Application.Queries.Wallets;
 using NumbatWallet.Domain.Aggregates;
 using NumbatWallet.Domain.Repositories;
 using NumbatWallet.SharedKernel.Enums;
-using Xunit;
 
 namespace NumbatWallet.Application.Tests.Queries.Wallets;
 

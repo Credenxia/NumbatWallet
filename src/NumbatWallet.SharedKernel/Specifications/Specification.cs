@@ -1,5 +1,4 @@
 using System.Linq.Expressions;
-using NumbatWallet.SharedKernel.Interfaces;
 
 namespace NumbatWallet.SharedKernel.Specifications;
 

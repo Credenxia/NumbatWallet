@@ -1,5 +1,3 @@
-using System;
-using System.Threading.Tasks;
 using Azure.Identity;
 using Azure.Security.KeyVault.Keys;
 using Azure.Security.KeyVault.Keys.Cryptography;
@@ -122,7 +120,7 @@ public class KeyVaultWrapProvider : IKeyWrapProvider
 
             // Mark old KEK for deletion (soft delete)
             var oldKeyName = GetKeyName(tenantId, oldKekId);
-            var deleteOperation = await _keyClient.StartDeleteKeyAsync(oldKeyName);
+            await _keyClient.StartDeleteKeyAsync(oldKeyName);
 
             _logger.LogInformation(
                 "Initiated KEK rotation for tenant {TenantId}. Old: {OldKek}, New: {NewKek}",

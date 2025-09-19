@@ -1,4 +1,3 @@
-using NumbatWallet.SharedKernel.Enums;
 using NumbatWallet.SharedKernel.Interfaces;
 
 namespace NumbatWallet.Domain.Events;

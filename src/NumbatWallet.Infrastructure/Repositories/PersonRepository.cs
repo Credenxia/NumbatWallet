@@ -1,7 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using NumbatWallet.Domain.Aggregates;
 using NumbatWallet.Domain.Interfaces;
-using NumbatWallet.Domain.ValueObjects;
 using NumbatWallet.Infrastructure.Data;
 using NumbatWallet.SharedKernel.Enums;
 using NumbatWallet.SharedKernel.Models;

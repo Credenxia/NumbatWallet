@@ -1,5 +1,7 @@
+using NumbatWallet.Application.Common.Exceptions;
 using NumbatWallet.Application.CQRS.Interfaces;
-using NumbatWallet.SharedKernel.Results;
+using NumbatWallet.Application.DTOs;
+using NumbatWallet.Domain.Interfaces;
 
 namespace NumbatWallet.Application.Queries.Person;
 
@@ -17,12 +19,12 @@ public sealed class GetPersonByIdQueryHandler : IQueryHandler<GetPersonByIdQuery
         _personRepository = personRepository;
     }
 
-    public async Task<Result<PersonDto>> HandleAsync(GetPersonByIdQuery request, CancellationToken cancellationToken)
+    public async Task<PersonDto> HandleAsync(GetPersonByIdQuery request, CancellationToken cancellationToken)
     {
         var person = await _personRepository.GetByIdAsync(request.Id, cancellationToken);
         if (person == null)
         {
-            return DomainError.NotFound("Person.NotFound", $"Person with ID {request.Id} not found");
+            throw new NotFoundException("Person.NotFound", $"Person with ID {request.Id} not found");
         }
 
         var dto = new PersonDto
@@ -39,26 +41,9 @@ public sealed class GetPersonByIdQueryHandler : IQueryHandler<GetPersonByIdQuery
             IsVerified = person.IsVerified,
             Status = person.Status.ToString(),
             CreatedAt = person.CreatedAt,
-            UpdatedAt = person.UpdatedAt
+            UpdatedAt = person.ModifiedAt
         };
 
         return dto;
     }
-}
-
-public sealed class PersonDto
-{
-    public Guid Id { get; init; }
-    public string Email { get; init; } = string.Empty;
-    public string PhoneNumber { get; init; } = string.Empty;
-    public string FirstName { get; init; } = string.Empty;
-    public string LastName { get; init; } = string.Empty;
-    public DateOnly DateOfBirth { get; init; }
-    public string ExternalId { get; init; } = string.Empty;
-    public string EmailVerificationStatus { get; init; } = string.Empty;
-    public string PhoneVerificationStatus { get; init; } = string.Empty;
-    public bool IsVerified { get; init; }
-    public string Status { get; init; } = string.Empty;
-    public DateTimeOffset CreatedAt { get; init; }
-    public DateTimeOffset? UpdatedAt { get; init; }
 }

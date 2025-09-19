@@ -1,4 +1,3 @@
-using System.Text.Json;
 using Microsoft.ApplicationInsights;
 using Microsoft.ApplicationInsights.Channel;
 using Microsoft.ApplicationInsights.DataContracts;
@@ -9,7 +8,6 @@ using NumbatWallet.Application.Interfaces;
 using NumbatWallet.Infrastructure.Services;
 using NumbatWallet.SharedKernel.Interfaces;
 using NumbatWallet.SharedKernel.Enums;
-using Xunit;
 using FluentAssertions;
 
 namespace NumbatWallet.Infrastructure.Tests.Services;

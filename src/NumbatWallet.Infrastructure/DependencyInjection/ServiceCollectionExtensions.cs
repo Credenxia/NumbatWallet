@@ -1,8 +1,6 @@
-using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
 using NumbatWallet.Application.Interfaces;
 using NumbatWallet.Domain.Interfaces;
 using NumbatWallet.Infrastructure.Data;
@@ -120,7 +118,7 @@ public static class ServiceCollectionExtensions
 
         // Crypto Services (Envelope Encryption)
         services.AddSingleton<Crypto.Interfaces.IKeyWrapProvider, Crypto.KeyVaultWrapProvider>();
-        services.AddScoped<Application.Interfaces.ICryptoService, Crypto.CryptoService>();
+        services.AddScoped<ICryptoService, Crypto.CryptoService>();
 
         // Blob Storage
         var storageConnectionString = configuration["Azure:Storage:ConnectionString"];

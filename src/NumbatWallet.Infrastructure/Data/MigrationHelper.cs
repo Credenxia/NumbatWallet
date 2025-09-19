@@ -30,10 +30,11 @@ public class MigrationHelper : IHostedService
             if (context.Database.IsRelational())
             {
                 // Get pending migrations
-                var pendingMigrations = await context.Database.GetPendingMigrationsAsync(cancellationToken);
-                if (pendingMigrations.Any())
+                var pendingMigrationsQuery = await context.Database.GetPendingMigrationsAsync(cancellationToken);
+                var pendingMigrations = pendingMigrationsQuery.ToList();
+                if (pendingMigrations.Count > 0)
                 {
-                    _logger.LogInformation("Applying {Count} pending migrations", pendingMigrations.Count());
+                    _logger.LogInformation("Applying {Count} pending migrations", pendingMigrations.Count);
                     await context.Database.MigrateAsync(cancellationToken);
                     _logger.LogInformation("Database migrations applied successfully");
                 }

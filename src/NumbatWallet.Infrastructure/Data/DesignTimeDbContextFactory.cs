@@ -2,7 +2,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using NumbatWallet.Infrastructure.Services;
 using NumbatWallet.SharedKernel.Interfaces;
 using Moq;
 

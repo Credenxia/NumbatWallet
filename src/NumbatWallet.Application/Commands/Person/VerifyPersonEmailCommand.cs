@@ -1,5 +1,7 @@
+using NumbatWallet.Application.Common.Exceptions;
 using NumbatWallet.Application.CQRS.Interfaces;
-using NumbatWallet.SharedKernel.Results;
+using NumbatWallet.Domain.Interfaces;
+using NumbatWallet.SharedKernel.Interfaces;
 
 namespace NumbatWallet.Application.Commands.Person;
 
@@ -12,29 +14,29 @@ public sealed class VerifyPersonEmailCommand : ICommand
 public sealed class VerifyPersonEmailCommandHandler : ICommandHandler<VerifyPersonEmailCommand>
 {
     private readonly IPersonRepository _personRepository;
+    private readonly IUnitOfWork _unitOfWork;
 
-    public VerifyPersonEmailCommandHandler(IPersonRepository personRepository)
+    public VerifyPersonEmailCommandHandler(IPersonRepository personRepository, IUnitOfWork unitOfWork)
     {
         _personRepository = personRepository;
+        _unitOfWork = unitOfWork;
     }
 
-    public async Task<Result> HandleAsync(VerifyPersonEmailCommand request, CancellationToken cancellationToken)
+    public async Task HandleAsync(VerifyPersonEmailCommand request, CancellationToken cancellationToken)
     {
         var person = await _personRepository.GetByIdAsync(request.PersonId, cancellationToken);
         if (person == null)
         {
-            return DomainError.NotFound("Person.NotFound", $"Person with ID {request.PersonId} not found");
+            throw new NotFoundException("Person.NotFound", $"Person with ID {request.PersonId} not found");
         }
 
         var result = person.VerifyEmail(request.VerificationCode);
         if (result.IsFailure)
         {
-            return result;
+            throw new AppException(result.Error.Code, result.Error.Message);
         }
 
-        _personRepository.Update(person);
-        await _personRepository.SaveChangesAsync(cancellationToken);
-
-        return Result.Success();
+        await _personRepository.UpdateAsync(person, cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
     }
 }

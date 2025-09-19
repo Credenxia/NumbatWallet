@@ -2,7 +2,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NumbatWallet.Domain.Aggregates;
-using NumbatWallet.SharedKernel.Enums;
 
 namespace NumbatWallet.Infrastructure.Data;
 

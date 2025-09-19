@@ -13,7 +13,6 @@ public class NumbatWalletDbContext : DbContext, IUnitOfWork
     private readonly ICurrentUserService _currentUserService;
     private readonly IDateTimeService _dateTimeService;
     private readonly IEventDispatcher _eventDispatcher;
-    private readonly ILogger<NumbatWalletDbContext> _logger;
     private IDbContextTransaction? _currentTransaction;
 
     public NumbatWalletDbContext(
@@ -28,7 +27,6 @@ public class NumbatWalletDbContext : DbContext, IUnitOfWork
         _currentUserService = currentUserService;
         _dateTimeService = dateTimeService;
         _eventDispatcher = eventDispatcher;
-        _logger = logger;
     }
 
     public DbSet<Wallet> Wallets => Set<Wallet>();
@@ -100,7 +98,7 @@ public class NumbatWalletDbContext : DbContext, IUnitOfWork
         var result = await base.SaveChangesAsync(cancellationToken);
 
         // Dispatch domain events after successful save
-        if (domainEvents.Any())
+        if (domainEvents.Count > 0)
         {
             await _eventDispatcher.DispatchAsync(domainEvents, cancellationToken);
 

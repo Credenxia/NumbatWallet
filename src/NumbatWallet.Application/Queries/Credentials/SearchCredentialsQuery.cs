@@ -1,11 +1,5 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using NumbatWallet.Application.CQRS.Interfaces;
-using NumbatWallet.Application.DTOs;
 using NumbatWallet.Domain.Repositories;
 using NumbatWallet.SharedKernel.Enums;
 
@@ -88,14 +82,14 @@ public class SearchCredentialsQueryHandler : IQueryHandler<SearchCredentialsQuer
             searchedCredentials = searchedCredentials.Where(c => !c.IsExpired());
         }
 
-        // Order by relevance (simplified)
-        searchedCredentials = searchedCredentials.OrderByDescending(c => c.CreatedAt);
+        // Order by relevance (simplified) and materialize to avoid multiple enumeration
+        var credentialsList = searchedCredentials.OrderByDescending(c => c.CreatedAt).ToList();
 
         // Get total count
-        var totalCount = searchedCredentials.Count();
+        var totalCount = credentialsList.Count;
 
         // Apply pagination
-        var pagedCredentials = searchedCredentials
+        var pagedCredentials = credentialsList
             .Skip((query.Page - 1) * query.PageSize)
             .Take(query.PageSize)
             .ToList();

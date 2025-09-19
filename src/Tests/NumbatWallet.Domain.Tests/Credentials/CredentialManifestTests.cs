@@ -1,6 +1,5 @@
 using FluentAssertions;
 using NumbatWallet.Domain.Credentials;
-using Xunit;
 
 namespace NumbatWallet.Domain.Tests.Credentials;
 

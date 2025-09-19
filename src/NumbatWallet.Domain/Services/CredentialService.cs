@@ -1,5 +1,4 @@
 using NumbatWallet.Domain.Aggregates;
-using NumbatWallet.Domain.Events;
 using NumbatWallet.Domain.Interfaces;
 using NumbatWallet.SharedKernel.Enums;
 using NumbatWallet.SharedKernel.Utilities;

@@ -1,4 +1,3 @@
-using Xunit;
 using NumbatWallet.SharedKernel.Enums;
 
 namespace NumbatWallet.SharedKernel.Tests.Enums;

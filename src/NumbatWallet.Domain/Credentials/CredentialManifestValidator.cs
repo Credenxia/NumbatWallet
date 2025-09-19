@@ -8,52 +8,76 @@ public class CredentialManifestValidator
     public bool IsValid(CredentialManifest manifest)
     {
         if (manifest == null)
+        {
             return false;
+        }
 
         // Required fields
         if (string.IsNullOrWhiteSpace(manifest.Id))
+        {
             return false;
+        }
 
         if (string.IsNullOrWhiteSpace(manifest.Version))
+        {
             return false;
+        }
 
         if (manifest.Issuer == null)
+        {
             return false;
+        }
 
         if (string.IsNullOrWhiteSpace(manifest.Issuer.Id))
+        {
             return false;
+        }
 
         // Must have at least one output descriptor
         if (manifest.OutputDescriptors == null || manifest.OutputDescriptors.Count == 0)
+        {
             return false;
+        }
 
         // Validate each output descriptor
         foreach (var descriptor in manifest.OutputDescriptors)
         {
             if (string.IsNullOrWhiteSpace(descriptor.Id))
+            {
                 return false;
+            }
 
             if (string.IsNullOrWhiteSpace(descriptor.Schema))
+            {
                 return false;
+            }
         }
 
         // Validate presentation definition if present
         if (manifest.PresentationDefinition != null)
         {
             if (string.IsNullOrWhiteSpace(manifest.PresentationDefinition.Id))
+            {
                 return false;
+            }
 
             if (manifest.PresentationDefinition.InputDescriptors == null ||
                 manifest.PresentationDefinition.InputDescriptors.Count == 0)
+            {
                 return false;
+            }
 
             foreach (var inputDescriptor in manifest.PresentationDefinition.InputDescriptors)
             {
                 if (string.IsNullOrWhiteSpace(inputDescriptor.Id))
+                {
                     return false;
+                }
 
                 if (inputDescriptor.Schema == null || inputDescriptor.Schema.Count == 0)
+                {
                     return false;
+                }
             }
         }
 

@@ -2,7 +2,7 @@ namespace NumbatWallet.Application.Common.Exceptions;
 
 public class NotFoundException : Exception
 {
-    public NotFoundException() : base()
+    public NotFoundException()
     {
     }
 

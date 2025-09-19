@@ -1,13 +1,6 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using NumbatWallet.Application.CQRS.Interfaces;
-using NumbatWallet.Application.DTOs;
 using NumbatWallet.Domain.Repositories;
-using NumbatWallet.Domain.Specifications;
 using NumbatWallet.SharedKernel.Enums;
 using NumbatWallet.SharedKernel.Specifications;
 
@@ -76,10 +69,11 @@ public class GetCredentialStatisticsQueryHandler : IQueryHandler<GetCredentialSt
 
         // Get all credentials in the period
         var periodSpec = new CredentialsIssuedInPeriodSpecification(query.From, query.To);
-        var credentials = await _credentialRepository.FindAsync(periodSpec, cancellationToken);
+        var credentialsQuery = await _credentialRepository.FindAsync(periodSpec, cancellationToken);
+        var credentials = credentialsQuery.ToList();
 
         // Calculate basic statistics
-        var totalCredentials = credentials.Count();
+        var totalCredentials = credentials.Count;
         var activeCredentials = credentials.Count(c => c.Status == CredentialStatus.Active && !IsExpired(c));
         var revokedCredentials = credentials.Count(c => c.Status == CredentialStatus.Revoked);
         var expiredCredentials = credentials.Count(c => IsExpired(c));

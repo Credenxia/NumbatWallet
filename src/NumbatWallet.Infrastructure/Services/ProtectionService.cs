@@ -98,8 +98,6 @@ public class ProtectionService : IProtectionService
             // Log data access for audit
             if (!string.IsNullOrEmpty(reason))
             {
-                var tenantId = _currentTenantService.TenantId ?? string.Empty;
-
                 await _auditService.LogUnmaskOperationAsync(
                     "ProtectedValue",
                     protectedValue.EncryptedValue.KeyId,

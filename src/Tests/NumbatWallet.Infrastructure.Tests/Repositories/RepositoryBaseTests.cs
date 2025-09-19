@@ -1,4 +1,3 @@
-using Xunit;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Data.Sqlite;
 using NumbatWallet.Infrastructure.Data;

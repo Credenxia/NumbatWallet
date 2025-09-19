@@ -1,4 +1,3 @@
-using System.Linq.Expressions;
 using NumbatWallet.Domain.Aggregates;
 using NumbatWallet.SharedKernel.Enums;
 using NumbatWallet.SharedKernel.Specifications;

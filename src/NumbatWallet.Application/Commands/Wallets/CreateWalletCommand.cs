@@ -1,15 +1,9 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using NumbatWallet.Application.Common.Exceptions;
 using NumbatWallet.Application.CQRS.Interfaces;
 using NumbatWallet.Application.DTOs;
 using NumbatWallet.Domain.Aggregates;
 using NumbatWallet.Domain.Repositories;
-using NumbatWallet.Domain.Specifications;
 using NumbatWallet.SharedKernel.Interfaces;
 
 namespace NumbatWallet.Application.Commands.Wallets;
@@ -59,7 +53,7 @@ public class CreateWalletCommandHandler : ICommandHandler<CreateWalletCommand, W
             new Domain.Specifications.WalletByPersonSpecification(personId),
             cancellationToken);
 
-        if (existingWallets.Any(w => w.Status == NumbatWallet.SharedKernel.Enums.WalletStatus.Active))
+        if (existingWallets.Any(w => w.Status == SharedKernel.Enums.WalletStatus.Active))
         {
             throw new DomainValidationException($"Person {command.PersonId} already has an active wallet");
         }
@@ -95,8 +89,8 @@ public class CreateWalletCommandHandler : ICommandHandler<CreateWalletCommand, W
             PersonName = $"{person.FirstName} {person.LastName}",
             Name = wallet.Name,
             Status = wallet.Status.ToString(),
-            IsActive = wallet.Status == NumbatWallet.SharedKernel.Enums.WalletStatus.Active,
-            IsSuspended = wallet.Status == NumbatWallet.SharedKernel.Enums.WalletStatus.Suspended,
+            IsActive = wallet.Status == SharedKernel.Enums.WalletStatus.Active,
+            IsSuspended = wallet.Status == SharedKernel.Enums.WalletStatus.Suspended,
             CreatedAt = wallet.CreatedAt,
             UpdatedAt = wallet.CreatedAt,
             CredentialCount = 0, // Would need to query credentials

@@ -1,8 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using NumbatWallet.Application.CQRS.Interfaces;
 using NumbatWallet.Domain.Repositories;
@@ -83,9 +78,9 @@ public class GetWalletStatisticsQueryHandler : IQueryHandler<GetWalletStatistics
 
         // Calculate wallet statistics
         var totalWallets = walletList.Count;
-        var activeWallets = walletList.Count(w => w.Status == NumbatWallet.SharedKernel.Enums.WalletStatus.Active);
-        var suspendedWallets = walletList.Count(w => w.Status == NumbatWallet.SharedKernel.Enums.WalletStatus.Suspended);
-        var inactiveWallets = walletList.Count(w => w.Status == NumbatWallet.SharedKernel.Enums.WalletStatus.Locked);
+        var activeWallets = walletList.Count(w => w.Status == SharedKernel.Enums.WalletStatus.Active);
+        var suspendedWallets = walletList.Count(w => w.Status == SharedKernel.Enums.WalletStatus.Suspended);
+        var inactiveWallets = walletList.Count(w => w.Status == SharedKernel.Enums.WalletStatus.Locked);
 
         // Group wallets by status
         var walletsByStatus = walletList
@@ -104,9 +99,9 @@ public class GetWalletStatisticsQueryHandler : IQueryHandler<GetWalletStatistics
 
         // Calculate credential statistics
         var totalCredentials = allCredentials.Count;
-        var activeCredentials = allCredentials.Count(c => c.Status == NumbatWallet.SharedKernel.Enums.CredentialStatus.Active && !c.IsExpired());
+        var activeCredentials = allCredentials.Count(c => c.Status == SharedKernel.Enums.CredentialStatus.Active && !c.IsExpired());
         var expiredCredentials = allCredentials.Count(c => c.IsExpired());
-        var revokedCredentials = allCredentials.Count(c => c.Status == NumbatWallet.SharedKernel.Enums.CredentialStatus.Revoked);
+        var revokedCredentials = allCredentials.Count(c => c.Status == SharedKernel.Enums.CredentialStatus.Revoked);
 
         // Group credentials by type
         var credentialsByType = allCredentials

@@ -1,4 +1,3 @@
-using Xunit;
 using Microsoft.EntityFrameworkCore;
 using NumbatWallet.Infrastructure.Data;
 using NumbatWallet.Infrastructure.Data.Configurations;

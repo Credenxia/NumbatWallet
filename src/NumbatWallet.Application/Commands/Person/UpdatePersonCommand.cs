@@ -1,6 +1,8 @@
+using NumbatWallet.Application.Common.Exceptions;
 using NumbatWallet.Application.CQRS.Interfaces;
-using NumbatWallet.SharedKernel.Results;
-using NumbatWallet.Application.Commands.Person;
+using NumbatWallet.Domain.Interfaces;
+using NumbatWallet.Domain.ValueObjects;
+using NumbatWallet.SharedKernel.Interfaces;
 
 namespace NumbatWallet.Application.Commands.Person;
 
@@ -16,47 +18,34 @@ public sealed class UpdatePersonCommand : ICommand
 public sealed class UpdatePersonCommandHandler : ICommandHandler<UpdatePersonCommand>
 {
     private readonly IPersonRepository _personRepository;
+    private readonly IUnitOfWork _unitOfWork;
 
-    public UpdatePersonCommandHandler(IPersonRepository personRepository)
+    public UpdatePersonCommandHandler(IPersonRepository personRepository, IUnitOfWork unitOfWork)
     {
         _personRepository = personRepository;
+        _unitOfWork = unitOfWork;
     }
 
-    public async Task<Result> HandleAsync(UpdatePersonCommand request, CancellationToken cancellationToken)
+    public async Task HandleAsync(UpdatePersonCommand request, CancellationToken cancellationToken)
     {
         var person = await _personRepository.GetByIdAsync(request.Id, cancellationToken);
         if (person == null)
         {
-            return DomainError.NotFound("Person.NotFound", $"Person with ID {request.Id} not found");
-        }
-
-        // Update first name if provided
-        if (!string.IsNullOrWhiteSpace(request.FirstName))
-        {
-            var result = person.UpdateFirstName(request.FirstName);
-            if (result.IsFailure)
-                return result;
-        }
-
-        // Update last name if provided
-        if (!string.IsNullOrWhiteSpace(request.LastName))
-        {
-            var result = person.UpdateLastName(request.LastName);
-            if (result.IsFailure)
-                return result;
+            throw new NotFoundException("Person.NotFound", $"Person with ID {request.Id} not found");
         }
 
         // Update phone number if provided
         if (!string.IsNullOrWhiteSpace(request.PhoneNumber))
         {
-            var result = person.UpdatePhoneNumber(request.PhoneNumber, request.PhoneCountryCode);
+            var phoneNumber = PhoneNumber.Create(request.PhoneNumber);
+            var result = person.UpdatePhoneNumber(phoneNumber);
             if (result.IsFailure)
-                return result;
+            {
+                throw new AppException(result.Error.Code, result.Error.Message);
+            }
         }
 
-        _personRepository.Update(person);
-        await _personRepository.SaveChangesAsync(cancellationToken);
-
-        return Result.Success();
+        await _personRepository.UpdateAsync(person, cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
     }
 }

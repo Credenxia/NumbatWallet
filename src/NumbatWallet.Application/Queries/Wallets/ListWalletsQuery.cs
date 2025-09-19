@@ -1,8 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using NumbatWallet.Application.CQRS.Interfaces;
 using NumbatWallet.Application.DTOs;
@@ -78,7 +73,7 @@ public class ListWalletsQueryHandler : IQueryHandler<ListWalletsQuery, PagedResu
 
         if (query.IsSuspended.HasValue)
         {
-            wallets = wallets.Where(w => (w.Status == NumbatWallet.SharedKernel.Enums.WalletStatus.Suspended) == query.IsSuspended.Value);
+            wallets = wallets.Where(w => (w.Status == SharedKernel.Enums.WalletStatus.Suspended) == query.IsSuspended.Value);
         }
 
         // Apply sorting
@@ -134,8 +129,8 @@ public class ListWalletsQueryHandler : IQueryHandler<ListWalletsQuery, PagedResu
                 PersonName = person != null ? $"{person.FirstName} {person.LastName}" : "Unknown",
                 Name = wallet.Name,
                 Status = wallet.Status.ToString(),
-                IsActive = wallet.Status == NumbatWallet.SharedKernel.Enums.WalletStatus.Active,
-                IsSuspended = wallet.Status == NumbatWallet.SharedKernel.Enums.WalletStatus.Suspended,
+                IsActive = wallet.Status == SharedKernel.Enums.WalletStatus.Active,
+                IsSuspended = wallet.Status == SharedKernel.Enums.WalletStatus.Suspended,
                 CreatedAt = wallet.CreatedAt,
                 UpdatedAt = wallet.CreatedAt,
                 CredentialCount = credentials.Count(),

@@ -8,7 +8,6 @@ using NumbatWallet.SharedKernel.Attributes;
 using NumbatWallet.SharedKernel.Enums;
 using NumbatWallet.SharedKernel.Interfaces;
 using System.Reflection;
-using System.Text.Json;
 
 namespace NumbatWallet.Infrastructure.Data.Interceptors;
 

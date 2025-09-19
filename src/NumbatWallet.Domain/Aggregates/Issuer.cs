@@ -1,4 +1,5 @@
 using System.Text.RegularExpressions;
+using NumbatWallet.Domain.Entities;
 using NumbatWallet.SharedKernel.Primitives;
 using NumbatWallet.SharedKernel.Results;
 using NumbatWallet.SharedKernel.Guards;

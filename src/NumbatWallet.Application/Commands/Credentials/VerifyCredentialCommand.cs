@@ -1,11 +1,6 @@
-using System;
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using NumbatWallet.Application.Common.Exceptions;
 using NumbatWallet.Application.CQRS.Interfaces;
-using NumbatWallet.Application.DTOs;
 using NumbatWallet.Domain.Repositories;
 
 namespace NumbatWallet.Application.Commands.Credentials;
@@ -62,7 +57,7 @@ public class VerifyCredentialCommandHandler : ICommandHandler<VerifyCredentialCo
         }
 
         // Check revocation status
-        if (credential.Status == NumbatWallet.SharedKernel.Enums.CredentialStatus.Revoked)
+        if (credential.Status == SharedKernel.Enums.CredentialStatus.Revoked)
         {
             validationErrors.Add("Credential has been revoked");
             verificationDetails["revocationDate"] = credential.RevokedAt?.ToString("O") ?? "";

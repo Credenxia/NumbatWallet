@@ -1,7 +1,5 @@
-using System;
 using System.Security.Cryptography;
 using System.Text;
-using System.Threading.Tasks;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using NumbatWallet.Application.Interfaces;
@@ -184,7 +182,7 @@ public class CryptoService : ICryptoService
         try
         {
             var secretName = GetDekSecretName(tenantId);
-            var secretValue = await _keyVaultService.GetSecretAsync(secretName);
+            await _keyVaultService.GetSecretAsync(secretName);
 
             // For now, return version 1 as we don't have tag support in IKeyVaultService
             return 1;

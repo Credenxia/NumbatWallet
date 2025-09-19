@@ -10,15 +10,21 @@ public class PresentationValidator
     public bool ValidateAgainstManifest(Dictionary<string, object> presentation, CredentialManifest manifest)
     {
         if (presentation == null || manifest == null)
+        {
             return false;
+        }
 
         if (manifest.PresentationDefinition == null)
+        {
             return true; // No requirements to validate
+        }
 
         foreach (var inputDescriptor in manifest.PresentationDefinition.InputDescriptors)
         {
             if (!ValidateInputDescriptor(presentation, inputDescriptor))
+            {
                 return false;
+            }
         }
 
         return true;
@@ -27,7 +33,9 @@ public class PresentationValidator
     private bool ValidateInputDescriptor(Dictionary<string, object> presentation, InputDescriptor descriptor)
     {
         if (descriptor.Constraints == null || descriptor.Constraints.Fields == null)
+        {
             return true; // No constraints to validate
+        }
 
         foreach (var fieldConstraint in descriptor.Constraints.Fields)
         {
@@ -35,7 +43,9 @@ public class PresentationValidator
             {
                 // Check if field is optional
                 if (fieldConstraint.Optional == true)
+                {
                     continue;
+                }
 
                 return false;
             }
@@ -54,7 +64,9 @@ public class PresentationValidator
                 if (constraint.Filter != null)
                 {
                     if (!ValidateFilter(value, constraint.Filter))
+                    {
                         return false;
+                    }
                 }
                 return true; // Found valid value in one of the paths
             }
@@ -67,7 +79,9 @@ public class PresentationValidator
     {
         // Simple JSONPath implementation for basic paths like "$.credentialSubject.age"
         if (string.IsNullOrEmpty(path))
+        {
             return null;
+        }
 
         var cleanPath = path.TrimStart('$', '.');
         var parts = cleanPath.Split('.');
@@ -112,25 +126,33 @@ public class PresentationValidator
         if (filter.TryGetValue("type", out var typeObj) && typeObj is string type)
         {
             if (!ValidateType(value, type))
+            {
                 return false;
+            }
         }
 
         if (filter.TryGetValue("minimum", out var minObj))
         {
             if (!ValidateMinimum(value, minObj))
+            {
                 return false;
+            }
         }
 
         if (filter.TryGetValue("maximum", out var maxObj))
         {
             if (!ValidateMaximum(value, maxObj))
+            {
                 return false;
+            }
         }
 
         if (filter.TryGetValue("format", out var formatObj) && formatObj is string format)
         {
             if (!ValidateFormat(value, format))
+            {
                 return false;
+            }
         }
 
         return true;
@@ -170,7 +192,9 @@ public class PresentationValidator
     private bool ValidateFormat(object value, string format)
     {
         if (value is not string stringValue)
+        {
             return false;
+        }
 
         return format.ToLowerInvariant() switch
         {
@@ -187,7 +211,9 @@ public class PresentationValidator
         number = 0;
 
         if (value == null)
+        {
             return false;
+        }
 
         if (value is int intVal)
         {

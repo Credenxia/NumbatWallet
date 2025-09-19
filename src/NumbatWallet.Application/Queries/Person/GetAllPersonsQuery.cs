@@ -1,6 +1,6 @@
-using NumbatWallet.Application.Commands.Person;
 using NumbatWallet.Application.CQRS.Interfaces;
-using NumbatWallet.SharedKernel.Results;
+using NumbatWallet.Application.DTOs;
+using NumbatWallet.Domain.Interfaces;
 
 namespace NumbatWallet.Application.Queries.Person;
 
@@ -19,7 +19,7 @@ public sealed class GetAllPersonsQueryHandler : IQueryHandler<GetAllPersonsQuery
         _personRepository = personRepository;
     }
 
-    public async Task<Result<List<PersonDto>>> HandleAsync(GetAllPersonsQuery request, CancellationToken cancellationToken)
+    public async Task<List<PersonDto>> HandleAsync(GetAllPersonsQuery request, CancellationToken cancellationToken)
     {
         var persons = await _personRepository.GetAllAsync(cancellationToken);
 
@@ -37,7 +37,7 @@ public sealed class GetAllPersonsQueryHandler : IQueryHandler<GetAllPersonsQuery
             IsVerified = person.IsVerified,
             Status = person.Status.ToString(),
             CreatedAt = person.CreatedAt,
-            UpdatedAt = person.UpdatedAt
+            UpdatedAt = person.ModifiedAt
         }).ToList();
 
         // Apply paging if specified

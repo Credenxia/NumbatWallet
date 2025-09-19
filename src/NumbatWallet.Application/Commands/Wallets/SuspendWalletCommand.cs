@@ -1,6 +1,3 @@
-using System;
-using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using NumbatWallet.Application.Common.Exceptions;
 using NumbatWallet.Application.CQRS.Interfaces;
@@ -46,7 +43,7 @@ public class SuspendWalletCommandHandler : ICommandHandler<SuspendWalletCommand,
             throw new EntityNotFoundException("Wallet", command.WalletId);
         }
 
-        if (wallet.Status == NumbatWallet.SharedKernel.Enums.WalletStatus.Suspended)
+        if (wallet.Status == SharedKernel.Enums.WalletStatus.Suspended)
         {
             _logger.LogWarning("Wallet {WalletId} is already suspended", command.WalletId);
             return false;

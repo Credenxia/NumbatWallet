@@ -1,6 +1,3 @@
-using System;
-using System.Threading.Tasks;
-
 namespace NumbatWallet.Infrastructure.Crypto.Interfaces;
 
 /// <summary>

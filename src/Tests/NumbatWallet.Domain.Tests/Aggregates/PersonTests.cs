@@ -1,4 +1,3 @@
-using Xunit;
 using NumbatWallet.Domain.Aggregates;
 using NumbatWallet.Domain.ValueObjects;
 using NumbatWallet.SharedKernel.Enums;

@@ -1,6 +1,3 @@
-using System;
-using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using NumbatWallet.Application.Common.Exceptions;
 using NumbatWallet.Application.CQRS.Interfaces;
@@ -48,7 +45,7 @@ public class RevokeCredentialCommandHandler : ICommandHandler<RevokeCredentialCo
         }
 
         // Check if already revoked
-        if (credential.Status == NumbatWallet.SharedKernel.Enums.CredentialStatus.Revoked)
+        if (credential.Status == SharedKernel.Enums.CredentialStatus.Revoked)
         {
             _logger.LogWarning("Credential {CredentialId} is already revoked", command.CredentialId);
             return false;

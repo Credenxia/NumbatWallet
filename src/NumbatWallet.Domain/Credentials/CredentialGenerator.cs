@@ -7,11 +7,8 @@ public class CredentialGenerator
 {
     public Dictionary<string, object> GenerateFromManifest(CredentialManifest manifest, Dictionary<string, object> claimData)
     {
-        if (manifest == null)
-            throw new ArgumentNullException(nameof(manifest));
-
-        if (claimData == null)
-            throw new ArgumentNullException(nameof(claimData));
+        ArgumentNullException.ThrowIfNull(manifest);
+        ArgumentNullException.ThrowIfNull(claimData);
 
         var credential = new Dictionary<string, object>
         {
@@ -91,7 +88,9 @@ public class CredentialGenerator
         // Extract type from schema URL
         // e.g., "https://schema.org/DriverLicense" -> "DriverLicense"
         if (string.IsNullOrEmpty(schemaUrl))
+        {
             return string.Empty;
+        }
 
         var lastSlash = schemaUrl.LastIndexOf('/');
         if (lastSlash >= 0 && lastSlash < schemaUrl.Length - 1)

@@ -35,7 +35,9 @@ public class JsonLdFormat : ICredentialFormat
     public string SerializeCredential(Dictionary<string, object> credentialData, string? signingKey = null)
     {
         if (credentialData == null)
+        {
             throw new ArgumentNullException(nameof(credentialData));
+        }
 
         // Ensure @context is present
         if (!credentialData.ContainsKey("@context"))
@@ -61,20 +63,28 @@ public class JsonLdFormat : ICredentialFormat
     public Dictionary<string, object> DeserializeCredential(string serializedCredential)
     {
         if (string.IsNullOrWhiteSpace(serializedCredential))
+        {
             throw new ArgumentNullException(nameof(serializedCredential));
+        }
 
         try
         {
             var result = JsonSerializer.Deserialize<Dictionary<string, object>>(serializedCredential, _serializerOptions);
             if (result == null)
+            {
                 throw new InvalidOperationException("Failed to deserialize JSON-LD credential");
+            }
 
             // Validate required fields
             if (!result.ContainsKey("@context"))
+            {
                 throw new InvalidOperationException("JSON-LD credential must contain @context");
+            }
 
             if (!result.ContainsKey("type"))
+            {
                 throw new InvalidOperationException("JSON-LD credential must contain type");
+            }
 
             return result;
         }
@@ -87,22 +97,30 @@ public class JsonLdFormat : ICredentialFormat
     public bool IsValidFormat(string serializedCredential)
     {
         if (string.IsNullOrWhiteSpace(serializedCredential))
+        {
             return false;
+        }
 
         try
         {
             var credential = JsonSerializer.Deserialize<Dictionary<string, object>>(serializedCredential);
 
             if (credential == null)
+            {
                 return false;
+            }
 
             // Must have @context and type
             if (!credential.ContainsKey("@context") || !credential.ContainsKey("type"))
+            {
                 return false;
+            }
 
             // Must have credentialSubject
             if (!credential.ContainsKey("credentialSubject"))
+            {
                 return false;
+            }
 
             return true;
         }
@@ -115,11 +133,15 @@ public class JsonLdFormat : ICredentialFormat
     public bool IsValidContext(string[] contexts)
     {
         if (contexts == null || contexts.Length == 0)
+        {
             return false;
+        }
 
         // First context must be W3C credentials context
         if (!contexts[0].StartsWith("https://www.w3.org/2018/credentials/", StringComparison.Ordinal))
+        {
             return false;
+        }
 
         // Check if all contexts are valid
         return contexts.All(ctx => _validContexts.Contains(ctx) ||

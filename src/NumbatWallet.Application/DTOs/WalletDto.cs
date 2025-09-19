@@ -1,6 +1,3 @@
-using System;
-using System.Collections.Generic;
-
 namespace NumbatWallet.Application.DTOs;
 
 public class WalletDto

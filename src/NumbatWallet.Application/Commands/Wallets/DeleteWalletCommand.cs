@@ -1,6 +1,3 @@
-using System;
-using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using NumbatWallet.Application.Common.Exceptions;
 using NumbatWallet.Application.CQRS.Interfaces;
@@ -55,7 +52,7 @@ public class DeleteWalletCommandHandler : ICommandHandler<DeleteWalletCommand, b
             new Domain.Specifications.CredentialByWalletSpecification(walletId),
             cancellationToken);
 
-        if (credentials.Any(c => c.Status != NumbatWallet.SharedKernel.Enums.CredentialStatus.Revoked && !c.IsExpired()))
+        if (credentials.Any(c => c.Status != SharedKernel.Enums.CredentialStatus.Revoked && !c.IsExpired()))
         {
             throw new DomainValidationException(
                 "Cannot delete wallet with active credentials. Revoke or expire all credentials first.");

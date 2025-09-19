@@ -1,5 +1,3 @@
-using Xunit;
-
 namespace NumbatWallet.Infrastructure.Tests;
 
 [CollectionDefinition("Database Collection", DisableParallelization = true)]

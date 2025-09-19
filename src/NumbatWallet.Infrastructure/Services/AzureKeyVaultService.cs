@@ -123,7 +123,7 @@ public class AzureKeyVaultService : IKeyVaultService
 
         try
         {
-            var deleteOperation = await _secretClient.StartDeleteSecretAsync(secretName, cancellationToken);
+            await _secretClient.StartDeleteSecretAsync(secretName, cancellationToken);
 
             // Remove from cache
             _cache.Remove(secretName);

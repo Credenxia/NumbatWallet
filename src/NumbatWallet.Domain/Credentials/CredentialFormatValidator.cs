@@ -19,12 +19,16 @@ public class CredentialFormatValidator
     public bool IsValidJwtVc(string credential)
     {
         if (string.IsNullOrWhiteSpace(credential))
+        {
             return false;
+        }
 
         // Check JWT structure (three parts separated by dots)
         var parts = credential.Split('.');
         if (parts.Length != 3)
+        {
             return false;
+        }
 
         try
         {
@@ -54,7 +58,9 @@ public class CredentialFormatValidator
     public bool IsValidJsonLd(string credential)
     {
         if (string.IsNullOrWhiteSpace(credential))
+        {
             return false;
+        }
 
         try
         {
@@ -63,13 +69,19 @@ public class CredentialFormatValidator
 
             // Check for required JSON-LD fields
             if (!root.TryGetProperty("@context", out _))
+            {
                 return false;
+            }
 
             if (!root.TryGetProperty("type", out _))
+            {
                 return false;
+            }
 
             if (!root.TryGetProperty("credentialSubject", out _))
+            {
                 return false;
+            }
 
             return true;
         }

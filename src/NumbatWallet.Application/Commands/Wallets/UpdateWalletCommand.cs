@@ -1,7 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using NumbatWallet.Application.Common.Exceptions;
 using NumbatWallet.Application.CQRS.Interfaces;
@@ -81,8 +77,8 @@ public class UpdateWalletCommandHandler : ICommandHandler<UpdateWalletCommand, W
             PersonName = person != null ? $"{person.FirstName} {person.LastName}" : "Unknown",
             Name = wallet.Name,
             Status = wallet.Status.ToString(),
-            IsActive = wallet.Status == NumbatWallet.SharedKernel.Enums.WalletStatus.Active,
-            IsSuspended = wallet.Status == NumbatWallet.SharedKernel.Enums.WalletStatus.Suspended,
+            IsActive = wallet.Status == SharedKernel.Enums.WalletStatus.Active,
+            IsSuspended = wallet.Status == SharedKernel.Enums.WalletStatus.Suspended,
             CreatedAt = wallet.CreatedAt,
             UpdatedAt = wallet.CreatedAt,
             CredentialCount = 0,

@@ -1,6 +1,3 @@
-using System;
-using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using NumbatWallet.Application.Common.Exceptions;
 using NumbatWallet.Application.CQRS.Interfaces;
@@ -49,7 +46,7 @@ public class ReactivateWalletCommandHandler : ICommandHandler<ReactivateWalletCo
             throw new EntityNotFoundException("Wallet", command.WalletId);
         }
 
-        if (wallet.Status != NumbatWallet.SharedKernel.Enums.WalletStatus.Suspended)
+        if (wallet.Status != SharedKernel.Enums.WalletStatus.Suspended)
         {
             _logger.LogWarning("Wallet {WalletId} is not suspended", command.WalletId);
             throw new DomainValidationException("Cannot reactivate a wallet that is not suspended");
@@ -79,8 +76,8 @@ public class ReactivateWalletCommandHandler : ICommandHandler<ReactivateWalletCo
             PersonName = person != null ? $"{person.FirstName} {person.LastName}" : "Unknown",
             Name = wallet.Name,
             Status = wallet.Status.ToString(),
-            IsActive = wallet.Status == NumbatWallet.SharedKernel.Enums.WalletStatus.Active,
-            IsSuspended = wallet.Status == NumbatWallet.SharedKernel.Enums.WalletStatus.Suspended,
+            IsActive = wallet.Status == SharedKernel.Enums.WalletStatus.Active,
+            IsSuspended = wallet.Status == SharedKernel.Enums.WalletStatus.Suspended,
             CreatedAt = wallet.CreatedAt,
             UpdatedAt = wallet.CreatedAt,
             CredentialCount = 0,

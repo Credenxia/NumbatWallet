@@ -1,6 +1,5 @@
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using NumbatWallet.Application.Interfaces;
 using NumbatWallet.SharedKernel.Enums;
 
 namespace NumbatWallet.Infrastructure.Data.Converters;
