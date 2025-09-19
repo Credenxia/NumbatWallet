@@ -34,15 +34,15 @@ public class PhoneNumber : ValueObject
             var cleaned = phoneNumber.Trim();
 
             // If starts with 00, replace with +
-            if (cleaned.StartsWith("00"))
+            if (cleaned.StartsWith("00", StringComparison.Ordinal))
             {
-                cleaned = "+" + cleaned.Substring(2);
+                cleaned = string.Concat("+", cleaned.AsSpan(2));
             }
 
             // Parse the phone number
             PhoneNumbers.PhoneNumber parsedNumber;
 
-            if (cleaned.StartsWith("+"))
+            if (cleaned.StartsWith('+'))
             {
                 // International format - parse without region
                 parsedNumber = PhoneUtil.Parse(cleaned, null);
