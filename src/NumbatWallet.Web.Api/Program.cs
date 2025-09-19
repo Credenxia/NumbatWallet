@@ -17,6 +17,9 @@ try
 
     var builder = WebApplication.CreateBuilder(args);
 
+    // Add service defaults & Aspire components
+    builder.AddServiceDefaults();
+
     // Add Serilog
     builder.Host.UseSerilog((context, services, configuration) => configuration
         .ReadFrom.Configuration(context.Configuration)
@@ -65,6 +68,7 @@ try
     app.MapControllers();
     app.MapGraphQL();
     app.MapHealthChecks();
+    app.MapDefaultEndpoints();
 
     // Ensure database is created and migrations are applied
     using (var scope = app.Services.CreateScope())

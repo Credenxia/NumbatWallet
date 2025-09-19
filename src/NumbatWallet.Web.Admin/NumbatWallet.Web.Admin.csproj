@@ -5,6 +5,7 @@
     <ProjectReference Include="..\NumbatWallet.Application\NumbatWallet.Application.csproj" />
     <ProjectReference Include="..\NumbatWallet.Domain\NumbatWallet.Domain.csproj" />
     <ProjectReference Include="..\NumbatWallet.SharedKernel\NumbatWallet.SharedKernel.csproj" />
+    <ProjectReference Include="..\NumbatWallet.ServiceDefaults\NumbatWallet.ServiceDefaults.csproj" />
   </ItemGroup>
 
   <ItemGroup>

@@ -12,11 +12,16 @@
 
   <ItemGroup>
     <PackageReference Include="Aspire.Hosting.AppHost" />
+    <PackageReference Include="Aspire.Hosting.Azure.Storage" />
+    <PackageReference Include="Aspire.Hosting.PostgreSQL" />
+    <PackageReference Include="Aspire.Hosting.Redis" />
+    <PackageReference Include="KubernetesClient" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\NumbatWallet.Web.Api\NumbatWallet.Web.Api.csproj" />
     <ProjectReference Include="..\NumbatWallet.Web.Admin\NumbatWallet.Web.Admin.csproj" />
+    <ProjectReference Include="..\NumbatWallet.ServiceDefaults\NumbatWallet.ServiceDefaults.csproj" IsAspireProjectResource="false" />
   </ItemGroup>
 
 </Project>

@@ -16,10 +16,7 @@ var redis = builder.AddRedis("redis")
 
 // Add Azure Storage emulator (Azurite)
 var storage = builder.AddAzureStorage("storage")
-    .RunAsEmulator()
-    .WithBlobPort(10000)
-    .WithQueuePort(10001)
-    .WithTablePort(10002);
+    .RunAsEmulator();
 
 var blobs = storage.AddBlobs("blobs");
 
@@ -48,7 +45,7 @@ var admin = builder.AddProject<Projects.NumbatWallet_Web_Admin>("admin")
 
 // Add health checks dashboard
 builder.AddContainer("healthchecks", "xabarilcoding/healthchecksui")
-    .WithHttpEndpoint(port: 5000, targetPort: 80, name: "health-ui")
+    .WithHttpEndpoint(targetPort: 80, name: "health-ui")
     .WithEnvironment("HealthChecksUI__HealthChecks__0__Name", "Web API")
     .WithEnvironment("HealthChecksUI__HealthChecks__0__Uri", "http://webapi/health")
     .WithEnvironment("HealthChecksUI__HealthChecks__1__Name", "Admin Portal")
@@ -56,19 +53,15 @@ builder.AddContainer("healthchecks", "xabarilcoding/healthchecksui")
     .WithEnvironment("HealthChecksUI__EvaluationTimeInSeconds", "30")
     .WithEnvironment("HealthChecksUI__MinimumSecondsBetweenFailureNotifications", "60");
 
-// Add pgAdmin for database management
-builder.AddContainer("pgadmin", "dpage/pgadmin4")
-    .WithHttpEndpoint(port: 5050, targetPort: 80, name: "pgadmin")
-    .WithEnvironment("PGADMIN_DEFAULT_EMAIL", "admin@numbatwallet.local")
-    .WithEnvironment("PGADMIN_DEFAULT_PASSWORD", "admin123")
-    .WithEnvironment("PGADMIN_CONFIG_SERVER_MODE", "False");
+// pgAdmin is already added via .WithPgAdmin() on the postgres resource
 
 // Add Seq for structured logging (optional, better than console)
-var seq = builder.AddSeq("seq")
-    .WithDataVolume();
+// TODO: Enable Seq when package is added
+// var seq = builder.AddSeq("seq")
+//     .WithDataVolume();
 
 // Update API and Admin to use Seq
-api.WithReference(seq);
-admin.WithReference(seq);
+// api.WithReference(seq);
+// admin.WithReference(seq);
 
 builder.Build().Run();

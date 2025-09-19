@@ -57,6 +57,15 @@
     <PackageVersion Include="Serilog" Version="4.2.0" />
     <PackageVersion Include="Serilog.AspNetCore" Version="9.0.0" />
     <PackageVersion Include="Serilog.Enrichers.Environment" Version="3.0.1" />
+    <!-- Aspire ServiceDefaults -->
+    <PackageVersion Include="Microsoft.Extensions.Http.Resilience" Version="9.0.0" />
+    <PackageVersion Include="Microsoft.Extensions.ServiceDiscovery" Version="9.0.0" />
+    <PackageVersion Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.10.0" />
+    <PackageVersion Include="OpenTelemetry.Extensions.Hosting" Version="1.10.0" />
+    <PackageVersion Include="OpenTelemetry.Instrumentation.AspNetCore" Version="1.10.0" />
+    <PackageVersion Include="OpenTelemetry.Instrumentation.EntityFrameworkCore" Version="1.10.0-beta.1" />
+    <PackageVersion Include="OpenTelemetry.Instrumentation.Http" Version="1.10.0" />
+    <PackageVersion Include="OpenTelemetry.Instrumentation.Runtime" Version="1.10.0" />
     <PackageVersion Include="Serilog.Extensions.Hosting" Version="8.0.0" />
     <PackageVersion Include="Serilog.Settings.Configuration" Version="8.0.4" />
     <PackageVersion Include="Serilog.Sinks.ApplicationInsights" Version="4.0.0" />
@@ -98,6 +107,7 @@
     <PackageVersion Include="Aspire.Hosting" Version="9.4.2" />
     <PackageVersion Include="Aspire.Hosting.AppHost" Version="9.4.2" />
     <PackageVersion Include="Aspire.Hosting.Azure" Version="9.4.2" />
+    <PackageVersion Include="Aspire.Hosting.Azure.Storage" Version="9.4.2" />
     <PackageVersion Include="Aspire.Hosting.PostgreSQL" Version="9.4.2" />
     <PackageVersion Include="Aspire.Hosting.Redis" Version="9.4.2" />
     <!-- Source Generators & Analyzers -->
