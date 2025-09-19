@@ -55,11 +55,11 @@ public class NumbatWalletDbContext : DbContext, IUnitOfWork
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(NumbatWalletDbContext).Assembly);
 
         // Apply global query filters for multi-tenancy
-        var tenantId = _tenantService.TenantId.ToString();
-        modelBuilder.Entity<Wallet>().HasQueryFilter(w => w.TenantId == tenantId);
-        modelBuilder.Entity<Credential>().HasQueryFilter(c => c.TenantId == tenantId);
-        modelBuilder.Entity<Person>().HasQueryFilter(p => p.TenantId == tenantId);
-        modelBuilder.Entity<Issuer>().HasQueryFilter(i => i.TenantId == tenantId);
+        // Use dynamic evaluation of TenantId to ensure it's evaluated at query time
+        modelBuilder.Entity<Wallet>().HasQueryFilter(w => w.TenantId == _tenantService.TenantId.ToString());
+        modelBuilder.Entity<Credential>().HasQueryFilter(c => c.TenantId == _tenantService.TenantId.ToString());
+        modelBuilder.Entity<Person>().HasQueryFilter(p => p.TenantId == _tenantService.TenantId.ToString());
+        modelBuilder.Entity<Issuer>().HasQueryFilter(i => i.TenantId == _tenantService.TenantId.ToString());
 
         // Configure JSONB for PostgreSQL
         modelBuilder.HasPostgresExtension("pgcrypto"); // For encryption functions if needed

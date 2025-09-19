@@ -1,14 +1,12 @@
-using System.Text.RegularExpressions;
 using NumbatWallet.SharedKernel.Base;
 using NumbatWallet.SharedKernel.Utilities;
+using PhoneNumbers;
 
 namespace NumbatWallet.Domain.ValueObjects;
 
 public class PhoneNumber : ValueObject
 {
-    private static readonly Regex PhoneRegex = new(
-        @"^\+[1-9]\d{7,14}$",  // Must start with +, country code, then 7-14 more digits (8-15 total)
-        RegexOptions.Compiled);
+    private static readonly PhoneNumberUtil PhoneUtil = PhoneNumberUtil.GetInstance();
 
     private PhoneNumber(string value, string? countryCode)
     {
@@ -30,55 +28,116 @@ public class PhoneNumber : ValueObject
     {
         Guard.AgainstNullOrWhiteSpace(phoneNumber, nameof(phoneNumber));
 
-        // Check if the original contains any letters (invalid)
-        if (Regex.IsMatch(phoneNumber, @"[a-zA-Z]"))
+        try
         {
-            throw new ArgumentException($"Invalid phone number format: {phoneNumber}", nameof(phoneNumber));
-        }
+            // Clean the input - remove common formatting characters but keep + and digits
+            var cleaned = phoneNumber.Trim();
 
-        // Remove spaces, dashes, parentheses but keep + and digits
-        var cleaned = Regex.Replace(phoneNumber, @"[^\d+]", "");
-
-        // Ensure it starts with + for international format
-        if (!cleaned.StartsWith('+'))
-        {
-            // If no + and country code provided, add it
-            if (!string.IsNullOrEmpty(countryCode))
+            // If starts with 00, replace with +
+            if (cleaned.StartsWith("00"))
             {
-                cleaned = $"+{countryCode}{cleaned}";
+                cleaned = "+" + cleaned.Substring(2);
+            }
+
+            // Parse the phone number
+            PhoneNumbers.PhoneNumber parsedNumber;
+
+            if (cleaned.StartsWith("+"))
+            {
+                // International format - parse without region
+                parsedNumber = PhoneUtil.Parse(cleaned, null);
             }
             else
             {
-                // Phone numbers must have international format
-                throw new ArgumentException($"Invalid phone number format: {phoneNumber}", nameof(phoneNumber));
+                // National format - need a region hint
+                // Default to AU if no country code provided (backward compatibility)
+                var region = countryCode ?? "AU";
+
+                // Convert country code to region if it's a number
+                if (int.TryParse(region, out var _))
+                {
+                    // If numeric country code provided (like "61"), use default region
+                    region = "AU";
+                }
+
+                parsedNumber = PhoneUtil.Parse(cleaned, region.ToUpperInvariant());
             }
-        }
 
-        if (!PhoneRegex.IsMatch(cleaned))
+            // Validate the parsed number
+            if (!PhoneUtil.IsValidNumber(parsedNumber))
+            {
+                throw new ArgumentException($"Invalid phone number: {phoneNumber}", nameof(phoneNumber));
+            }
+
+            // Format as E164 for storage
+            var e164Format = PhoneUtil.Format(parsedNumber, PhoneNumberFormat.E164);
+
+            // Get the region code for this number
+            var regionCode = PhoneUtil.GetRegionCodeForNumber(parsedNumber);
+
+            return new PhoneNumber(e164Format, regionCode);
+        }
+        catch (NumberParseException ex)
         {
-            throw new ArgumentException($"Invalid phone number format: {phoneNumber}", nameof(phoneNumber));
+            throw new ArgumentException($"Invalid phone number format: {phoneNumber}. {ex.Message}", nameof(phoneNumber));
         }
-
-        return new PhoneNumber(cleaned, countryCode);
     }
 
-    public string GetFormatted()
+    public string GetFormatted(bool international = false)
     {
-        // Handle US numbers (+1 followed by 10 digits)
-        if (Value.StartsWith("+1", StringComparison.Ordinal) && Value.Length == 12)
+        try
         {
-            var withoutCountryCode = Value.Substring(2);
-            return $"+1 {withoutCountryCode.Substring(0, 3)} {withoutCountryCode.Substring(3, 3)} {withoutCountryCode.Substring(6, 4)}";
-        }
+            // Parse the stored E164 number
+            var parsedNumber = PhoneUtil.Parse(Value, null);
 
-        // Handle Australian numbers (+61 followed by 9 digits)
-        if (Value.StartsWith("+61", StringComparison.Ordinal) && Value.Length == 12)
+            // Format based on preference
+            if (international)
+            {
+                return PhoneUtil.Format(parsedNumber, PhoneNumberFormat.INTERNATIONAL);
+            }
+            else
+            {
+                // Use national format for the number's region
+                return PhoneUtil.Format(parsedNumber, PhoneNumberFormat.NATIONAL);
+            }
+        }
+        catch
         {
-            return $"+61 {Value.Substring(3, 3)} {Value.Substring(6, 3)} {Value.Substring(9, 3)}";
+            // Fallback to stored value if parsing fails
+            return Value;
         }
+    }
 
-        // For other formats, return as-is
-        return Value;
+    public string GetRegion()
+    {
+        try
+        {
+            var parsedNumber = PhoneUtil.Parse(Value, null);
+            return PhoneUtil.GetRegionCodeForNumber(parsedNumber);
+        }
+        catch
+        {
+            return CountryCode ?? "Unknown";
+        }
+    }
+
+    public PhoneNumberType GetNumberType()
+    {
+        try
+        {
+            var parsedNumber = PhoneUtil.Parse(Value, null);
+            return PhoneUtil.GetNumberType(parsedNumber);
+        }
+        catch
+        {
+            return PhoneNumberType.UNKNOWN;
+        }
+    }
+
+    public bool IsMobile()
+    {
+        var type = GetNumberType();
+        return type == PhoneNumberType.MOBILE || type == PhoneNumberType.FIXED_LINE_OR_MOBILE;
     }
 
     protected override IEnumerable<object?> GetAtomicValues()

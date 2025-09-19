@@ -1,5 +1,6 @@
 using Xunit;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Data.Sqlite;
 using NumbatWallet.Infrastructure.Data;
 using NumbatWallet.Infrastructure.Repositories;
 using NumbatWallet.Domain.Aggregates;
@@ -10,16 +11,24 @@ using Moq;
 
 namespace NumbatWallet.Infrastructure.Tests.Repositories;
 
+[Collection("Database Collection")]
 public class RepositoryBaseTests : IDisposable
 {
     private readonly NumbatWalletDbContext _context;
     private readonly RepositoryBase<Wallet, Guid> _repository;
     private readonly Mock<ITenantService> _tenantServiceMock;
+    private readonly Guid _tenantId;
+    private readonly SqliteConnection _connection;
 
     public RepositoryBaseTests()
     {
+        // Use SQLite in-memory database for better query filter support
+        _connection = new SqliteConnection("DataSource=:memory:");
+        _connection.Open();
+
         var options = new DbContextOptionsBuilder<NumbatWalletDbContext>()
-            .UseInMemoryDatabase(databaseName: $"TestDb_{Guid.NewGuid()}")
+            .UseSqlite(_connection)
+            .EnableSensitiveDataLogging()
             .Options;
 
         _tenantServiceMock = new Mock<ITenantService>();
@@ -28,7 +37,8 @@ public class RepositoryBaseTests : IDisposable
         var eventDispatcherMock = new Mock<IEventDispatcher>();
         var loggerMock = new Mock<ILogger<NumbatWalletDbContext>>();
 
-        _tenantServiceMock.Setup(x => x.TenantId).Returns(Guid.NewGuid());
+        _tenantId = Guid.NewGuid();
+        _tenantServiceMock.Setup(x => x.TenantId).Returns(_tenantId);
         currentUserServiceMock.Setup(x => x.UserId).Returns("test-user");
         dateTimeServiceMock.Setup(x => x.UtcNow).Returns(DateTimeOffset.UtcNow);
 
@@ -40,6 +50,8 @@ public class RepositoryBaseTests : IDisposable
             eventDispatcherMock.Object,
             loggerMock.Object);
 
+        _context.Database.EnsureCreated();
+
         _repository = new RepositoryBase<Wallet, Guid>(_context);
     }
 
@@ -47,8 +59,15 @@ public class RepositoryBaseTests : IDisposable
     public async Task GetByIdAsync_ShouldReturnEntity()
     {
         // Arrange
-        var personId = Guid.NewGuid();
-        var wallet = Wallet.Create(personId, "Test Wallet").Value;
+        // Create person first to satisfy foreign key constraint
+        var personResult = Person.Create("Test", "User", "test@example.com", "+14155552671");
+        Assert.True(personResult.IsSuccess);
+        var person = personResult.Value;
+        person.SetTenantId(_tenantId.ToString());
+        _context.Persons.Add(person);
+        await _context.SaveChangesAsync();
+
+        var wallet = Wallet.Create(person.Id, "Test Wallet").Value;
         await _context.Wallets.AddAsync(wallet);
         await _context.SaveChangesAsync();
 
@@ -64,12 +83,29 @@ public class RepositoryBaseTests : IDisposable
     public async Task GetAllAsync_ShouldReturnAllEntities()
     {
         // Arrange
-        var personId1 = Guid.NewGuid();
-        var personId2 = Guid.NewGuid();
-        var wallet1 = Wallet.Create(personId1, "Wallet 1").Value;
-        var wallet2 = Wallet.Create(personId2, "Wallet 2").Value;
-        await _context.Wallets.AddRangeAsync(wallet1, wallet2);
+        // Create persons first to satisfy foreign key constraints
+        var person1Result = Person.Create("John", "Doe", "john@example.com", "+14155552672");
+        var person2Result = Person.Create("Jane", "Smith", "jane@example.com", "+442071234567");
+        Assert.True(person1Result.IsSuccess);
+        Assert.True(person2Result.IsSuccess);
+        var person1 = person1Result.Value;
+        var person2 = person2Result.Value;
+        person1.SetTenantId(_tenantId.ToString());
+        person2.SetTenantId(_tenantId.ToString());
+        _context.Persons.Add(person1);
+        _context.Persons.Add(person2);
         await _context.SaveChangesAsync();
+
+        var wallet1 = Wallet.Create(person1.Id, "Wallet 1").Value;
+        var wallet2 = Wallet.Create(person2.Id, "Wallet 2").Value;
+
+        // Use repository to add entities (it will handle TenantId)
+        await _repository.AddAsync(wallet1);
+        await _repository.AddAsync(wallet2);
+        await _context.SaveChangesAsync();
+
+        // Clear change tracker to ensure clean queries
+        _context.ChangeTracker.Clear();
 
         // Act
         var results = await _repository.GetAllAsync();
@@ -82,8 +118,15 @@ public class RepositoryBaseTests : IDisposable
     public async Task AddAsync_ShouldAddEntity()
     {
         // Arrange
-        var personId = Guid.NewGuid();
-        var wallet = Wallet.Create(personId, "New Wallet").Value;
+        // Create person first to satisfy foreign key constraint
+        var personResult = Person.Create("Test", "User", "test@example.com", "+14155552671");
+        Assert.True(personResult.IsSuccess);
+        var person = personResult.Value;
+        person.SetTenantId(_tenantId.ToString());
+        _context.Persons.Add(person);
+        await _context.SaveChangesAsync();
+
+        var wallet = Wallet.Create(person.Id, "New Wallet").Value;
 
         // Act
         await _repository.AddAsync(wallet);
@@ -98,8 +141,15 @@ public class RepositoryBaseTests : IDisposable
     public async Task UpdateAsync_ShouldUpdateEntity()
     {
         // Arrange
-        var personId = Guid.NewGuid();
-        var wallet = Wallet.Create(personId, "Original Name").Value;
+        // Create person first to satisfy foreign key constraint
+        var personResult = Person.Create("Test", "User", "test@example.com", "+14155552671");
+        Assert.True(personResult.IsSuccess);
+        var person = personResult.Value;
+        person.SetTenantId(_tenantId.ToString());
+        _context.Persons.Add(person);
+        await _context.SaveChangesAsync();
+
+        var wallet = Wallet.Create(person.Id, "Original Name").Value;
         await _context.Wallets.AddAsync(wallet);
         await _context.SaveChangesAsync();
 
@@ -118,8 +168,15 @@ public class RepositoryBaseTests : IDisposable
     public async Task DeleteAsync_ShouldRemoveEntity()
     {
         // Arrange
-        var personId = Guid.NewGuid();
-        var wallet = Wallet.Create(personId, "To Delete").Value;
+        // Create person first to satisfy foreign key constraint
+        var personResult = Person.Create("Test", "User", "test@example.com", "+14155552671");
+        Assert.True(personResult.IsSuccess);
+        var person = personResult.Value;
+        person.SetTenantId(_tenantId.ToString());
+        _context.Persons.Add(person);
+        await _context.SaveChangesAsync();
+
+        var wallet = Wallet.Create(person.Id, "To Delete").Value;
         await _context.Wallets.AddAsync(wallet);
         await _context.SaveChangesAsync();
 
@@ -136,34 +193,71 @@ public class RepositoryBaseTests : IDisposable
     public async Task FindAsync_WithSpecification_ShouldReturnMatchingEntities()
     {
         // Arrange
-        var personId = Guid.NewGuid();
-        var wallet1 = Wallet.Create(personId, "Wallet 1").Value;
-        var wallet2 = Wallet.Create(Guid.NewGuid(), "Wallet 2").Value;
-        await _context.Wallets.AddRangeAsync(wallet1, wallet2);
+        // Create persons first to satisfy foreign key constraints
+        var person1Result = Person.Create("John", "Doe", "john@example.com", "+14155552672");
+        var person2Result = Person.Create("Jane", "Smith", "jane@example.com", "+442071234567");
+        Assert.True(person1Result.IsSuccess);
+        Assert.True(person2Result.IsSuccess);
+        var person1 = person1Result.Value;
+        var person2 = person2Result.Value;
+        person1.SetTenantId(_tenantId.ToString());
+        person2.SetTenantId(_tenantId.ToString());
+        _context.Persons.Add(person1);
+        _context.Persons.Add(person2);
         await _context.SaveChangesAsync();
 
-        var spec = new WalletByPersonIdSpecification(personId);
+        var wallet1 = Wallet.Create(person1.Id, "Wallet 1").Value;
+        var wallet2 = Wallet.Create(person2.Id, "Wallet 2").Value;
+
+        // Use repository to add entities
+        await _repository.AddAsync(wallet1);
+        await _repository.AddAsync(wallet2);
+        await _context.SaveChangesAsync();
+
+        // Clear change tracker to ensure clean queries
+        _context.ChangeTracker.Clear();
+
+        var spec = new WalletByPersonIdSpecification(person1.Id);
 
         // Act
         var results = await _repository.FindAsync(spec);
 
         // Assert
         Assert.Single(results);
-        Assert.Equal(personId, results.First().PersonId);
+        Assert.Equal(person1.Id, results.First().PersonId);
     }
 
     [Fact]
     public async Task CountAsync_WithSpecification_ShouldReturnCorrectCount()
     {
         // Arrange
-        var personId = Guid.NewGuid();
-        var wallet1 = Wallet.Create(personId, "Wallet 1").Value;
-        var wallet2 = Wallet.Create(personId, "Wallet 2").Value;
-        var wallet3 = Wallet.Create(Guid.NewGuid(), "Wallet 3").Value;
-        await _context.Wallets.AddRangeAsync(wallet1, wallet2, wallet3);
+        // Create persons first to satisfy foreign key constraints
+        var person1Result = Person.Create("John", "Doe", "john@example.com", "+14155552672");
+        var person2Result = Person.Create("Jane", "Smith", "jane@example.com", "+442071234567");
+        Assert.True(person1Result.IsSuccess);
+        Assert.True(person2Result.IsSuccess);
+        var person1 = person1Result.Value;
+        var person2 = person2Result.Value;
+        person1.SetTenantId(_tenantId.ToString());
+        person2.SetTenantId(_tenantId.ToString());
+        _context.Persons.Add(person1);
+        _context.Persons.Add(person2);
         await _context.SaveChangesAsync();
 
-        var spec = new WalletByPersonIdSpecification(personId);
+        var wallet1 = Wallet.Create(person1.Id, "Wallet 1").Value;
+        var wallet2 = Wallet.Create(person1.Id, "Wallet 2").Value;
+        var wallet3 = Wallet.Create(person2.Id, "Wallet 3").Value;
+
+        // Use repository to add entities
+        await _repository.AddAsync(wallet1);
+        await _repository.AddAsync(wallet2);
+        await _repository.AddAsync(wallet3);
+        await _context.SaveChangesAsync();
+
+        // Clear change tracker to ensure clean queries
+        _context.ChangeTracker.Clear();
+
+        var spec = new WalletByPersonIdSpecification(person1.Id);
 
         // Act
         var count = await _repository.CountAsync(spec);
@@ -176,12 +270,24 @@ public class RepositoryBaseTests : IDisposable
     public async Task AnyAsync_WithSpecification_ShouldReturnCorrectResult()
     {
         // Arrange
-        var personId = Guid.NewGuid();
-        var wallet = Wallet.Create(personId, "Wallet").Value;
-        await _context.Wallets.AddAsync(wallet);
+        // Create person first to satisfy foreign key constraint
+        var personResult = Person.Create("Test", "User", "test@example.com", "+14155552671");
+        Assert.True(personResult.IsSuccess);
+        var person = personResult.Value;
+        person.SetTenantId(_tenantId.ToString());
+        _context.Persons.Add(person);
         await _context.SaveChangesAsync();
 
-        var existingSpec = new WalletByPersonIdSpecification(personId);
+        var wallet = Wallet.Create(person.Id, "Wallet").Value;
+
+        // Use repository to add entity
+        await _repository.AddAsync(wallet);
+        await _context.SaveChangesAsync();
+
+        // Clear change tracker to ensure clean queries
+        _context.ChangeTracker.Clear();
+
+        var existingSpec = new WalletByPersonIdSpecification(person.Id);
         var nonExistingSpec = new WalletByPersonIdSpecification(Guid.NewGuid());
 
         // Act
@@ -196,6 +302,7 @@ public class RepositoryBaseTests : IDisposable
     public void Dispose()
     {
         _context?.Dispose();
+        _connection?.Dispose();
     }
 }
 
