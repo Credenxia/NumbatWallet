@@ -129,13 +129,13 @@ public class IssueCredentialCommandHandler : ICommandHandler<IssueCredentialComm
         {
             ["type"] = "RsaSignature2018",
             ["created"] = DateTime.UtcNow.ToString("O"),
-            ["verificationMethod"] = $"{issuer.Did}#key-1",
+            ["verificationMethod"] = $"{issuer.IssuerDid}#key-1",
             ["proofPurpose"] = "assertionMethod"
         };
 
         // In production, this would create actual cryptographic signature
         // For now, we'll use a placeholder
-        var dataToSign = System.Text.Json.JsonSerializer.Serialize(credential.CredentialSubject);
+        var dataToSign = credential.CredentialData;
         var encryptedSignature = await _cryptoService.EncryptAsync(dataToSign, DataClassification.Protected);
         proofData["jws"] = encryptedSignature;
 
@@ -147,15 +147,15 @@ public class IssueCredentialCommandHandler : ICommandHandler<IssueCredentialComm
         return new CredentialDto
         {
             Id = credential.Id.ToString(),
-            HolderId = credential.HolderId.Value,
-            IssuerId = credential.IssuerId.Value,
-            Type = credential.Type,
-            CredentialSubject = credential.CredentialSubject,
-            IssuanceDate = credential.IssuanceDate,
-            ExpirationDate = credential.ExpirationDate,
+            HolderId = credential.WalletId.ToString(),
+            IssuerId = credential.IssuerId.ToString(),
+            Type = credential.CredentialType,
+            CredentialSubject = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, object>>(credential.CredentialData) ?? new Dictionary<string, object>(),
+            IssuanceDate = credential.IssuedAt.DateTime,
+            ExpirationDate = credential.ExpiresAt?.DateTime,
             Status = credential.Status.ToString(),
-            Proof = credential.Proof,
-            Metadata = credential.Metadata
+            Proof = new Dictionary<string, object>(),
+            Metadata = new Dictionary<string, string>()
         };
     }
 }

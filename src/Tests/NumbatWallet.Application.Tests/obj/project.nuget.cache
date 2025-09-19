@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "wWbN3U9DMAI=",
+  "dgSpecHash": "B3WBOHoKbiQ=",
   "success": true,
   "projectFilePath": "/Users/rodrigolmiranda/repo/NumbatWallet/src/Tests/NumbatWallet.Application.Tests/NumbatWallet.Application.Tests.csproj",
   "expectedPackageFiles": [
@@ -11,6 +11,7 @@
     "/Users/rodrigolmiranda/.nuget/packages/fluentassertions/8.6.0/fluentassertions.8.6.0.nupkg.sha512",
     "/Users/rodrigolmiranda/.nuget/packages/fluentvalidation/12.0.0/fluentvalidation.12.0.0.nupkg.sha512",
     "/Users/rodrigolmiranda/.nuget/packages/fluentvalidation.dependencyinjectionextensions/12.0.0/fluentvalidation.dependencyinjectionextensions.12.0.0.nupkg.sha512",
+    "/Users/rodrigolmiranda/.nuget/packages/libphonenumber-csharp/9.0.14/libphonenumber-csharp.9.0.14.nupkg.sha512",
     "/Users/rodrigolmiranda/.nuget/packages/microsoft.build.tasks.git/8.0.0/microsoft.build.tasks.git.8.0.0.nupkg.sha512",
     "/Users/rodrigolmiranda/.nuget/packages/microsoft.codecoverage/17.14.1/microsoft.codecoverage.17.14.1.nupkg.sha512",
     "/Users/rodrigolmiranda/.nuget/packages/microsoft.extensions.dependencyinjection/9.0.9/microsoft.extensions.dependencyinjection.9.0.9.nupkg.sha512",

@@ -1,9 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using NumbatWallet.Application.Common.Exceptions;
 using NumbatWallet.Application.CQRS.Interfaces;
 using NumbatWallet.Application.DTOs;
 using NumbatWallet.Domain.Repositories;
@@ -14,10 +16,23 @@ namespace NumbatWallet.Application.Queries.Credentials;
 
 public record ListCredentialsQuery : IQuery<PagedResult<CredentialSummaryDto>>
 {
-    public required Guid WalletId { get; init; }
-    public CredentialFilter? Filter { get; init; }
-    public PaginationParams Pagination { get; init; } = new PaginationParams();
+    public required string WalletId { get; init; }
+    public PaginationParams Pagination { get; init; } = new();
     public SortingParams? Sorting { get; init; }
+    public CredentialFilter? Filter { get; init; }
+}
+
+public record PaginationParams
+{
+    public int Page { get; init; } = 1;
+    public int PageSize { get; init; } = 20;
+    public int Skip => (Page - 1) * PageSize;
+}
+
+public record SortingParams
+{
+    public string SortBy { get; init; } = "CreatedAt";
+    public bool Ascending { get; init; } = false;
 }
 
 public record CredentialFilter
@@ -25,24 +40,10 @@ public record CredentialFilter
     public CredentialStatus[]? Statuses { get; init; }
     public string[]? Types { get; init; }
     public Guid[]? IssuerIds { get; init; }
-    public bool? IncludeExpired { get; init; }
-    public bool? IncludeRevoked { get; init; }
+    public bool IncludeExpired { get; init; } = false;
+    public bool IncludeRevoked { get; init; } = false;
     public DateTimeOffset? IssuedAfter { get; init; }
     public DateTimeOffset? IssuedBefore { get; init; }
-}
-
-public record PaginationParams
-{
-    public int Page { get; init; } = 1;
-    public int PageSize { get; init; } = 20;
-
-    public int Skip => (Page - 1) * PageSize;
-}
-
-public record SortingParams
-{
-    public string SortBy { get; init; } = "IssuedAt";
-    public bool Ascending { get; init; } = false;
 }
 
 public record PagedResult<T>
@@ -56,21 +57,35 @@ public record PagedResult<T>
     public bool HasPreviousPage => Page > 1;
 }
 
+public record CredentialSummaryDto
+{
+    public required string Id { get; init; }
+    public required string WalletId { get; init; }
+    public required string IssuerId { get; init; }
+    public required string IssuerName { get; init; }
+    public required string Type { get; init; }
+    public required string Status { get; init; }
+    public DateTimeOffset IssuedAt { get; init; }
+    public DateTimeOffset? ExpiresAt { get; init; }
+    public bool IsExpired { get; init; }
+    public bool IsRevoked { get; init; }
+}
+
 public class ListCredentialsQueryHandler : IQueryHandler<ListCredentialsQuery, PagedResult<CredentialSummaryDto>>
 {
-    private readonly ICredentialRepository _credentialRepository;
     private readonly IWalletRepository _walletRepository;
+    private readonly ICredentialRepository _credentialRepository;
     private readonly IIssuerRepository _issuerRepository;
     private readonly ILogger<ListCredentialsQueryHandler> _logger;
 
     public ListCredentialsQueryHandler(
-        ICredentialRepository credentialRepository,
         IWalletRepository walletRepository,
+        ICredentialRepository credentialRepository,
         IIssuerRepository issuerRepository,
         ILogger<ListCredentialsQueryHandler> logger)
     {
-        _credentialRepository = credentialRepository;
         _walletRepository = walletRepository;
+        _credentialRepository = credentialRepository;
         _issuerRepository = issuerRepository;
         _logger = logger;
     }
@@ -79,48 +94,45 @@ public class ListCredentialsQueryHandler : IQueryHandler<ListCredentialsQuery, P
         ListCredentialsQuery query,
         CancellationToken cancellationToken = default)
     {
-        _logger.LogInformation(
-            "Listing credentials for wallet {WalletId} with pagination {Page}/{PageSize}",
-            query.WalletId, query.Pagination.Page, query.Pagination.PageSize);
+        _logger.LogInformation("Processing ListCredentialsQuery for wallet {WalletId}", query.WalletId);
 
-        // Verify wallet exists
-        var wallet = await _walletRepository.GetByIdAsync(query.WalletId, cancellationToken);
+        // Get wallet
+        var walletId = Guid.Parse(query.WalletId);
+        var wallet = await _walletRepository.GetByIdAsync(walletId, cancellationToken);
         if (wallet == null)
         {
-            return new PagedResult<CredentialSummaryDto>
+            throw new EntityNotFoundException("Wallet", query.WalletId);
+        }
+
+        // Get credentials for wallet
+        var allCredentials = await _credentialRepository.GetByWalletIdAsync(wallet.Id, cancellationToken);
+
+        // Apply filters
+        var filteredCredentials = ApplyManualFilters(allCredentials, query.Filter);
+
+        // Apply sorting
+        if (query.Sorting != null)
+        {
+            filteredCredentials = query.Sorting.SortBy?.ToLowerInvariant() switch
             {
-                Items = Array.Empty<CredentialSummaryDto>(),
-                TotalCount = 0,
-                Page = query.Pagination.Page,
-                PageSize = query.Pagination.PageSize
+                "issuedat" => query.Sorting.Ascending
+                    ? filteredCredentials.OrderBy(c => c.IssuedAt)
+                    : filteredCredentials.OrderByDescending(c => c.IssuedAt),
+                "type" => query.Sorting.Ascending
+                    ? filteredCredentials.OrderBy(c => c.CredentialType)
+                    : filteredCredentials.OrderByDescending(c => c.CredentialType),
+                _ => filteredCredentials.OrderByDescending(c => c.CreatedAt)
             };
         }
 
-        // Build specification
-        var spec = new CredentialByWalletSpecification(query.WalletId, query.Filter?.IncludeRevoked ?? false);
-
-        // Apply filters
-        if (query.Filter != null)
-        {
-            spec = ApplyFilters(spec, query.Filter);
-        }
-
         // Get total count
-        var totalCount = await _credentialRepository.CountAsync(spec, cancellationToken);
+        var totalCount = filteredCredentials.Count();
 
-        // Apply sorting and pagination
-        spec.ApplyPaging(query.Pagination.Skip, query.Pagination.PageSize);
-
-        if (query.Sorting != null)
-        {
-            if (query.Sorting.Ascending)
-                spec.ApplyOrderBy(GetSortExpression(query.Sorting.SortBy));
-            else
-                spec.ApplyOrderByDescending(GetSortExpression(query.Sorting.SortBy));
-        }
-
-        // Get credentials
-        var credentials = await _credentialRepository.FindAsync(spec, cancellationToken);
+        // Apply pagination
+        var credentials = filteredCredentials
+            .Skip(query.Pagination.Skip)
+            .Take(query.Pagination.PageSize)
+            .ToList();
 
         // Get issuer details for mapping
         var issuerIds = credentials.Select(c => c.IssuerId).Distinct().ToArray();
@@ -146,57 +158,61 @@ public class ListCredentialsQueryHandler : IQueryHandler<ListCredentialsQuery, P
         };
     }
 
-    private static CredentialByWalletSpecification ApplyFilters(
-        CredentialByWalletSpecification spec,
-        CredentialFilter filter)
+    private static IEnumerable<Domain.Aggregates.Credential> ApplyManualFilters(
+        IEnumerable<Domain.Aggregates.Credential> credentials,
+        CredentialFilter? filter)
     {
+        if (filter == null)
+        {
+            return credentials;
+        }
+
         if (filter.Statuses != null && filter.Statuses.Length > 0)
         {
-            spec.AddCriteria(c => filter.Statuses.Contains(c.Status));
+            credentials = credentials.Where(c => filter.Statuses.Contains(c.Status));
         }
 
         if (filter.Types != null && filter.Types.Length > 0)
         {
-            spec.AddCriteria(c => filter.Types.Contains(c.CredentialType));
+            credentials = credentials.Where(c => filter.Types.Contains(c.CredentialType));
         }
 
         if (filter.IssuerIds != null && filter.IssuerIds.Length > 0)
         {
-            spec.AddCriteria(c => filter.IssuerIds.Contains(c.IssuerId));
+            credentials = credentials.Where(c => filter.IssuerIds.Contains(c.IssuerId));
         }
 
         if (filter.IncludeExpired == false)
         {
-            spec.AddCriteria(c => !c.ExpiresAt.HasValue || c.ExpiresAt > DateTimeOffset.UtcNow);
+            credentials = credentials.Where(c => !c.IsExpired());
         }
 
         if (filter.IncludeRevoked == false)
         {
-            spec.AddCriteria(c => !c.RevokedAt.HasValue);
+            credentials = credentials.Where(c => c.Status != CredentialStatus.Revoked);
         }
 
         if (filter.IssuedAfter.HasValue)
         {
-            spec.AddCriteria(c => c.IssuedAt >= filter.IssuedAfter.Value);
+            credentials = credentials.Where(c => c.IssuedAt >= filter.IssuedAfter.Value);
         }
 
         if (filter.IssuedBefore.HasValue)
         {
-            spec.AddCriteria(c => c.IssuedAt <= filter.IssuedBefore.Value);
+            credentials = credentials.Where(c => c.IssuedAt <= filter.IssuedBefore.Value);
         }
 
-        return spec;
+        return credentials;
     }
 
-    private static System.Linq.Expressions.Expression<Func<Domain.Aggregates.Credential, object>> GetSortExpression(string sortBy)
+    private static Expression<Func<Domain.Aggregates.Credential, object>> GetSortExpression(string sortBy)
     {
-        return sortBy.ToLowerInvariant() switch
+        return sortBy?.ToLowerInvariant() switch
         {
+            "issuedat" => c => c.IssuedAt,
             "type" => c => c.CredentialType,
             "status" => c => c.Status,
-            "issuer" => c => c.IssuerId,
-            "expiresat" => c => c.ExpiresAt ?? DateTimeOffset.MaxValue,
-            _ => c => c.IssuedAt
+            _ => c => c.CreatedAt
         };
     }
 
@@ -208,14 +224,15 @@ public class ListCredentialsQueryHandler : IQueryHandler<ListCredentialsQuery, P
         return new CredentialSummaryDto
         {
             Id = credential.Id.ToString(),
-            Type = credential.CredentialType,
-            HolderName = wallet.Name,
+            WalletId = wallet.Id.ToString(),
+            IssuerId = credential.IssuerId.ToString(),
             IssuerName = issuer?.Name ?? "Unknown Issuer",
-            IssuanceDate = credential.IssuedAt.DateTime,
-            ExpirationDate = credential.ExpiresAt?.DateTime,
+            Type = credential.CredentialType,
             Status = credential.Status.ToString(),
-            IsExpired = credential.ExpiresAt.HasValue && credential.ExpiresAt.Value < DateTimeOffset.UtcNow,
-            IsRevoked = credential.RevokedAt.HasValue
+            IssuedAt = credential.IssuedAt,
+            ExpiresAt = credential.ExpiresAt,
+            IsExpired = credential.IsExpired(),
+            IsRevoked = credential.Status == CredentialStatus.Revoked
         };
     }
 }

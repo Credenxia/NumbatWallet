@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "Q406RSzlR2k=",
+  "dgSpecHash": "kZd+WlLnXvg=",
   "success": true,
   "projectFilePath": "/Users/rodrigolmiranda/repo/NumbatWallet/src/NumbatWallet.Infrastructure/NumbatWallet.Infrastructure.csproj",
   "expectedPackageFiles": [
@@ -19,6 +19,7 @@
     "/Users/rodrigolmiranda/.nuget/packages/fluentvalidation/12.0.0/fluentvalidation.12.0.0.nupkg.sha512",
     "/Users/rodrigolmiranda/.nuget/packages/fluentvalidation.dependencyinjectionextensions/12.0.0/fluentvalidation.dependencyinjectionextensions.12.0.0.nupkg.sha512",
     "/Users/rodrigolmiranda/.nuget/packages/humanizer.core/2.14.1/humanizer.core.2.14.1.nupkg.sha512",
+    "/Users/rodrigolmiranda/.nuget/packages/libphonenumber-csharp/9.0.14/libphonenumber-csharp.9.0.14.nupkg.sha512",
     "/Users/rodrigolmiranda/.nuget/packages/microsoft.applicationinsights/2.23.0/microsoft.applicationinsights.2.23.0.nupkg.sha512",
     "/Users/rodrigolmiranda/.nuget/packages/microsoft.applicationinsights.aspnetcore/2.23.0/microsoft.applicationinsights.aspnetcore.2.23.0.nupkg.sha512",
     "/Users/rodrigolmiranda/.nuget/packages/microsoft.applicationinsights.dependencycollector/2.23.0/microsoft.applicationinsights.dependencycollector.2.23.0.nupkg.sha512",

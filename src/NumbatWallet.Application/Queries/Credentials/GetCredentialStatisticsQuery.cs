@@ -79,7 +79,7 @@ public class GetCredentialStatisticsQueryHandler : IQueryHandler<GetCredentialSt
         var credentials = await _credentialRepository.FindAsync(periodSpec, cancellationToken);
 
         // Calculate basic statistics
-        var totalCredentials = credentials.Count;
+        var totalCredentials = credentials.Count();
         var activeCredentials = credentials.Count(c => c.Status == CredentialStatus.Active && !IsExpired(c));
         var revokedCredentials = credentials.Count(c => c.Status == CredentialStatus.Revoked);
         var expiredCredentials = credentials.Count(c => IsExpired(c));

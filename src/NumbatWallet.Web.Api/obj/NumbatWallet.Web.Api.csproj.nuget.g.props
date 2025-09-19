@@ -13,20 +13,9 @@
     <SourceRoot Include="/Users/rodrigolmiranda/.nuget/packages/" />
   </ItemGroup>
   <ItemGroup Condition=" '$(ExcludeRestorePackageImports)' != 'true' ">
-    <Content Include="$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.11.0/contentFiles/any/any/BuildHost-net472/Microsoft.Bcl.AsyncInterfaces.dll" Condition="Exists('$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.11.0/contentFiles/any/any/BuildHost-net472/Microsoft.Bcl.AsyncInterfaces.dll')">
+    <Content Include="$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.14.0/contentFiles/any/any/BuildHost-net472/Microsoft.Build.Locator.dll" Condition="Exists('$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.14.0/contentFiles/any/any/BuildHost-net472/Microsoft.Build.Locator.dll')">
       <NuGetPackageId>Microsoft.CodeAnalysis.Workspaces.MSBuild</NuGetPackageId>
-      <NuGetPackageVersion>4.11.0</NuGetPackageVersion>
-      <NuGetItemType>Content</NuGetItemType>
-      <Pack>false</Pack>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <TargetPath>BuildHost-net472/Microsoft.Bcl.AsyncInterfaces.dll</TargetPath>
-      <DestinationSubDirectory>BuildHost-net472/</DestinationSubDirectory>
-      <Private>True</Private>
-      <Link>BuildHost-net472/Microsoft.Bcl.AsyncInterfaces.dll</Link>
-    </Content>
-    <Content Include="$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.11.0/contentFiles/any/any/BuildHost-net472/Microsoft.Build.Locator.dll" Condition="Exists('$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.11.0/contentFiles/any/any/BuildHost-net472/Microsoft.Build.Locator.dll')">
-      <NuGetPackageId>Microsoft.CodeAnalysis.Workspaces.MSBuild</NuGetPackageId>
-      <NuGetPackageVersion>4.11.0</NuGetPackageVersion>
+      <NuGetPackageVersion>4.14.0</NuGetPackageVersion>
       <NuGetItemType>Content</NuGetItemType>
       <Pack>false</Pack>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -35,9 +24,9 @@
       <Private>True</Private>
       <Link>BuildHost-net472/Microsoft.Build.Locator.dll</Link>
     </Content>
-    <Content Include="$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.11.0/contentFiles/any/any/BuildHost-net472/Microsoft.CodeAnalysis.Workspaces.MSBuild.BuildHost.exe" Condition="Exists('$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.11.0/contentFiles/any/any/BuildHost-net472/Microsoft.CodeAnalysis.Workspaces.MSBuild.BuildHost.exe')">
+    <Content Include="$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.14.0/contentFiles/any/any/BuildHost-net472/Microsoft.CodeAnalysis.Workspaces.MSBuild.BuildHost.exe" Condition="Exists('$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.14.0/contentFiles/any/any/BuildHost-net472/Microsoft.CodeAnalysis.Workspaces.MSBuild.BuildHost.exe')">
       <NuGetPackageId>Microsoft.CodeAnalysis.Workspaces.MSBuild</NuGetPackageId>
-      <NuGetPackageVersion>4.11.0</NuGetPackageVersion>
+      <NuGetPackageVersion>4.14.0</NuGetPackageVersion>
       <NuGetItemType>Content</NuGetItemType>
       <Pack>false</Pack>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -46,9 +35,9 @@
       <Private>True</Private>
       <Link>BuildHost-net472/Microsoft.CodeAnalysis.Workspaces.MSBuild.BuildHost.exe</Link>
     </Content>
-    <Content Include="$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.11.0/contentFiles/any/any/BuildHost-net472/Microsoft.CodeAnalysis.Workspaces.MSBuild.BuildHost.exe.config" Condition="Exists('$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.11.0/contentFiles/any/any/BuildHost-net472/Microsoft.CodeAnalysis.Workspaces.MSBuild.BuildHost.exe.config')">
+    <Content Include="$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.14.0/contentFiles/any/any/BuildHost-net472/Microsoft.CodeAnalysis.Workspaces.MSBuild.BuildHost.exe.config" Condition="Exists('$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.14.0/contentFiles/any/any/BuildHost-net472/Microsoft.CodeAnalysis.Workspaces.MSBuild.BuildHost.exe.config')">
       <NuGetPackageId>Microsoft.CodeAnalysis.Workspaces.MSBuild</NuGetPackageId>
-      <NuGetPackageVersion>4.11.0</NuGetPackageVersion>
+      <NuGetPackageVersion>4.14.0</NuGetPackageVersion>
       <NuGetItemType>Content</NuGetItemType>
       <Pack>false</Pack>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -57,9 +46,20 @@
       <Private>True</Private>
       <Link>BuildHost-net472/Microsoft.CodeAnalysis.Workspaces.MSBuild.BuildHost.exe.config</Link>
     </Content>
-    <Content Include="$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.11.0/contentFiles/any/any/BuildHost-net472/Newtonsoft.Json.dll" Condition="Exists('$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.11.0/contentFiles/any/any/BuildHost-net472/Newtonsoft.Json.dll')">
+    <Content Include="$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.14.0/contentFiles/any/any/BuildHost-net472/Microsoft.IO.Redist.dll" Condition="Exists('$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.14.0/contentFiles/any/any/BuildHost-net472/Microsoft.IO.Redist.dll')">
       <NuGetPackageId>Microsoft.CodeAnalysis.Workspaces.MSBuild</NuGetPackageId>
-      <NuGetPackageVersion>4.11.0</NuGetPackageVersion>
+      <NuGetPackageVersion>4.14.0</NuGetPackageVersion>
+      <NuGetItemType>Content</NuGetItemType>
+      <Pack>false</Pack>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <TargetPath>BuildHost-net472/Microsoft.IO.Redist.dll</TargetPath>
+      <DestinationSubDirectory>BuildHost-net472/</DestinationSubDirectory>
+      <Private>True</Private>
+      <Link>BuildHost-net472/Microsoft.IO.Redist.dll</Link>
+    </Content>
+    <Content Include="$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.14.0/contentFiles/any/any/BuildHost-net472/Newtonsoft.Json.dll" Condition="Exists('$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.14.0/contentFiles/any/any/BuildHost-net472/Newtonsoft.Json.dll')">
+      <NuGetPackageId>Microsoft.CodeAnalysis.Workspaces.MSBuild</NuGetPackageId>
+      <NuGetPackageVersion>4.14.0</NuGetPackageVersion>
       <NuGetItemType>Content</NuGetItemType>
       <Pack>false</Pack>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -68,9 +68,9 @@
       <Private>True</Private>
       <Link>BuildHost-net472/Newtonsoft.Json.dll</Link>
     </Content>
-    <Content Include="$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.11.0/contentFiles/any/any/BuildHost-net472/System.Buffers.dll" Condition="Exists('$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.11.0/contentFiles/any/any/BuildHost-net472/System.Buffers.dll')">
+    <Content Include="$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.14.0/contentFiles/any/any/BuildHost-net472/System.Buffers.dll" Condition="Exists('$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.14.0/contentFiles/any/any/BuildHost-net472/System.Buffers.dll')">
       <NuGetPackageId>Microsoft.CodeAnalysis.Workspaces.MSBuild</NuGetPackageId>
-      <NuGetPackageVersion>4.11.0</NuGetPackageVersion>
+      <NuGetPackageVersion>4.14.0</NuGetPackageVersion>
       <NuGetItemType>Content</NuGetItemType>
       <Pack>false</Pack>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -79,9 +79,9 @@
       <Private>True</Private>
       <Link>BuildHost-net472/System.Buffers.dll</Link>
     </Content>
-    <Content Include="$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.11.0/contentFiles/any/any/BuildHost-net472/System.Collections.Immutable.dll" Condition="Exists('$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.11.0/contentFiles/any/any/BuildHost-net472/System.Collections.Immutable.dll')">
+    <Content Include="$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.14.0/contentFiles/any/any/BuildHost-net472/System.Collections.Immutable.dll" Condition="Exists('$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.14.0/contentFiles/any/any/BuildHost-net472/System.Collections.Immutable.dll')">
       <NuGetPackageId>Microsoft.CodeAnalysis.Workspaces.MSBuild</NuGetPackageId>
-      <NuGetPackageVersion>4.11.0</NuGetPackageVersion>
+      <NuGetPackageVersion>4.14.0</NuGetPackageVersion>
       <NuGetItemType>Content</NuGetItemType>
       <Pack>false</Pack>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -90,9 +90,9 @@
       <Private>True</Private>
       <Link>BuildHost-net472/System.Collections.Immutable.dll</Link>
     </Content>
-    <Content Include="$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.11.0/contentFiles/any/any/BuildHost-net472/System.CommandLine.dll" Condition="Exists('$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.11.0/contentFiles/any/any/BuildHost-net472/System.CommandLine.dll')">
+    <Content Include="$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.14.0/contentFiles/any/any/BuildHost-net472/System.CommandLine.dll" Condition="Exists('$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.14.0/contentFiles/any/any/BuildHost-net472/System.CommandLine.dll')">
       <NuGetPackageId>Microsoft.CodeAnalysis.Workspaces.MSBuild</NuGetPackageId>
-      <NuGetPackageVersion>4.11.0</NuGetPackageVersion>
+      <NuGetPackageVersion>4.14.0</NuGetPackageVersion>
       <NuGetItemType>Content</NuGetItemType>
       <Pack>false</Pack>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -101,9 +101,9 @@
       <Private>True</Private>
       <Link>BuildHost-net472/System.CommandLine.dll</Link>
     </Content>
-    <Content Include="$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.11.0/contentFiles/any/any/BuildHost-net472/System.Memory.dll" Condition="Exists('$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.11.0/contentFiles/any/any/BuildHost-net472/System.Memory.dll')">
+    <Content Include="$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.14.0/contentFiles/any/any/BuildHost-net472/System.Memory.dll" Condition="Exists('$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.14.0/contentFiles/any/any/BuildHost-net472/System.Memory.dll')">
       <NuGetPackageId>Microsoft.CodeAnalysis.Workspaces.MSBuild</NuGetPackageId>
-      <NuGetPackageVersion>4.11.0</NuGetPackageVersion>
+      <NuGetPackageVersion>4.14.0</NuGetPackageVersion>
       <NuGetItemType>Content</NuGetItemType>
       <Pack>false</Pack>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -112,9 +112,9 @@
       <Private>True</Private>
       <Link>BuildHost-net472/System.Memory.dll</Link>
     </Content>
-    <Content Include="$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.11.0/contentFiles/any/any/BuildHost-net472/System.Numerics.Vectors.dll" Condition="Exists('$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.11.0/contentFiles/any/any/BuildHost-net472/System.Numerics.Vectors.dll')">
+    <Content Include="$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.14.0/contentFiles/any/any/BuildHost-net472/System.Numerics.Vectors.dll" Condition="Exists('$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.14.0/contentFiles/any/any/BuildHost-net472/System.Numerics.Vectors.dll')">
       <NuGetPackageId>Microsoft.CodeAnalysis.Workspaces.MSBuild</NuGetPackageId>
-      <NuGetPackageVersion>4.11.0</NuGetPackageVersion>
+      <NuGetPackageVersion>4.14.0</NuGetPackageVersion>
       <NuGetItemType>Content</NuGetItemType>
       <Pack>false</Pack>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -123,9 +123,9 @@
       <Private>True</Private>
       <Link>BuildHost-net472/System.Numerics.Vectors.dll</Link>
     </Content>
-    <Content Include="$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.11.0/contentFiles/any/any/BuildHost-net472/System.Runtime.CompilerServices.Unsafe.dll" Condition="Exists('$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.11.0/contentFiles/any/any/BuildHost-net472/System.Runtime.CompilerServices.Unsafe.dll')">
+    <Content Include="$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.14.0/contentFiles/any/any/BuildHost-net472/System.Runtime.CompilerServices.Unsafe.dll" Condition="Exists('$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.14.0/contentFiles/any/any/BuildHost-net472/System.Runtime.CompilerServices.Unsafe.dll')">
       <NuGetPackageId>Microsoft.CodeAnalysis.Workspaces.MSBuild</NuGetPackageId>
-      <NuGetPackageVersion>4.11.0</NuGetPackageVersion>
+      <NuGetPackageVersion>4.14.0</NuGetPackageVersion>
       <NuGetItemType>Content</NuGetItemType>
       <Pack>false</Pack>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -134,31 +134,9 @@
       <Private>True</Private>
       <Link>BuildHost-net472/System.Runtime.CompilerServices.Unsafe.dll</Link>
     </Content>
-    <Content Include="$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.11.0/contentFiles/any/any/BuildHost-net472/System.Text.Encodings.Web.dll" Condition="Exists('$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.11.0/contentFiles/any/any/BuildHost-net472/System.Text.Encodings.Web.dll')">
+    <Content Include="$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.14.0/contentFiles/any/any/BuildHost-net472/System.Threading.Tasks.Extensions.dll" Condition="Exists('$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.14.0/contentFiles/any/any/BuildHost-net472/System.Threading.Tasks.Extensions.dll')">
       <NuGetPackageId>Microsoft.CodeAnalysis.Workspaces.MSBuild</NuGetPackageId>
-      <NuGetPackageVersion>4.11.0</NuGetPackageVersion>
-      <NuGetItemType>Content</NuGetItemType>
-      <Pack>false</Pack>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <TargetPath>BuildHost-net472/System.Text.Encodings.Web.dll</TargetPath>
-      <DestinationSubDirectory>BuildHost-net472/</DestinationSubDirectory>
-      <Private>True</Private>
-      <Link>BuildHost-net472/System.Text.Encodings.Web.dll</Link>
-    </Content>
-    <Content Include="$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.11.0/contentFiles/any/any/BuildHost-net472/System.Text.Json.dll" Condition="Exists('$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.11.0/contentFiles/any/any/BuildHost-net472/System.Text.Json.dll')">
-      <NuGetPackageId>Microsoft.CodeAnalysis.Workspaces.MSBuild</NuGetPackageId>
-      <NuGetPackageVersion>4.11.0</NuGetPackageVersion>
-      <NuGetItemType>Content</NuGetItemType>
-      <Pack>false</Pack>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <TargetPath>BuildHost-net472/System.Text.Json.dll</TargetPath>
-      <DestinationSubDirectory>BuildHost-net472/</DestinationSubDirectory>
-      <Private>True</Private>
-      <Link>BuildHost-net472/System.Text.Json.dll</Link>
-    </Content>
-    <Content Include="$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.11.0/contentFiles/any/any/BuildHost-net472/System.Threading.Tasks.Extensions.dll" Condition="Exists('$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.11.0/contentFiles/any/any/BuildHost-net472/System.Threading.Tasks.Extensions.dll')">
-      <NuGetPackageId>Microsoft.CodeAnalysis.Workspaces.MSBuild</NuGetPackageId>
-      <NuGetPackageVersion>4.11.0</NuGetPackageVersion>
+      <NuGetPackageVersion>4.14.0</NuGetPackageVersion>
       <NuGetItemType>Content</NuGetItemType>
       <Pack>false</Pack>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -167,20 +145,9 @@
       <Private>True</Private>
       <Link>BuildHost-net472/System.Threading.Tasks.Extensions.dll</Link>
     </Content>
-    <Content Include="$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.11.0/contentFiles/any/any/BuildHost-net472/System.ValueTuple.dll" Condition="Exists('$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.11.0/contentFiles/any/any/BuildHost-net472/System.ValueTuple.dll')">
+    <Content Include="$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.14.0/contentFiles/any/any/BuildHost-net472/cs/System.CommandLine.resources.dll" Condition="Exists('$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.14.0/contentFiles/any/any/BuildHost-net472/cs/System.CommandLine.resources.dll')">
       <NuGetPackageId>Microsoft.CodeAnalysis.Workspaces.MSBuild</NuGetPackageId>
-      <NuGetPackageVersion>4.11.0</NuGetPackageVersion>
-      <NuGetItemType>Content</NuGetItemType>
-      <Pack>false</Pack>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <TargetPath>BuildHost-net472/System.ValueTuple.dll</TargetPath>
-      <DestinationSubDirectory>BuildHost-net472/</DestinationSubDirectory>
-      <Private>True</Private>
-      <Link>BuildHost-net472/System.ValueTuple.dll</Link>
-    </Content>
-    <Content Include="$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.11.0/contentFiles/any/any/BuildHost-net472/cs/System.CommandLine.resources.dll" Condition="Exists('$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.11.0/contentFiles/any/any/BuildHost-net472/cs/System.CommandLine.resources.dll')">
-      <NuGetPackageId>Microsoft.CodeAnalysis.Workspaces.MSBuild</NuGetPackageId>
-      <NuGetPackageVersion>4.11.0</NuGetPackageVersion>
+      <NuGetPackageVersion>4.14.0</NuGetPackageVersion>
       <NuGetItemType>Content</NuGetItemType>
       <Pack>false</Pack>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -189,9 +156,9 @@
       <Private>True</Private>
       <Link>BuildHost-net472/cs/System.CommandLine.resources.dll</Link>
     </Content>
-    <Content Include="$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.11.0/contentFiles/any/any/BuildHost-net472/de/System.CommandLine.resources.dll" Condition="Exists('$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.11.0/contentFiles/any/any/BuildHost-net472/de/System.CommandLine.resources.dll')">
+    <Content Include="$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.14.0/contentFiles/any/any/BuildHost-net472/de/System.CommandLine.resources.dll" Condition="Exists('$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.14.0/contentFiles/any/any/BuildHost-net472/de/System.CommandLine.resources.dll')">
       <NuGetPackageId>Microsoft.CodeAnalysis.Workspaces.MSBuild</NuGetPackageId>
-      <NuGetPackageVersion>4.11.0</NuGetPackageVersion>
+      <NuGetPackageVersion>4.14.0</NuGetPackageVersion>
       <NuGetItemType>Content</NuGetItemType>
       <Pack>false</Pack>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -200,9 +167,9 @@
       <Private>True</Private>
       <Link>BuildHost-net472/de/System.CommandLine.resources.dll</Link>
     </Content>
-    <Content Include="$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.11.0/contentFiles/any/any/BuildHost-net472/es/System.CommandLine.resources.dll" Condition="Exists('$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.11.0/contentFiles/any/any/BuildHost-net472/es/System.CommandLine.resources.dll')">
+    <Content Include="$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.14.0/contentFiles/any/any/BuildHost-net472/es/System.CommandLine.resources.dll" Condition="Exists('$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.14.0/contentFiles/any/any/BuildHost-net472/es/System.CommandLine.resources.dll')">
       <NuGetPackageId>Microsoft.CodeAnalysis.Workspaces.MSBuild</NuGetPackageId>
-      <NuGetPackageVersion>4.11.0</NuGetPackageVersion>
+      <NuGetPackageVersion>4.14.0</NuGetPackageVersion>
       <NuGetItemType>Content</NuGetItemType>
       <Pack>false</Pack>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -211,9 +178,9 @@
       <Private>True</Private>
       <Link>BuildHost-net472/es/System.CommandLine.resources.dll</Link>
     </Content>
-    <Content Include="$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.11.0/contentFiles/any/any/BuildHost-net472/fr/System.CommandLine.resources.dll" Condition="Exists('$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.11.0/contentFiles/any/any/BuildHost-net472/fr/System.CommandLine.resources.dll')">
+    <Content Include="$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.14.0/contentFiles/any/any/BuildHost-net472/fr/System.CommandLine.resources.dll" Condition="Exists('$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.14.0/contentFiles/any/any/BuildHost-net472/fr/System.CommandLine.resources.dll')">
       <NuGetPackageId>Microsoft.CodeAnalysis.Workspaces.MSBuild</NuGetPackageId>
-      <NuGetPackageVersion>4.11.0</NuGetPackageVersion>
+      <NuGetPackageVersion>4.14.0</NuGetPackageVersion>
       <NuGetItemType>Content</NuGetItemType>
       <Pack>false</Pack>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -222,9 +189,9 @@
       <Private>True</Private>
       <Link>BuildHost-net472/fr/System.CommandLine.resources.dll</Link>
     </Content>
-    <Content Include="$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.11.0/contentFiles/any/any/BuildHost-net472/it/System.CommandLine.resources.dll" Condition="Exists('$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.11.0/contentFiles/any/any/BuildHost-net472/it/System.CommandLine.resources.dll')">
+    <Content Include="$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.14.0/contentFiles/any/any/BuildHost-net472/it/System.CommandLine.resources.dll" Condition="Exists('$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.14.0/contentFiles/any/any/BuildHost-net472/it/System.CommandLine.resources.dll')">
       <NuGetPackageId>Microsoft.CodeAnalysis.Workspaces.MSBuild</NuGetPackageId>
-      <NuGetPackageVersion>4.11.0</NuGetPackageVersion>
+      <NuGetPackageVersion>4.14.0</NuGetPackageVersion>
       <NuGetItemType>Content</NuGetItemType>
       <Pack>false</Pack>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -233,9 +200,9 @@
       <Private>True</Private>
       <Link>BuildHost-net472/it/System.CommandLine.resources.dll</Link>
     </Content>
-    <Content Include="$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.11.0/contentFiles/any/any/BuildHost-net472/ja/System.CommandLine.resources.dll" Condition="Exists('$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.11.0/contentFiles/any/any/BuildHost-net472/ja/System.CommandLine.resources.dll')">
+    <Content Include="$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.14.0/contentFiles/any/any/BuildHost-net472/ja/System.CommandLine.resources.dll" Condition="Exists('$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.14.0/contentFiles/any/any/BuildHost-net472/ja/System.CommandLine.resources.dll')">
       <NuGetPackageId>Microsoft.CodeAnalysis.Workspaces.MSBuild</NuGetPackageId>
-      <NuGetPackageVersion>4.11.0</NuGetPackageVersion>
+      <NuGetPackageVersion>4.14.0</NuGetPackageVersion>
       <NuGetItemType>Content</NuGetItemType>
       <Pack>false</Pack>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -244,9 +211,9 @@
       <Private>True</Private>
       <Link>BuildHost-net472/ja/System.CommandLine.resources.dll</Link>
     </Content>
-    <Content Include="$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.11.0/contentFiles/any/any/BuildHost-net472/ko/System.CommandLine.resources.dll" Condition="Exists('$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.11.0/contentFiles/any/any/BuildHost-net472/ko/System.CommandLine.resources.dll')">
+    <Content Include="$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.14.0/contentFiles/any/any/BuildHost-net472/ko/System.CommandLine.resources.dll" Condition="Exists('$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.14.0/contentFiles/any/any/BuildHost-net472/ko/System.CommandLine.resources.dll')">
       <NuGetPackageId>Microsoft.CodeAnalysis.Workspaces.MSBuild</NuGetPackageId>
-      <NuGetPackageVersion>4.11.0</NuGetPackageVersion>
+      <NuGetPackageVersion>4.14.0</NuGetPackageVersion>
       <NuGetItemType>Content</NuGetItemType>
       <Pack>false</Pack>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -255,9 +222,9 @@
       <Private>True</Private>
       <Link>BuildHost-net472/ko/System.CommandLine.resources.dll</Link>
     </Content>
-    <Content Include="$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.11.0/contentFiles/any/any/BuildHost-net472/pl/System.CommandLine.resources.dll" Condition="Exists('$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.11.0/contentFiles/any/any/BuildHost-net472/pl/System.CommandLine.resources.dll')">
+    <Content Include="$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.14.0/contentFiles/any/any/BuildHost-net472/pl/System.CommandLine.resources.dll" Condition="Exists('$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.14.0/contentFiles/any/any/BuildHost-net472/pl/System.CommandLine.resources.dll')">
       <NuGetPackageId>Microsoft.CodeAnalysis.Workspaces.MSBuild</NuGetPackageId>
-      <NuGetPackageVersion>4.11.0</NuGetPackageVersion>
+      <NuGetPackageVersion>4.14.0</NuGetPackageVersion>
       <NuGetItemType>Content</NuGetItemType>
       <Pack>false</Pack>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -266,9 +233,9 @@
       <Private>True</Private>
       <Link>BuildHost-net472/pl/System.CommandLine.resources.dll</Link>
     </Content>
-    <Content Include="$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.11.0/contentFiles/any/any/BuildHost-net472/pt-BR/System.CommandLine.resources.dll" Condition="Exists('$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.11.0/contentFiles/any/any/BuildHost-net472/pt-BR/System.CommandLine.resources.dll')">
+    <Content Include="$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.14.0/contentFiles/any/any/BuildHost-net472/pt-BR/System.CommandLine.resources.dll" Condition="Exists('$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.14.0/contentFiles/any/any/BuildHost-net472/pt-BR/System.CommandLine.resources.dll')">
       <NuGetPackageId>Microsoft.CodeAnalysis.Workspaces.MSBuild</NuGetPackageId>
-      <NuGetPackageVersion>4.11.0</NuGetPackageVersion>
+      <NuGetPackageVersion>4.14.0</NuGetPackageVersion>
       <NuGetItemType>Content</NuGetItemType>
       <Pack>false</Pack>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -277,9 +244,9 @@
       <Private>True</Private>
       <Link>BuildHost-net472/pt-BR/System.CommandLine.resources.dll</Link>
     </Content>
-    <Content Include="$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.11.0/contentFiles/any/any/BuildHost-net472/ru/System.CommandLine.resources.dll" Condition="Exists('$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.11.0/contentFiles/any/any/BuildHost-net472/ru/System.CommandLine.resources.dll')">
+    <Content Include="$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.14.0/contentFiles/any/any/BuildHost-net472/ru/System.CommandLine.resources.dll" Condition="Exists('$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.14.0/contentFiles/any/any/BuildHost-net472/ru/System.CommandLine.resources.dll')">
       <NuGetPackageId>Microsoft.CodeAnalysis.Workspaces.MSBuild</NuGetPackageId>
-      <NuGetPackageVersion>4.11.0</NuGetPackageVersion>
+      <NuGetPackageVersion>4.14.0</NuGetPackageVersion>
       <NuGetItemType>Content</NuGetItemType>
       <Pack>false</Pack>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -288,9 +255,9 @@
       <Private>True</Private>
       <Link>BuildHost-net472/ru/System.CommandLine.resources.dll</Link>
     </Content>
-    <Content Include="$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.11.0/contentFiles/any/any/BuildHost-net472/tr/System.CommandLine.resources.dll" Condition="Exists('$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.11.0/contentFiles/any/any/BuildHost-net472/tr/System.CommandLine.resources.dll')">
+    <Content Include="$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.14.0/contentFiles/any/any/BuildHost-net472/tr/System.CommandLine.resources.dll" Condition="Exists('$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.14.0/contentFiles/any/any/BuildHost-net472/tr/System.CommandLine.resources.dll')">
       <NuGetPackageId>Microsoft.CodeAnalysis.Workspaces.MSBuild</NuGetPackageId>
-      <NuGetPackageVersion>4.11.0</NuGetPackageVersion>
+      <NuGetPackageVersion>4.14.0</NuGetPackageVersion>
       <NuGetItemType>Content</NuGetItemType>
       <Pack>false</Pack>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -299,9 +266,9 @@
       <Private>True</Private>
       <Link>BuildHost-net472/tr/System.CommandLine.resources.dll</Link>
     </Content>
-    <Content Include="$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.11.0/contentFiles/any/any/BuildHost-net472/zh-Hans/System.CommandLine.resources.dll" Condition="Exists('$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.11.0/contentFiles/any/any/BuildHost-net472/zh-Hans/System.CommandLine.resources.dll')">
+    <Content Include="$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.14.0/contentFiles/any/any/BuildHost-net472/zh-Hans/System.CommandLine.resources.dll" Condition="Exists('$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.14.0/contentFiles/any/any/BuildHost-net472/zh-Hans/System.CommandLine.resources.dll')">
       <NuGetPackageId>Microsoft.CodeAnalysis.Workspaces.MSBuild</NuGetPackageId>
-      <NuGetPackageVersion>4.11.0</NuGetPackageVersion>
+      <NuGetPackageVersion>4.14.0</NuGetPackageVersion>
       <NuGetItemType>Content</NuGetItemType>
       <Pack>false</Pack>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -310,9 +277,9 @@
       <Private>True</Private>
       <Link>BuildHost-net472/zh-Hans/System.CommandLine.resources.dll</Link>
     </Content>
-    <Content Include="$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.11.0/contentFiles/any/any/BuildHost-net472/zh-Hant/System.CommandLine.resources.dll" Condition="Exists('$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.11.0/contentFiles/any/any/BuildHost-net472/zh-Hant/System.CommandLine.resources.dll')">
+    <Content Include="$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.14.0/contentFiles/any/any/BuildHost-net472/zh-Hant/System.CommandLine.resources.dll" Condition="Exists('$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.14.0/contentFiles/any/any/BuildHost-net472/zh-Hant/System.CommandLine.resources.dll')">
       <NuGetPackageId>Microsoft.CodeAnalysis.Workspaces.MSBuild</NuGetPackageId>
-      <NuGetPackageVersion>4.11.0</NuGetPackageVersion>
+      <NuGetPackageVersion>4.14.0</NuGetPackageVersion>
       <NuGetItemType>Content</NuGetItemType>
       <Pack>false</Pack>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -321,9 +288,9 @@
       <Private>True</Private>
       <Link>BuildHost-net472/zh-Hant/System.CommandLine.resources.dll</Link>
     </Content>
-    <Content Include="$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.11.0/contentFiles/any/any/BuildHost-netcore/Microsoft.Build.Locator.dll" Condition="Exists('$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.11.0/contentFiles/any/any/BuildHost-netcore/Microsoft.Build.Locator.dll')">
+    <Content Include="$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.14.0/contentFiles/any/any/BuildHost-netcore/Microsoft.Build.Locator.dll" Condition="Exists('$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.14.0/contentFiles/any/any/BuildHost-netcore/Microsoft.Build.Locator.dll')">
       <NuGetPackageId>Microsoft.CodeAnalysis.Workspaces.MSBuild</NuGetPackageId>
-      <NuGetPackageVersion>4.11.0</NuGetPackageVersion>
+      <NuGetPackageVersion>4.14.0</NuGetPackageVersion>
       <NuGetItemType>Content</NuGetItemType>
       <Pack>false</Pack>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -332,9 +299,9 @@
       <Private>True</Private>
       <Link>BuildHost-netcore/Microsoft.Build.Locator.dll</Link>
     </Content>
-    <Content Include="$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.11.0/contentFiles/any/any/BuildHost-netcore/Microsoft.CodeAnalysis.Workspaces.MSBuild.BuildHost.deps.json" Condition="Exists('$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.11.0/contentFiles/any/any/BuildHost-netcore/Microsoft.CodeAnalysis.Workspaces.MSBuild.BuildHost.deps.json')">
+    <Content Include="$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.14.0/contentFiles/any/any/BuildHost-netcore/Microsoft.CodeAnalysis.Workspaces.MSBuild.BuildHost.deps.json" Condition="Exists('$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.14.0/contentFiles/any/any/BuildHost-netcore/Microsoft.CodeAnalysis.Workspaces.MSBuild.BuildHost.deps.json')">
       <NuGetPackageId>Microsoft.CodeAnalysis.Workspaces.MSBuild</NuGetPackageId>
-      <NuGetPackageVersion>4.11.0</NuGetPackageVersion>
+      <NuGetPackageVersion>4.14.0</NuGetPackageVersion>
       <NuGetItemType>Content</NuGetItemType>
       <Pack>false</Pack>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -343,9 +310,9 @@
       <Private>True</Private>
       <Link>BuildHost-netcore/Microsoft.CodeAnalysis.Workspaces.MSBuild.BuildHost.deps.json</Link>
     </Content>
-    <Content Include="$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.11.0/contentFiles/any/any/BuildHost-netcore/Microsoft.CodeAnalysis.Workspaces.MSBuild.BuildHost.dll" Condition="Exists('$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.11.0/contentFiles/any/any/BuildHost-netcore/Microsoft.CodeAnalysis.Workspaces.MSBuild.BuildHost.dll')">
+    <Content Include="$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.14.0/contentFiles/any/any/BuildHost-netcore/Microsoft.CodeAnalysis.Workspaces.MSBuild.BuildHost.dll" Condition="Exists('$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.14.0/contentFiles/any/any/BuildHost-netcore/Microsoft.CodeAnalysis.Workspaces.MSBuild.BuildHost.dll')">
       <NuGetPackageId>Microsoft.CodeAnalysis.Workspaces.MSBuild</NuGetPackageId>
-      <NuGetPackageVersion>4.11.0</NuGetPackageVersion>
+      <NuGetPackageVersion>4.14.0</NuGetPackageVersion>
       <NuGetItemType>Content</NuGetItemType>
       <Pack>false</Pack>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -354,9 +321,9 @@
       <Private>True</Private>
       <Link>BuildHost-netcore/Microsoft.CodeAnalysis.Workspaces.MSBuild.BuildHost.dll</Link>
     </Content>
-    <Content Include="$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.11.0/contentFiles/any/any/BuildHost-netcore/Microsoft.CodeAnalysis.Workspaces.MSBuild.BuildHost.dll.config" Condition="Exists('$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.11.0/contentFiles/any/any/BuildHost-netcore/Microsoft.CodeAnalysis.Workspaces.MSBuild.BuildHost.dll.config')">
+    <Content Include="$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.14.0/contentFiles/any/any/BuildHost-netcore/Microsoft.CodeAnalysis.Workspaces.MSBuild.BuildHost.dll.config" Condition="Exists('$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.14.0/contentFiles/any/any/BuildHost-netcore/Microsoft.CodeAnalysis.Workspaces.MSBuild.BuildHost.dll.config')">
       <NuGetPackageId>Microsoft.CodeAnalysis.Workspaces.MSBuild</NuGetPackageId>
-      <NuGetPackageVersion>4.11.0</NuGetPackageVersion>
+      <NuGetPackageVersion>4.14.0</NuGetPackageVersion>
       <NuGetItemType>Content</NuGetItemType>
       <Pack>false</Pack>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -365,9 +332,9 @@
       <Private>True</Private>
       <Link>BuildHost-netcore/Microsoft.CodeAnalysis.Workspaces.MSBuild.BuildHost.dll.config</Link>
     </Content>
-    <Content Include="$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.11.0/contentFiles/any/any/BuildHost-netcore/Microsoft.CodeAnalysis.Workspaces.MSBuild.BuildHost.runtimeconfig.json" Condition="Exists('$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.11.0/contentFiles/any/any/BuildHost-netcore/Microsoft.CodeAnalysis.Workspaces.MSBuild.BuildHost.runtimeconfig.json')">
+    <Content Include="$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.14.0/contentFiles/any/any/BuildHost-netcore/Microsoft.CodeAnalysis.Workspaces.MSBuild.BuildHost.runtimeconfig.json" Condition="Exists('$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.14.0/contentFiles/any/any/BuildHost-netcore/Microsoft.CodeAnalysis.Workspaces.MSBuild.BuildHost.runtimeconfig.json')">
       <NuGetPackageId>Microsoft.CodeAnalysis.Workspaces.MSBuild</NuGetPackageId>
-      <NuGetPackageVersion>4.11.0</NuGetPackageVersion>
+      <NuGetPackageVersion>4.14.0</NuGetPackageVersion>
       <NuGetItemType>Content</NuGetItemType>
       <Pack>false</Pack>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -376,9 +343,9 @@
       <Private>True</Private>
       <Link>BuildHost-netcore/Microsoft.CodeAnalysis.Workspaces.MSBuild.BuildHost.runtimeconfig.json</Link>
     </Content>
-    <Content Include="$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.11.0/contentFiles/any/any/BuildHost-netcore/Newtonsoft.Json.dll" Condition="Exists('$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.11.0/contentFiles/any/any/BuildHost-netcore/Newtonsoft.Json.dll')">
+    <Content Include="$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.14.0/contentFiles/any/any/BuildHost-netcore/Newtonsoft.Json.dll" Condition="Exists('$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.14.0/contentFiles/any/any/BuildHost-netcore/Newtonsoft.Json.dll')">
       <NuGetPackageId>Microsoft.CodeAnalysis.Workspaces.MSBuild</NuGetPackageId>
-      <NuGetPackageVersion>4.11.0</NuGetPackageVersion>
+      <NuGetPackageVersion>4.14.0</NuGetPackageVersion>
       <NuGetItemType>Content</NuGetItemType>
       <Pack>false</Pack>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -387,9 +354,9 @@
       <Private>True</Private>
       <Link>BuildHost-netcore/Newtonsoft.Json.dll</Link>
     </Content>
-    <Content Include="$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.11.0/contentFiles/any/any/BuildHost-netcore/System.Collections.Immutable.dll" Condition="Exists('$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.11.0/contentFiles/any/any/BuildHost-netcore/System.Collections.Immutable.dll')">
+    <Content Include="$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.14.0/contentFiles/any/any/BuildHost-netcore/System.Collections.Immutable.dll" Condition="Exists('$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.14.0/contentFiles/any/any/BuildHost-netcore/System.Collections.Immutable.dll')">
       <NuGetPackageId>Microsoft.CodeAnalysis.Workspaces.MSBuild</NuGetPackageId>
-      <NuGetPackageVersion>4.11.0</NuGetPackageVersion>
+      <NuGetPackageVersion>4.14.0</NuGetPackageVersion>
       <NuGetItemType>Content</NuGetItemType>
       <Pack>false</Pack>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -398,9 +365,9 @@
       <Private>True</Private>
       <Link>BuildHost-netcore/System.Collections.Immutable.dll</Link>
     </Content>
-    <Content Include="$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.11.0/contentFiles/any/any/BuildHost-netcore/System.CommandLine.dll" Condition="Exists('$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.11.0/contentFiles/any/any/BuildHost-netcore/System.CommandLine.dll')">
+    <Content Include="$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.14.0/contentFiles/any/any/BuildHost-netcore/System.CommandLine.dll" Condition="Exists('$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.14.0/contentFiles/any/any/BuildHost-netcore/System.CommandLine.dll')">
       <NuGetPackageId>Microsoft.CodeAnalysis.Workspaces.MSBuild</NuGetPackageId>
-      <NuGetPackageVersion>4.11.0</NuGetPackageVersion>
+      <NuGetPackageVersion>4.14.0</NuGetPackageVersion>
       <NuGetItemType>Content</NuGetItemType>
       <Pack>false</Pack>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -409,31 +376,9 @@
       <Private>True</Private>
       <Link>BuildHost-netcore/System.CommandLine.dll</Link>
     </Content>
-    <Content Include="$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.11.0/contentFiles/any/any/BuildHost-netcore/System.Text.Encodings.Web.dll" Condition="Exists('$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.11.0/contentFiles/any/any/BuildHost-netcore/System.Text.Encodings.Web.dll')">
+    <Content Include="$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.14.0/contentFiles/any/any/BuildHost-netcore/cs/System.CommandLine.resources.dll" Condition="Exists('$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.14.0/contentFiles/any/any/BuildHost-netcore/cs/System.CommandLine.resources.dll')">
       <NuGetPackageId>Microsoft.CodeAnalysis.Workspaces.MSBuild</NuGetPackageId>
-      <NuGetPackageVersion>4.11.0</NuGetPackageVersion>
-      <NuGetItemType>Content</NuGetItemType>
-      <Pack>false</Pack>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <TargetPath>BuildHost-netcore/System.Text.Encodings.Web.dll</TargetPath>
-      <DestinationSubDirectory>BuildHost-netcore/</DestinationSubDirectory>
-      <Private>True</Private>
-      <Link>BuildHost-netcore/System.Text.Encodings.Web.dll</Link>
-    </Content>
-    <Content Include="$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.11.0/contentFiles/any/any/BuildHost-netcore/System.Text.Json.dll" Condition="Exists('$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.11.0/contentFiles/any/any/BuildHost-netcore/System.Text.Json.dll')">
-      <NuGetPackageId>Microsoft.CodeAnalysis.Workspaces.MSBuild</NuGetPackageId>
-      <NuGetPackageVersion>4.11.0</NuGetPackageVersion>
-      <NuGetItemType>Content</NuGetItemType>
-      <Pack>false</Pack>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <TargetPath>BuildHost-netcore/System.Text.Json.dll</TargetPath>
-      <DestinationSubDirectory>BuildHost-netcore/</DestinationSubDirectory>
-      <Private>True</Private>
-      <Link>BuildHost-netcore/System.Text.Json.dll</Link>
-    </Content>
-    <Content Include="$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.11.0/contentFiles/any/any/BuildHost-netcore/cs/System.CommandLine.resources.dll" Condition="Exists('$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.11.0/contentFiles/any/any/BuildHost-netcore/cs/System.CommandLine.resources.dll')">
-      <NuGetPackageId>Microsoft.CodeAnalysis.Workspaces.MSBuild</NuGetPackageId>
-      <NuGetPackageVersion>4.11.0</NuGetPackageVersion>
+      <NuGetPackageVersion>4.14.0</NuGetPackageVersion>
       <NuGetItemType>Content</NuGetItemType>
       <Pack>false</Pack>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -442,9 +387,9 @@
       <Private>True</Private>
       <Link>BuildHost-netcore/cs/System.CommandLine.resources.dll</Link>
     </Content>
-    <Content Include="$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.11.0/contentFiles/any/any/BuildHost-netcore/de/System.CommandLine.resources.dll" Condition="Exists('$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.11.0/contentFiles/any/any/BuildHost-netcore/de/System.CommandLine.resources.dll')">
+    <Content Include="$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.14.0/contentFiles/any/any/BuildHost-netcore/de/System.CommandLine.resources.dll" Condition="Exists('$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.14.0/contentFiles/any/any/BuildHost-netcore/de/System.CommandLine.resources.dll')">
       <NuGetPackageId>Microsoft.CodeAnalysis.Workspaces.MSBuild</NuGetPackageId>
-      <NuGetPackageVersion>4.11.0</NuGetPackageVersion>
+      <NuGetPackageVersion>4.14.0</NuGetPackageVersion>
       <NuGetItemType>Content</NuGetItemType>
       <Pack>false</Pack>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -453,9 +398,9 @@
       <Private>True</Private>
       <Link>BuildHost-netcore/de/System.CommandLine.resources.dll</Link>
     </Content>
-    <Content Include="$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.11.0/contentFiles/any/any/BuildHost-netcore/es/System.CommandLine.resources.dll" Condition="Exists('$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.11.0/contentFiles/any/any/BuildHost-netcore/es/System.CommandLine.resources.dll')">
+    <Content Include="$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.14.0/contentFiles/any/any/BuildHost-netcore/es/System.CommandLine.resources.dll" Condition="Exists('$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.14.0/contentFiles/any/any/BuildHost-netcore/es/System.CommandLine.resources.dll')">
       <NuGetPackageId>Microsoft.CodeAnalysis.Workspaces.MSBuild</NuGetPackageId>
-      <NuGetPackageVersion>4.11.0</NuGetPackageVersion>
+      <NuGetPackageVersion>4.14.0</NuGetPackageVersion>
       <NuGetItemType>Content</NuGetItemType>
       <Pack>false</Pack>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -464,9 +409,9 @@
       <Private>True</Private>
       <Link>BuildHost-netcore/es/System.CommandLine.resources.dll</Link>
     </Content>
-    <Content Include="$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.11.0/contentFiles/any/any/BuildHost-netcore/fr/System.CommandLine.resources.dll" Condition="Exists('$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.11.0/contentFiles/any/any/BuildHost-netcore/fr/System.CommandLine.resources.dll')">
+    <Content Include="$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.14.0/contentFiles/any/any/BuildHost-netcore/fr/System.CommandLine.resources.dll" Condition="Exists('$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.14.0/contentFiles/any/any/BuildHost-netcore/fr/System.CommandLine.resources.dll')">
       <NuGetPackageId>Microsoft.CodeAnalysis.Workspaces.MSBuild</NuGetPackageId>
-      <NuGetPackageVersion>4.11.0</NuGetPackageVersion>
+      <NuGetPackageVersion>4.14.0</NuGetPackageVersion>
       <NuGetItemType>Content</NuGetItemType>
       <Pack>false</Pack>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -475,9 +420,9 @@
       <Private>True</Private>
       <Link>BuildHost-netcore/fr/System.CommandLine.resources.dll</Link>
     </Content>
-    <Content Include="$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.11.0/contentFiles/any/any/BuildHost-netcore/it/System.CommandLine.resources.dll" Condition="Exists('$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.11.0/contentFiles/any/any/BuildHost-netcore/it/System.CommandLine.resources.dll')">
+    <Content Include="$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.14.0/contentFiles/any/any/BuildHost-netcore/it/System.CommandLine.resources.dll" Condition="Exists('$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.14.0/contentFiles/any/any/BuildHost-netcore/it/System.CommandLine.resources.dll')">
       <NuGetPackageId>Microsoft.CodeAnalysis.Workspaces.MSBuild</NuGetPackageId>
-      <NuGetPackageVersion>4.11.0</NuGetPackageVersion>
+      <NuGetPackageVersion>4.14.0</NuGetPackageVersion>
       <NuGetItemType>Content</NuGetItemType>
       <Pack>false</Pack>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -486,9 +431,9 @@
       <Private>True</Private>
       <Link>BuildHost-netcore/it/System.CommandLine.resources.dll</Link>
     </Content>
-    <Content Include="$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.11.0/contentFiles/any/any/BuildHost-netcore/ja/System.CommandLine.resources.dll" Condition="Exists('$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.11.0/contentFiles/any/any/BuildHost-netcore/ja/System.CommandLine.resources.dll')">
+    <Content Include="$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.14.0/contentFiles/any/any/BuildHost-netcore/ja/System.CommandLine.resources.dll" Condition="Exists('$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.14.0/contentFiles/any/any/BuildHost-netcore/ja/System.CommandLine.resources.dll')">
       <NuGetPackageId>Microsoft.CodeAnalysis.Workspaces.MSBuild</NuGetPackageId>
-      <NuGetPackageVersion>4.11.0</NuGetPackageVersion>
+      <NuGetPackageVersion>4.14.0</NuGetPackageVersion>
       <NuGetItemType>Content</NuGetItemType>
       <Pack>false</Pack>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -497,9 +442,9 @@
       <Private>True</Private>
       <Link>BuildHost-netcore/ja/System.CommandLine.resources.dll</Link>
     </Content>
-    <Content Include="$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.11.0/contentFiles/any/any/BuildHost-netcore/ko/System.CommandLine.resources.dll" Condition="Exists('$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.11.0/contentFiles/any/any/BuildHost-netcore/ko/System.CommandLine.resources.dll')">
+    <Content Include="$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.14.0/contentFiles/any/any/BuildHost-netcore/ko/System.CommandLine.resources.dll" Condition="Exists('$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.14.0/contentFiles/any/any/BuildHost-netcore/ko/System.CommandLine.resources.dll')">
       <NuGetPackageId>Microsoft.CodeAnalysis.Workspaces.MSBuild</NuGetPackageId>
-      <NuGetPackageVersion>4.11.0</NuGetPackageVersion>
+      <NuGetPackageVersion>4.14.0</NuGetPackageVersion>
       <NuGetItemType>Content</NuGetItemType>
       <Pack>false</Pack>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -508,9 +453,9 @@
       <Private>True</Private>
       <Link>BuildHost-netcore/ko/System.CommandLine.resources.dll</Link>
     </Content>
-    <Content Include="$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.11.0/contentFiles/any/any/BuildHost-netcore/pl/System.CommandLine.resources.dll" Condition="Exists('$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.11.0/contentFiles/any/any/BuildHost-netcore/pl/System.CommandLine.resources.dll')">
+    <Content Include="$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.14.0/contentFiles/any/any/BuildHost-netcore/pl/System.CommandLine.resources.dll" Condition="Exists('$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.14.0/contentFiles/any/any/BuildHost-netcore/pl/System.CommandLine.resources.dll')">
       <NuGetPackageId>Microsoft.CodeAnalysis.Workspaces.MSBuild</NuGetPackageId>
-      <NuGetPackageVersion>4.11.0</NuGetPackageVersion>
+      <NuGetPackageVersion>4.14.0</NuGetPackageVersion>
       <NuGetItemType>Content</NuGetItemType>
       <Pack>false</Pack>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -519,9 +464,9 @@
       <Private>True</Private>
       <Link>BuildHost-netcore/pl/System.CommandLine.resources.dll</Link>
     </Content>
-    <Content Include="$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.11.0/contentFiles/any/any/BuildHost-netcore/pt-BR/System.CommandLine.resources.dll" Condition="Exists('$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.11.0/contentFiles/any/any/BuildHost-netcore/pt-BR/System.CommandLine.resources.dll')">
+    <Content Include="$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.14.0/contentFiles/any/any/BuildHost-netcore/pt-BR/System.CommandLine.resources.dll" Condition="Exists('$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.14.0/contentFiles/any/any/BuildHost-netcore/pt-BR/System.CommandLine.resources.dll')">
       <NuGetPackageId>Microsoft.CodeAnalysis.Workspaces.MSBuild</NuGetPackageId>
-      <NuGetPackageVersion>4.11.0</NuGetPackageVersion>
+      <NuGetPackageVersion>4.14.0</NuGetPackageVersion>
       <NuGetItemType>Content</NuGetItemType>
       <Pack>false</Pack>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -530,9 +475,9 @@
       <Private>True</Private>
       <Link>BuildHost-netcore/pt-BR/System.CommandLine.resources.dll</Link>
     </Content>
-    <Content Include="$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.11.0/contentFiles/any/any/BuildHost-netcore/ru/System.CommandLine.resources.dll" Condition="Exists('$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.11.0/contentFiles/any/any/BuildHost-netcore/ru/System.CommandLine.resources.dll')">
+    <Content Include="$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.14.0/contentFiles/any/any/BuildHost-netcore/ru/System.CommandLine.resources.dll" Condition="Exists('$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.14.0/contentFiles/any/any/BuildHost-netcore/ru/System.CommandLine.resources.dll')">
       <NuGetPackageId>Microsoft.CodeAnalysis.Workspaces.MSBuild</NuGetPackageId>
-      <NuGetPackageVersion>4.11.0</NuGetPackageVersion>
+      <NuGetPackageVersion>4.14.0</NuGetPackageVersion>
       <NuGetItemType>Content</NuGetItemType>
       <Pack>false</Pack>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -541,20 +486,9 @@
       <Private>True</Private>
       <Link>BuildHost-netcore/ru/System.CommandLine.resources.dll</Link>
     </Content>
-    <Content Include="$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.11.0/contentFiles/any/any/BuildHost-netcore/runtimes/browser/lib/net6.0/System.Text.Encodings.Web.dll" Condition="Exists('$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.11.0/contentFiles/any/any/BuildHost-netcore/runtimes/browser/lib/net6.0/System.Text.Encodings.Web.dll')">
+    <Content Include="$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.14.0/contentFiles/any/any/BuildHost-netcore/tr/System.CommandLine.resources.dll" Condition="Exists('$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.14.0/contentFiles/any/any/BuildHost-netcore/tr/System.CommandLine.resources.dll')">
       <NuGetPackageId>Microsoft.CodeAnalysis.Workspaces.MSBuild</NuGetPackageId>
-      <NuGetPackageVersion>4.11.0</NuGetPackageVersion>
-      <NuGetItemType>Content</NuGetItemType>
-      <Pack>false</Pack>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <TargetPath>BuildHost-netcore/runtimes/browser/lib/net6.0/System.Text.Encodings.Web.dll</TargetPath>
-      <DestinationSubDirectory>BuildHost-netcore/runtimes/browser/lib/net6.0/</DestinationSubDirectory>
-      <Private>True</Private>
-      <Link>BuildHost-netcore/runtimes/browser/lib/net6.0/System.Text.Encodings.Web.dll</Link>
-    </Content>
-    <Content Include="$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.11.0/contentFiles/any/any/BuildHost-netcore/tr/System.CommandLine.resources.dll" Condition="Exists('$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.11.0/contentFiles/any/any/BuildHost-netcore/tr/System.CommandLine.resources.dll')">
-      <NuGetPackageId>Microsoft.CodeAnalysis.Workspaces.MSBuild</NuGetPackageId>
-      <NuGetPackageVersion>4.11.0</NuGetPackageVersion>
+      <NuGetPackageVersion>4.14.0</NuGetPackageVersion>
       <NuGetItemType>Content</NuGetItemType>
       <Pack>false</Pack>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -563,9 +497,9 @@
       <Private>True</Private>
       <Link>BuildHost-netcore/tr/System.CommandLine.resources.dll</Link>
     </Content>
-    <Content Include="$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.11.0/contentFiles/any/any/BuildHost-netcore/zh-Hans/System.CommandLine.resources.dll" Condition="Exists('$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.11.0/contentFiles/any/any/BuildHost-netcore/zh-Hans/System.CommandLine.resources.dll')">
+    <Content Include="$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.14.0/contentFiles/any/any/BuildHost-netcore/zh-Hans/System.CommandLine.resources.dll" Condition="Exists('$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.14.0/contentFiles/any/any/BuildHost-netcore/zh-Hans/System.CommandLine.resources.dll')">
       <NuGetPackageId>Microsoft.CodeAnalysis.Workspaces.MSBuild</NuGetPackageId>
-      <NuGetPackageVersion>4.11.0</NuGetPackageVersion>
+      <NuGetPackageVersion>4.14.0</NuGetPackageVersion>
       <NuGetItemType>Content</NuGetItemType>
       <Pack>false</Pack>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -574,9 +508,9 @@
       <Private>True</Private>
       <Link>BuildHost-netcore/zh-Hans/System.CommandLine.resources.dll</Link>
     </Content>
-    <Content Include="$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.11.0/contentFiles/any/any/BuildHost-netcore/zh-Hant/System.CommandLine.resources.dll" Condition="Exists('$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.11.0/contentFiles/any/any/BuildHost-netcore/zh-Hant/System.CommandLine.resources.dll')">
+    <Content Include="$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.14.0/contentFiles/any/any/BuildHost-netcore/zh-Hant/System.CommandLine.resources.dll" Condition="Exists('$(NuGetPackageRoot)microsoft.codeanalysis.workspaces.msbuild/4.14.0/contentFiles/any/any/BuildHost-netcore/zh-Hant/System.CommandLine.resources.dll')">
       <NuGetPackageId>Microsoft.CodeAnalysis.Workspaces.MSBuild</NuGetPackageId>
-      <NuGetPackageVersion>4.11.0</NuGetPackageVersion>
+      <NuGetPackageVersion>4.14.0</NuGetPackageVersion>
       <NuGetItemType>Content</NuGetItemType>
       <Pack>false</Pack>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -593,7 +527,7 @@
     <Import Project="$(NuGetPackageRoot)microsoft.build.tasks.git/8.0.0/build/Microsoft.Build.Tasks.Git.props" Condition="Exists('$(NuGetPackageRoot)microsoft.build.tasks.git/8.0.0/build/Microsoft.Build.Tasks.Git.props')" />
     <Import Project="$(NuGetPackageRoot)microsoft.sourcelink.github/8.0.0/build/Microsoft.SourceLink.GitHub.props" Condition="Exists('$(NuGetPackageRoot)microsoft.sourcelink.github/8.0.0/build/Microsoft.SourceLink.GitHub.props')" />
     <Import Project="$(NuGetPackageRoot)microsoft.entityframeworkcore/9.0.9/buildTransitive/net8.0/Microsoft.EntityFrameworkCore.props" Condition="Exists('$(NuGetPackageRoot)microsoft.entityframeworkcore/9.0.9/buildTransitive/net8.0/Microsoft.EntityFrameworkCore.props')" />
-    <Import Project="$(NuGetPackageRoot)microsoft.codeanalysis.analyzers/3.3.4/buildTransitive/Microsoft.CodeAnalysis.Analyzers.props" Condition="Exists('$(NuGetPackageRoot)microsoft.codeanalysis.analyzers/3.3.4/buildTransitive/Microsoft.CodeAnalysis.Analyzers.props')" />
+    <Import Project="$(NuGetPackageRoot)microsoft.codeanalysis.analyzers/3.11.0/buildTransitive/Microsoft.CodeAnalysis.Analyzers.props" Condition="Exists('$(NuGetPackageRoot)microsoft.codeanalysis.analyzers/3.11.0/buildTransitive/Microsoft.CodeAnalysis.Analyzers.props')" />
     <Import Project="$(NuGetPackageRoot)microsoft.entityframeworkcore.design/9.0.9/build/net8.0/Microsoft.EntityFrameworkCore.Design.props" Condition="Exists('$(NuGetPackageRoot)microsoft.entityframeworkcore.design/9.0.9/build/net8.0/Microsoft.EntityFrameworkCore.Design.props')" />
     <Import Project="$(NuGetPackageRoot)hotchocolate.data.entityframework/15.1.10/build/HotChocolate.Data.EntityFramework.props" Condition="Exists('$(NuGetPackageRoot)hotchocolate.data.entityframework/15.1.10/build/HotChocolate.Data.EntityFramework.props')" />
     <Import Project="$(NuGetPackageRoot)hotchocolate.aspnetcore/15.1.10/build/HotChocolate.AspNetCore.props" Condition="Exists('$(NuGetPackageRoot)hotchocolate.aspnetcore/15.1.10/build/HotChocolate.AspNetCore.props')" />
@@ -604,7 +538,7 @@
     <PkgMicrosoft_SourceLink_Common Condition=" '$(PkgMicrosoft_SourceLink_Common)' == '' ">/Users/rodrigolmiranda/.nuget/packages/microsoft.sourcelink.common/8.0.0</PkgMicrosoft_SourceLink_Common>
     <PkgMicrosoft_Build_Tasks_Git Condition=" '$(PkgMicrosoft_Build_Tasks_Git)' == '' ">/Users/rodrigolmiranda/.nuget/packages/microsoft.build.tasks.git/8.0.0</PkgMicrosoft_Build_Tasks_Git>
     <PkgMicrosoft_SourceLink_GitHub Condition=" '$(PkgMicrosoft_SourceLink_GitHub)' == '' ">/Users/rodrigolmiranda/.nuget/packages/microsoft.sourcelink.github/8.0.0</PkgMicrosoft_SourceLink_GitHub>
-    <PkgMicrosoft_CodeAnalysis_Analyzers Condition=" '$(PkgMicrosoft_CodeAnalysis_Analyzers)' == '' ">/Users/rodrigolmiranda/.nuget/packages/microsoft.codeanalysis.analyzers/3.3.4</PkgMicrosoft_CodeAnalysis_Analyzers>
+    <PkgMicrosoft_CodeAnalysis_Analyzers Condition=" '$(PkgMicrosoft_CodeAnalysis_Analyzers)' == '' ">/Users/rodrigolmiranda/.nuget/packages/microsoft.codeanalysis.analyzers/3.11.0</PkgMicrosoft_CodeAnalysis_Analyzers>
     <PkgGrpc_Tools Condition=" '$(PkgGrpc_Tools)' == '' ">/Users/rodrigolmiranda/.nuget/packages/grpc.tools/2.72.0</PkgGrpc_Tools>
   </PropertyGroup>
 </Project>

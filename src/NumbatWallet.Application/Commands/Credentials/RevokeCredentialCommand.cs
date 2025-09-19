@@ -48,14 +48,14 @@ public class RevokeCredentialCommandHandler : ICommandHandler<RevokeCredentialCo
         }
 
         // Check if already revoked
-        if (credential.IsRevoked)
+        if (credential.Status == NumbatWallet.SharedKernel.Enums.CredentialStatus.Revoked)
         {
             _logger.LogWarning("Credential {CredentialId} is already revoked", command.CredentialId);
             return false;
         }
 
         // Revoke the credential
-        var revokeResult = credential.Revoke(command.Reason, command.RevokedBy);
+        var revokeResult = credential.Revoke(command.Reason);
         if (revokeResult.IsFailure)
         {
             throw new DomainValidationException(revokeResult.Error.Message);

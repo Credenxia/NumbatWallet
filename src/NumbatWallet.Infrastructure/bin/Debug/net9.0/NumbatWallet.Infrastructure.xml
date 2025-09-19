@@ -9,41 +9,6 @@
             Provides envelope encryption services for multi-tenant data protection
             </summary>
         </member>
-        <member name="T:NumbatWallet.Infrastructure.Crypto.Interfaces.ICryptoService">
-            <summary>
-            Provides encryption and decryption services using envelope encryption
-            </summary>
-        </member>
-        <member name="M:NumbatWallet.Infrastructure.Crypto.Interfaces.ICryptoService.EncryptAsync(System.String,NumbatWallet.SharedKernel.Enums.DataClassification)">
-            <summary>
-            Encrypts plaintext using envelope encryption based on data classification
-            </summary>
-        </member>
-        <member name="M:NumbatWallet.Infrastructure.Crypto.Interfaces.ICryptoService.DecryptAsync(System.String,NumbatWallet.SharedKernel.Enums.DataClassification)">
-            <summary>
-            Decrypts ciphertext using envelope encryption
-            </summary>
-        </member>
-        <member name="M:NumbatWallet.Infrastructure.Crypto.Interfaces.ICryptoService.EncryptBytesAsync(System.Byte[],NumbatWallet.SharedKernel.Enums.DataClassification)">
-            <summary>
-            Encrypts binary data using envelope encryption
-            </summary>
-        </member>
-        <member name="M:NumbatWallet.Infrastructure.Crypto.Interfaces.ICryptoService.DecryptBytesAsync(System.Byte[],NumbatWallet.SharedKernel.Enums.DataClassification)">
-            <summary>
-            Decrypts binary data using envelope encryption
-            </summary>
-        </member>
-        <member name="M:NumbatWallet.Infrastructure.Crypto.Interfaces.ICryptoService.RotateDekAsync(System.String)">
-            <summary>
-            Rotates the Data Encryption Key for a tenant
-            </summary>
-        </member>
-        <member name="M:NumbatWallet.Infrastructure.Crypto.Interfaces.ICryptoService.GetCurrentDekVersionAsync(System.String)">
-            <summary>
-            Gets the current DEK version for a tenant
-            </summary>
-        </member>
         <member name="T:NumbatWallet.Infrastructure.Crypto.Interfaces.IKeyWrapProvider">
             <summary>
             Provides key wrapping and unwrapping functionality for envelope encryption

@@ -7,87 +7,121 @@ using Microsoft.Extensions.Logging;
 using NumbatWallet.Application.CQRS.Interfaces;
 using NumbatWallet.Application.DTOs;
 using NumbatWallet.Domain.Repositories;
-using NumbatWallet.Domain.Specifications;
 using NumbatWallet.SharedKernel.Enums;
-using NumbatWallet.SharedKernel.Specifications;
 
 namespace NumbatWallet.Application.Queries.Credentials;
 
-public record SearchCredentialsQuery : IQuery<PagedResult<CredentialSummaryDto>>
+public record SearchCredentialsQuery : IQuery<SearchCredentialsResult>
 {
-    public required string SearchTerm { get; init; }
-    public string[]? Types { get; init; }
-    public CredentialStatus[]? Statuses { get; init; }
-    public PaginationParams Pagination { get; init; } = new PaginationParams();
+    public required string SearchText { get; init; }
+    public int Page { get; init; } = 1;
+    public int PageSize { get; init; } = 20;
+    public bool IncludeRevoked { get; init; } = false;
+    public bool IncludeExpired { get; init; } = false;
+    public Guid? TenantId { get; init; }
 }
 
-public class SearchCredentialsQueryHandler : IQueryHandler<SearchCredentialsQuery, PagedResult<CredentialSummaryDto>>
+public record SearchCredentialsResult
+{
+    public required IReadOnlyList<CredentialSearchResultDto> Results { get; init; }
+    public required int TotalCount { get; init; }
+    public required int Page { get; init; }
+    public required int PageSize { get; init; }
+    public required string SearchText { get; init; }
+}
+
+public record CredentialSearchResultDto
+{
+    public required string Id { get; init; }
+    public required string WalletId { get; init; }
+    public required string HolderName { get; init; }
+    public required string IssuerName { get; init; }
+    public required string Type { get; init; }
+    public required string Status { get; init; }
+    public float RelevanceScore { get; init; }
+    public string? MatchedField { get; init; }
+}
+
+public class SearchCredentialsQueryHandler : IQueryHandler<SearchCredentialsQuery, SearchCredentialsResult>
 {
     private readonly ICredentialRepository _credentialRepository;
     private readonly IWalletRepository _walletRepository;
+    private readonly IPersonRepository _personRepository;
     private readonly IIssuerRepository _issuerRepository;
     private readonly ILogger<SearchCredentialsQueryHandler> _logger;
 
     public SearchCredentialsQueryHandler(
         ICredentialRepository credentialRepository,
         IWalletRepository walletRepository,
+        IPersonRepository personRepository,
         IIssuerRepository issuerRepository,
         ILogger<SearchCredentialsQueryHandler> logger)
     {
         _credentialRepository = credentialRepository;
         _walletRepository = walletRepository;
+        _personRepository = personRepository;
         _issuerRepository = issuerRepository;
         _logger = logger;
     }
 
-    public async Task<PagedResult<CredentialSummaryDto>> HandleAsync(
+    public async Task<SearchCredentialsResult> HandleAsync(
         SearchCredentialsQuery query,
         CancellationToken cancellationToken = default)
     {
-        _logger.LogInformation(
-            "Searching credentials with term '{SearchTerm}', page {Page}/{PageSize}",
-            query.SearchTerm, query.Pagination.Page, query.Pagination.PageSize);
+        _logger.LogInformation("Searching credentials with text: {SearchText}", query.SearchText);
 
-        // Build search specification
-        var spec = new SearchCredentialsSpecification(query.SearchTerm);
+        // Get all credentials (in production, this would use full-text search)
+        var allCredentials = await _credentialRepository.GetAllAsync(cancellationToken);
 
-        // Apply type filter
-        if (query.Types != null && query.Types.Length > 0)
+        // Filter by search text
+        var searchedCredentials = allCredentials
+            .Where(c => MatchesSearchText(c, query.SearchText));
+
+        // Apply additional filters
+        if (!query.IncludeRevoked)
         {
-            spec.AddCriteria(c => query.Types.Contains(c.CredentialType));
+            searchedCredentials = searchedCredentials.Where(c => c.Status != CredentialStatus.Revoked);
         }
 
-        // Apply status filter
-        if (query.Statuses != null && query.Statuses.Length > 0)
+        if (!query.IncludeExpired)
         {
-            spec.AddCriteria(c => query.Statuses.Contains(c.Status));
+            searchedCredentials = searchedCredentials.Where(c => !c.IsExpired());
         }
+
+        // Order by relevance (simplified)
+        searchedCredentials = searchedCredentials.OrderByDescending(c => c.CreatedAt);
 
         // Get total count
-        var totalCount = await _credentialRepository.CountAsync(spec, cancellationToken);
+        var totalCount = searchedCredentials.Count();
 
         // Apply pagination
-        spec.ApplyPaging(query.Pagination.Skip, query.Pagination.PageSize);
-        spec.ApplyOrderByDescending(c => c.IssuedAt);
+        var pagedCredentials = searchedCredentials
+            .Skip((query.Page - 1) * query.PageSize)
+            .Take(query.PageSize)
+            .ToList();
 
-        // Get credentials
-        var credentials = await _credentialRepository.FindAsync(spec, cancellationToken);
-
-        // Get wallet and issuer details for mapping
-        var walletIds = credentials.Select(c => c.WalletId).Distinct().ToArray();
-        var issuerIds = credentials.Select(c => c.IssuerId).Distinct().ToArray();
+        // Get related data for mapping
+        var walletIds = pagedCredentials.Select(c => c.WalletId).Distinct();
+        var issuerIds = pagedCredentials.Select(c => c.IssuerId).Distinct();
 
         var wallets = new Dictionary<Guid, Domain.Aggregates.Wallet>();
+        var persons = new Dictionary<Guid, Domain.Aggregates.Person>();
+        var issuers = new Dictionary<Guid, Domain.Aggregates.Issuer>();
+
         foreach (var walletId in walletIds)
         {
             var wallet = await _walletRepository.GetByIdAsync(walletId, cancellationToken);
             if (wallet != null)
             {
                 wallets[walletId] = wallet;
+                var person = await _personRepository.GetByIdAsync(wallet.PersonId, cancellationToken);
+                if (person != null)
+                {
+                    persons[wallet.PersonId] = person;
+                }
             }
         }
 
-        var issuers = new Dictionary<Guid, Domain.Aggregates.Issuer>();
         foreach (var issuerId in issuerIds)
         {
             var issuer = await _issuerRepository.GetByIdAsync(issuerId, cancellationToken);
@@ -98,57 +132,87 @@ public class SearchCredentialsQueryHandler : IQueryHandler<SearchCredentialsQuer
         }
 
         // Map to DTOs
-        var items = credentials.Select(c => MapToSummaryDto(
-            c,
-            wallets.GetValueOrDefault(c.WalletId),
-            issuers.GetValueOrDefault(c.IssuerId)
-        )).ToList();
-
-        return new PagedResult<CredentialSummaryDto>
+        var results = pagedCredentials.Select(c =>
         {
-            Items = items,
+            var wallet = wallets.GetValueOrDefault(c.WalletId);
+            var person = wallet != null ? persons.GetValueOrDefault(wallet.PersonId) : null;
+            var issuer = issuers.GetValueOrDefault(c.IssuerId);
+
+            return new CredentialSearchResultDto
+            {
+                Id = c.Id.ToString(),
+                WalletId = c.WalletId.ToString(),
+                HolderName = person != null ? $"{person.FirstName} {person.LastName}" : "Unknown",
+                IssuerName = issuer?.Name ?? "Unknown Issuer",
+                Type = c.CredentialType,
+                Status = c.Status.ToString(),
+                RelevanceScore = CalculateRelevanceScore(c, query.SearchText),
+                MatchedField = GetMatchedField(c, query.SearchText)
+            };
+        }).ToList();
+
+        return new SearchCredentialsResult
+        {
+            Results = results,
             TotalCount = totalCount,
-            Page = query.Pagination.Page,
-            PageSize = query.Pagination.PageSize
+            Page = query.Page,
+            PageSize = query.PageSize,
+            SearchText = query.SearchText
         };
     }
 
-    private static CredentialSummaryDto MapToSummaryDto(
-        Domain.Aggregates.Credential credential,
-        Domain.Aggregates.Wallet? wallet,
-        Domain.Aggregates.Issuer? issuer)
+    private static bool MatchesSearchText(Domain.Aggregates.Credential credential, string searchText)
     {
-        return new CredentialSummaryDto
-        {
-            Id = credential.Id.ToString(),
-            Type = credential.CredentialType,
-            HolderName = wallet?.Name ?? "Unknown Holder",
-            IssuerName = issuer?.Name ?? "Unknown Issuer",
-            IssuanceDate = credential.IssuedAt.DateTime,
-            ExpirationDate = credential.ExpiresAt?.DateTime,
-            Status = credential.Status.ToString(),
-            IsExpired = credential.ExpiresAt.HasValue && credential.ExpiresAt.Value < DateTimeOffset.UtcNow,
-            IsRevoked = credential.RevokedAt.HasValue
-        };
-    }
-}
+        var lowerSearch = searchText.ToLowerInvariant();
 
-// Custom specification for searching
-public class SearchCredentialsSpecification : Specification<Domain.Aggregates.Credential>
-{
-    public SearchCredentialsSpecification(string searchTerm)
+        return credential.CredentialType.ToLowerInvariant().Contains(lowerSearch, StringComparison.InvariantCulture) ||
+               credential.CredentialId.ToLowerInvariant().Contains(lowerSearch, StringComparison.InvariantCulture) ||
+               credential.Id.ToString().ToLowerInvariant().Contains(lowerSearch, StringComparison.InvariantCulture) ||
+               credential.Status.ToString().ToLowerInvariant().Contains(lowerSearch, StringComparison.InvariantCulture);
+    }
+
+    private static float CalculateRelevanceScore(Domain.Aggregates.Credential credential, string searchText)
     {
-        if (!string.IsNullOrWhiteSpace(searchTerm))
+        float score = 0;
+
+        // Exact match scores higher
+        if (credential.CredentialId.Equals(searchText, StringComparison.OrdinalIgnoreCase))
         {
-            var term = searchTerm.ToLower();
-            AddCriteria(c =>
-                c.CredentialType.ToLower().Contains(term) ||
-                c.CredentialId.ToLower().Contains(term) ||
-                c.SchemaId.ToLower().Contains(term) ||
-                c.CredentialData.ToLower().Contains(term));
+            score += 10;
         }
 
-        AddInclude(c => c.Wallet!);
-        AddInclude(c => c.Issuer!);
+        // Type match
+        if (credential.CredentialType.Contains(searchText, StringComparison.OrdinalIgnoreCase))
+        {
+            score += 5;
+        }
+
+        // Status match
+        if (credential.Status.ToString().Contains(searchText, StringComparison.OrdinalIgnoreCase))
+        {
+            score += 3;
+        }
+
+        return score;
+    }
+
+    private static string? GetMatchedField(Domain.Aggregates.Credential credential, string searchText)
+    {
+        if (credential.CredentialId.Contains(searchText, StringComparison.OrdinalIgnoreCase))
+        {
+            return "CredentialId";
+        }
+
+        if (credential.CredentialType.Contains(searchText, StringComparison.OrdinalIgnoreCase))
+        {
+            return "Type";
+        }
+
+        if (credential.Status.ToString().Contains(searchText, StringComparison.OrdinalIgnoreCase))
+        {
+            return "Status";
+        }
+
+        return null;
     }
 }

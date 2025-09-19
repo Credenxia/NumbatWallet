@@ -7,6 +7,7 @@ using Microsoft.Extensions.Logging;
 using Moq;
 using NumbatWallet.Application.Interfaces;
 using NumbatWallet.Infrastructure.Crypto;
+using NumbatWallet.Infrastructure.Crypto.Interfaces;
 using NumbatWallet.SharedKernel.Enums;
 using NumbatWallet.SharedKernel.Interfaces;
 using Xunit;
@@ -129,9 +130,8 @@ public class CryptoServiceTests : IDisposable
     }
 
     [Theory]
-    [InlineData(null)]
     [InlineData("")]
-    public async Task EncryptAsync_WithNullOrEmpty_ReturnsInput(string input)
+    public async Task EncryptAsync_WithEmpty_ReturnsInput(string input)
     {
         // Arrange
         var classification = DataClassification.Protected;
@@ -142,6 +142,21 @@ public class CryptoServiceTests : IDisposable
 
         // Assert
         result.Should().Be(input);
+    }
+
+    [Fact]
+    public async Task EncryptAsync_WithNull_ReturnsInput()
+    {
+        // Arrange
+        string? input = null;
+        var classification = DataClassification.Protected;
+        var sut = CreateTestableService();
+
+        // Act
+        var result = await sut.EncryptAsync(input!, classification);
+
+        // Assert
+        result.Should().BeNull();
     }
 
     [Fact]
@@ -243,7 +258,7 @@ public class CryptoServiceTests : IDisposable
         await sut.RotateDekAsync(tenantId);
 
         // Assert
-        _memoryCache.TryGetValue(cacheKey, out byte[] _).Should().BeFalse();
+        _memoryCache.TryGetValue(cacheKey, out byte[]? _).Should().BeFalse();
         _wrapProviderMock.Verify(x => x.WrapAsync(
             It.IsAny<byte[]>(),
             It.IsAny<string>(),

@@ -7,6 +7,7 @@
 /Users/rodrigolmiranda/repo/NumbatWallet/src/Tests/NumbatWallet.Domain.Tests/bin/Debug/net9.0/NumbatWallet.Domain.Tests.dll
 /Users/rodrigolmiranda/repo/NumbatWallet/src/Tests/NumbatWallet.Domain.Tests/bin/Debug/net9.0/NumbatWallet.Domain.Tests.pdb
 /Users/rodrigolmiranda/repo/NumbatWallet/src/Tests/NumbatWallet.Domain.Tests/bin/Debug/net9.0/NumbatWallet.Domain.Tests.xml
+/Users/rodrigolmiranda/repo/NumbatWallet/src/Tests/NumbatWallet.Domain.Tests/bin/Debug/net9.0/PhoneNumbers.dll
 /Users/rodrigolmiranda/repo/NumbatWallet/src/Tests/NumbatWallet.Domain.Tests/bin/Debug/net9.0/Microsoft.VisualStudio.CodeCoverage.Shim.dll
 /Users/rodrigolmiranda/repo/NumbatWallet/src/Tests/NumbatWallet.Domain.Tests/bin/Debug/net9.0/Microsoft.TestPlatform.CoreUtilities.dll
 /Users/rodrigolmiranda/repo/NumbatWallet/src/Tests/NumbatWallet.Domain.Tests/bin/Debug/net9.0/Microsoft.TestPlatform.PlatformAbstractions.dll

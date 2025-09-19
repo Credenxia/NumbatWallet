@@ -15,6 +15,7 @@
     <PackageReference Include="FluentAssertions" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
     <PackageReference Include="Moq" />
     <PackageReference Include="Testcontainers.PostgreSql" />
@@ -33,6 +34,12 @@
     <ProjectReference Include="..\..\NumbatWallet.Infrastructure\NumbatWallet.Infrastructure.csproj" />
     <ProjectReference Include="..\..\NumbatWallet.Domain\NumbatWallet.Domain.csproj" />
     <ProjectReference Include="..\..\NumbatWallet.SharedKernel\NumbatWallet.SharedKernel.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="xunit.runner.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 </Project>

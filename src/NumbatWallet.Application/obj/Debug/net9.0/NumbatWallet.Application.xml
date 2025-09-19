@@ -4,6 +4,16 @@
         <name>NumbatWallet.Application</name>
     </assembly>
     <members>
+        <member name="T:NumbatWallet.Application.Behaviors.ValidationBehavior`2">
+            <summary>
+            Validation behavior for CQRS commands and queries
+            </summary>
+        </member>
+        <member name="T:NumbatWallet.Application.Behaviors.ValidationException">
+            <summary>
+            Custom validation exception that includes property-specific errors
+            </summary>
+        </member>
         <member name="T:NumbatWallet.Application.CQRS.Dispatcher">
             <summary>
             Default implementation of the CQRS dispatcher
@@ -177,6 +187,41 @@
         <member name="T:NumbatWallet.Application.Interfaces.TimePeriod">
             <summary>
             Time period for statistics
+            </summary>
+        </member>
+        <member name="T:NumbatWallet.Application.Interfaces.ICryptoService">
+            <summary>
+            Provides encryption and decryption services using envelope encryption
+            </summary>
+        </member>
+        <member name="M:NumbatWallet.Application.Interfaces.ICryptoService.EncryptAsync(System.String,NumbatWallet.SharedKernel.Enums.DataClassification)">
+            <summary>
+            Encrypts plaintext using envelope encryption based on data classification
+            </summary>
+        </member>
+        <member name="M:NumbatWallet.Application.Interfaces.ICryptoService.DecryptAsync(System.String,NumbatWallet.SharedKernel.Enums.DataClassification)">
+            <summary>
+            Decrypts ciphertext using envelope encryption
+            </summary>
+        </member>
+        <member name="M:NumbatWallet.Application.Interfaces.ICryptoService.EncryptBytesAsync(System.Byte[],NumbatWallet.SharedKernel.Enums.DataClassification)">
+            <summary>
+            Encrypts binary data using envelope encryption
+            </summary>
+        </member>
+        <member name="M:NumbatWallet.Application.Interfaces.ICryptoService.DecryptBytesAsync(System.Byte[],NumbatWallet.SharedKernel.Enums.DataClassification)">
+            <summary>
+            Decrypts binary data using envelope encryption
+            </summary>
+        </member>
+        <member name="M:NumbatWallet.Application.Interfaces.ICryptoService.RotateDekAsync(System.String)">
+            <summary>
+            Rotates the Data Encryption Key for a tenant
+            </summary>
+        </member>
+        <member name="M:NumbatWallet.Application.Interfaces.ICryptoService.GetCurrentDekVersionAsync(System.String)">
+            <summary>
+            Gets the current DEK version for a tenant
             </summary>
         </member>
         <member name="T:NumbatWallet.Application.Interfaces.IEncryptionService">

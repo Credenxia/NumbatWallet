@@ -1,10 +1,11 @@
 {
   "version": 2,
-  "dgSpecHash": "Y55jW+5OB90=",
+  "dgSpecHash": "RHOTiKi+qQA=",
   "success": true,
   "projectFilePath": "/Users/rodrigolmiranda/repo/NumbatWallet/src/Tests/NumbatWallet.Domain.Tests/NumbatWallet.Domain.Tests.csproj",
   "expectedPackageFiles": [
     "/Users/rodrigolmiranda/.nuget/packages/coverlet.collector/6.0.4/coverlet.collector.6.0.4.nupkg.sha512",
+    "/Users/rodrigolmiranda/.nuget/packages/libphonenumber-csharp/9.0.14/libphonenumber-csharp.9.0.14.nupkg.sha512",
     "/Users/rodrigolmiranda/.nuget/packages/microsoft.build.tasks.git/8.0.0/microsoft.build.tasks.git.8.0.0.nupkg.sha512",
     "/Users/rodrigolmiranda/.nuget/packages/microsoft.codecoverage/17.14.1/microsoft.codecoverage.17.14.1.nupkg.sha512",
     "/Users/rodrigolmiranda/.nuget/packages/microsoft.net.test.sdk/17.14.1/microsoft.net.test.sdk.17.14.1.nupkg.sha512",
