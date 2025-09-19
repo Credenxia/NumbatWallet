@@ -48,10 +48,11 @@ public sealed class CreateWalletCommandHandler : ICommandHandler<CreateWalletCom
         }
 
         // Check for duplicate wallet name for this person
-        var exists = await _walletRepository.ExistsAsync(
+        var existingWallets = await _walletRepository.GetByPersonIdAsync(
             command.PersonId,
-            command.Name,
             cancellationToken);
+
+        var exists = existingWallets.Any(w => w.Name == command.Name);
 
         if (exists)
         {

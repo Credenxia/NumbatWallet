@@ -4,8 +4,9 @@ using Moq;
 using NumbatWallet.Application.Commands.Wallets;
 using NumbatWallet.Application.Common.Exceptions;
 using NumbatWallet.Domain.Aggregates;
-using NumbatWallet.Domain.Repositories;
+using NumbatWallet.Domain.Interfaces;
 using NumbatWallet.SharedKernel.Interfaces;
+using DomainPerson = NumbatWallet.Domain.Aggregates.Person;
 
 namespace NumbatWallet.Application.Tests.Commands.Wallets;
 
@@ -36,7 +37,7 @@ public class CreateWalletCommandTests
     {
         // Arrange
         var personId = Guid.NewGuid();
-        var person = Person.Create("John", "Doe", "john@example.com", "+61412345678").Value;
+        var person = DomainPerson.Create("John", "Doe", "john@example.com", "+61412345678").Value;
         var command = new CreateWalletCommand
         {
             PersonId = personId.ToString(),
@@ -87,7 +88,7 @@ public class CreateWalletCommandTests
 
         _personRepositoryMock
             .Setup(x => x.GetByIdAsync(personId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync((Person?)null);
+            .ReturnsAsync((DomainPerson?)null);
 
         // Act & Assert
         await Assert.ThrowsAsync<EntityNotFoundException>(
@@ -102,7 +103,7 @@ public class CreateWalletCommandTests
     {
         // Arrange
         var personId = Guid.NewGuid();
-        var person = Person.Create("John", "Doe", "john@example.com", "+61412345678").Value;
+        var person = DomainPerson.Create("John", "Doe", "john@example.com", "+61412345678").Value;
         var existingWallet = Wallet.Create(personId, "Existing Wallet").Value;
 
         var command = new CreateWalletCommand

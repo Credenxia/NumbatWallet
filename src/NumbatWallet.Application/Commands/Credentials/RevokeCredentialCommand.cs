@@ -2,7 +2,7 @@ using Microsoft.Extensions.Logging;
 using NumbatWallet.Application.Common.Exceptions;
 using NumbatWallet.Application.CQRS.Interfaces;
 using NumbatWallet.SharedKernel.Interfaces;
-using NumbatWallet.Domain.Repositories;
+using NumbatWallet.Domain.Interfaces;
 
 namespace NumbatWallet.Application.Commands.Credentials;
 

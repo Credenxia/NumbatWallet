@@ -51,7 +51,7 @@ public class CredentialDomainService : ICredentialDomainService
         }
 
         // Check if issuer supports this credential type
-        return await _issuerRepository.CanIssueCredentialTypeAsync(issuerId, credentialType, cancellationToken);
+        return await _issuerRepository.CanIssueCredentialTypeAsync(issuer.IssuerDid, credentialType, cancellationToken);
     }
 
     public async Task<bool> ValidateCredentialForIssuanceAsync(Credential credential, Issuer issuer, CancellationToken cancellationToken = default)

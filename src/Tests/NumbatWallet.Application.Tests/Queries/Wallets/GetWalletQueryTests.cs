@@ -4,7 +4,7 @@ using Moq;
 using NumbatWallet.Application.Common.Exceptions;
 using NumbatWallet.Application.Queries.Wallets;
 using NumbatWallet.Domain.Aggregates;
-using NumbatWallet.Domain.Repositories;
+using NumbatWallet.Domain.Interfaces;
 using NumbatWallet.SharedKernel.Enums;
 
 namespace NumbatWallet.Application.Tests.Queries.Wallets;

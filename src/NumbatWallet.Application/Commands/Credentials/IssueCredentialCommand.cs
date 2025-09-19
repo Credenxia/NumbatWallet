@@ -3,7 +3,7 @@ using NumbatWallet.Application.Common.Exceptions;
 using NumbatWallet.Application.CQRS.Interfaces;
 using NumbatWallet.Application.DTOs;
 using NumbatWallet.Domain.Aggregates;
-using NumbatWallet.Domain.Repositories;
+using NumbatWallet.Domain.Interfaces;
 using NumbatWallet.Domain.Specifications;
 using NumbatWallet.SharedKernel.Enums;
 using NumbatWallet.Application.Interfaces;
