@@ -218,3 +218,23 @@ public record CredentialUpdatedEvent(
     {
     }
 }
+
+public record CredentialPresentedEvent(
+    Guid CredentialId,
+    Guid WalletId,
+    string VerifierId,
+    string Purpose,
+    DateTimeOffset PresentedAt,
+    Guid EventId,
+    DateTimeOffset OccurredAt) : IDomainEvent
+{
+    public CredentialPresentedEvent(
+        Guid credentialId,
+        Guid walletId,
+        string verifierId,
+        string purpose,
+        DateTimeOffset presentedAt)
+        : this(credentialId, walletId, verifierId, purpose, presentedAt, Guid.NewGuid(), DateTimeOffset.UtcNow)
+    {
+    }
+}
