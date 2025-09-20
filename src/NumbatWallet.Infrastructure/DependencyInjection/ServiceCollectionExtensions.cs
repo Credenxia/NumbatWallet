@@ -71,13 +71,18 @@ public static class ServiceCollectionExtensions
         // Register Infrastructure Services
         services.AddScoped<Application.Interfaces.ITenantService, TenantService>();
         services.AddScoped<IAuthenticationService, AuthenticationService>();
+        services.AddScoped<IWAIdXService, MockWAIdXService>();
         // services.AddScoped<IDateTimeService, DateTimeService>();
-        // services.AddScoped<IEventDispatcher, EventDispatcher>();
 
         // Protection and Security Services
+        services.AddScoped<IAuditService, AuditService>();
+        services.AddScoped<INotificationService, NotificationService>();
+        services.AddScoped<IEmailService, EmailService>();
+        services.AddScoped<IStatisticsService, StatisticsService>();
+        // TODO: Add after fixing background jobs
+        // services.AddScoped<Application.BackgroundJobs.IDatabaseMaintenanceService, DatabaseMaintenanceService>();
         // TODO: Implement these services
         // services.AddScoped<IProtectionService, ProtectionService>();
-        // services.AddScoped<IAuditService, AuditService>();
         // services.AddScoped<ISearchTokenService, SearchTokenService>();
         // services.AddScoped<ISearchIndexingService, SearchIndexingService>();
 

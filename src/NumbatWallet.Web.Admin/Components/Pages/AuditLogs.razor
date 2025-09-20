@@ -1,0 +1,376 @@
+@page "/audit"
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
+@using NumbatWallet.Web.Admin.Services
+@using NumbatWallet.Web.Admin.Components.Common
+@attribute [Authorize(Roles = "Admin,SuperAdmin")]
+@inject IAuditLogService AuditLogService
+@inject ILogger<Components.Pages.AuditLogs> Logger
+@implements IDisposable
+
+<PageTitle>Audit Logs - NumbatWallet Admin</PageTitle>
+
+<div class="audit-logs-container">
+    <div class="page-header d-flex justify-content-between align-items-center mb-4">
+        <h1>Audit Logs</h1>
+        <div class="header-actions">
+            <button class="btn btn-outline-primary me-2" @onclick="ToggleRealTime">
+                <i class="bi @(IsRealTimeEnabled ? "bi-pause-fill" : "bi-play-fill")"></i>
+                @(IsRealTimeEnabled ? "Pause" : "Resume") Real-time
+            </button>
+            <button class="btn btn-primary" @onclick="ExportLogs">
+                <i class="bi bi-download"></i> Export
+            </button>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label">Date Range</label>
+                    <div class="input-group">
+                        <input type="datetime-local" class="form-control"
+                               @bind="Filter.StartDate" />
+                        <span class="input-group-text">to</span>
+                        <input type="datetime-local" class="form-control"
+                               @bind="Filter.EndDate" />
+                    </div>
+                </div>
+
+                <div class="col-md-2">
+                    <label class="form-label">Severity</label>
+                    <select class="form-select" @bind="Filter.Severity">
+                        <option value="">All</option>
+                        <option value="Debug">Debug</option>
+                        <option value="Info">Info</option>
+                        <option value="Warning">Warning</option>
+                        <option value="Error">Error</option>
+                        <option value="Critical">Critical</option>
+                    </select>
+                </div>
+
+                <div class="col-md-2">
+                    <label class="form-label">Entity Type</label>
+                    <select class="form-select" @bind="Filter.EntityType">
+                        <option value="">All</option>
+                        <option value="Credential">Credential</option>
+                        <option value="Wallet">Wallet</option>
+                        <option value="Person">Person</option>
+                        <option value="Verification">Verification</option>
+                        <option value="System">System</option>
+                    </select>
+                </div>
+
+                <div class="col-md-2">
+                    <label class="form-label">Action</label>
+                    <select class="form-select" @bind="Filter.Action">
+                        <option value="">All</option>
+                        <option value="Create">Create</option>
+                        <option value="Update">Update</option>
+                        <option value="Delete">Delete</option>
+                        <option value="View">View</option>
+                        <option value="Verify">Verify</option>
+                        <option value="Revoke">Revoke</option>
+                    </select>
+                </div>
+
+                <div class="col-md-3">
+                    <label class="form-label">Search</label>
+                    <div class="input-group">
+                        <input type="text" class="form-control"
+                               placeholder="User, Entity ID, or Message..."
+                               @bind="Filter.SearchTerm"
+                               @bind:event="oninput"
+                               @onkeyup="@(async (e) => { if (e.Key == "Enter") await ApplyFilters(); })" />
+                        <button class="btn btn-outline-secondary" @onclick="ApplyFilters">
+                            <i class="bi bi-search"></i>
+                        </button>
+                        <button class="btn btn-outline-secondary" @onclick="ClearFilters">
+                            <i class="bi bi-x-lg"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Audit Logs Table -->
+    @if (IsLoading)
+    {
+        <LoadingSpinner IsLoading="true" LoadingText="Loading audit logs..." />
+    }
+    else
+    {
+        <div class="card">
+            <div class="card-body">
+                @if (AuditLogsList.Any())
+                {
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Timestamp</th>
+                                    <th>Severity</th>
+                                    <th>User</th>
+                                    <th>Action</th>
+                                    <th>Entity Type</th>
+                                    <th>Entity ID</th>
+                                    <th>Message</th>
+                                    <th>Details</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var log in AuditLogsList)
+                                {
+                                    <tr>
+                                        <td>@log.Timestamp.ToString("yyyy-MM-dd HH:mm:ss")</td>
+                                        <td>
+                                            <span class="badge bg-@GetSeverityColor(log.Severity)">
+                                                @log.Severity
+                                            </span>
+                                        </td>
+                                        <td>@log.UserId</td>
+                                        <td>@log.Action</td>
+                                        <td>@log.EntityType</td>
+                                        <td>
+                                            <code>@log.EntityId</code>
+                                        </td>
+                                        <td>@log.Message</td>
+                                        <td>
+                                            <button class="btn btn-sm btn-outline-info"
+                                                    @onclick="() => ShowDetails(log)">
+                                                <i class="bi bi-eye"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Pagination -->
+                    <nav aria-label="Audit log pagination">
+                        <ul class="pagination justify-content-center">
+                            <li class="page-item @(CurrentPage == 1 ? "disabled" : "")">
+                                <button class="page-link" @onclick="PreviousPage" disabled="@(CurrentPage == 1)">
+                                    Previous
+                                </button>
+                            </li>
+                            @for (int i = Math.Max(1, CurrentPage - 2); i <= Math.Min(TotalPages, CurrentPage + 2); i++)
+                            {
+                                var pageNumber = i;
+                                <li class="page-item @(pageNumber == CurrentPage ? "active" : "")">
+                                    <button class="page-link" @onclick="() => GoToPage(pageNumber)">
+                                        @pageNumber
+                                    </button>
+                                </li>
+                            }
+                            <li class="page-item @(CurrentPage == TotalPages ? "disabled" : "")">
+                                <button class="page-link" @onclick="NextPage" disabled="@(CurrentPage == TotalPages)">
+                                    Next
+                                </button>
+                            </li>
+                        </ul>
+                    </nav>
+                }
+                else
+                {
+                    <div class="alert alert-info" role="alert">
+                        <i class="bi bi-info-circle"></i> No audit logs found matching your filters.
+                    </div>
+                }
+            </div>
+        </div>
+    }
+</div>
+
+<!-- Details Modal -->
+@if (SelectedLog != null)
+{
+    <div class="modal fade show" style="display: block;" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Audit Log Details</h5>
+                    <button type="button" class="btn-close" @onclick="() => SelectedLog = null"></button>
+                </div>
+                <div class="modal-body">
+                    <dl class="row">
+                        <dt class="col-sm-3">Timestamp</dt>
+                        <dd class="col-sm-9">@SelectedLog.Timestamp.ToString("yyyy-MM-dd HH:mm:ss.fff")</dd>
+
+                        <dt class="col-sm-3">Severity</dt>
+                        <dd class="col-sm-9">
+                            <span class="badge bg-@GetSeverityColor(SelectedLog.Severity)">@SelectedLog.Severity</span>
+                        </dd>
+
+                        <dt class="col-sm-3">User</dt>
+                        <dd class="col-sm-9">@SelectedLog.UserId</dd>
+
+                        <dt class="col-sm-3">Action</dt>
+                        <dd class="col-sm-9">@SelectedLog.Action</dd>
+
+                        <dt class="col-sm-3">Entity Type</dt>
+                        <dd class="col-sm-9">@SelectedLog.EntityType</dd>
+
+                        <dt class="col-sm-3">Entity ID</dt>
+                        <dd class="col-sm-9"><code>@SelectedLog.EntityId</code></dd>
+
+                        <dt class="col-sm-3">Message</dt>
+                        <dd class="col-sm-9">@SelectedLog.Message</dd>
+
+                        @if (SelectedLog.Details != null && SelectedLog.Details.Any())
+                        {
+                            <dt class="col-sm-3">Additional Details</dt>
+                            <dd class="col-sm-9">
+                                <pre class="bg-light p-2">@System.Text.Json.JsonSerializer.Serialize(SelectedLog.Details, new System.Text.Json.JsonSerializerOptions { WriteIndented = true })</pre>
+                            </dd>
+                        }
+                    </dl>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="() => SelectedLog = null">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal-backdrop fade show"></div>
+}
+
+@code {
+    private bool IsLoading = true;
+    private bool IsRealTimeEnabled = false;
+    private List<Services.AuditLogEntry> AuditLogsList = new();
+    private Services.AuditLogEntry? SelectedLog;
+    private Services.AuditLogFilter Filter = new();
+    private int CurrentPage = 1;
+    private int PageSize = 20;
+    private int TotalPages = 1;
+    private int TotalRecords = 0;
+    private Timer? _refreshTimer;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadAuditLogs();
+    }
+
+    private async Task LoadAuditLogs()
+    {
+        try
+        {
+            IsLoading = true;
+            var result = await AuditLogService.GetAuditLogsAsync(Filter, CurrentPage, PageSize);
+            AuditLogsList = result.Items;
+            TotalRecords = result.TotalCount;
+            TotalPages = (int)Math.Ceiling((double)TotalRecords / PageSize);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Failed to load audit logs");
+            AuditLogsList = new List<Services.AuditLogEntry>();
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    private async Task ApplyFilters()
+    {
+        CurrentPage = 1;
+        await LoadAuditLogs();
+    }
+
+    private async Task ClearFilters()
+    {
+        Filter = new Services.AuditLogFilter();
+        CurrentPage = 1;
+        await LoadAuditLogs();
+    }
+
+    private void ShowDetails(Services.AuditLogEntry log)
+    {
+        SelectedLog = log;
+    }
+
+    private async Task GoToPage(int page)
+    {
+        CurrentPage = page;
+        await LoadAuditLogs();
+    }
+
+    private async Task NextPage()
+    {
+        if (CurrentPage < TotalPages)
+        {
+            CurrentPage++;
+            await LoadAuditLogs();
+        }
+    }
+
+    private async Task PreviousPage()
+    {
+        if (CurrentPage > 1)
+        {
+            CurrentPage--;
+            await LoadAuditLogs();
+        }
+    }
+
+    private void ToggleRealTime()
+    {
+        IsRealTimeEnabled = !IsRealTimeEnabled;
+
+        if (IsRealTimeEnabled)
+        {
+            _refreshTimer = new Timer(async _ =>
+            {
+                await InvokeAsync(async () =>
+                {
+                    await LoadAuditLogs();
+                    StateHasChanged();
+                });
+            }, null, TimeSpan.Zero, TimeSpan.FromSeconds(5));
+        }
+        else
+        {
+            _refreshTimer?.Dispose();
+            _refreshTimer = null;
+        }
+    }
+
+    private async Task ExportLogs()
+    {
+        try
+        {
+            await AuditLogService.ExportLogsAsync(Filter, "csv");
+            Logger.LogInformation("Audit logs exported successfully");
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Failed to export audit logs");
+        }
+    }
+
+    private string GetSeverityColor(string severity)
+    {
+        return severity?.ToLower() switch
+        {
+            "debug" => "secondary",
+            "info" => "info",
+            "warning" => "warning",
+            "error" => "danger",
+            "critical" => "dark",
+            _ => "light"
+        };
+    }
+
+    public void Dispose()
+    {
+        _refreshTimer?.Dispose();
+    }
+
+    // Removed duplicate classes - using Services.AuditLogFilter and Services.AuditLogEntry
+}

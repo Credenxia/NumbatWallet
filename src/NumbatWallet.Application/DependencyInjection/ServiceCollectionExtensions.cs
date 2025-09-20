@@ -1,6 +1,8 @@
 using Microsoft.Extensions.DependencyInjection;
 using NumbatWallet.Application.CQRS;
 using NumbatWallet.Application.CQRS.Interfaces;
+using NumbatWallet.Application.Interfaces;
+using NumbatWallet.Domain.Events;
 using System.Reflection;
 using FluentValidation;
 
@@ -43,9 +45,22 @@ public static class ServiceCollectionExtensions
             .WithScopedLifetime());
 
         // Register Application Services
-        // TODO: Implement application services when commands/queries are created
-        // services.AddScoped<IWalletService, WalletService>();
-        // services.AddScoped<ICredentialService, CredentialService>();
+        services.AddScoped<IEventDispatcher, Services.EventDispatcher>();
+
+        // Register Domain Event Handlers
+        services.AddScoped<IDomainEventHandler<PersonCreatedEvent>, EventHandlers.PersonCreatedEventHandler>();
+        services.AddScoped<IDomainEventHandler<WalletCreatedEvent>, EventHandlers.WalletCreatedEventHandler>();
+        services.AddScoped<IDomainEventHandler<CredentialIssuedEvent>, EventHandlers.CredentialIssuedEventHandler>();
+        services.AddScoped<IDomainEventHandler<CredentialRevokedEvent>, EventHandlers.CredentialRevokedEventHandler>();
+
+        // TODO: Register Background Jobs after fixing them
+        // services.AddHostedService<BackgroundJobs.CredentialExpiryCheckJob>();
+        // services.AddHostedService<BackgroundJobs.StatisticsAggregationJob>();
+        // services.AddHostedService<BackgroundJobs.DatabaseCleanupJob>();
+        // services.AddHostedService<BackgroundJobs.NotificationProcessorJob>();
+
+        // TODO: Register notification channel for async processing
+        // services.AddSingleton(System.Threading.Channels.Channel.CreateUnbounded<BackgroundJobs.NotificationMessage>());
 
         return services;
     }

@@ -198,7 +198,7 @@ public class IdentityVerificationApiClient : IIdentityVerificationApiClient
         };
     }
 
-    public async Task<IdentityVerificationResult> VerifyIdentityAsync(
+    public async Task<Application.Interfaces.IdentityVerificationResult> VerifyIdentityAsync(
         string firstName,
         string lastName,
         DateOnly dateOfBirth,
@@ -224,21 +224,21 @@ public class IdentityVerificationApiClient : IIdentityVerificationApiClient
             response.EnsureSuccessStatusCode();
 
             var responseJson = await response.Content.ReadAsStringAsync(cancellationToken);
-            var result = JsonSerializer.Deserialize<IdentityVerificationResult>(responseJson, _jsonOptions);
+            var result = JsonSerializer.Deserialize<Application.Interfaces.IdentityVerificationResult>(responseJson, _jsonOptions);
 
             _logger.LogInformation("Identity verification completed for {FirstName} {LastName}: {Result}",
                 firstName, lastName, result?.IsVerified);
 
-            return result ?? new IdentityVerificationResult { IsVerified = false };
+            return result ?? new Application.Interfaces.IdentityVerificationResult { IsVerified = false };
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error verifying identity for {FirstName} {LastName}", firstName, lastName);
-            return new IdentityVerificationResult { IsVerified = false, Error = ex.Message };
+            return new Application.Interfaces.IdentityVerificationResult { IsVerified = false, Error = ex.Message };
         }
     }
 
-    public async Task<DocumentVerificationResult> VerifyDocumentAsync(
+    public async Task<Application.Interfaces.DocumentVerificationResult> VerifyDocumentAsync(
         byte[] documentImage,
         string documentType,
         CancellationToken cancellationToken = default)
@@ -253,17 +253,17 @@ public class IdentityVerificationApiClient : IIdentityVerificationApiClient
             response.EnsureSuccessStatusCode();
 
             var responseJson = await response.Content.ReadAsStringAsync(cancellationToken);
-            var result = JsonSerializer.Deserialize<DocumentVerificationResult>(responseJson, _jsonOptions);
+            var result = JsonSerializer.Deserialize<Application.Interfaces.DocumentVerificationResult>(responseJson, _jsonOptions);
 
             _logger.LogInformation("Document verification completed for type {DocumentType}: {Result}",
                 documentType, result?.IsValid);
 
-            return result ?? new DocumentVerificationResult { IsValid = false };
+            return result ?? new Application.Interfaces.DocumentVerificationResult { IsValid = false };
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error verifying document of type {DocumentType}", documentType);
-            return new DocumentVerificationResult { IsValid = false, Error = ex.Message };
+            return new Application.Interfaces.DocumentVerificationResult { IsValid = false, Error = ex.Message };
         }
     }
 }

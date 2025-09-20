@@ -1,0 +1,173 @@
+@page "/dashboard"
+@using Microsoft.AspNetCore.Components.Authorization
+@using NumbatWallet.Web.Admin.Components.Widgets
+@using NumbatWallet.Web.Admin.Components.Common
+@using NumbatWallet.Web.Admin.Services
+@inject IApiClient ApiClient
+@inject IAuthService AuthService
+@inject ILogger<Dashboard> Logger
+
+<PageTitle>Dashboard - NumbatWallet Admin</PageTitle>
+
+<h1>Dashboard</h1>
+
+<AuthorizeView>
+    <Authorized>
+        <div class="mb-3">
+            <p>Welcome back, <strong>@context.User.Identity?.Name</strong>!</p>
+        </div>
+
+        @if (IsLoading)
+        {
+            <LoadingSpinner IsLoading="true" LoadingText="Loading dashboard statistics..." />
+        }
+        else if (ErrorMessage != null)
+        {
+            <div class="alert alert-danger" role="alert">
+                <strong>Error:</strong> @ErrorMessage
+            </div>
+        }
+        else
+        {
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <StatCard Title="Total Persons"
+                              Value="@Stats?.TotalPersons.ToString()"
+                              Icon="people" />
+                </div>
+                <div class="col-md-3">
+                    <StatCard Title="Total Wallets"
+                              Value="@Stats?.TotalWallets.ToString()"
+                              Icon="wallet2" />
+                </div>
+                <div class="col-md-3">
+                    <StatCard Title="Total Credentials"
+                              Value="@Stats?.TotalCredentials.ToString()"
+                              Icon="file-earmark-text" />
+                </div>
+                <div class="col-md-3">
+                    <StatCard Title="Active Credentials"
+                              Value="@Stats?.ActiveCredentials.ToString()"
+                              Icon="check-circle" />
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Recent Activity</h5>
+                        </div>
+                        <div class="card-body">
+                            <p class="text-muted">Recent activity will be displayed here.</p>
+                            <ul class="list-group list-group-flush">
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span>Credentials Issued Today</span>
+                                    <strong>@Stats?.IssuedToday</strong>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span>Expiring This Week</span>
+                                    <strong class="text-warning">@Stats?.ExpiringThisWeek</strong>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">System Health</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="d-flex align-items-center mb-3">
+                                <span class="badge bg-success me-2">Healthy</span>
+                                <span>All systems operational</span>
+                            </div>
+                            <div class="progress mb-2">
+                                <div class="progress-bar bg-success" role="progressbar" style="width: 100%" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"></div>
+                            </div>
+                            <small class="text-muted">Last checked: @DateTime.Now.ToString("g")</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </Authorized>
+    <NotAuthorized>
+        <div class="alert alert-warning" role="alert">
+            <h4 class="alert-heading">Authentication Required</h4>
+            <p>You must be logged in to view the dashboard.</p>
+            <hr>
+            <p class="mb-0">Please <a href="/login" class="alert-link">sign in</a> to continue.</p>
+        </div>
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+    private bool IsLoading { get; set; } = true;
+    private string? ErrorMessage { get; set; }
+    private DashboardStats? Stats { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDashboardData();
+    }
+
+    private async Task LoadDashboardData()
+    {
+        try
+        {
+            IsLoading = true;
+            ErrorMessage = null;
+
+            // Check if user is authenticated
+            if (!await AuthService.IsAuthenticatedAsync())
+            {
+                Logger.LogWarning("User is not authenticated");
+                return;
+            }
+
+            // Fetch dashboard statistics from API
+            Stats = await ApiClient.GetAsync<DashboardStats>("/api/admin/statistics/dashboard");
+
+            if (Stats == null)
+            {
+                // Use default values if API call fails
+                Stats = new DashboardStats
+                {
+                    TotalPersons = 0,
+                    TotalWallets = 0,
+                    TotalCredentials = 0,
+                    ActiveCredentials = 0,
+                    IssuedToday = 0,
+                    ExpiringThisWeek = 0
+                };
+            }
+        }
+        catch (ApiException ex)
+        {
+            Logger.LogError(ex, "Failed to load dashboard statistics");
+            ErrorMessage = $"Failed to load dashboard data: {ex.Message}";
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Unexpected error loading dashboard");
+            ErrorMessage = "An unexpected error occurred while loading the dashboard.";
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    private class DashboardStats
+    {
+        public int TotalPersons { get; set; }
+        public int TotalWallets { get; set; }
+        public int TotalCredentials { get; set; }
+        public int ActiveCredentials { get; set; }
+        public int IssuedToday { get; set; }
+        public int ExpiringThisWeek { get; set; }
+    }
+}

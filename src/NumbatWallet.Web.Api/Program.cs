@@ -50,6 +50,9 @@ try
     // Add custom authentication
     builder.Services.AddCustomAuthentication(builder.Configuration);
 
+    // Add rate limiting
+    builder.Services.AddCustomRateLimiting(builder.Configuration);
+
     var app = builder.Build();
 
     // Configure the HTTP request pipeline
@@ -78,6 +81,9 @@ try
 
     app.UseAuthentication();
     app.UseAuthorization();
+
+    // Add rate limiting
+    app.UseCustomRateLimiting();
 
     // Map endpoints
     app.MapControllers();
