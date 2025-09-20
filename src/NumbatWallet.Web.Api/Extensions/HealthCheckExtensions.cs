@@ -17,8 +17,8 @@ public static class HealthCheckExtensions
         IConfiguration configuration)
     {
         services.AddHealthChecks()
-            // Liveness checks - basic application health
-            .AddCheck("self", () => HealthCheckResult.Healthy(), tags: new[] { "live" })
+            // Liveness check is already added by ServiceDefaults
+            // .AddCheck("self", () => HealthCheckResult.Healthy(), tags: new[] { "live" })
 
             // Readiness checks - dependencies
             .AddCheck<DatabaseHealthCheck>("database",

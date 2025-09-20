@@ -15,7 +15,7 @@ public class Email : ValueObject
         Value = value;
     }
 
-    // EF Core constructor
+    // ORM constructor
     private Email()
     {
         Value = string.Empty;

@@ -50,7 +50,7 @@ public sealed class Person : AuditableEntity<Guid>, ITenantAware
 #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring as nullable.
     private Person() : base(Guid.Empty)
     {
-        // Required for EF Core
+        // Required for persistence
     }
 #pragma warning restore CS8618
 

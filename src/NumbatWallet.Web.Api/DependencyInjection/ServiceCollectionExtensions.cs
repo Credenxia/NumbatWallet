@@ -2,10 +2,12 @@ using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Versioning;
 using Microsoft.Identity.Web;
 using Microsoft.OpenApi.Models;
+using NumbatWallet.Web.Api.Authorization.Handlers;
 // TODO: Implement GraphQL types
 // using NumbatWallet.Web.Api.GraphQL;
 using HotChocolate.Execution.Configuration;
@@ -64,6 +66,12 @@ public static class ServiceCollectionExtensions
         // Add Authentication
         services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             .AddMicrosoftIdentityWebApi(configuration.GetSection("AzureAd"));
+
+        // Register authorization handlers
+        services.AddSingleton<IAuthorizationHandler, TenantAccessHandler>();
+        services.AddScoped<IAuthorizationHandler, CredentialOwnerHandler>();
+        services.AddScoped<IAuthorizationHandler, WalletOwnerHandler>();
+        services.AddHttpContextAccessor(); // Required for TenantAccessHandler
 
         // Add Authorization
         services.AddAuthorization(options =>

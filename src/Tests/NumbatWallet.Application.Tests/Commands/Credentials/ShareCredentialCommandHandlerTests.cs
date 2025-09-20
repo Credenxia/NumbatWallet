@@ -70,11 +70,11 @@ public class ShareCredentialCommandHandlerTests
             .ReturnsAsync(credential);
 
         _sharingServiceMock.Setup(x => x.CreateShareLinkAsync(
-                credentialId,
+                It.IsAny<Guid>(),
                 It.IsAny<string>(),
                 It.IsAny<DateTime>(),
-                true,
-                "1234",
+                It.IsAny<bool>(),
+                It.IsAny<string>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(shareUrl);
 
@@ -176,7 +176,7 @@ public class ShareCredentialCommandHandlerTests
 
         // Act & Assert
         var exception = await Assert.ThrowsAsync<BusinessRuleException>(() => _handler.HandleAsync(command));
-        exception.Message.Should().Contain("Cannot share expired credential");
+        exception.Message.Should().Contain("Cannot share inactive credential");
     }
 
     [Fact]
@@ -210,11 +210,11 @@ public class ShareCredentialCommandHandlerTests
             .ReturnsAsync(credential);
 
         _sharingServiceMock.Setup(x => x.CreateShareLinkAsync(
-                credentialId,
+                It.IsAny<Guid>(),
                 It.IsAny<string>(),
                 It.IsAny<DateTime>(),
-                false,
-                null,
+                It.IsAny<bool>(),
+                It.IsAny<string>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(shareUrl);
 

@@ -1,0 +1,65 @@
+@using Microsoft.JSInterop
+@inject IJSRuntime JS
+@rendermode InteractiveServer
+
+<button class="theme-toggle" @onclick="ToggleTheme" title="@(_isDarkMode ? "Switch to light mode" : "Switch to dark mode")">
+    @if (_isDarkMode)
+    {
+        <i class="fas fa-sun"></i>
+    }
+    else
+    {
+        <i class="fas fa-moon"></i>
+    }
+</button>
+
+@code {
+    private bool _isDarkMode = true; // Default to dark mode
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            // Check saved theme preference
+            var savedTheme = await JS.InvokeAsync<string>("localStorage.getItem", "theme");
+
+            if (string.IsNullOrEmpty(savedTheme))
+            {
+                // Check system preference
+                var prefersDark = await JS.InvokeAsync<bool>("window.matchMedia", "(prefers-color-scheme: dark)");
+                _isDarkMode = prefersDark;
+                savedTheme = prefersDark ? "dark" : "light";
+            }
+            else
+            {
+                _isDarkMode = savedTheme == "dark";
+            }
+
+            // Apply theme
+            await ApplyTheme(savedTheme);
+            StateHasChanged();
+        }
+    }
+
+    private async Task ToggleTheme()
+    {
+        _isDarkMode = !_isDarkMode;
+        var theme = _isDarkMode ? "dark" : "light";
+
+        // Apply theme
+        await ApplyTheme(theme);
+
+        // Save preference
+        await JS.InvokeVoidAsync("localStorage.setItem", "theme", theme);
+    }
+
+    private async Task ApplyTheme(string theme)
+    {
+        await JS.InvokeVoidAsync("eval", $"document.documentElement.setAttribute('data-theme', '{theme}');");
+
+        // Dispatch custom event for other components
+        await JS.InvokeVoidAsync("eval", $@"
+            window.dispatchEvent(new CustomEvent('themeChanged', {{ detail: {{ theme: '{theme}' }} }}));
+        ");
+    }
+}

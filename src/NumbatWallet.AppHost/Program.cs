@@ -2,15 +2,17 @@ using Aspire.Hosting;
 
 var builder = DistributedApplication.CreateBuilder(args);
 
-// Add PostgreSQL database
+// Add PostgreSQL database with fixed port
 var postgres = builder.AddPostgres("postgres")
+    .WithEndpoint(port: 5432, targetPort: 5432, name: "postgres")
     .WithDataVolume()
     .WithPgAdmin();
 
 var postgresDb = postgres.AddDatabase("numbatwallet");
 
-// Add Redis cache
+// Add Redis cache with fixed port
 var redis = builder.AddRedis("redis")
+    .WithEndpoint(port: 6379, targetPort: 6379, name: "redis")
     .WithDataVolume()
     .WithRedisCommander();
 

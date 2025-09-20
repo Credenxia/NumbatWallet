@@ -1,0 +1,244 @@
+@page "/dashboard/master"
+@using Microsoft.AspNetCore.Components.Web
+@using Microsoft.JSInterop
+@using NumbatWallet.Web.Admin.Services
+@inject IJSRuntime JS
+@inject IDashboardService DashboardService
+@inject NavigationManager Navigation
+@rendermode InteractiveServer
+
+<PageTitle>Master Admin Dashboard - NumbatWallet</PageTitle>
+
+<div class="dashboard-container">
+    <div class="dashboard-header">
+        <div class="dashboard-header-left">
+            <h1 class="dashboard-title">Master Admin Dashboard</h1>
+            <span class="badge badge-info">Cross-Tenant View</span>
+        </div>
+        <div class="dashboard-actions">
+            <button class="btn btn-secondary" @onclick="ShowPresetLayouts">
+                <i class="fas fa-layout"></i> Layouts
+            </button>
+            <button class="btn btn-secondary" @onclick="RefreshAllWidgets">
+                <i class="fas fa-sync-alt"></i> Refresh All
+            </button>
+            <button class="btn btn-primary" id="widget-gallery-toggle" @onclick="ToggleWidgetGallery">
+                <i class="fas fa-plus"></i> Add Widget
+            </button>
+        </div>
+    </div>
+
+    @if (ShowPresets)
+    {
+        <div class="preset-layouts">
+            <button class="preset-btn" @onclick="@(() => LoadPresetLayout("default"))">
+                Default Layout
+            </button>
+            <button class="preset-btn" @onclick="@(() => LoadPresetLayout("analytics"))">
+                Analytics Focus
+            </button>
+            <button class="preset-btn" @onclick="@(() => LoadPresetLayout("operations"))">
+                Operations Focus
+            </button>
+            <button class="preset-btn" @onclick="@(() => LoadPresetLayout("minimal"))">
+                Minimal View
+            </button>
+        </div>
+    }
+
+    <!-- Dashboard Grid Container -->
+    <div id="dashboard-grid" class="grid-stack">
+        <!-- Widgets will be dynamically added here -->
+    </div>
+
+    @if (IsEmpty)
+    {
+        <div class="dashboard-empty">
+            <h3>Your dashboard is empty</h3>
+            <p>Click "Add Widget" to start customizing your dashboard</p>
+            <button class="btn btn-primary" @onclick="LoadDefaultWidgets">
+                <i class="fas fa-magic"></i> Load Default Layout
+            </button>
+        </div>
+    }
+</div>
+
+<!-- Widget Gallery Sidebar -->
+<div id="widget-gallery" class="widget-gallery">
+    <div class="gallery-header">
+        <h3 class="gallery-title">Widget Gallery</h3>
+        <button class="gallery-close" @onclick="CloseWidgetGallery">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+    <div class="gallery-content">
+        <div id="widget-gallery-items">
+            <!-- Gallery items will be rendered by JavaScript -->
+        </div>
+    </div>
+</div>
+
+@code {
+    private bool ShowPresets = false;
+    private bool IsEmpty = false;
+    // Widget initialization handled by JS
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            // Load GridStack and Chart.js libraries
+            await LoadExternalLibraries();
+
+            // Initialize dashboard widget manager
+            await JS.InvokeVoidAsync("eval", @"
+                if (typeof dashboardManager === 'undefined') {
+                    dashboardManager = new DashboardWidgetManager('dashboard-grid');
+                }
+            ");
+
+            // Start SignalR connection for real-time updates
+            await InitializeSignalR();
+
+            // Widget initialization is handled by JS
+        }
+    }
+
+    private async Task LoadExternalLibraries()
+    {
+        // Load GridStack CSS
+        await JS.InvokeVoidAsync("eval", @"
+            if (!document.querySelector('link[href*=""gridstack""]')) {
+                const link = document.createElement('link');
+                link.rel = 'stylesheet';
+                link.href = 'https://cdn.jsdelivr.net/npm/gridstack@9/dist/gridstack.min.css';
+                document.head.appendChild(link);
+            }
+        ");
+
+        // Load GridStack JS
+        await JS.InvokeVoidAsync("eval", @"
+            if (typeof GridStack === 'undefined') {
+                const script = document.createElement('script');
+                script.src = 'https://cdn.jsdelivr.net/npm/gridstack@9/dist/gridstack-all.js';
+                document.head.appendChild(script);
+            }
+        ");
+
+        // Load Chart.js
+        await JS.InvokeVoidAsync("eval", @"
+            if (typeof Chart === 'undefined') {
+                const script = document.createElement('script');
+                script.src = 'https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js';
+                document.head.appendChild(script);
+            }
+        ");
+
+        // Wait for libraries to load
+        await Task.Delay(1000);
+    }
+
+    private async Task InitializeSignalR()
+    {
+        // Initialize SignalR connection for real-time dashboard updates
+        // This will be implemented when SignalR hub is ready
+    }
+
+    private void ShowPresetLayouts()
+    {
+        ShowPresets = !ShowPresets;
+    }
+
+    private async Task LoadPresetLayout(string layoutName)
+    {
+        await JS.InvokeVoidAsync("dashboardManager.resetLayout");
+
+        switch (layoutName)
+        {
+            case "analytics":
+                await LoadAnalyticsLayout();
+                break;
+            case "operations":
+                await LoadOperationsLayout();
+                break;
+            case "minimal":
+                await LoadMinimalLayout();
+                break;
+            default:
+                await LoadDefaultWidgets();
+                break;
+        }
+
+        ShowPresets = false;
+    }
+
+    private async Task LoadDefaultWidgets()
+    {
+        // Load default master admin widgets
+        await JS.InvokeVoidAsync("eval", @"
+            dashboardManager.addWidget('active-tenants', { x: 0, y: 0 });
+            dashboardManager.addWidget('active-wallets', { x: 3, y: 0 });
+            dashboardManager.addWidget('total-credentials', { x: 6, y: 0 });
+            dashboardManager.addWidget('verifications-today', { x: 9, y: 0 });
+            dashboardManager.addWidget('wallet-growth', { x: 0, y: 2 });
+            dashboardManager.addWidget('credential-types', { x: 6, y: 2 });
+            dashboardManager.addWidget('tenant-activity', { x: 0, y: 6 });
+            dashboardManager.addWidget('live-feed', { x: 6, y: 6 });
+            dashboardManager.addWidget('system-health', { x: 10, y: 2 });
+        ");
+
+        IsEmpty = false;
+    }
+
+    private async Task LoadAnalyticsLayout()
+    {
+        await JS.InvokeVoidAsync("eval", @"
+            dashboardManager.addWidget('wallet-growth', { x: 0, y: 0 });
+            dashboardManager.addWidget('verification-activity', { x: 6, y: 0 });
+            dashboardManager.addWidget('credential-types', { x: 0, y: 4 });
+            dashboardManager.addWidget('tenant-activity', { x: 4, y: 4 });
+            dashboardManager.addWidget('active-wallets', { x: 10, y: 4 });
+        ");
+    }
+
+    private async Task LoadOperationsLayout()
+    {
+        await JS.InvokeVoidAsync("eval", @"
+            dashboardManager.addWidget('system-health', { x: 0, y: 0 });
+            dashboardManager.addWidget('live-feed', { x: 3, y: 0 });
+            dashboardManager.addWidget('recent-wallets', { x: 7, y: 0 });
+            dashboardManager.addWidget('verifications-today', { x: 0, y: 4 });
+            dashboardManager.addWidget('active-tenants', { x: 3, y: 4 });
+        ");
+    }
+
+    private async Task LoadMinimalLayout()
+    {
+        await JS.InvokeVoidAsync("eval", @"
+            dashboardManager.addWidget('active-wallets', { x: 0, y: 0 });
+            dashboardManager.addWidget('total-credentials', { x: 4, y: 0 });
+            dashboardManager.addWidget('active-tenants', { x: 8, y: 0 });
+        ");
+    }
+
+    private async Task RefreshAllWidgets()
+    {
+        await JS.InvokeVoidAsync("eval", @"
+            dashboardManager.widgets.forEach((widget, id) => {
+                dashboardManager.refreshWidget(id);
+            });
+        ");
+    }
+
+    private async Task ToggleWidgetGallery()
+    {
+        await JS.InvokeVoidAsync("dashboardManager.toggleWidgetGallery");
+    }
+
+    private async Task CloseWidgetGallery()
+    {
+        await JS.InvokeVoidAsync("eval", @"
+            document.getElementById('widget-gallery').classList.remove('open');
+        ");
+    }
+}

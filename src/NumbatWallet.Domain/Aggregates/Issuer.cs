@@ -54,7 +54,7 @@ public sealed partial class Issuer : AuditableEntity<Guid>, ITenantAware
 #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring as nullable.
     private Issuer() : base(Guid.Empty)
     {
-        // Required for EF Core
+        // Required for persistence
     }
 #pragma warning restore CS8618
 
@@ -120,7 +120,7 @@ public sealed partial class Issuer : AuditableEntity<Guid>, ITenantAware
             Guard.AgainstNullOrWhiteSpace(trustedDomain, nameof(trustedDomain));
 
             var issuer = new Issuer(
-                Guid.Empty, // Will be set by DbContext
+                Guid.Empty, // Will be set by persistence layer
                 name,
                 code,
                 string.Empty, // Description

@@ -9,6 +9,7 @@ using NumbatWallet.Infrastructure.Data;
 using NumbatWallet.Web.Admin.Authentication;
 using NumbatWallet.Web.Admin.Components;
 using NumbatWallet.Web.Admin.Services;
+using NumbatWallet.Web.Admin.Hubs;
 using Polly;
 using Polly.Extensions.Http;
 using Serilog;
@@ -70,6 +71,13 @@ try
     builder.Services.AddRazorComponents()
         .AddInteractiveServerComponents();
 
+    // Add SignalR
+    builder.Services.AddSignalR(options =>
+    {
+        options.EnableDetailedErrors = builder.Environment.IsDevelopment();
+        options.MaximumReceiveMessageSize = 102400; // 100KB
+    });
+
     // Add Authentication services
     builder.Services.AddHttpContextAccessor();
     builder.Services.AddScoped<CustomAuthenticationStateProvider>();
@@ -91,7 +99,9 @@ try
     // Add application services
     builder.Services.AddScoped<IAuthService, AuthService>();
     builder.Services.AddScoped<IDashboardService, DashboardService>();
+    builder.Services.AddScoped<ITenantService, TenantService>();
     builder.Services.AddScoped<IAuditLogService, AuditLogService>();
+    builder.Services.AddScoped<IRealtimeNotificationService, RealtimeNotificationService>();
 
     // Add health checks
     builder.Services.AddInfrastructureHealthChecks(builder.Configuration);
@@ -120,6 +130,7 @@ try
 
     app.MapHealthChecks("/health");
     app.MapControllers();
+    app.MapHub<DashboardHub>("/hubs/dashboard");
     app.MapDefaultEndpoints();
 
     // Ensure database is created and migrations are applied

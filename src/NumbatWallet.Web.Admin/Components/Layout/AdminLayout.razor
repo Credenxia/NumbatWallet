@@ -1,0 +1,477 @@
+@using Microsoft.AspNetCore.Components.Web
+@using NumbatWallet.Web.Admin.Components.Common
+@using NumbatWallet.Web.Admin.Services
+@inject NavigationManager Navigation
+@inject ITenantService TenantService
+@rendermode InteractiveServer
+
+<div class="admin-layout" data-theme="dark">
+    <!-- Sidebar -->
+    <aside class="sidebar @(IsSidebarCollapsed ? "collapsed" : "")">
+        <div class="sidebar-header">
+            <div class="sidebar-logo">
+                @if (!string.IsNullOrEmpty(TenantLogo) && IsWhiteLabel)
+                {
+                    <img src="@TenantLogo" alt="Logo" />
+                }
+                else
+                {
+                    <span class="logo-icon">🔐</span>
+                }
+                @if (!IsSidebarCollapsed)
+                {
+                    <span class="logo-text">@(TenantName ?? "NumbatWallet")</span>
+                }
+            </div>
+            <button class="sidebar-toggle" @onclick="ToggleSidebar">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
+
+        <nav class="sidebar-nav">
+            <!-- Master Admin Section -->
+            @if (IsMasterAdmin)
+            {
+                <div class="nav-section">
+                    <div class="nav-section-title">MASTER ADMIN</div>
+                    <div class="nav-item">
+                        <a href="/dashboard/master" class="nav-link @GetActiveClass("/dashboard/master")">
+                            <span class="nav-icon">📊</span>
+                            @if (!IsSidebarCollapsed) { <span>Master Dashboard</span> }
+                        </a>
+                    </div>
+                    <div class="nav-item">
+                        <a href="/tenants" class="nav-link @GetActiveClass("/tenants")">
+                            <span class="nav-icon">🏢</span>
+                            @if (!IsSidebarCollapsed) { <span>Tenant Management</span> }
+                        </a>
+                    </div>
+                </div>
+            }
+
+            <!-- Tenant Admin Section -->
+            <div class="nav-section">
+                <div class="nav-section-title">MANAGEMENT</div>
+                <div class="nav-item">
+                    <a href="/dashboard/tenant" class="nav-link @GetActiveClass("/dashboard/tenant")">
+                        <span class="nav-icon">📈</span>
+                        @if (!IsSidebarCollapsed) { <span>Dashboard</span> }
+                    </a>
+                </div>
+                <div class="nav-item">
+                    <a href="/wallets" class="nav-link @GetActiveClass("/wallets")">
+                        <span class="nav-icon">👛</span>
+                        @if (!IsSidebarCollapsed) { <span>Wallets</span> }
+                    </a>
+                </div>
+                <div class="nav-item">
+                    <a href="/credentials" class="nav-link @GetActiveClass("/credentials")">
+                        <span class="nav-icon">🎫</span>
+                        @if (!IsSidebarCollapsed) { <span>Credentials</span> }
+                    </a>
+                </div>
+                <div class="nav-item">
+                    <a href="/verifications" class="nav-link @GetActiveClass("/verifications")">
+                        <span class="nav-icon">✅</span>
+                        @if (!IsSidebarCollapsed) { <span>Verifications</span> }
+                    </a>
+                </div>
+            </div>
+
+            <!-- Analytics Section -->
+            <div class="nav-section">
+                <div class="nav-section-title">ANALYTICS</div>
+                <div class="nav-item">
+                    <a href="/reports" class="nav-link @GetActiveClass("/reports")">
+                        <span class="nav-icon">📑</span>
+                        @if (!IsSidebarCollapsed) { <span>Reports</span> }
+                    </a>
+                </div>
+                <div class="nav-item">
+                    <a href="/audit-logs" class="nav-link @GetActiveClass("/audit-logs")">
+                        <span class="nav-icon">📝</span>
+                        @if (!IsSidebarCollapsed) { <span>Audit Logs</span> }
+                    </a>
+                </div>
+            </div>
+
+            <!-- Settings Section -->
+            <div class="nav-section">
+                <div class="nav-section-title">SETTINGS</div>
+                <div class="nav-item">
+                    <a href="/settings/general" class="nav-link @GetActiveClass("/settings")">
+                        <span class="nav-icon">⚙️</span>
+                        @if (!IsSidebarCollapsed) { <span>General</span> }
+                    </a>
+                </div>
+                <div class="nav-item">
+                    <a href="/settings/security" class="nav-link @GetActiveClass("/settings/security")">
+                        <span class="nav-icon">🔒</span>
+                        @if (!IsSidebarCollapsed) { <span>Security</span> }
+                    </a>
+                </div>
+                <div class="nav-item">
+                    <a href="/settings/api" class="nav-link @GetActiveClass("/settings/api")">
+                        <span class="nav-icon">🔌</span>
+                        @if (!IsSidebarCollapsed) { <span>API Keys</span> }
+                    </a>
+                </div>
+            </div>
+        </nav>
+
+        @if (IsWhiteLabel && !string.IsNullOrEmpty(CompanyLogo))
+        {
+            <div class="sidebar-footer">
+                <div class="powered-by">
+                    @if (!IsSidebarCollapsed)
+                    {
+                        <span>Powered by</span>
+                    }
+                    <img src="@CompanyLogo" alt="CredEntry" class="company-logo" />
+                </div>
+            </div>
+        }
+    </aside>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-left">
+                <div class="search-box">
+                    <i class="fas fa-search search-icon"></i>
+                    <input type="text" placeholder="Search..." @bind="SearchQuery" @onkeyup="@(async (e) => { if (e.Key == "Enter") await PerformSearch(); })" />
+                </div>
+            </div>
+
+            <div class="header-right">
+                <!-- Notifications -->
+                <button class="btn btn-icon" @onclick="ToggleNotifications">
+                    <i class="fas fa-bell"></i>
+                    @if (UnreadNotifications > 0)
+                    {
+                        <span class="notification-badge">@UnreadNotifications</span>
+                    }
+                </button>
+
+                <!-- Theme Toggle -->
+                <ThemeToggle />
+
+                <!-- User Menu -->
+                <div class="user-menu" @onclick="ToggleUserMenu">
+                    <div class="user-avatar">
+                        @UserInitials
+                    </div>
+                    <div class="user-info">
+                        <div class="user-name">@UserName</div>
+                        <div class="user-role">@UserRole</div>
+                    </div>
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+
+                @if (IsUserMenuOpen)
+                {
+                    <div class="user-dropdown">
+                        <a href="/profile" class="dropdown-item">
+                            <i class="fas fa-user"></i>
+                            Profile
+                        </a>
+                        <a href="/settings" class="dropdown-item">
+                            <i class="fas fa-cog"></i>
+                            Settings
+                        </a>
+                        <hr class="dropdown-divider" />
+                        <a href="/logout" class="dropdown-item">
+                            <i class="fas fa-sign-out-alt"></i>
+                            Logout
+                        </a>
+                    </div>
+                }
+            </div>
+        </header>
+
+        <!-- Page Content -->
+        <main class="page-content">
+            @Body
+        </main>
+    </div>
+
+    <!-- Notification Panel -->
+    @if (IsNotificationPanelOpen)
+    {
+        <div class="notification-panel">
+            <div class="notification-header">
+                <h3>Notifications</h3>
+                <button @onclick="CloseNotifications">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="notification-list">
+                @foreach (var notification in Notifications)
+                {
+                    <div class="notification-item @(!notification.IsRead ? "unread" : "")">
+                        <div class="notification-icon">@notification.Icon</div>
+                        <div class="notification-content">
+                            <div class="notification-title">@notification.Title</div>
+                            <div class="notification-message">@notification.Message</div>
+                            <div class="notification-time">@notification.TimeAgo</div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public RenderFragment Body { get; set; } = null!;
+
+    private bool IsSidebarCollapsed = false;
+    private bool IsUserMenuOpen = false;
+    private bool IsNotificationPanelOpen = false;
+    private string SearchQuery = string.Empty;
+    private int UnreadNotifications = 3;
+
+    // User info
+    private string UserName = "Loading...";
+    private string UserRole = "Admin";
+    private string UserInitials = "AD";
+
+    // Tenant info
+    private string? TenantName;
+    private string? TenantLogo;
+    private bool IsWhiteLabel = false;
+    private string? CompanyLogo = "/img/credentry-logo.png";
+    private bool IsMasterAdmin = true;
+
+    // Notifications
+    private List<NotificationItem> Notifications = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Load user info
+        UserName = "Admin User";
+        UserInitials = "AU";
+
+        // Load tenant info if applicable
+        var tenant = await TenantService.GetCurrentTenantAsync();
+        if (tenant != null)
+        {
+            TenantName = tenant.DisplayName;
+            TenantLogo = tenant.LogoUrl;
+            IsWhiteLabel = tenant.Settings?.EnableWhiteLabeling ?? false;
+        }
+
+        // Load notifications
+        LoadNotifications();
+    }
+
+    private void LoadNotifications()
+    {
+        Notifications = new List<NotificationItem>
+        {
+            new() { Icon = "👛", Title = "New Wallet Created", Message = "A new wallet was created for user john.doe", TimeAgo = "5 mins ago", IsRead = false },
+            new() { Icon = "🎫", Title = "Credential Issued", Message = "Driver's License credential issued successfully", TimeAgo = "15 mins ago", IsRead = false },
+            new() { Icon = "✅", Title = "Verification Complete", Message = "Age verification completed for wallet #1234", TimeAgo = "30 mins ago", IsRead = false },
+            new() { Icon = "⚠️", Title = "System Alert", Message = "High API usage detected", TimeAgo = "1 hour ago", IsRead = true }
+        };
+
+        UnreadNotifications = Notifications.Count(n => !n.IsRead);
+    }
+
+    private void ToggleSidebar()
+    {
+        IsSidebarCollapsed = !IsSidebarCollapsed;
+    }
+
+    private void ToggleUserMenu()
+    {
+        IsUserMenuOpen = !IsUserMenuOpen;
+    }
+
+    private void ToggleNotifications()
+    {
+        IsNotificationPanelOpen = !IsNotificationPanelOpen;
+        if (IsNotificationPanelOpen)
+        {
+            // Mark all as read
+            foreach (var notification in Notifications)
+            {
+                notification.IsRead = true;
+            }
+            UnreadNotifications = 0;
+        }
+    }
+
+    private void CloseNotifications()
+    {
+        IsNotificationPanelOpen = false;
+    }
+
+    private async Task PerformSearch()
+    {
+        if (!string.IsNullOrWhiteSpace(SearchQuery))
+        {
+            // Implement global search
+            Navigation.NavigateTo($"/search?q={Uri.EscapeDataString(SearchQuery)}");
+        }
+    }
+
+    private string GetActiveClass(string path)
+    {
+        var currentPath = Navigation.Uri.Replace(Navigation.BaseUri, "/");
+        return currentPath.StartsWith(path) ? "active" : "";
+    }
+
+    private class NotificationItem
+    {
+        public string Icon { get; set; } = "";
+        public string Title { get; set; } = "";
+        public string Message { get; set; } = "";
+        public string TimeAgo { get; set; } = "";
+        public bool IsRead { get; set; }
+    }
+}
+
+<style>
+    .notification-badge {
+        position: absolute;
+        top: -5px;
+        right: -5px;
+        background: var(--danger);
+        color: white;
+        font-size: 0.75rem;
+        padding: 2px 6px;
+        border-radius: 10px;
+        font-weight: 600;
+    }
+
+    .user-dropdown {
+        position: absolute;
+        top: 100%;
+        right: 0;
+        margin-top: 0.5rem;
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius-sm);
+        box-shadow: var(--shadow-lg);
+        min-width: 200px;
+        z-index: 1000;
+    }
+
+    .dropdown-item {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.75rem 1rem;
+        color: var(--text-primary);
+        text-decoration: none;
+        transition: background 0.2s ease;
+    }
+
+    .dropdown-item:hover {
+        background: var(--bg-hover);
+    }
+
+    .dropdown-divider {
+        margin: 0.5rem 0;
+        border: none;
+        border-top: 1px solid var(--border-color);
+    }
+
+    .notification-panel {
+        position: fixed;
+        right: 0;
+        top: var(--header-height);
+        bottom: 0;
+        width: 400px;
+        background: var(--bg-secondary);
+        border-left: 1px solid var(--border-color);
+        z-index: 999;
+        overflow-y: auto;
+        animation: slideInRight 0.3s ease;
+    }
+
+    @@keyframes slideInRight {
+        from {
+            transform: translateX(100%);
+        }
+        to {
+            transform: translateX(0);
+        }
+    }
+
+    .notification-header {
+        padding: 1.5rem;
+        border-bottom: 1px solid var(--border-color);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .notification-item {
+        display: flex;
+        gap: 1rem;
+        padding: 1rem 1.5rem;
+        border-bottom: 1px solid var(--border-color);
+        transition: background 0.2s ease;
+    }
+
+    .notification-item.unread {
+        background: var(--bg-tertiary);
+    }
+
+    .notification-icon {
+        font-size: 1.5rem;
+        width: 40px;
+    }
+
+    .notification-content {
+        flex: 1;
+    }
+
+    .notification-title {
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 0.25rem;
+    }
+
+    .notification-message {
+        font-size: 0.875rem;
+        color: var(--text-secondary);
+        margin-bottom: 0.25rem;
+    }
+
+    .notification-time {
+        font-size: 0.75rem;
+        color: var(--text-tertiary);
+    }
+
+    .sidebar-footer {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        padding: 1rem;
+        border-top: 1px solid var(--border-color);
+        background: var(--bg-tertiary);
+    }
+
+    .powered-by {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        color: var(--text-tertiary);
+        font-size: 0.75rem;
+    }
+
+    .company-logo {
+        height: 20px;
+        width: auto;
+    }
+
+    .page-content {
+        padding: 0;
+    }
+</style>

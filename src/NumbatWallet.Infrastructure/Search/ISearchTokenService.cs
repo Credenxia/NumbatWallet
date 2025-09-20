@@ -14,7 +14,7 @@ public interface ISearchTokenService
     Task<string> GenerateEmailTokenAsync(string email);
 
     // Date search tokens
-    Task<string> GenerateDateTokenAsync(DateTime date, DateGranularity granularity);
+    Task<string> GenerateDateTokenAsync(DateTime dateTime, DateGranularity granularity);
 
     // Phone search tokens
     Task<string> GeneratePhoneTokenAsync(string phoneNumber);

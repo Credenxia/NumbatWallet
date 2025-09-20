@@ -14,7 +14,7 @@ public class PhoneNumber : ValueObject
         CountryCode = countryCode;
     }
 
-    // EF Core constructor
+    // ORM constructor
     private PhoneNumber()
     {
         Value = string.Empty;

@@ -1,0 +1,654 @@
+@page "/wallets"
+@using Microsoft.AspNetCore.Components.Web
+@using Microsoft.EntityFrameworkCore
+@using NumbatWallet.Infrastructure.Data
+@using NumbatWallet.Domain.Aggregates
+@using NumbatWallet.SharedKernel.Enums
+@inject NumbatWalletDbContext DbContext
+@inject NavigationManager Navigation
+@inject IJSRuntime JS
+@rendermode InteractiveServer
+
+<PageTitle>Wallet Management - NumbatWallet</PageTitle>
+
+<div class="page-container">
+    <div class="page-header">
+        <div class="page-header-left">
+            <h1 class="page-title">Wallet Management</h1>
+            <nav class="breadcrumb">
+                <a href="/">Home</a>
+                <span>/</span>
+                <span>Wallets</span>
+            </nav>
+        </div>
+        <div class="page-header-right">
+            <button class="btn btn-secondary" @onclick="ExportWallets">
+                <i class="fas fa-download"></i> Export
+            </button>
+            <button class="btn btn-primary" @onclick="ShowCreateModal">
+                <i class="fas fa-plus"></i> Create Wallet
+            </button>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon" style="background: rgba(79, 70, 229, 0.1); color: #4F46E5;">
+                <i class="fas fa-wallet"></i>
+            </div>
+            <div class="stat-content">
+                <div class="stat-value">@TotalWallets</div>
+                <div class="stat-label">Total Wallets</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon" style="background: rgba(16, 185, 129, 0.1); color: #10B981;">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <div class="stat-content">
+                <div class="stat-value">@ActiveWallets</div>
+                <div class="stat-label">Active Wallets</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon" style="background: rgba(245, 158, 11, 0.1); color: #F59E0B;">
+                <i class="fas fa-pause-circle"></i>
+            </div>
+            <div class="stat-content">
+                <div class="stat-value">@SuspendedWallets</div>
+                <div class="stat-label">Suspended</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon" style="background: rgba(59, 130, 246, 0.1); color: #3B82F6;">
+                <i class="fas fa-calendar"></i>
+            </div>
+            <div class="stat-content">
+                <div class="stat-value">@CreatedToday</div>
+                <div class="stat-label">Created Today</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="filter-bar">
+        <div class="filter-group">
+            <div class="search-input">
+                <i class="fas fa-search"></i>
+                <input type="text" placeholder="Search wallets..." @bind="SearchQuery" @bind:event="oninput" @onkeyup="@(async (e) => { if (e.Key == "Enter") await LoadWallets(); })" />
+            </div>
+        </div>
+        <div class="filter-group">
+            <select class="filter-select" value="@StatusFilter" @onchange="@(async (e) => { StatusFilter = e.Value?.ToString() ?? ""; await LoadWallets(); })">
+                <option value="">All Status</option>
+                <option value="Active">Active</option>
+                <option value="Suspended">Suspended</option>
+                <option value="Revoked">Revoked</option>
+            </select>
+            <select class="filter-select" value="@TenantFilter" @onchange="@(async (e) => { TenantFilter = e.Value?.ToString() ?? ""; await LoadWallets(); })">
+                <option value="">All Tenants</option>
+                @foreach (var tenant in Tenants)
+                {
+                    <option value="@tenant.Id">@tenant.Name</option>
+                }
+            </select>
+            <input type="date" class="filter-input" value="@DateFilter" @onchange="@(async (e) => { DateFilter = DateTime.TryParse(e.Value?.ToString(), out var date) ? date : (DateTime?)null; await LoadWallets(); })" />
+        </div>
+    </div>
+
+    <!-- Wallets Table -->
+    <div class="table-container">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>
+                        <input type="checkbox" @onchange="ToggleSelectAll" />
+                    </th>
+                    <th @onclick="@(() => SortBy("Id"))">
+                        Wallet ID
+                        @if (SortColumn == "Id")
+                        {
+                            <i class="fas fa-sort-@(SortAscending ? "up" : "down")"></i>
+                        }
+                    </th>
+                    <th @onclick="@(() => SortBy("User"))">
+                        User
+                        @if (SortColumn == "User")
+                        {
+                            <i class="fas fa-sort-@(SortAscending ? "up" : "down")"></i>
+                        }
+                    </th>
+                    <th>Tenant</th>
+                    <th>Credentials</th>
+                    <th @onclick="@(() => SortBy("Status"))">
+                        Status
+                        @if (SortColumn == "Status")
+                        {
+                            <i class="fas fa-sort-@(SortAscending ? "up" : "down")"></i>
+                        }
+                    </th>
+                    <th @onclick="@(() => SortBy("Created"))">
+                        Created
+                        @if (SortColumn == "Created")
+                        {
+                            <i class="fas fa-sort-@(SortAscending ? "up" : "down")"></i>
+                        }
+                    </th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (IsLoading)
+                {
+                    <tr>
+                        <td colspan="8" class="text-center">
+                            <div class="spinner"></div>
+                            Loading wallets...
+                        </td>
+                    </tr>
+                }
+                else if (!WalletList.Any())
+                {
+                    <tr>
+                        <td colspan="8" class="text-center">
+                            <div class="empty-state">
+                                <i class="fas fa-wallet" style="font-size: 3rem; color: var(--text-tertiary);"></i>
+                                <p>No wallets found</p>
+                            </div>
+                        </td>
+                    </tr>
+                }
+                else
+                {
+                    @foreach (var wallet in WalletList)
+                    {
+                        <tr>
+                            <td>
+                                <input type="checkbox" checked="@wallet.IsSelected" @onchange="() => ToggleSelection(wallet)" />
+                            </td>
+                            <td>
+                                <a href="/wallets/@wallet.Id" class="link">
+                                    @wallet.Id.ToString().Substring(0, 8)...
+                                </a>
+                            </td>
+                            <td>
+                                <div class="user-cell">
+                                    <div class="user-avatar">@GetUserInitials(wallet.UserEmail)</div>
+                                    <div>
+                                        <div class="user-name">@wallet.UserName</div>
+                                        <div class="user-email">@wallet.UserEmail</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>@wallet.TenantName</td>
+                            <td>
+                                <span class="credential-count">@wallet.CredentialCount</span>
+                            </td>
+                            <td>
+                                <span class="badge badge-@GetStatusClass(wallet.Status)">
+                                    @wallet.Status
+                                </span>
+                            </td>
+                            <td>@wallet.CreatedAt.ToString("MMM dd, yyyy")</td>
+                            <td>
+                                <div class="action-buttons">
+                                    <button class="btn-action" @onclick="() => ViewWallet(wallet)" title="View">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    <button class="btn-action" @onclick="() => EditWallet(wallet)" title="Edit">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    @if (wallet.Status == "Active")
+                                    {
+                                        <button class="btn-action warning" @onclick="() => SuspendWallet(wallet)" title="Suspend">
+                                            <i class="fas fa-pause"></i>
+                                        </button>
+                                    }
+                                    else if (wallet.Status == "Suspended")
+                                    {
+                                        <button class="btn-action success" @onclick="() => ReactivateWallet(wallet)" title="Reactivate">
+                                            <i class="fas fa-play"></i>
+                                        </button>
+                                    }
+                                    <button class="btn-action danger" @onclick="() => DeleteWallet(wallet)" title="Delete">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination -->
+    <div class="pagination">
+        <div class="pagination-info">
+            Showing @((CurrentPage - 1) * PageSize + 1) to @Math.Min(CurrentPage * PageSize, TotalRecords) of @TotalRecords wallets
+        </div>
+        <div class="pagination-controls">
+            <button class="pagination-btn" @onclick="PreviousPage" disabled="@(CurrentPage == 1)">
+                <i class="fas fa-chevron-left"></i>
+            </button>
+            @for (int i = Math.Max(1, CurrentPage - 2); i <= Math.Min(TotalPages, CurrentPage + 2); i++)
+            {
+                var pageNum = i;
+                <button class="pagination-btn @(pageNum == CurrentPage ? "active" : "")" @onclick="() => GoToPage(pageNum)">
+                    @pageNum
+                </button>
+            }
+            <button class="pagination-btn" @onclick="NextPage" disabled="@(CurrentPage == TotalPages)">
+                <i class="fas fa-chevron-right"></i>
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Create/Edit Modal -->
+@if (ShowModal)
+{
+    <div class="modal-overlay" @onclick="CloseModal">
+        <div class="modal" @onclick:stopPropagation="true">
+            <div class="modal-header">
+                <h2 class="modal-title">@(IsEditMode ? "Edit Wallet" : "Create New Wallet")</h2>
+                <button class="modal-close" @onclick="CloseModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>User Email *</label>
+                    <input type="email" class="form-control" @bind="EditingWallet.UserEmail" placeholder="user@example.com" />
+                </div>
+                <div class="form-group">
+                    <label>User Name *</label>
+                    <input type="text" class="form-control" @bind="EditingWallet.UserName" placeholder="John Doe" />
+                </div>
+                <div class="form-group">
+                    <label>Tenant</label>
+                    <select class="form-control" @bind="EditingWallet.TenantId">
+                        <option value="">Select Tenant</option>
+                        @foreach (var tenant in Tenants)
+                        {
+                            <option value="@tenant.Id">@tenant.Name</option>
+                        }
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Status</label>
+                    <select class="form-control" @bind="EditingWallet.Status">
+                        <option value="Active">Active</option>
+                        <option value="Suspended">Suspended</option>
+                        <option value="Revoked">Revoked</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" @onclick="CloseModal">Cancel</button>
+                <button class="btn btn-primary" @onclick="SaveWallet">
+                    @(IsEditMode ? "Update" : "Create") Wallet
+                </button>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private List<WalletViewModel> WalletList = new();
+    private List<TenantInfo> Tenants = new();
+    private bool IsLoading = true;
+    private bool ShowModal = false;
+    private bool IsEditMode = false;
+
+    // Stats
+    private int TotalWallets = 0;
+    private int ActiveWallets = 0;
+    private int SuspendedWallets = 0;
+    private int CreatedToday = 0;
+
+    // Filters
+    private string SearchQuery = "";
+    private string StatusFilter = "";
+    private string TenantFilter = "";
+    private DateTime? DateFilter;
+
+    // Sorting
+    private string SortColumn = "Created";
+    private bool SortAscending = false;
+
+    // Pagination
+    private int CurrentPage = 1;
+    private int PageSize = 10;
+    private int TotalRecords = 0;
+    private int TotalPages => (int)Math.Ceiling(TotalRecords / (double)PageSize);
+
+    // Editing
+    private WalletViewModel EditingWallet = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadTenants();
+        await LoadStats();
+        await LoadWallets();
+    }
+
+    private async Task LoadTenants()
+    {
+        // Get unique tenant IDs from wallets since we don't have a Tenants table
+        var tenantIds = await DbContext.Wallets
+            .Select(w => w.TenantId)
+            .Distinct()
+            .ToListAsync();
+
+        Tenants = tenantIds.Select(id => new TenantInfo
+        {
+            Id = id,
+            Name = id == "default" ? "Default Tenant" : $"Tenant {id}"
+        }).ToList();
+    }
+
+    private async Task LoadStats()
+    {
+        var today = DateTime.UtcNow.Date;
+
+        TotalWallets = await DbContext.Wallets.CountAsync();
+        ActiveWallets = await DbContext.Wallets.CountAsync(w => w.Status == WalletStatus.Active);
+        SuspendedWallets = await DbContext.Wallets.CountAsync(w => w.Status == WalletStatus.Suspended);
+        CreatedToday = await DbContext.Wallets.CountAsync(w => w.CreatedAt >= today);
+    }
+
+    private async Task LoadWallets()
+    {
+        IsLoading = true;
+
+        var query = DbContext.Wallets
+            .Include(w => w.Credentials)
+            .AsQueryable();
+
+        // Apply filters
+        if (!string.IsNullOrEmpty(SearchQuery))
+        {
+            query = query.Where(w =>
+                w.PersonId.ToString().Contains(SearchQuery) ||
+                w.Id.ToString().Contains(SearchQuery));
+        }
+
+        if (!string.IsNullOrEmpty(StatusFilter))
+        {
+            var status = Enum.Parse<WalletStatus>(StatusFilter);
+            query = query.Where(w => w.Status == status);
+        }
+
+        if (!string.IsNullOrEmpty(TenantFilter))
+        {
+            query = query.Where(w => w.TenantId == TenantFilter);
+        }
+
+        if (DateFilter.HasValue)
+        {
+            var date = DateFilter.Value.Date;
+            query = query.Where(w => w.CreatedAt.Date == date);
+        }
+
+        // Apply sorting
+        query = SortColumn switch
+        {
+            "Id" => SortAscending ? query.OrderBy(w => w.Id) : query.OrderByDescending(w => w.Id),
+            "User" => SortAscending ? query.OrderBy(w => w.PersonId) : query.OrderByDescending(w => w.PersonId),
+            "Status" => SortAscending ? query.OrderBy(w => w.Status) : query.OrderByDescending(w => w.Status),
+            _ => SortAscending ? query.OrderBy(w => w.CreatedAt) : query.OrderByDescending(w => w.CreatedAt)
+        };
+
+        // Get total count
+        TotalRecords = await query.CountAsync();
+
+        // Apply pagination
+        WalletList = await query
+            .Skip((CurrentPage - 1) * PageSize)
+            .Take(PageSize)
+            .Select(w => new WalletViewModel
+            {
+                Id = w.Id,
+                UserId = w.PersonId.ToString(),
+                UserEmail = w.PersonId.ToString(), // In real app, would lookup user email
+                UserName = "User " + w.PersonId.ToString().Substring(0, 8),
+                TenantId = w.TenantId,
+                TenantName = "N/A", // Will set later after query execution
+                CredentialCount = w.Credentials.Count,
+                Status = w.Status.ToString(),
+                CreatedAt = w.CreatedAt.DateTime,
+                IsSelected = false
+            })
+            .ToListAsync();
+
+        // Update tenant names
+        foreach (var wallet in WalletList)
+        {
+            wallet.TenantName = Tenants.FirstOrDefault(t => t.Id == wallet.TenantId)?.Name ?? "N/A";
+        }
+
+        IsLoading = false;
+    }
+
+    private void SortBy(string column)
+    {
+        if (SortColumn == column)
+        {
+            SortAscending = !SortAscending;
+        }
+        else
+        {
+            SortColumn = column;
+            SortAscending = true;
+        }
+        _ = LoadWallets();
+    }
+
+    private void ToggleSelectAll(ChangeEventArgs e)
+    {
+        var isChecked = (bool)(e.Value ?? false);
+        foreach (var wallet in WalletList)
+        {
+            wallet.IsSelected = isChecked;
+        }
+    }
+
+    private void ToggleSelection(WalletViewModel wallet)
+    {
+        wallet.IsSelected = !wallet.IsSelected;
+    }
+
+    private string GetUserInitials(string email)
+    {
+        var parts = email.Split('@')[0].Split('.');
+        if (parts.Length >= 2)
+        {
+            return $"{parts[0][0]}{parts[1][0]}".ToUpper();
+        }
+        return email.Substring(0, 2).ToUpper();
+    }
+
+    private string GetStatusClass(string status) => status switch
+    {
+        "Active" => "success",
+        "Suspended" => "warning",
+        "Revoked" => "danger",
+        _ => "info"
+    };
+
+    private void ShowCreateModal()
+    {
+        EditingWallet = new WalletViewModel { Status = "Active" };
+        IsEditMode = false;
+        ShowModal = true;
+    }
+
+    private void EditWallet(WalletViewModel wallet)
+    {
+        EditingWallet = new WalletViewModel
+        {
+            Id = wallet.Id,
+            UserEmail = wallet.UserEmail,
+            UserName = wallet.UserName,
+            TenantId = wallet.TenantId,
+            Status = wallet.Status
+        };
+        IsEditMode = true;
+        ShowModal = true;
+    }
+
+    private void ViewWallet(WalletViewModel wallet)
+    {
+        Navigation.NavigateTo($"/wallets/{wallet.Id}");
+    }
+
+    private async Task SuspendWallet(WalletViewModel wallet)
+    {
+        if (await JS.InvokeAsync<bool>("confirm", $"Are you sure you want to suspend wallet {wallet.Id.ToString().Substring(0, 8)}?"))
+        {
+            var dbWallet = await DbContext.Wallets.FindAsync(wallet.Id);
+            if (dbWallet != null)
+            {
+                dbWallet.Suspend("Manual suspension via admin portal");
+                await DbContext.SaveChangesAsync();
+                await LoadWallets();
+            }
+        }
+    }
+
+    private async Task ReactivateWallet(WalletViewModel wallet)
+    {
+        var dbWallet = await DbContext.Wallets.FindAsync(wallet.Id);
+        if (dbWallet != null)
+        {
+            dbWallet.Reactivate();
+            await DbContext.SaveChangesAsync();
+            await LoadWallets();
+        }
+    }
+
+    private async Task DeleteWallet(WalletViewModel wallet)
+    {
+        if (await JS.InvokeAsync<bool>("confirm", $"Are you sure you want to delete wallet {wallet.Id.ToString().Substring(0, 8)}? This action cannot be undone."))
+        {
+            var dbWallet = await DbContext.Wallets.FindAsync(wallet.Id);
+            if (dbWallet != null)
+            {
+                DbContext.Wallets.Remove(dbWallet);
+                await DbContext.SaveChangesAsync();
+                await LoadWallets();
+            }
+        }
+    }
+
+    private async Task SaveWallet()
+    {
+        if (IsEditMode)
+        {
+            var wallet = await DbContext.Wallets.FindAsync(EditingWallet.Id);
+            if (wallet != null)
+            {
+                // Update wallet properties
+                await DbContext.SaveChangesAsync();
+            }
+        }
+        else
+        {
+            // Create new wallet
+            // Parse user ID to get person ID
+            if (!Guid.TryParse(EditingWallet.UserId, out var personId))
+            {
+                personId = Guid.NewGuid(); // Generate new ID if parsing fails
+            }
+
+            var wallet = Wallet.Create(
+                personId,
+                EditingWallet.UserName ?? "Default Wallet");
+
+            if (wallet.IsSuccess)
+            {
+                // Set tenant ID after creation
+                wallet.Value.SetTenantId(EditingWallet.TenantId ?? "default");
+                DbContext.Wallets.Add(wallet.Value);
+                await DbContext.SaveChangesAsync();
+            }
+        }
+
+        ShowModal = false;
+        await LoadWallets();
+    }
+
+    private void CloseModal()
+    {
+        ShowModal = false;
+    }
+
+    private async Task ExportWallets()
+    {
+        // Export to CSV
+        var csv = new System.Text.StringBuilder();
+        csv.AppendLine("Wallet ID,User Email,User Name,Tenant,Credentials,Status,Created");
+
+        foreach (var wallet in WalletList)
+        {
+            csv.AppendLine($"{wallet.Id},{wallet.UserEmail},{wallet.UserName},{wallet.TenantName},{wallet.CredentialCount},{wallet.Status},{wallet.CreatedAt:yyyy-MM-dd}");
+        }
+
+        var bytes = System.Text.Encoding.UTF8.GetBytes(csv.ToString());
+        var base64 = Convert.ToBase64String(bytes);
+
+        await JS.InvokeVoidAsync("eval", $@"
+            const link = document.createElement('a');
+            link.href = 'data:text/csv;base64,{base64}';
+            link.download = 'wallets-{DateTime.Now:yyyyMMdd-HHmmss}.csv';
+            link.click();
+        ");
+    }
+
+    private void GoToPage(int page)
+    {
+        CurrentPage = page;
+        _ = LoadWallets();
+    }
+
+    private void NextPage()
+    {
+        if (CurrentPage < TotalPages)
+        {
+            CurrentPage++;
+            _ = LoadWallets();
+        }
+    }
+
+    private void PreviousPage()
+    {
+        if (CurrentPage > 1)
+        {
+            CurrentPage--;
+            _ = LoadWallets();
+        }
+    }
+
+    // View Models
+    private class WalletViewModel
+    {
+        public Guid Id { get; set; }
+        public string UserId { get; set; } = "";
+        public string UserEmail { get; set; } = "";
+        public string UserName { get; set; } = "";
+        public string? TenantId { get; set; }
+        public string TenantName { get; set; } = "";
+        public int CredentialCount { get; set; }
+        public string Status { get; set; } = "";
+        public DateTime CreatedAt { get; set; }
+        public bool IsSelected { get; set; }
+    }
+
+    private class TenantInfo
+    {
+        public string Id { get; set; } = "";
+        public string Name { get; set; } = "";
+    }
+}

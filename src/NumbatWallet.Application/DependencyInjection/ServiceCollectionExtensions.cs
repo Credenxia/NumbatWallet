@@ -46,6 +46,11 @@ public static class ServiceCollectionExtensions
 
         // Register Application Services
         services.AddScoped<IEventDispatcher, Services.EventDispatcher>();
+        services.AddScoped<SharedKernel.Interfaces.IEventDispatcher, Services.EventDispatcher>();
+
+        // Register Mock Services for Development
+        services.AddScoped<Commands.Credentials.Handlers.IVerificationService, Commands.Credentials.Handlers.MockVerificationService>();
+        services.AddScoped<Commands.Credentials.Handlers.ICredentialSharingService, Commands.Credentials.Handlers.MockCredentialSharingService>();
 
         // Register Domain Event Handlers
         services.AddScoped<IDomainEventHandler<PersonCreatedEvent>, EventHandlers.PersonCreatedEventHandler>();

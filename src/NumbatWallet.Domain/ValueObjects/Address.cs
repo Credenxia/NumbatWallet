@@ -24,7 +24,7 @@ public class Address : ValueObject
         Country = country;
     }
 
-    // EF Core constructor
+    // ORM constructor
     private Address()
     {
         StreetLine1 = string.Empty;

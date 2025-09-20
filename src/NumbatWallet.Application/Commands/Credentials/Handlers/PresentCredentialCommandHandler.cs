@@ -38,14 +38,14 @@ public class PresentCredentialCommandHandler : ICommandHandler<PresentCredential
             ?? throw new NotFoundException($"Credential with ID {command.CredentialId} not found");
 
         // Check if credential can be presented
-        if (credential.Status != CredentialStatus.Active)
-        {
-            throw new BusinessRuleException("Cannot present inactive credential");
-        }
-
         if (credential.IsExpired())
         {
             throw new BusinessRuleException("Cannot present expired credential");
+        }
+
+        if (credential.Status != CredentialStatus.Active)
+        {
+            throw new BusinessRuleException("Cannot present inactive credential");
         }
 
         // Parse credential data to get claims

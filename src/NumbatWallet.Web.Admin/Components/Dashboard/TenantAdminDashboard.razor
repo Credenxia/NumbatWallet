@@ -1,0 +1,314 @@
+@page "/dashboard/tenant"
+@using Microsoft.AspNetCore.Components.Web
+@using Microsoft.JSInterop
+@using NumbatWallet.Web.Admin.Services
+@inject IJSRuntime JS
+@inject IDashboardService DashboardService
+@inject ITenantService TenantService
+@inject NavigationManager Navigation
+@rendermode InteractiveServer
+
+<PageTitle>@TenantName Dashboard - NumbatWallet</PageTitle>
+
+<div class="dashboard-container">
+    <div class="dashboard-header">
+        <div class="dashboard-header-left">
+            <h1 class="dashboard-title">@TenantName Dashboard</h1>
+            <span class="badge badge-success">Tenant View</span>
+        </div>
+        <div class="dashboard-actions">
+            <button class="btn btn-secondary" @onclick="ExportDashboard">
+                <i class="fas fa-download"></i> Export
+            </button>
+            <button class="btn btn-secondary" @onclick="RefreshAllWidgets">
+                <i class="fas fa-sync-alt"></i> Refresh
+            </button>
+            <button class="btn btn-primary" @onclick="ToggleWidgetGallery">
+                <i class="fas fa-plus"></i> Add Widget
+            </button>
+        </div>
+    </div>
+
+    <!-- Tenant-specific KPI Summary -->
+    <div class="tenant-summary">
+        <div class="summary-card">
+            <div class="summary-icon">🏢</div>
+            <div class="summary-content">
+                <div class="summary-label">Organization</div>
+                <div class="summary-value">@TenantName</div>
+            </div>
+        </div>
+        <div class="summary-card">
+            <div class="summary-icon">📅</div>
+            <div class="summary-content">
+                <div class="summary-label">Active Since</div>
+                <div class="summary-value">@ActiveSince</div>
+            </div>
+        </div>
+        <div class="summary-card">
+            <div class="summary-icon">🎯</div>
+            <div class="summary-content">
+                <div class="summary-label">Plan</div>
+                <div class="summary-value">@SubscriptionPlan</div>
+            </div>
+        </div>
+        <div class="summary-card">
+            <div class="summary-icon">💳</div>
+            <div class="summary-content">
+                <div class="summary-label">Monthly Usage</div>
+                <div class="summary-value">@MonthlyUsage</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dashboard Grid Container -->
+    <div id="dashboard-grid" class="grid-stack">
+        <!-- Widgets will be dynamically added here -->
+    </div>
+</div>
+
+<!-- Widget Gallery Sidebar -->
+<div id="widget-gallery" class="widget-gallery">
+    <div class="gallery-header">
+        <h3 class="gallery-title">Widget Gallery</h3>
+        <button class="gallery-close" @onclick="CloseWidgetGallery">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+    <div class="gallery-content">
+        <div id="widget-gallery-items">
+            <!-- Gallery items will be rendered by JavaScript -->
+        </div>
+    </div>
+</div>
+
+@code {
+    private string TenantName = "Loading...";
+    private string ActiveSince = "Loading...";
+    private string SubscriptionPlan = "Loading...";
+    private string MonthlyUsage = "Loading...";
+    // Widget initialization handled by JS
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Load tenant information
+        await LoadTenantInfo();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            // Load GridStack and Chart.js libraries
+            await LoadExternalLibraries();
+
+            // Initialize dashboard widget manager
+            await JS.InvokeVoidAsync("eval", @"
+                if (typeof dashboardManager === 'undefined') {
+                    dashboardManager = new DashboardWidgetManager('dashboard-grid', {
+                        column: 12,
+                        cellHeight: 70,
+                        verticalMargin: 15,
+                        animate: true
+                    });
+                }
+            ");
+
+            // Load tenant-specific widgets
+            await LoadTenantWidgets();
+
+            // Start SignalR connection for real-time updates
+            await InitializeSignalR();
+
+            // Widget initialization handled by JS
+        }
+    }
+
+    private async Task LoadTenantInfo()
+    {
+        // Load tenant information from service
+        var tenantInfo = await TenantService.GetCurrentTenantAsync();
+        if (tenantInfo != null)
+        {
+            TenantName = tenantInfo.Name;
+            ActiveSince = tenantInfo.CreatedAt.ToString("MMM yyyy");
+            SubscriptionPlan = tenantInfo.Plan;
+            MonthlyUsage = $"{tenantInfo.MonthlyUsage:N0} verifications";
+        }
+    }
+
+    private async Task LoadExternalLibraries()
+    {
+        // Load GridStack CSS
+        await JS.InvokeVoidAsync("eval", @"
+            if (!document.querySelector('link[href*=""gridstack""]')) {
+                const link = document.createElement('link');
+                link.rel = 'stylesheet';
+                link.href = 'https://cdn.jsdelivr.net/npm/gridstack@9/dist/gridstack.min.css';
+                document.head.appendChild(link);
+            }
+        ");
+
+        // Load GridStack JS
+        await JS.InvokeVoidAsync("eval", @"
+            if (typeof GridStack === 'undefined') {
+                const script = document.createElement('script');
+                script.src = 'https://cdn.jsdelivr.net/npm/gridstack@9/dist/gridstack-all.js';
+                document.head.appendChild(script);
+            }
+        ");
+
+        // Load Chart.js
+        await JS.InvokeVoidAsync("eval", @"
+            if (typeof Chart === 'undefined') {
+                const script = document.createElement('script');
+                script.src = 'https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js';
+                document.head.appendChild(script);
+            }
+        ");
+
+        // Wait for libraries to load
+        await Task.Delay(1000);
+    }
+
+    private async Task InitializeSignalR()
+    {
+        // Initialize SignalR connection for real-time dashboard updates
+        // This will be implemented when SignalR hub is ready
+    }
+
+    private async Task LoadTenantWidgets()
+    {
+        // Load tenant-specific widgets (different from master admin)
+        await JS.InvokeVoidAsync("eval", @"
+            // Register tenant-specific widgets
+            dashboardManager.registerWidget({
+                id: 'my-wallets',
+                type: 'kpi',
+                name: 'My Wallets',
+                icon: '👛',
+                defaultSize: { w: 3, h: 2 },
+                component: 'KpiWidget',
+                props: {
+                    title: 'Total Wallets',
+                    valueKey: 'myWallets',
+                    color: 'primary'
+                }
+            });
+
+            dashboardManager.registerWidget({
+                id: 'my-credentials',
+                type: 'kpi',
+                name: 'My Credentials',
+                icon: '🎫',
+                defaultSize: { w: 3, h: 2 },
+                component: 'KpiWidget',
+                props: {
+                    title: 'Issued Credentials',
+                    valueKey: 'myCredentials',
+                    color: 'success'
+                }
+            });
+
+            dashboardManager.registerWidget({
+                id: 'usage-quota',
+                type: 'gauge',
+                name: 'Usage Quota',
+                icon: '⚡',
+                defaultSize: { w: 3, h: 3 },
+                component: 'GaugeWidget',
+                props: {
+                    title: 'Monthly Usage',
+                    valueKey: 'usageQuota',
+                    max: 10000
+                }
+            });
+
+            // Load default tenant layout
+            dashboardManager.addWidget('my-wallets', { x: 0, y: 0 });
+            dashboardManager.addWidget('my-credentials', { x: 3, y: 0 });
+            dashboardManager.addWidget('verifications-today', { x: 6, y: 0 });
+            dashboardManager.addWidget('usage-quota', { x: 9, y: 0 });
+            dashboardManager.addWidget('wallet-growth', { x: 0, y: 2 });
+            dashboardManager.addWidget('credential-types', { x: 6, y: 2 });
+            dashboardManager.addWidget('recent-wallets', { x: 0, y: 6 });
+            dashboardManager.addWidget('live-feed', { x: 6, y: 6 });
+        ");
+    }
+
+    private async Task RefreshAllWidgets()
+    {
+        await JS.InvokeVoidAsync("eval", @"
+            dashboardManager.widgets.forEach((widget, id) => {
+                dashboardManager.refreshWidget(id);
+            });
+        ");
+    }
+
+    private async Task ToggleWidgetGallery()
+    {
+        await JS.InvokeVoidAsync("dashboardManager.toggleWidgetGallery");
+    }
+
+    private async Task CloseWidgetGallery()
+    {
+        await JS.InvokeVoidAsync("eval", @"
+            document.getElementById('widget-gallery').classList.remove('open');
+        ");
+    }
+
+    private async Task ExportDashboard()
+    {
+        // Export dashboard data to CSV or PDF
+        // Mock export for now
+        var data = new byte[] { };
+        // Trigger download
+    }
+}
+
+<style>
+    .tenant-summary {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .summary-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius);
+        padding: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .summary-icon {
+        font-size: 2rem;
+        width: 48px;
+        height: 48px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--bg-tertiary);
+        border-radius: var(--border-radius-sm);
+    }
+
+    .summary-content {
+        flex: 1;
+    }
+
+    .summary-label {
+        font-size: 0.75rem;
+        color: var(--text-tertiary);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .summary-value {
+        font-size: 1.125rem;
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+</style>

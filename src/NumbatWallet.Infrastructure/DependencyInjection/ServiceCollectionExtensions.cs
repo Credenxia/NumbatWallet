@@ -24,6 +24,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<ICurrentUserService, CurrentUserService>();
         services.AddScoped<ICurrentTenantService, CurrentTenantService>();
         services.AddSingleton<IDateTimeProvider, DateTimeProvider>();
+        services.AddSingleton<IDateTimeService, DateTimeService>();
 
         // Register interceptors
         services.AddScoped<AuditInterceptor>();
@@ -70,6 +71,8 @@ public static class ServiceCollectionExtensions
 
         // Register Infrastructure Services
         services.AddScoped<Application.Interfaces.ITenantService, TenantService>();
+        // Register adapter for SharedKernel.Interfaces.ITenantService
+        services.AddScoped<SharedKernel.Interfaces.ITenantService, TenantServiceAdapter>();
         services.AddScoped<IAuthenticationService, AuthenticationService>();
         services.AddScoped<IWAIdXService, MockWAIdXService>();
         // services.AddScoped<IDateTimeService, DateTimeService>();
@@ -120,6 +123,11 @@ public static class ServiceCollectionExtensions
         if (!string.IsNullOrEmpty(keyVaultUrl))
         {
             services.AddSingleton<IKeyVaultService, AzureKeyVaultService>();
+        }
+        else
+        {
+            // Use mock service for development when Azure Key Vault is not configured
+            services.AddSingleton<IKeyVaultService, MockKeyVaultService>();
         }
 
         // Crypto Services (Envelope Encryption)

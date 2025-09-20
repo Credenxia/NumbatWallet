@@ -19,7 +19,7 @@ public class CredentialSchemaId : ValueObject
         Uri = new Uri(value);
     }
 
-    // EF Core constructor
+    // ORM constructor
     private CredentialSchemaId()
     {
         Value = string.Empty;

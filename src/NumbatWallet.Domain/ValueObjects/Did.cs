@@ -22,7 +22,7 @@ public class Did : ValueObject
         MethodSpecificId = parts[2];
     }
 
-    // EF Core constructor
+    // ORM constructor
     private Did()
     {
         Value = string.Empty;

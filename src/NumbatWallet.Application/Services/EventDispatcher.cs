@@ -5,7 +5,7 @@ using NumbatWallet.SharedKernel.Interfaces;
 
 namespace NumbatWallet.Application.Services;
 
-public class EventDispatcher : Application.Interfaces.IEventDispatcher
+public class EventDispatcher : Application.Interfaces.IEventDispatcher, SharedKernel.Interfaces.IEventDispatcher
 {
     private readonly IServiceProvider _serviceProvider;
     private readonly ILogger<EventDispatcher> _logger;

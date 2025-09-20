@@ -33,7 +33,7 @@ public sealed class Wallet : AuditableEntity<Guid>, ITenantAware
 #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring as nullable.
     private Wallet() : base(Guid.Empty)
     {
-        // Required for EF Core
+        // Required for persistence
     }
 #pragma warning restore CS8618
 
@@ -61,7 +61,7 @@ public sealed class Wallet : AuditableEntity<Guid>, ITenantAware
 
             var wallet = new Wallet(
                 personId,
-                string.Empty, // Will be set by DbContext
+                string.Empty, // Will be set by persistence layer
                 walletName);
 
             // Raise domain event

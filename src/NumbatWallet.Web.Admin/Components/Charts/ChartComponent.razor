@@ -1,0 +1,353 @@
+@using Microsoft.JSInterop
+@using System.Text.Json
+@using NumbatWallet.Web.Admin.Services
+@inject IJSRuntime JS
+@inject IDashboardService DashboardService
+@rendermode InteractiveServer
+
+<div class="chart-container @CssClass">
+    @if (!string.IsNullOrEmpty(Title))
+    {
+        <div class="chart-header">
+            <h3 class="chart-title">@Title</h3>
+            <div class="chart-actions">
+                <button class="btn btn-icon" @onclick="RefreshChart" title="Refresh">
+                    <i class="fas fa-sync-alt"></i>
+                </button>
+                <button class="btn btn-icon" @onclick="ExportChart" title="Export">
+                    <i class="fas fa-download"></i>
+                </button>
+            </div>
+        </div>
+    }
+    <div class="chart-body">
+        <canvas id="@ChartId"></canvas>
+    </div>
+</div>
+
+@code {
+    [Parameter] public string ChartId { get; set; } = $"chart-{Guid.NewGuid():N}";
+    [Parameter] public string? Title { get; set; }
+    [Parameter] public ChartType Type { get; set; } = ChartType.Line;
+    [Parameter] public string? DataEndpoint { get; set; }
+    [Parameter] public string? TenantId { get; set; }
+    [Parameter] public string? CssClass { get; set; }
+    [Parameter] public bool AutoRefresh { get; set; } = false;
+    [Parameter] public int RefreshIntervalSeconds { get; set; } = 30;
+
+    private System.Threading.Timer? _refreshTimer;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            // Load Chart.js if not already loaded
+            await EnsureChartJsLoaded();
+
+            // Initialize chart
+            await InitializeChart();
+
+            // Set up auto-refresh if enabled
+            if (AutoRefresh)
+            {
+                _refreshTimer = new System.Threading.Timer(
+                    async _ => await RefreshChart(),
+                    null,
+                    TimeSpan.FromSeconds(RefreshIntervalSeconds),
+                    TimeSpan.FromSeconds(RefreshIntervalSeconds));
+            }
+        }
+    }
+
+    private async Task EnsureChartJsLoaded()
+    {
+        await JS.InvokeVoidAsync("eval", @"
+            if (typeof Chart === 'undefined') {
+                const script = document.createElement('script');
+                script.src = 'https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js';
+                document.head.appendChild(script);
+
+                // Wait for Chart.js to load
+                await new Promise(resolve => {
+                    script.onload = resolve;
+                });
+            }
+        ");
+    }
+
+    private async Task InitializeChart()
+    {
+        var data = await LoadChartData();
+        var config = GetChartConfiguration(data);
+
+        await JS.InvokeVoidAsync("eval", $@"
+            const canvas = document.getElementById('{ChartId}');
+            if (canvas) {{
+                const ctx = canvas.getContext('2d');
+                window['{ChartId}'] = new Chart(ctx, {JsonSerializer.Serialize(config)});
+            }}
+        ");
+    }
+
+    private async Task<ChartData> LoadChartData()
+    {
+        // Load data based on endpoint
+        return DataEndpoint switch
+        {
+            "wallet-growth" => await LoadWalletGrowthData(),
+            "credential-distribution" => await LoadCredentialDistribution(),
+            "verification-activity" => await LoadVerificationActivity(),
+            "tenant-comparison" => await LoadTenantComparison(),
+            _ => GetMockData()
+        };
+    }
+
+    private async Task<ChartData> LoadWalletGrowthData()
+    {
+        // Mock wallet growth data
+        var dataPoints = new List<ChartDataPoint>
+        {
+            new() { Label = "Mon", Value = 10 },
+            new() { Label = "Tue", Value = 15 },
+            new() { Label = "Wed", Value = 20 },
+            new() { Label = "Thu", Value = 18 },
+            new() { Label = "Fri", Value = 25 },
+            new() { Label = "Sat", Value = 30 },
+            new() { Label = "Sun", Value = 28 }
+        };
+        return new ChartData
+        {
+            Labels = dataPoints.Select(d => d.Label).ToList(),
+            Datasets = new List<ChartDataset>
+            {
+                new ChartDataset
+                {
+                    Label = "Wallets Created",
+                    Data = dataPoints.Select(d => (object)d.Value).ToList(),
+                    BorderColor = "#4F46E5",
+                    BackgroundColor = "rgba(79, 70, 229, 0.1)",
+                    Tension = 0.4
+                }
+            }
+        };
+    }
+
+    private async Task<ChartData> LoadCredentialDistribution()
+    {
+        var dataPoints = await DashboardService.GetCredentialTypeDistributionAsync();
+        return new ChartData
+        {
+            Labels = dataPoints.Select(d => d.Label).ToList(),
+            Datasets = new List<ChartDataset>
+            {
+                new ChartDataset
+                {
+                    Label = "Credentials",
+                    Data = dataPoints.Select(d => (object)d.Value).ToList(),
+                    BackgroundColor = new List<string>
+                    {
+                        "#4F46E5", "#10B981", "#F59E0B", "#EF4444",
+                        "#8B5CF6", "#EC4899", "#14B8A6", "#6366F1"
+                    }
+                }
+            }
+        };
+    }
+
+    private async Task<ChartData> LoadVerificationActivity()
+    {
+        // Mock data for now
+        var last7Days = Enumerable.Range(0, 7)
+            .Select(i => DateTime.Now.AddDays(-i))
+            .Reverse()
+            .ToList();
+
+        return new ChartData
+        {
+            Labels = last7Days.Select(d => d.ToString("MMM dd")).ToList(),
+            Datasets = new List<ChartDataset>
+            {
+                new ChartDataset
+                {
+                    Label = "Verifications",
+                    Data = last7Days.Select(_ => Random.Shared.Next(50, 200)).Cast<object>().ToList(),
+                    BackgroundColor = "#10B981",
+                    BorderColor = "#10B981",
+                    BorderWidth = 2
+                }
+            }
+        };
+    }
+
+    private async Task<ChartData> LoadTenantComparison()
+    {
+        return new ChartData
+        {
+            Labels = new List<string> { "Tenant A", "Tenant B", "Tenant C", "Tenant D", "Tenant E" },
+            Datasets = new List<ChartDataset>
+            {
+                new ChartDataset
+                {
+                    Label = "Wallets",
+                    Data = new List<object> { 145, 238, 187, 92, 165 },
+                    BackgroundColor = "#4F46E5"
+                },
+                new ChartDataset
+                {
+                    Label = "Credentials",
+                    Data = new List<object> { 523, 892, 645, 318, 598 },
+                    BackgroundColor = "#F59E0B"
+                }
+            }
+        };
+    }
+
+    private ChartData GetMockData()
+    {
+        return Type switch
+        {
+            ChartType.Doughnut or ChartType.Pie => new ChartData
+            {
+                Labels = new List<string> { "Type A", "Type B", "Type C", "Type D" },
+                Datasets = new List<ChartDataset>
+                {
+                    new ChartDataset
+                    {
+                        Data = new List<object> { 30, 25, 20, 25 },
+                        BackgroundColor = new List<string> { "#4F46E5", "#10B981", "#F59E0B", "#EF4444" }
+                    }
+                }
+            },
+            _ => new ChartData
+            {
+                Labels = new List<string> { "Jan", "Feb", "Mar", "Apr", "May", "Jun" },
+                Datasets = new List<ChartDataset>
+                {
+                    new ChartDataset
+                    {
+                        Label = "Dataset",
+                        Data = new List<object> { 12, 19, 3, 5, 2, 3 },
+                        BorderColor = "#4F46E5",
+                        BackgroundColor = "rgba(79, 70, 229, 0.1)"
+                    }
+                }
+            }
+        };
+    }
+
+    private object GetChartConfiguration(ChartData data)
+    {
+        return new
+        {
+            type = Type.ToString().ToLower(),
+            data = data,
+            options = new
+            {
+                responsive = true,
+                maintainAspectRatio = false,
+                plugins = new
+                {
+                    legend = new
+                    {
+                        display = Type != ChartType.Line,
+                        position = "bottom"
+                    },
+                    tooltip = new
+                    {
+                        mode = "index",
+                        intersect = false
+                    }
+                },
+                scales = Type == ChartType.Line || Type == ChartType.Bar ? new
+                {
+                    x = new
+                    {
+                        grid = new { display = false }
+                    },
+                    y = new
+                    {
+                        beginAtZero = true,
+                        grid = new
+                        {
+                            color = "rgba(0, 0, 0, 0.05)"
+                        }
+                    }
+                } : null
+            }
+        };
+    }
+
+    private async Task RefreshChart()
+    {
+        var data = await LoadChartData();
+
+        await JS.InvokeVoidAsync("eval", $@"
+            if (window['{ChartId}']) {{
+                window['{ChartId}'].data = {JsonSerializer.Serialize(data)};
+                window['{ChartId}'].update();
+            }}
+        ");
+    }
+
+    private async Task ExportChart()
+    {
+        var filename = $"{Title ?? "chart"}-{DateTime.Now:yyyyMMdd-HHmmss}.png";
+        await JS.InvokeVoidAsync("eval", $@"
+            if (window['{ChartId}']) {{
+                const url = window['{ChartId}'].toBase64Image();
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = '{filename}';
+                a.click();
+            }}
+        ");
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        _refreshTimer?.Dispose();
+
+        // Destroy chart instance
+        await JS.InvokeVoidAsync("eval", $@"
+            if (window['{ChartId}']) {{
+                window['{ChartId}'].destroy();
+                delete window['{ChartId}'];
+            }}
+        ");
+    }
+
+    // Models
+    public enum ChartType
+    {
+        Line,
+        Bar,
+        Pie,
+        Doughnut,
+        Radar,
+        PolarArea,
+        Bubble,
+        Scatter
+    }
+
+    public class ChartData
+    {
+        public List<string> Labels { get; set; } = new();
+        public List<ChartDataset> Datasets { get; set; } = new();
+    }
+
+    public class ChartDataset
+    {
+        public string? Label { get; set; }
+        public List<object> Data { get; set; } = new();
+        public object? BackgroundColor { get; set; }
+        public string? BorderColor { get; set; }
+        public int BorderWidth { get; set; } = 1;
+        public double Tension { get; set; } = 0;
+    }
+
+    public class ChartDataPoint
+    {
+        public string Label { get; set; } = "";
+        public double Value { get; set; }
+    }
+}

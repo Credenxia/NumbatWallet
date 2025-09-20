@@ -13,6 +13,7 @@ using NumbatWallet.Application.Interfaces;
 using NumbatWallet.Domain.Aggregates;
 using NumbatWallet.Domain.Events;
 using NumbatWallet.Domain.Interfaces;
+using NumbatWallet.SharedKernel.Interfaces;
 using NumbatWallet.SharedKernel.Enums;
 using Xunit;
 
@@ -22,7 +23,7 @@ public class PresentCredentialCommandHandlerTests
 {
     private readonly Mock<ICredentialRepository> _credentialRepositoryMock;
     private readonly Mock<IVerificationService> _verificationServiceMock;
-    private readonly Mock<IEventDispatcher> _eventDispatcherMock;
+    private readonly Mock<Application.Interfaces.IEventDispatcher> _eventDispatcherMock;
     private readonly Mock<ILogger<PresentCredentialCommandHandler>> _loggerMock;
     private readonly PresentCredentialCommandHandler _handler;
 
@@ -30,7 +31,7 @@ public class PresentCredentialCommandHandlerTests
     {
         _credentialRepositoryMock = new Mock<ICredentialRepository>();
         _verificationServiceMock = new Mock<IVerificationService>();
-        _eventDispatcherMock = new Mock<IEventDispatcher>();
+        _eventDispatcherMock = new Mock<Application.Interfaces.IEventDispatcher>();
         _loggerMock = new Mock<ILogger<PresentCredentialCommandHandler>>();
         _handler = new PresentCredentialCommandHandler(
             _credentialRepositoryMock.Object,
@@ -78,15 +79,15 @@ public class PresentCredentialCommandHandlerTests
             .ReturnsAsync(credential);
 
         _verificationServiceMock.Setup(x => x.CreatePresentationTokenAsync(
-                credentialId,
-                verifierId,
-                purpose,
+                It.IsAny<Guid>(),
+                It.IsAny<string>(),
+                It.IsAny<string>(),
                 It.IsAny<Dictionary<string, object>>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(presentationToken);
 
         _verificationServiceMock.Setup(x => x.CreateVerificationUrlAsync(
-                presentationToken,
+                It.IsAny<string>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(verificationUrl);
 
@@ -289,11 +290,11 @@ public class PresentCredentialCommandHandlerTests
 
         CredentialPresentedEvent? capturedEvent = null;
         _eventDispatcherMock.Setup(x => x.DispatchAsync(
-                It.IsAny<CredentialPresentedEvent>(),
+                It.IsAny<IDomainEvent>(),
                 It.IsAny<CancellationToken>()))
-            .Callback<CredentialPresentedEvent, CancellationToken>((evt, ct) =>
+            .Callback((IDomainEvent evt, CancellationToken ct) =>
             {
-                capturedEvent = evt;
+                capturedEvent = evt as CredentialPresentedEvent;
             })
             .Returns(Task.CompletedTask);
 
