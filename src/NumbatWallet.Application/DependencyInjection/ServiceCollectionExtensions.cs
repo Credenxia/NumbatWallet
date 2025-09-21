@@ -58,6 +58,14 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IDomainEventHandler<CredentialIssuedEvent>, EventHandlers.CredentialIssuedEventHandler>();
         services.AddScoped<IDomainEventHandler<CredentialRevokedEvent>, EventHandlers.CredentialRevokedEventHandler>();
 
+        // Register Application Services
+        services.AddScoped<IPersonService, Services.PersonService>();
+        services.AddScoped<IWalletService, Services.WalletService>();
+        services.AddScoped<ICredentialService, Services.CredentialService>();
+        services.AddScoped<IOrganizationService, Services.OrganizationService>();
+        services.AddScoped<IStatisticsService, Services.StatisticsService>();
+        // Note: IHealthCheckService is registered in Infrastructure layer
+
         // TODO: Register Background Jobs after fixing them
         // services.AddHostedService<BackgroundJobs.CredentialExpiryCheckJob>();
         // services.AddHostedService<BackgroundJobs.StatisticsAggregationJob>();

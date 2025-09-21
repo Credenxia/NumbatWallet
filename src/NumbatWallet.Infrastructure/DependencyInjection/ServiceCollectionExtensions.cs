@@ -137,6 +137,9 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<Crypto.Interfaces.IKeyWrapProvider, Crypto.KeyVaultWrapProvider>();
         services.AddScoped<ICryptoService, Crypto.CryptoService>();
 
+        // Health Check Service
+        services.AddScoped<IHealthCheckService, Services.HealthCheckService>();
+
         // Blob Storage
         var storageConnectionString = configuration["Azure:Storage:ConnectionString"];
         var storageAccountName = configuration["Azure:Storage:AccountName"];
