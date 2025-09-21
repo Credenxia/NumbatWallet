@@ -22,8 +22,8 @@ public static class CarterExtensions
 
     public static WebApplication MapCarterEndpoints(this WebApplication app)
     {
-        // Map Carter modules
-        app.MapCarter();
+        // Note: MapCarter() is now called directly in Program.cs
+        // This method is kept for adding additional API metadata
 
         // Add endpoint metadata for OpenAPI
         app.MapGet("/api", () => new

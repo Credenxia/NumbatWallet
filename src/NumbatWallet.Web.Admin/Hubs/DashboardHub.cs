@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.SignalR;
 using System;
 using System.Threading.Tasks;
 using NumbatWallet.Web.Admin.Services;
+using NumbatWallet.Web.Admin.Models;
 
 namespace NumbatWallet.Web.Admin.Hubs;
 

@@ -22,6 +22,10 @@ try
     // Add service defaults & Aspire components
     builder.AddServiceDefaults();
 
+    // Logging the connection string for debugging
+    var connString = builder.Configuration.GetConnectionString("numbatwallet");
+    Log.Information($"Connection string from config: {connString}");
+
     // Add Serilog
     builder.Host.UseSerilog((context, services, configuration) => configuration
         .ReadFrom.Configuration(context.Configuration)
@@ -87,24 +91,13 @@ try
 
     // Map endpoints
     app.MapControllers();
+    app.MapCarter(); // Map Carter endpoints first
     app.MapGraphQL();
-    app.MapCarterEndpoints(); // REST endpoints via Carter with metadata
     app.MapHealthChecks();
     app.MapDefaultEndpoints();
 
-    // Ensure database is created and migrations are applied
-    using (var scope = app.Services.CreateScope())
-    {
-        var dbContext = scope.ServiceProvider.GetRequiredService<NumbatWalletDbContext>();
-        if (app.Environment.IsDevelopment())
-        {
-            await dbContext.Database.EnsureCreatedAsync();
-        }
-        else
-        {
-            await dbContext.Database.MigrateAsync();
-        }
-    }
+    // Database migration is handled by MigrationHelper hosted service
+    // No need to manually ensure database creation here
 
     await app.RunAsync();
 }

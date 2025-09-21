@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using NumbatWallet.Domain.Aggregates;
 using NumbatWallet.Infrastructure.Data;
 using NumbatWallet.Web.Admin.Services;
+using NumbatWallet.Web.Admin.Models;
 using NumbatWallet.SharedKernel.Enums;
 using NumbatWallet.Web.Admin.Hubs;
 using System;
@@ -18,23 +19,23 @@ namespace NumbatWallet.Web.Admin.Controllers;
 [Authorize(Policy = "OfficerOrAdmin")]
 public class AdminApiController : ControllerBase
 {
-    private readonly NumbatWalletDbContext _context;
     private readonly IDashboardService _dashboardService;
     private readonly ITenantService _tenantService;
     private readonly IRealtimeNotificationService _notificationService;
+    private readonly IApiClient _apiClient;
     private readonly ILogger<AdminApiController> _logger;
 
     public AdminApiController(
-        NumbatWalletDbContext context,
         IDashboardService dashboardService,
         ITenantService tenantService,
         IRealtimeNotificationService notificationService,
+        IApiClient apiClient,
         ILogger<AdminApiController> logger)
     {
-        _context = context;
         _dashboardService = dashboardService;
         _tenantService = tenantService;
         _notificationService = notificationService;
+        _apiClient = apiClient;
         _logger = logger;
     }
 

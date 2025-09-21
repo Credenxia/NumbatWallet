@@ -106,56 +106,9 @@ public static class ServiceCollectionExtensions
             });
         });
 
-        // Add Swagger/OpenAPI
+        // Swagger is configured in SwaggerExtensions.cs via AddSwaggerDocumentation()
+        // Just add the EndpointsApiExplorer which is needed for minimal APIs
         services.AddEndpointsApiExplorer();
-        services.AddSwaggerGen(options =>
-        {
-            options.SwaggerDoc("v1", new OpenApiInfo
-            {
-                Title = "NumbatWallet API",
-                Version = "v1",
-                Description = "Digital Wallet and Verifiable Credentials API for Western Australia",
-                Contact = new OpenApiContact
-                {
-                    Name = "NumbatWallet Team",
-                    Email = "support@numbatwallet.wa.gov.au"
-                }
-            });
-
-            // Add JWT Authentication to Swagger
-            options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
-            {
-                Description = "JWT Authorization header using the Bearer scheme",
-                Name = "Authorization",
-                In = ParameterLocation.Header,
-                Type = SecuritySchemeType.Http,
-                Scheme = "bearer",
-                BearerFormat = "JWT"
-            });
-
-            options.AddSecurityRequirement(new OpenApiSecurityRequirement
-            {
-                {
-                    new OpenApiSecurityScheme
-                    {
-                        Reference = new OpenApiReference
-                        {
-                            Type = ReferenceType.SecurityScheme,
-                            Id = "Bearer"
-                        }
-                    },
-                    Array.Empty<string>()
-                }
-            });
-
-            // Include XML comments
-            var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
-            var xmlPath = System.IO.Path.Combine(AppContext.BaseDirectory, xmlFile);
-            if (File.Exists(xmlPath))
-            {
-                options.IncludeXmlComments(xmlPath);
-            }
-        });
 
         return services;
     }

@@ -1,0 +1,87 @@
+# Wallet management queries and mutations
+
+query GetWallets {
+  wallets {
+    id
+    name
+    type
+    status
+    createdAt
+    owner {
+      id
+      email
+      firstName
+      lastName
+    }
+    credentials {
+      id
+      type
+      status
+    }
+  }
+}
+
+query GetWallet($id: ID!) {
+  wallet(id: $id) {
+    id
+    name
+    type
+    status
+    createdAt
+    owner {
+      id
+      email
+      firstName
+      lastName
+      role
+    }
+    credentials {
+      id
+      type
+      status
+      issuedAt
+      expiresAt
+    }
+  }
+}
+
+mutation CreateWallet($input: CreateWalletInput!) {
+  createWallet(input: $input) {
+    wallet {
+      id
+      name
+      type
+      status
+      createdAt
+    }
+    errors {
+      message
+      code
+    }
+  }
+}
+
+mutation UpdateWallet($input: UpdateWalletInput!) {
+  updateWallet(input: $input) {
+    wallet {
+      id
+      name
+      type
+      status
+    }
+    errors {
+      message
+      code
+    }
+  }
+}
+
+mutation DeleteWallet($input: DeleteWalletInput!) {
+  deleteWallet(input: $input) {
+    success
+    errors {
+      message
+      code
+    }
+  }
+}

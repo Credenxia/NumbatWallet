@@ -72,8 +72,8 @@ public class DtpModule : RestEndpointBase
     }
 
     private static async Task<IResult> GetWalletById(
-        string id,
-        IWalletService walletService,
+        [FromRoute] string id,
+        [FromServices] IWalletService walletService,
         CancellationToken cancellationToken)
     {
         try
@@ -98,8 +98,8 @@ public class DtpModule : RestEndpointBase
     }
 
     private static async Task<IResult> GetWalletsByPerson(
-        string personId,
-        IWalletService walletService,
+        [FromRoute] string personId,
+        [FromServices] IWalletService walletService,
         CancellationToken cancellationToken)
     {
         try
@@ -125,8 +125,8 @@ public class DtpModule : RestEndpointBase
     }
 
     private static async Task<IResult> GetCredentialById(
-        string id,
-        ICredentialService credentialService,
+        [FromRoute] string id,
+        [FromServices] ICredentialService credentialService,
         CancellationToken cancellationToken)
     {
         try
@@ -151,8 +151,8 @@ public class DtpModule : RestEndpointBase
     }
 
     private static async Task<IResult> GetCredentialsByWallet(
-        string walletId,
-        ICredentialService credentialService,
+        [FromRoute] string walletId,
+        [FromServices] ICredentialService credentialService,
         CancellationToken cancellationToken)
     {
         try
@@ -178,9 +178,9 @@ public class DtpModule : RestEndpointBase
     }
 
     private static async Task<IResult> VerifyCredential(
-        DtpVerifyRequest request,
-        IValidator<DtpVerifyRequest> validator,
-        ICredentialService credentialService,
+        [FromBody] DtpVerifyRequest request,
+        [FromServices] IValidator<DtpVerifyRequest> validator,
+        [FromServices] ICredentialService credentialService,
         CancellationToken cancellationToken)
     {
         var validationError = await ValidateRequest(request, validator);
@@ -210,9 +210,9 @@ public class DtpModule : RestEndpointBase
     }
 
     private static async Task<IResult> IssueCredential(
-        DtpIssueRequest request,
-        IValidator<DtpIssueRequest> validator,
-        ICredentialService credentialService,
+        [FromBody] DtpIssueRequest request,
+        [FromServices] IValidator<DtpIssueRequest> validator,
+        [FromServices] ICredentialService credentialService,
         IHttpContextAccessor httpContextAccessor,
         CancellationToken cancellationToken)
     {
@@ -252,10 +252,10 @@ public class DtpModule : RestEndpointBase
     }
 
     private static async Task<IResult> RevokeCredential(
-        string id,
-        DtpRevokeRequest request,
-        IValidator<DtpRevokeRequest> validator,
-        ICredentialService credentialService,
+        [FromRoute] string id,
+        [FromBody] DtpRevokeRequest request,
+        [FromServices] IValidator<DtpRevokeRequest> validator,
+        [FromServices] ICredentialService credentialService,
         IHttpContextAccessor httpContextAccessor,
         CancellationToken cancellationToken)
     {

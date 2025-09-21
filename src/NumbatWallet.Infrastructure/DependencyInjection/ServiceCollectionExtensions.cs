@@ -34,7 +34,9 @@ public static class ServiceCollectionExtensions
         // Add DbContext
         services.AddDbContext<NumbatWalletDbContext>((serviceProvider, options) =>
         {
-            var connectionString = configuration.GetConnectionString("DefaultConnection");
+            // Use Aspire service discovery - connection name matches AddDatabase("numbatwallet") in AppHost
+            var connectionString = configuration.GetConnectionString("numbatwallet")
+                ?? configuration.GetConnectionString("DefaultConnection");
             options.UseNpgsql(connectionString, npgsqlOptions =>
             {
                 npgsqlOptions.MigrationsAssembly(typeof(NumbatWalletDbContext).Assembly.FullName);
@@ -89,8 +91,9 @@ public static class ServiceCollectionExtensions
         // services.AddScoped<ISearchTokenService, SearchTokenService>();
         // services.AddScoped<ISearchIndexingService, SearchIndexingService>();
 
-        // Caching
-        var redisConnectionString = configuration.GetConnectionString("Redis");
+        // Caching - use Aspire service discovery
+        var redisConnectionString = configuration.GetConnectionString("redis")
+            ?? configuration.GetConnectionString("Redis");
         if (!string.IsNullOrEmpty(redisConnectionString))
         {
             // Add StackExchange.Redis IConnectionMultiplexer

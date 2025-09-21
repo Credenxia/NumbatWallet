@@ -2,17 +2,15 @@ using Aspire.Hosting;
 
 var builder = DistributedApplication.CreateBuilder(args);
 
-// Add PostgreSQL database with fixed port
+// Add PostgreSQL database
 var postgres = builder.AddPostgres("postgres")
-    .WithEndpoint(port: 5432, targetPort: 5432, name: "postgres")
     .WithDataVolume()
     .WithPgAdmin();
 
 var postgresDb = postgres.AddDatabase("numbatwallet");
 
-// Add Redis cache with fixed port
+// Add Redis cache
 var redis = builder.AddRedis("redis")
-    .WithEndpoint(port: 6379, targetPort: 6379, name: "redis")
     .WithDataVolume()
     .WithRedisCommander();
 
@@ -32,18 +30,12 @@ var api = builder.AddProject<Projects.NumbatWallet_Web_Api>("webapi")
     .WithReference(postgresDb)
     .WithReference(redis)
     .WithReference(blobs)
-    .WithEnvironment("ASPNETCORE_ENVIRONMENT", "Development")
-    .WithEnvironment("ConnectionStrings__DefaultConnection", postgresDb.Resource.ConnectionStringExpression)
-    .WithEnvironment("ConnectionStrings__Redis", redis.Resource.ConnectionStringExpression)
-    .WithEnvironment("ConnectionStrings__BlobStorage", blobs.Resource.ConnectionStringExpression);
+    .WithEnvironment("ASPNETCORE_ENVIRONMENT", "Development");
 
-// Add Admin Portal with references
+// Add Admin Portal - only references API, not database directly (Clean Architecture)
 var admin = builder.AddProject<Projects.NumbatWallet_Web_Admin>("admin")
-    .WithReference(postgresDb)
-    .WithReference(redis)
-    .WithEnvironment("ASPNETCORE_ENVIRONMENT", "Development")
-    .WithEnvironment("ConnectionStrings__DefaultConnection", postgresDb.Resource.ConnectionStringExpression)
-    .WithEnvironment("ConnectionStrings__Redis", redis.Resource.ConnectionStringExpression);
+    .WithReference(api)  // Admin communicates only through API
+    .WithEnvironment("ASPNETCORE_ENVIRONMENT", "Development");
 
 // Add health checks dashboard
 builder.AddContainer("healthchecks", "xabarilcoding/healthchecksui")

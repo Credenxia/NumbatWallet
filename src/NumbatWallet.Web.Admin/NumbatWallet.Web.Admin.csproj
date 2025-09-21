@@ -21,6 +21,10 @@
     <PackageReference Include="Blazored.SessionStorage" />
     <PackageReference Include="Serilog.AspNetCore" />
     <PackageReference Include="Serilog.Enrichers.Environment" />
+    <PackageReference Include="StrawberryShake.Blazor" />
+    <!-- Temporarily disabled due to permission issues
+    <PackageReference Include="StrawberryShake.CodeGeneration.CSharp.Analyzers" />
+    -->
   </ItemGroup>
 
   <PropertyGroup>

@@ -55,11 +55,11 @@ public class WebhookModule : RestEndpointBase
     }
 
     private static async Task<IResult> HandleServiceWACallback(
-        ServiceWACallbackRequest request,
-        IHttpContextAccessor httpContextAccessor,
-        IConfiguration configuration,
-        IWalletService walletService,
-        ILogger<WebhookModule> logger,
+        [FromBody] ServiceWACallbackRequest request,
+        [FromServices] IHttpContextAccessor httpContextAccessor,
+        [FromServices] IConfiguration configuration,
+        [FromServices] IWalletService walletService,
+        [FromServices] ILogger<WebhookModule> logger,
         CancellationToken cancellationToken)
     {
         // Verify webhook signature
@@ -106,11 +106,11 @@ public class WebhookModule : RestEndpointBase
     }
 
     private static async Task<IResult> HandleIssuerNotification(
-        IssuerNotificationRequest request,
-        IHttpContextAccessor httpContextAccessor,
-        IConfiguration configuration,
-        ICredentialService credentialService,
-        ILogger<WebhookModule> logger,
+        [FromBody] IssuerNotificationRequest request,
+        [FromServices] IHttpContextAccessor httpContextAccessor,
+        [FromServices] IConfiguration configuration,
+        [FromServices] ICredentialService credentialService,
+        [FromServices] ILogger<WebhookModule> logger,
         CancellationToken cancellationToken)
     {
         // Verify webhook signature
@@ -156,11 +156,11 @@ public class WebhookModule : RestEndpointBase
     }
 
     private static async Task<IResult> HandleCredentialStatusUpdate(
-        CredentialStatusUpdateRequest request,
-        IHttpContextAccessor httpContextAccessor,
-        IConfiguration configuration,
-        ICredentialService credentialService,
-        ILogger<WebhookModule> logger,
+        [FromBody] CredentialStatusUpdateRequest request,
+        [FromServices] IHttpContextAccessor httpContextAccessor,
+        [FromServices] IConfiguration configuration,
+        [FromServices] ICredentialService credentialService,
+        [FromServices] ILogger<WebhookModule> logger,
         CancellationToken cancellationToken)
     {
         // Verify webhook signature
@@ -202,11 +202,11 @@ public class WebhookModule : RestEndpointBase
     }
 
     private static async Task<IResult> HandleVerificationCallback(
-        VerificationCallbackRequest request,
-        IHttpContextAccessor httpContextAccessor,
-        IConfiguration configuration,
-        ICredentialService credentialService,
-        ILogger<WebhookModule> logger,
+        [FromBody] VerificationCallbackRequest request,
+        [FromServices] IHttpContextAccessor httpContextAccessor,
+        [FromServices] IConfiguration configuration,
+        [FromServices] ICredentialService credentialService,
+        [FromServices] ILogger<WebhookModule> logger,
         CancellationToken cancellationToken)
     {
         // Verify webhook signature
