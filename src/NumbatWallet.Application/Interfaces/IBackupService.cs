@@ -44,6 +44,16 @@ public interface IBackupService
     /// Export backup to external storage
     /// </summary>
     Task<Stream> ExportBackupAsync(string backupId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Get backup history
+    /// </summary>
+    Task<BackupHistory> GetBackupHistoryAsync(int limit = 100, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Get backup status
+    /// </summary>
+    Task<BackupStatus> GetBackupStatusAsync(CancellationToken cancellationToken = default);
 }
 
 /// <summary>
@@ -154,4 +164,28 @@ public class RestoreStatistics
     public long RecordsRestored { get; set; }
     public int FilesRestored { get; set; }
     public long BytesProcessed { get; set; }
+}
+
+/// <summary>
+/// Backup history
+/// </summary>
+public class BackupHistory
+{
+    public BackupInfo[] Backups { get; set; } = Array.Empty<BackupInfo>();
+    public int TotalCount { get; set; }
+    public DateTime LastBackupAt { get; set; }
+    public DateTime? NextScheduledBackupAt { get; set; }
+}
+
+/// <summary>
+/// Backup status
+/// </summary>
+public class BackupStatus
+{
+    public bool IsBackupInProgress { get; set; }
+    public string? CurrentOperation { get; set; }
+    public double? ProgressPercent { get; set; }
+    public DateTime? LastSuccessfulBackup { get; set; }
+    public DateTime? LastFailedBackup { get; set; }
+    public string? LastError { get; set; }
 }
