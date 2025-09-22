@@ -54,7 +54,7 @@ public class HsmServiceTests
 
         // Act & Assert
         var exception = Assert.Throws<InvalidOperationException>(
-            () => new HsmService(emptyConfig, _loggerMock.Object));
+            () => new HsmService(_serviceProviderMock.Object, emptyConfig, _loggerMock.Object));
 
         Assert.Contains("Azure Key Vault URI not configured", exception.Message);
     }
