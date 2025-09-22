@@ -53,6 +53,16 @@ public interface IMaintenanceService
     /// Run system health checks
     /// </summary>
     Task<HealthCheckResult> RunHealthChecksAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Run database maintenance tasks
+    /// </summary>
+    Task<MaintenanceResult> RunDatabaseMaintenanceAsync(MaintenanceOptions options, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Run database maintenance with default options
+    /// </summary>
+    Task<OptimizationResult> RunDatabaseMaintenanceAsync(CancellationToken cancellationToken = default);
 }
 
 public class MaintenanceOptions
@@ -125,4 +135,13 @@ public class HealthCheckItem
     public string Status { get; set; } = string.Empty;
     public string? Message { get; set; }
     public TimeSpan ResponseTime { get; set; }
+}
+
+public class MaintenanceResult
+{
+    public bool Success { get; set; }
+    public int TablesOptimized { get; set; }
+    public int IndexesRebuilt { get; set; }
+    public long SpaceReclaimed { get; set; }
+    public TimeSpan Duration { get; set; }
 }

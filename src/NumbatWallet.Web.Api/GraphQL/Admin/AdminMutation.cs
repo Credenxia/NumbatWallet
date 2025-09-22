@@ -2,6 +2,7 @@ using HotChocolate;
 using HotChocolate.AspNetCore.Authorization;
 using HotChocolate.Types;
 using NumbatWallet.Application.Commands.Credentials;
+using NumbatWallet.Application.Commands.Wallets;
 using NumbatWallet.Application.CQRS.Interfaces;
 using NumbatWallet.Application.DTOs;
 using NumbatWallet.Application.Interfaces;
@@ -206,7 +207,7 @@ public class AdminMutation
         {
             Id = job.Id,
             Status = job.Status,
-            Type = job.Type,
+            Type = job.Type.ToString(),
             StartedAt = job.StartedAt
         };
     }
@@ -305,9 +306,22 @@ public class AdminMutation
         ScheduleReportInput input,
         CancellationToken cancellationToken = default)
     {
-        return await reportingService.ScheduleReportAsync(
+        // The base method returns a string (schedule ID), need to convert to DTO
+        var scheduleId = await reportingService.ScheduleReportAsync(
             input.ToScheduleReportCommand(),
             cancellationToken);
+
+        // Create a DTO from the result
+        return new ScheduledReportDto
+        {
+            Id = scheduleId,
+            Type = input.Type,
+            Schedule = input.Schedule,
+            Recipients = input.Recipients,
+            IsActive = true,
+            LastRun = null,
+            NextRun = null
+        };
     }
 
     /// <summary>
@@ -339,14 +353,15 @@ public class AdminMutation
 
         // For batch operations, we'll need to handle this differently
         // Since IDispatcher doesn't have batch support, we'll return a mock result
-        var result = new SharedKernel.Results.Result<BatchOperationResult>(new BatchOperationResult
+        var batchResult = new BatchOperationResult
         {
             OperationId = Guid.NewGuid().ToString(),
             TotalCount = command.Wallets.Count,
             SuccessCount = 0,
             FailureCount = 0,
             Status = BulkOperationStatus.Pending
-        });
+        };
+        var result = SharedKernel.Results.Result.Success(batchResult);
 
         if (result.IsFailure)
             throw new GraphQLException(result.Error.Message);
@@ -490,13 +505,16 @@ public class ScheduleReportInput
     public List<string> Recipients { get; set; } = new();
     public ReportParametersInput Parameters { get; set; } = new();
 
-    public ScheduledReportRequest ToScheduleReportCommand()
+    public Application.Interfaces.ScheduledReportRequest ToScheduleReportCommand()
     {
-        return new ScheduledReportRequest
+        return new Application.Interfaces.ScheduledReportRequest
         {
             ReportType = Type.ToString(),
-            Schedule = Schedule,
-            Recipients = Recipients
+            CronExpression = Schedule, // Schedule is the cron expression
+            Recipients = Recipients,
+            Parameters = Parameters.ToReportParameters().ToDictionary(),
+            Format = Application.Interfaces.ExportFormat.PDF,
+            Enabled = true
         };
     }
 }
@@ -513,9 +531,9 @@ public class CreateWalletInput
     public string Name { get; set; } = string.Empty;
     public string UserId { get; set; } = string.Empty;
 
-    public Application.Commands.Wallets.CreateWalletCommand ToCreateWalletCommand()
+    public CreateWalletCommand ToCreateWalletCommand()
     {
-        return new Application.Commands.Wallets.CreateWalletCommand(
+        return new CreateWalletCommand(
             Guid.Parse(PersonId),
             Name,
             UserId);
@@ -609,7 +627,7 @@ public enum ReportType
 // Batch commands for GraphQL
 public class BatchCreateWalletsCommand
 {
-    public List<Application.Commands.Wallets.CreateWalletCommand> Wallets { get; set; } = new();
+    public List<CreateWalletCommand> Wallets { get; set; } = new();
     public bool ContinueOnError { get; set; }
 }
 
@@ -647,4 +665,19 @@ public class ReportParameters
     public DateTime? EndDate { get; set; }
     public List<string>? IncludeSections { get; set; }
     public string Format { get; set; } = "PDF";
+
+    public Dictionary<string, object> ToDictionary()
+    {
+        var dict = new Dictionary<string, object>();
+
+        if (StartDate.HasValue)
+            dict["StartDate"] = StartDate.Value;
+        if (EndDate.HasValue)
+            dict["EndDate"] = EndDate.Value;
+        if (IncludeSections != null && IncludeSections.Any())
+            dict["IncludeSections"] = IncludeSections;
+        dict["Format"] = Format;
+
+        return dict;
+    }
 }

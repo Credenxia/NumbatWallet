@@ -44,4 +44,9 @@ public interface IFeatureFlagService
     /// Toggle a feature flag and return its DTO
     /// </summary>
     Task<FeatureFlagDto> ToggleFlagAsync(string flagId, bool enabled, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Get all feature flags as DTOs
+    /// </summary>
+    Task<List<FeatureFlagDto>> GetAllFlagsAsync(CancellationToken cancellationToken = default);
 }

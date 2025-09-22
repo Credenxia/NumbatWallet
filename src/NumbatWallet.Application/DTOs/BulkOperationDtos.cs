@@ -8,6 +8,7 @@ public class OperationStatusDto
 {
     public string OperationId { get; set; } = string.Empty;
     public string Status { get; set; } = string.Empty;
+    public string OperationType { get; set; } = "BulkOperation"; // Added for UI
     public int ProcessedCount { get; set; }
     public int TotalCount { get; set; }
     public int SuccessCount { get; set; }
@@ -16,6 +17,7 @@ public class OperationStatusDto
     public DateTime StartedAt { get; set; }
     public DateTime? CompletedAt { get; set; }
     public TimeSpan? Duration { get; set; }
+    public List<string> Errors { get; set; } = new(); // Added for UI
 }
 
 public class OperationResultsDto

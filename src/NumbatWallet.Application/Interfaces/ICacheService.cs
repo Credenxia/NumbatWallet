@@ -17,4 +17,8 @@ public interface ICacheService
     string GenerateCacheKey(params string[] segments);
 
     string GenerateTenantCacheKey(string tenantId, params string[] segments);
+
+    Task ClearAsync(CancellationToken cancellationToken = default);
+
+    Task<bool> ClearAsync(string? cacheType, CancellationToken cancellationToken = default);
 }

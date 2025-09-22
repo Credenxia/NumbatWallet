@@ -137,7 +137,18 @@ public class AdminQuery
         CancellationToken cancellationToken = default)
     {
         var backups = await backupService.GetBackupHistoryAsync(cancellationToken);
-        return backups.AsQueryable();
+        // Convert from Application DTOs to Web DTOs
+        var webBackups = backups.Select(b => new BackupDto
+        {
+            Id = b.Id,
+            Type = b.Type,
+            Status = b.Status,
+            SizeBytes = b.SizeBytes,
+            Location = b.Location,
+            CreatedAt = b.CreatedAt,
+            CompletedAt = b.CompletedAt
+        }).ToList();
+        return webBackups.AsQueryable();
     }
 
     /// <summary>
@@ -149,7 +160,19 @@ public class AdminQuery
         string id,
         CancellationToken cancellationToken = default)
     {
-        return await backupService.GetBackupStatusAsync(id, cancellationToken);
+        var status = await backupService.GetBackupStatusAsync(id, cancellationToken);
+        if (status == null) return null;
+
+        // Convert from Application DTO to Web DTO
+        return new BackupStatusDto
+        {
+            Id = status.Id,
+            Status = status.Status,
+            PercentComplete = status.PercentComplete,
+            CurrentOperation = status.CurrentOperation,
+            StartedAt = status.StartedAt,
+            EstimatedCompletion = status.EstimatedCompletion
+        };
     }
 
     /// <summary>
@@ -185,10 +208,28 @@ public class AdminQuery
         ReportParametersInput parameters,
         CancellationToken cancellationToken = default)
     {
-        return await reportingService.GenerateReportAsync(
-            type,
-            parameters.ToReportParameters(),
-            cancellationToken);
+        // Convert to Application layer types
+        var appType = (Application.Interfaces.ReportType)Enum.Parse(typeof(Application.Interfaces.ReportType), type.ToString());
+        var appParams = new Application.Interfaces.ReportParameters
+        {
+            StartDate = parameters.StartDate,
+            EndDate = parameters.EndDate,
+            IncludeSections = parameters.IncludeSections,
+            Format = parameters.Format ?? "PDF"
+        };
+
+        var report = await reportingService.GenerateReportAsync(appType, appParams, cancellationToken);
+
+        // Convert back to Web DTO
+        return new ReportDto
+        {
+            Id = report.Id,
+            Type = type,
+            Format = report.Format,
+            Content = report.Content,
+            GeneratedAt = report.GeneratedAt,
+            Metadata = report.Metadata
+        };
     }
 
     /// <summary>
@@ -199,7 +240,19 @@ public class AdminQuery
         [Service] IReportingService reportingService,
         CancellationToken cancellationToken = default)
     {
-        return await reportingService.GetScheduledReportsAsync(cancellationToken);
+        var reports = await reportingService.GetScheduledReportsAsync(cancellationToken);
+
+        // Convert from Application DTOs to Web DTOs
+        return reports.Select(r => new ScheduledReportDto
+        {
+            Id = r.Id,
+            Type = (ReportType)Enum.Parse(typeof(ReportType), r.Type.ToString()),
+            Schedule = r.Schedule,
+            Recipients = r.Recipients,
+            IsActive = r.IsActive,
+            LastRun = r.LastRun,
+            NextRun = r.NextRun
+        }).ToList();
     }
 
     /// <summary>
@@ -215,7 +268,7 @@ public class AdminQuery
             TotalWallets = await context.Wallets.CountAsync(cancellationToken),
             TotalCredentials = await context.Credentials.CountAsync(cancellationToken),
             TotalPersons = await context.Persons.CountAsync(cancellationToken),
-            TotalOrganizations = await context.Organizations.CountAsync(cancellationToken),
+            TotalOrganizations = 0, // Organizations entity not yet implemented
             DatabaseSizeMB = await GetDatabaseSizeAsync(context, cancellationToken),
             LastBackup = await GetLastBackupTimeAsync(context, cancellationToken)
         };

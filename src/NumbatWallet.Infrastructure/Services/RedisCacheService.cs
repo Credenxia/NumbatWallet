@@ -229,4 +229,65 @@ public class RedisCacheService : ICacheService
 
         return result;
     }
+
+    public async Task ClearAsync(CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var endpoints = _redis.GetEndPoints();
+            foreach (var endpoint in endpoints)
+            {
+                var server = _redis.GetServer(endpoint);
+                if (!server.IsReplica)
+                {
+                    await server.FlushDatabaseAsync();
+                    _logger.LogInformation("Cleared all cache entries from Redis");
+                    return;
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error clearing Redis cache");
+        }
+    }
+
+    public async Task<bool> ClearAsync(string? cacheType, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            if (string.IsNullOrEmpty(cacheType) || cacheType?.ToLower() == "all")
+            {
+                await ClearAsync(cancellationToken);
+                return true;
+            }
+
+            // Clear cache by prefix/pattern for specific cache type
+            var endpoints = _redis.GetEndPoints();
+            foreach (var endpoint in endpoints)
+            {
+                var server = _redis.GetServer(endpoint);
+                if (!server.IsReplica)
+                {
+                    var pattern = $"{cacheType!.ToLower()}:*";
+                    var keys = server.Keys(pattern: pattern);
+
+                    foreach (var key in keys)
+                    {
+                        await _database.KeyDeleteAsync(key);
+                    }
+
+                    _logger.LogInformation("Cleared cache entries for type: {CacheType}", cacheType);
+                    return true;
+                }
+            }
+
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error clearing cache for type: {CacheType}", cacheType);
+            return false;
+        }
+    }
 }

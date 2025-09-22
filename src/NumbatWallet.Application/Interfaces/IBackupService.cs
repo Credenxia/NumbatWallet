@@ -64,6 +64,16 @@ public interface IBackupService
     /// Start a restore operation (for GraphQL compatibility)
     /// </summary>
     Task<RestoreJob> StartRestoreAsync(string backupId, RestoreOptions? options, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Get backup history as DTOs
+    /// </summary>
+    Task<List<BackupDto>> GetBackupHistoryAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Get backup status by ID
+    /// </summary>
+    Task<BackupStatusDto?> GetBackupStatusAsync(string id, CancellationToken cancellationToken = default);
 }
 
 /// <summary>
@@ -236,4 +246,31 @@ public enum BackupType
     Full,
     Incremental,
     Differential
+}
+
+/// <summary>
+/// Backup DTO for GraphQL
+/// </summary>
+public class BackupDto
+{
+    public string Id { get; set; } = string.Empty;
+    public string Type { get; set; } = string.Empty;
+    public string Status { get; set; } = string.Empty;
+    public long SizeBytes { get; set; }
+    public string Location { get; set; } = string.Empty;
+    public DateTime CreatedAt { get; set; }
+    public DateTime? CompletedAt { get; set; }
+}
+
+/// <summary>
+/// Backup status DTO for GraphQL
+/// </summary>
+public class BackupStatusDto
+{
+    public string Id { get; set; } = string.Empty;
+    public string Status { get; set; } = string.Empty;
+    public int PercentComplete { get; set; }
+    public string? CurrentOperation { get; set; }
+    public DateTime StartedAt { get; set; }
+    public DateTime? EstimatedCompletion { get; set; }
 }

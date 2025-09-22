@@ -122,9 +122,9 @@
                             <div>
                                 <h6 class="text-muted mb-2">System Health</h6>
                                 <h3 class="mb-0">@systemHealth?.Status</h3>
-                                @if (!string.IsNullOrEmpty(systemHealth?.Message))
+                                @if (systemHealth?.ActiveAlerts?.Any() == true)
                                 {
-                                    <small class="text-muted">@systemHealth.Message</small>
+                                    <small class="text-muted">@systemHealth.ActiveAlerts.Count alert(s)</small>
                                 }
                             </div>
                             <div class="text-@GetHealthColor(systemHealth?.Status)">

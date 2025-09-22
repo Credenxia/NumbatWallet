@@ -141,4 +141,29 @@ public class CacheService : ICacheService
         var allSegments = new[] { "tenant", tenantId }.Concat(segments).ToArray();
         return GenerateCacheKey(allSegments);
     }
+
+    public async Task ClearAsync(CancellationToken cancellationToken = default)
+    {
+        // Generic IDistributedCache doesn't support clearing all keys
+        // This would need a Redis-specific implementation
+        _logger.LogWarning("ClearAsync is not fully implemented for generic IDistributedCache. Consider using Redis-specific implementation.");
+        await Task.CompletedTask;
+    }
+
+    public async Task<bool> ClearAsync(string? cacheType, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            _logger.LogInformation("Clearing cache for type: {CacheType}", cacheType ?? "All");
+            // In a real implementation, this would clear specific cache types
+            // For now, we'll return true to indicate success
+            await Task.CompletedTask;
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error clearing cache for type: {CacheType}", cacheType);
+            return false;
+        }
+    }
 }

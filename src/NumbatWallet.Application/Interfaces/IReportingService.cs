@@ -50,6 +50,16 @@ public interface IReportingService
     /// Generate custom analytics
     /// </summary>
     Task<AnalyticsResult> GenerateAnalyticsAsync(AnalyticsRequest request, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Generate a report (for GraphQL)
+    /// </summary>
+    Task<ReportDto> GenerateReportAsync(ReportType type, ReportParameters parameters, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Get scheduled reports (for GraphQL)
+    /// </summary>
+    Task<List<ScheduledReportDto>> GetScheduledReportsAsync(CancellationToken cancellationToken = default);
 }
 
 public class ReportRequest
@@ -155,4 +165,43 @@ public class TrendData
     public string Direction { get; set; } = string.Empty;
     public double Forecast { get; set; }
     public double Confidence { get; set; }
+}
+
+// GraphQL DTOs
+public class ReportDto
+{
+    public string Id { get; set; } = string.Empty;
+    public ReportType Type { get; set; }
+    public string Format { get; set; } = string.Empty;
+    public byte[] Content { get; set; } = Array.Empty<byte>();
+    public DateTime GeneratedAt { get; set; }
+    public Dictionary<string, object> Metadata { get; set; } = new();
+}
+
+public class ScheduledReportDto
+{
+    public string Id { get; set; } = string.Empty;
+    public ReportType Type { get; set; }
+    public string Schedule { get; set; } = string.Empty;
+    public List<string> Recipients { get; set; } = new();
+    public bool IsActive { get; set; }
+    public DateTime? LastRun { get; set; }
+    public DateTime? NextRun { get; set; }
+}
+
+public enum ReportType
+{
+    Audit,
+    Compliance,
+    Usage,
+    Performance,
+    Security
+}
+
+public class ReportParameters
+{
+    public DateTime? StartDate { get; set; }
+    public DateTime? EndDate { get; set; }
+    public List<string>? IncludeSections { get; set; }
+    public string Format { get; set; } = "PDF";
 }

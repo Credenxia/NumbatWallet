@@ -39,4 +39,9 @@ public interface IConfigurationService
     /// Reload configuration from source
     /// </summary>
     Task ReloadConfigurationAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Get all configurations for an environment
+    /// </summary>
+    Task<List<ConfigurationDto>> GetConfigurationsAsync(string environment, CancellationToken cancellationToken = default);
 }
