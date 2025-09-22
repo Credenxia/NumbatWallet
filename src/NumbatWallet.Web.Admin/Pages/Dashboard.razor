@@ -1,0 +1,510 @@
+@page "/"
+@using Microsoft.AspNetCore.Authorization
+@using NumbatWallet.Application.DTOs
+@using Microsoft.AspNetCore.SignalR.Client
+@attribute [Authorize(Roles = "Admin")]
+@inject HttpClient Http
+@inject NavigationManager Navigation
+@inject ILogger<Dashboard> Logger
+@implements IAsyncDisposable
+
+<PageTitle>Dashboard - NumbatWallet Admin</PageTitle>
+
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12 d-flex justify-content-between align-items-center">
+            <h1>System Dashboard</h1>
+            <div class="btn-group">
+                <button class="btn btn-outline-secondary" @onclick="RefreshMetrics" disabled="@isRefreshing">
+                    <i class="bi bi-arrow-clockwise @(isRefreshing ? "spinner-border spinner-border-sm" : "")"></i>
+                    Refresh
+                </button>
+                <div class="dropdown">
+                    <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                        Auto-refresh: @(refreshInterval == 0 ? "Off" : $"{refreshInterval}s")
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" @onclick="() => SetRefreshInterval(0)">Off</a></li>
+                        <li><a class="dropdown-item" @onclick="() => SetRefreshInterval(5)">5 seconds</a></li>
+                        <li><a class="dropdown-item" @onclick="() => SetRefreshInterval(30)">30 seconds</a></li>
+                        <li><a class="dropdown-item" @onclick="() => SetRefreshInterval(60)">60 seconds</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (isLoading)
+    {
+        <div class="d-flex justify-content-center">
+            <div class="spinner-border" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+    }
+    else
+    {
+        <!-- Key Metrics Cards -->
+        <div class="row mb-4">
+            <div class="col-lg-3 col-md-6 mb-4">
+                <div class="card border-primary">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="text-muted mb-2">Total Wallets</h6>
+                                <h3 class="mb-0">@metrics?.TotalWallets.ToString("N0")</h3>
+                                @if (metrics?.WalletsTrend != null)
+                                {
+                                    <small class="@GetTrendClass(metrics.WalletsTrend.Value)">
+                                        <i class="bi @GetTrendIcon(metrics.WalletsTrend.Value)"></i>
+                                        @metrics.WalletsTrend.Value.ToString("F1")%
+                                    </small>
+                                }
+                            </div>
+                            <div class="text-primary">
+                                <i class="bi bi-wallet2 fs-1"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-md-6 mb-4">
+                <div class="card border-success">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="text-muted mb-2">Active Users</h6>
+                                <h3 class="mb-0">@metrics?.ActiveUsers.ToString("N0")</h3>
+                                @if (metrics?.UsersTrend != null)
+                                {
+                                    <small class="@GetTrendClass(metrics.UsersTrend.Value)">
+                                        <i class="bi @GetTrendIcon(metrics.UsersTrend.Value)"></i>
+                                        @metrics.UsersTrend.Value.ToString("F1")%
+                                    </small>
+                                }
+                            </div>
+                            <div class="text-success">
+                                <i class="bi bi-people fs-1"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-md-6 mb-4">
+                <div class="card border-info">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="text-muted mb-2">Credentials Issued</h6>
+                                <h3 class="mb-0">@metrics?.CredentialsIssued.ToString("N0")</h3>
+                                @if (metrics?.CredentialsTrend != null)
+                                {
+                                    <small class="@GetTrendClass(metrics.CredentialsTrend.Value)">
+                                        <i class="bi @GetTrendIcon(metrics.CredentialsTrend.Value)"></i>
+                                        @metrics.CredentialsTrend.Value.ToString("F1")%
+                                    </small>
+                                }
+                            </div>
+                            <div class="text-info">
+                                <i class="bi bi-award fs-1"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-md-6 mb-4">
+                <div class="card border-@GetHealthColor(systemHealth?.Status)">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="text-muted mb-2">System Health</h6>
+                                <h3 class="mb-0">@systemHealth?.Status</h3>
+                                @if (!string.IsNullOrEmpty(systemHealth?.Message))
+                                {
+                                    <small class="text-muted">@systemHealth.Message</small>
+                                }
+                            </div>
+                            <div class="text-@GetHealthColor(systemHealth?.Status)">
+                                <i class="bi bi-heart-pulse fs-1"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- System Components Status -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">System Components</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            @foreach (var component in systemComponents)
+                            {
+                                <div class="col-md-3 mb-3">
+                                    <div class="d-flex align-items-center">
+                                        <div class="me-3">
+                                            <span class="badge bg-@GetComponentStatusColor(component.Status) rounded-circle p-2">
+                                                <i class="bi @GetComponentIcon(component.Name)"></i>
+                                            </span>
+                                        </div>
+                                        <div>
+                                            <h6 class="mb-0">@component.Name</h6>
+                                            <small class="text-muted">@component.Status</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts Row -->
+        <div class="row mb-4">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Activity Timeline (Last 7 Days)</h5>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="activityChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Credential Types Distribution</h5>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="credentialPieChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Activity & Alerts -->
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Recent Activity</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="list-group list-group-flush">
+                            @foreach (var activity in recentActivities.Take(10))
+                            {
+                                <div class="list-group-item px-0">
+                                    <div class="d-flex w-100 justify-content-between">
+                                        <div class="d-flex align-items-center">
+                                            <span class="badge bg-@activity.Color rounded-circle p-2 me-3">
+                                                <i class="bi @activity.Icon"></i>
+                                            </span>
+                                            <div>
+                                                <h6 class="mb-0">@activity.Type</h6>
+                                                <small class="text-muted">@activity.Description</small>
+                                            </div>
+                                        </div>
+                                        <small class="text-muted">@FormatTimeAgo(activity.Timestamp)</small>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Active Alerts</h5>
+                    </div>
+                    <div class="card-body">
+                        @if (alerts.Any())
+                        {
+                            <div class="list-group list-group-flush">
+                                @foreach (var alert in alerts.Take(10))
+                                {
+                                    <div class="list-group-item px-0">
+                                        <div class="d-flex w-100 justify-content-between">
+                                            <div>
+                                                <div class="d-flex align-items-center mb-1">
+                                                    <span class="badge bg-@GetAlertSeverityColor(alert.Severity) me-2">
+                                                        @alert.Severity
+                                                    </span>
+                                                    <h6 class="mb-0">@alert.Title</h6>
+                                                </div>
+                                                <small class="text-muted">@alert.Message</small>
+                                            </div>
+                                            <button class="btn btn-sm btn-outline-secondary" @onclick="() => DismissAlert(alert.Id)">
+                                                <i class="bi bi-x"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        }
+                        else
+                        {
+                            <p class="text-muted text-center mb-0">No active alerts</p>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private bool isLoading = true;
+    private bool isRefreshing = false;
+    private int refreshInterval = 30;
+    private System.Threading.Timer? refreshTimer;
+    private HubConnection? hubConnection;
+
+    private DashboardMetrics? metrics;
+    private SystemHealthDto? systemHealth;
+    private List<SystemComponentDto> systemComponents = new();
+    private List<RecentActivityDto> recentActivities = new();
+    private List<SystemAlertDto> alerts = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDashboardData();
+        await SetupSignalRConnection();
+        SetupAutoRefresh();
+    }
+
+    private async Task LoadDashboardData()
+    {
+        try
+        {
+            isLoading = true;
+
+            // Load all dashboard data in parallel
+            var metricsTask = Http.GetFromJsonAsync<DashboardMetrics>("/api/v1/admin/metrics");
+            var healthTask = Http.GetFromJsonAsync<SystemHealthDto>("/api/v1/admin/health");
+            var componentsTask = Http.GetFromJsonAsync<List<SystemComponentDto>>("/api/v1/admin/components");
+            var activitiesTask = Http.GetFromJsonAsync<List<RecentActivityDto>>("/api/v1/admin/activities");
+            var alertsTask = Http.GetFromJsonAsync<List<SystemAlertDto>>("/api/v1/admin/alerts");
+
+            await Task.WhenAll(metricsTask, healthTask, componentsTask, activitiesTask, alertsTask);
+
+            metrics = await metricsTask;
+            systemHealth = await healthTask;
+            systemComponents = await componentsTask ?? new();
+            recentActivities = await activitiesTask ?? new();
+            alerts = await alertsTask ?? new();
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Failed to load dashboard data");
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task SetupSignalRConnection()
+    {
+        hubConnection = new HubConnectionBuilder()
+            .WithUrl(Navigation.ToAbsoluteUri("/hubs/dashboard"))
+            .WithAutomaticReconnect()
+            .Build();
+
+        hubConnection.On<DashboardMetrics>("MetricsUpdated", (updatedMetrics) =>
+        {
+            metrics = updatedMetrics;
+            InvokeAsync(StateHasChanged);
+        });
+
+        hubConnection.On<SystemAlertDto>("AlertReceived", (alert) =>
+        {
+            alerts.Insert(0, alert);
+            InvokeAsync(StateHasChanged);
+        });
+
+        try
+        {
+            await hubConnection.StartAsync();
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Failed to establish SignalR connection");
+        }
+    }
+
+    private async Task RefreshMetrics()
+    {
+        if (isRefreshing) return;
+
+        isRefreshing = true;
+        StateHasChanged();
+
+        await LoadDashboardData();
+
+        isRefreshing = false;
+        StateHasChanged();
+    }
+
+    private void SetRefreshInterval(int seconds)
+    {
+        refreshInterval = seconds;
+        SetupAutoRefresh();
+    }
+
+    private void SetupAutoRefresh()
+    {
+        refreshTimer?.Dispose();
+
+        if (refreshInterval > 0)
+        {
+            refreshTimer = new System.Threading.Timer(async _ =>
+            {
+                await InvokeAsync(async () =>
+                {
+                    await RefreshMetrics();
+                });
+            }, null, TimeSpan.FromSeconds(refreshInterval), TimeSpan.FromSeconds(refreshInterval));
+        }
+    }
+
+    private async Task DismissAlert(string alertId)
+    {
+        try
+        {
+            var response = await Http.PostAsync($"/api/v1/admin/alerts/{alertId}/dismiss", null);
+            if (response.IsSuccessStatusCode)
+            {
+                alerts.RemoveAll(a => a.Id == alertId);
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Failed to dismiss alert");
+        }
+    }
+
+    private string GetTrendClass(double trend)
+    {
+        return trend > 0 ? "text-success" : trend < 0 ? "text-danger" : "text-muted";
+    }
+
+    private string GetTrendIcon(double trend)
+    {
+        return trend > 0 ? "bi-arrow-up" : trend < 0 ? "bi-arrow-down" : "bi-dash";
+    }
+
+    private string GetHealthColor(string? status)
+    {
+        return status?.ToLower() switch
+        {
+            "healthy" => "success",
+            "degraded" => "warning",
+            "unhealthy" => "danger",
+            _ => "secondary"
+        };
+    }
+
+    private string GetComponentStatusColor(string status)
+    {
+        return status.ToLower() switch
+        {
+            "online" or "healthy" => "success",
+            "degraded" or "warning" => "warning",
+            "offline" or "error" => "danger",
+            _ => "secondary"
+        };
+    }
+
+    private string GetComponentIcon(string name)
+    {
+        return name.ToLower() switch
+        {
+            "database" => "bi-database",
+            "redis" => "bi-memory",
+            "storage" => "bi-cloud-arrow-up",
+            "keyvault" => "bi-key",
+            "api" => "bi-globe",
+            _ => "bi-server"
+        };
+    }
+
+    private string GetAlertSeverityColor(string severity)
+    {
+        return severity.ToLower() switch
+        {
+            "critical" => "danger",
+            "warning" => "warning",
+            "info" => "info",
+            _ => "secondary"
+        };
+    }
+
+    private string FormatTimeAgo(DateTime timestamp)
+    {
+        var diff = DateTime.UtcNow - timestamp;
+        if (diff.TotalMinutes < 1) return "just now";
+        if (diff.TotalMinutes < 60) return $"{(int)diff.TotalMinutes}m ago";
+        if (diff.TotalHours < 24) return $"{(int)diff.TotalHours}h ago";
+        if (diff.TotalDays < 7) return $"{(int)diff.TotalDays}d ago";
+        return timestamp.ToString("MMM dd");
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        refreshTimer?.Dispose();
+        if (hubConnection != null)
+        {
+            await hubConnection.DisposeAsync();
+        }
+    }
+
+    public class DashboardMetrics
+    {
+        public int TotalWallets { get; set; }
+        public double? WalletsTrend { get; set; }
+        public int ActiveUsers { get; set; }
+        public double? UsersTrend { get; set; }
+        public int CredentialsIssued { get; set; }
+        public double? CredentialsTrend { get; set; }
+        public DateTime LastUpdated { get; set; }
+    }
+
+    public class SystemComponentDto
+    {
+        public string Id { get; set; } = string.Empty;
+        public string Name { get; set; } = string.Empty;
+        public string Status { get; set; } = string.Empty;
+        public string? Message { get; set; }
+    }
+
+    public class RecentActivityDto
+    {
+        public string Id { get; set; } = string.Empty;
+        public string Type { get; set; } = string.Empty;
+        public string Description { get; set; } = string.Empty;
+        public string User { get; set; } = string.Empty;
+        public DateTime Timestamp { get; set; }
+        public string Icon { get; set; } = string.Empty;
+        public string Color { get; set; } = string.Empty;
+    }
+
+    public class SystemAlertDto
+    {
+        public string Id { get; set; } = string.Empty;
+        public string Severity { get; set; } = string.Empty;
+        public string Title { get; set; } = string.Empty;
+        public string Message { get; set; } = string.Empty;
+        public DateTime CreatedAt { get; set; }
+    }
+}
