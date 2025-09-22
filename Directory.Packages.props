@@ -6,8 +6,8 @@
   </PropertyGroup>
   <ItemGroup>
     <!-- ASP.NET Core & .NET -->
-    <PackageVersion Include="Azure.Security.KeyVault.Certificates" Version="4.7.0" />
-    <PackageVersion Include="Azure.Security.KeyVault.Keys" Version="4.7.0" />
+    <PackageVersion Include="Azure.Security.KeyVault.Certificates" Version="4.8.0" />
+    <PackageVersion Include="Azure.Security.KeyVault.Keys" Version="4.8.0" />
     <PackageVersion Include="Blazored.SessionStorage" Version="2.4.0" />
     <PackageVersion Include="Carter" Version="9.0.0" />
     <PackageVersion Include="HotChocolate.Diagnostics" Version="15.1.10" />
@@ -69,7 +69,7 @@
     <!-- Aspire ServiceDefaults -->
     <PackageVersion Include="Microsoft.Extensions.Http.Resilience" Version="9.9.0" />
     <!-- Test Dependencies -->
-    <PackageVersion Include="Microsoft.AspNetCore.TestHost" Version="9.0.0" />
+    <PackageVersion Include="Microsoft.AspNetCore.TestHost" Version="9.0.9" />
     <PackageVersion Include="Microsoft.Extensions.ServiceDiscovery" Version="9.4.2" />
     <PackageVersion Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.12.0" />
     <PackageVersion Include="OpenTelemetry.Extensions.Hosting" Version="1.12.0" />

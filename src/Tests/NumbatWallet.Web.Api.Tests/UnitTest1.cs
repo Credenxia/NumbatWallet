@@ -1,4 +1,4 @@
-﻿namespace NumbatWallet.Web.Api.Tests;
+namespace NumbatWallet.Web.Api.Tests;
 
 public class UnitTest1
 {

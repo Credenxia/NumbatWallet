@@ -116,7 +116,7 @@ public class ListWalletsQueryHandler : IQueryHandler<ListWalletsQuery, PagedResu
         foreach (var wallet in pagedWallets)
         {
             var person = persons.GetValueOrDefault(wallet.PersonId);
-            
+
             // Get credential count
             var credentials = await _credentialRepository.FindAsync(
                 new CredentialByWalletSpecification(wallet.Id),

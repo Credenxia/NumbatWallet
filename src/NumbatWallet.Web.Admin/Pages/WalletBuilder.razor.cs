@@ -21,6 +21,12 @@ public partial class WalletBuilder
     private FieldModel currentField = new();
     private string newCredentialType = string.Empty;
 
+    // Cache JsonSerializerOptions to avoid CA1869
+    private static readonly JsonSerializerOptions s_jsonOptions = new()
+    {
+        WriteIndented = true
+    };
+
     protected override async Task OnInitializedAsync()
     {
         await LoadTemplates();
@@ -104,7 +110,10 @@ public partial class WalletBuilder
 
     private async Task SaveField()
     {
-        if (selectedTemplate == null) return;
+        if (selectedTemplate == null)
+        {
+            return;
+        }
 
         try
         {
@@ -161,7 +170,10 @@ public partial class WalletBuilder
 
     private void MoveFieldUp(WalletField field)
     {
-        if (selectedTemplate == null) return;
+        if (selectedTemplate == null)
+        {
+            return;
+        }
 
         var fields = selectedTemplate.Fields.OrderBy(f => f.DisplayOrder).ToList();
         var index = fields.IndexOf(field);
@@ -174,7 +186,10 @@ public partial class WalletBuilder
 
     private void MoveFieldDown(WalletField field)
     {
-        if (selectedTemplate == null) return;
+        if (selectedTemplate == null)
+        {
+            return;
+        }
 
         var fields = selectedTemplate.Fields.OrderBy(f => f.DisplayOrder).ToList();
         var index = fields.IndexOf(field);
@@ -201,7 +216,10 @@ public partial class WalletBuilder
 
     private async Task SaveTemplate()
     {
-        if (selectedTemplate == null) return;
+        if (selectedTemplate == null)
+        {
+            return;
+        }
 
         try
         {
@@ -221,12 +239,12 @@ public partial class WalletBuilder
 
     private async Task ExportTemplate()
     {
-        if (selectedTemplate == null) return;
-
-        var json = JsonSerializer.Serialize(selectedTemplate, new JsonSerializerOptions
+        if (selectedTemplate == null)
         {
-            WriteIndented = true
-        });
+            return;
+        }
+
+        var json = JsonSerializer.Serialize(selectedTemplate, s_jsonOptions);
 
         // In a real implementation, this would trigger a download
         Logger.LogInformation("Exported template: {Json}", json);
@@ -267,9 +285,13 @@ public partial class WalletBuilder
         try
         {
             if (template.IsActive)
+            {
                 template.Deactivate();
+            }
             else
+            {
                 template.Activate();
+            }
 
             await WalletTemplateService.UpdateTemplateAsync(template);
             await LoadTemplates();

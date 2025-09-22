@@ -1,4 +1,4 @@
-﻿namespace NumbatWallet.SharedKernel.Tests;
+namespace NumbatWallet.SharedKernel.Tests;
 
 public class UnitTest1
 {

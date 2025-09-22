@@ -200,52 +200,60 @@ public class RevocationRegistryService : IRevocationRegistryService
                 .OrderBy(r => r.RevocationDate)
                 .ToListAsync(cancellationToken);
 
-            // Create CRL structure
+            // First, create the TBSCertList to sign
+            var tbsWriter = new AsnWriter(AsnEncodingRules.DER);
+            byte[] tbsCertList;
+
+            // TBSCertList SEQUENCE
+            using (tbsWriter.PushSequence())
+            {
+                // Version (v2 = 1)
+                tbsWriter.WriteInteger(1);
+
+                // Signature algorithm
+                WriteAlgorithmIdentifier(tbsWriter, "2.16.840.1.101.3.4.2.1"); // SHA256
+
+                // Issuer
+                tbsWriter.WriteEncodedValue(caCertificate.SubjectName.RawData);
+
+                // ThisUpdate
+                tbsWriter.WriteUtcTime(DateTime.UtcNow);
+
+                // NextUpdate
+                tbsWriter.WriteUtcTime(DateTime.UtcNow.AddDays(7));
+
+                // RevokedCertificates SEQUENCE OF
+                if (revokedCerts.Any())
+                {
+                    using (tbsWriter.PushSequence())
+                    {
+                        foreach (var cert in revokedCerts)
+                        {
+                            WriteRevokedCertificate(tbsWriter, cert);
+                        }
+                    }
+                }
+
+                // Extensions (optional)
+                WriteCrlExtensions(tbsWriter, caCertificate);
+            }
+
+            tbsCertList = tbsWriter.Encode();
+
+            // Sign the TBSCertList
+            var signature = await SignCrlAsync(tbsCertList, caCertificate, cancellationToken);
+
+            // Now create the full CRL with signature
             var crlBuilder = new AsnWriter(AsnEncodingRules.DER);
 
             // CertificateList SEQUENCE
             using (crlBuilder.PushSequence())
             {
-                // TBSCertList SEQUENCE
-                using (crlBuilder.PushSequence())
-                {
-                    // Version (v2 = 1)
-                    crlBuilder.WriteInteger(1);
-
-                    // Signature algorithm
-                    WriteAlgorithmIdentifier(crlBuilder, "2.16.840.1.101.3.4.2.1"); // SHA256
-
-                    // Issuer
-                    crlBuilder.WriteEncodedValue(caCertificate.SubjectName.RawData);
-
-                    // ThisUpdate
-                    crlBuilder.WriteUtcTime(DateTime.UtcNow);
-
-                    // NextUpdate
-                    crlBuilder.WriteUtcTime(DateTime.UtcNow.AddDays(7));
-
-                    // RevokedCertificates SEQUENCE OF
-                    if (revokedCerts.Any())
-                    {
-                        using (crlBuilder.PushSequence())
-                        {
-                            foreach (var cert in revokedCerts)
-                            {
-                                WriteRevokedCertificate(crlBuilder, cert);
-                            }
-                        }
-                    }
-
-                    // Extensions (optional)
-                    WriteCrlExtensions(crlBuilder, caCertificate);
-                }
+                // Write the TBSCertList
+                crlBuilder.WriteEncodedValue(tbsCertList);
 
                 // SignatureAlgorithm
                 WriteAlgorithmIdentifier(crlBuilder, "2.16.840.1.101.3.4.2.1");
-
-                // Sign the CRL
-                var tbsCertList = crlBuilder.Encode();
-                var signature = await SignCrlAsync(tbsCertList, caCertificate, cancellationToken);
 
                 // SignatureValue BIT STRING
                 crlBuilder.WriteBitString(signature);
@@ -683,7 +691,7 @@ public class RevocationRegistryService : IRevocationRegistryService
                     using (akiValue.PushSequence())
                     {
                         // Use SHA256 instead of SHA1 for security
-                var keyHash = SHA256.HashData(caCertificate.GetPublicKey());
+                        var keyHash = SHA256.HashData(caCertificate.GetPublicKey());
                         akiValue.WriteOctetString(keyHash, new Asn1Tag(TagClass.ContextSpecific, 0));
                     }
                     writer.WriteOctetString(akiValue.Encode());

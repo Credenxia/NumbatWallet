@@ -11,13 +11,13 @@ public class MockKeyVaultService : IKeyVaultService
     public MockKeyVaultService(ILogger<MockKeyVaultService> logger)
     {
         _logger = logger;
-        
+
         // Add some default secrets for development
         _secrets["DatabasePassword"] = "DevPassword123!";
         _secrets["ApiKey"] = "dev-api-key-12345";
         _secrets["JwtSecret"] = "dev-jwt-secret-must-be-at-least-32-characters-long";
         _secrets["EncryptionKey"] = "dev-encryption-key-256-bits-long-for-aes-256bit";
-        
+
         _logger.LogWarning("Using MockKeyVaultService - NOT FOR PRODUCTION USE");
     }
 
@@ -29,12 +29,12 @@ public class MockKeyVaultService : IKeyVaultService
         }
 
         _logger.LogDebug("Mock: Getting secret '{SecretName}'", secretName);
-        
+
         if (_secrets.TryGetValue(secretName, out var value))
         {
             return Task.FromResult<string?>(value);
         }
-        
+
         _logger.LogWarning("Mock: Secret '{SecretName}' not found", secretName);
         return Task.FromResult<string?>(null);
     }
@@ -65,7 +65,7 @@ public class MockKeyVaultService : IKeyVaultService
     public Task<Dictionary<string, string>> GetSecretsAsync(IEnumerable<string> secretNames, CancellationToken cancellationToken = default)
     {
         var result = new Dictionary<string, string>();
-        
+
         foreach (var secretName in secretNames)
         {
             if (_secrets.TryGetValue(secretName, out var value))
@@ -73,7 +73,7 @@ public class MockKeyVaultService : IKeyVaultService
                 result[secretName] = value;
             }
         }
-        
+
         _logger.LogDebug("Mock: Retrieved {Count} secrets", result.Count);
         return Task.FromResult(result);
     }

@@ -21,8 +21,8 @@ public class TenantServiceAdapter : SharedKernel.Interfaces.ITenantService
                 // Return default tenant for development
                 return Guid.Parse("00000000-0000-0000-0000-000000000001");
             }
-            return Guid.TryParse(tenantIdString, out var tenantId) 
-                ? tenantId 
+            return Guid.TryParse(tenantIdString, out var tenantId)
+                ? tenantId
                 : Guid.Parse("00000000-0000-0000-0000-000000000001");
         }
     }

@@ -37,6 +37,7 @@ public class NumbatWalletDbContext : DbContext, IUnitOfWork
     public DbSet<TenantCertificate> TenantCertificates => Set<TenantCertificate>();
     public DbSet<CertificateAuthority> CertificateAuthorities => Set<CertificateAuthority>();
     public DbSet<CertificateTrustStore> CertificateTrustStores => Set<CertificateTrustStore>();
+    public DbSet<CertificateRevocation> CertificateRevocations => Set<CertificateRevocation>();
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
