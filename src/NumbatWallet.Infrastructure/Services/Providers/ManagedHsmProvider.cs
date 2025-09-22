@@ -245,16 +245,16 @@ public class ManagedHsmProvider : IHsmProvider
     public async Task<byte[]> WrapKeyAsync(
         string wrappingKeyId,
         byte[] keyToWrap,
-        KeyWrapAlgorithm algorithm,
+        Azure.Security.KeyVault.Keys.Cryptography.KeyWrapAlgorithm algorithm,
         CancellationToken cancellationToken = default)
     {
         var cryptoClient = await GetCryptoClientAsync(wrappingKeyId, cancellationToken);
 
         var wrapAlgorithm = algorithm switch
         {
-            KeyWrapAlgorithm.RSA_OAEP => Azure.Security.KeyVault.Keys.Cryptography.KeyWrapAlgorithm.RsaOaep,
-            KeyWrapAlgorithm.RSA_OAEP_256 => Azure.Security.KeyVault.Keys.Cryptography.KeyWrapAlgorithm.RsaOaep256,
-            KeyWrapAlgorithm.AES_KW => Azure.Security.KeyVault.Keys.Cryptography.KeyWrapAlgorithm.A256Kw,
+            Azure.Security.KeyVault.Keys.Cryptography.KeyWrapAlgorithm.RSA_OAEP => Azure.Security.KeyVault.Keys.Cryptography.KeyWrapAlgorithm.RsaOaep,
+            Azure.Security.KeyVault.Keys.Cryptography.KeyWrapAlgorithm.RSA_OAEP_256 => Azure.Security.KeyVault.Keys.Cryptography.KeyWrapAlgorithm.RsaOaep256,
+            Azure.Security.KeyVault.Keys.Cryptography.KeyWrapAlgorithm.AES_KW => Azure.Security.KeyVault.Keys.Cryptography.KeyWrapAlgorithm.A256Kw,
             _ => throw new NotSupportedException($"Key wrap algorithm {algorithm} not supported")
         };
 
@@ -268,16 +268,16 @@ public class ManagedHsmProvider : IHsmProvider
     public async Task<byte[]> UnwrapKeyAsync(
         string unwrappingKeyId,
         byte[] wrappedKey,
-        KeyWrapAlgorithm algorithm,
+        Azure.Security.KeyVault.Keys.Cryptography.KeyWrapAlgorithm algorithm,
         CancellationToken cancellationToken = default)
     {
         var cryptoClient = await GetCryptoClientAsync(unwrappingKeyId, cancellationToken);
 
         var wrapAlgorithm = algorithm switch
         {
-            KeyWrapAlgorithm.RSA_OAEP => Azure.Security.KeyVault.Keys.Cryptography.KeyWrapAlgorithm.RsaOaep,
-            KeyWrapAlgorithm.RSA_OAEP_256 => Azure.Security.KeyVault.Keys.Cryptography.KeyWrapAlgorithm.RsaOaep256,
-            KeyWrapAlgorithm.AES_KW => Azure.Security.KeyVault.Keys.Cryptography.KeyWrapAlgorithm.A256Kw,
+            Azure.Security.KeyVault.Keys.Cryptography.KeyWrapAlgorithm.RSA_OAEP => Azure.Security.KeyVault.Keys.Cryptography.KeyWrapAlgorithm.RsaOaep,
+            Azure.Security.KeyVault.Keys.Cryptography.KeyWrapAlgorithm.RSA_OAEP_256 => Azure.Security.KeyVault.Keys.Cryptography.KeyWrapAlgorithm.RsaOaep256,
+            Azure.Security.KeyVault.Keys.Cryptography.KeyWrapAlgorithm.AES_KW => Azure.Security.KeyVault.Keys.Cryptography.KeyWrapAlgorithm.A256Kw,
             _ => throw new NotSupportedException($"Key wrap algorithm {algorithm} not supported")
         };
 
@@ -518,8 +518,8 @@ public class ManagedHsmProvider : IHsmProvider
             // Test cryptographic operations
             var cryptoClient = new CryptographyClient(testKey.Value.Id, GetManagedHsmCredential());
             var testData = Encoding.UTF8.GetBytes("HSM Health Check");
-            var signResult = await cryptoClient.SignDataAsync(SignatureAlgorithm.RS256, testData, cancellationToken);
-            var verifyResult = await cryptoClient.VerifyDataAsync(SignatureAlgorithm.RS256, testData, signResult.Signature, cancellationToken);
+            var signResult = await cryptoClient.SignDataAsync(Azure.Security.KeyVault.Keys.Cryptography.SignatureAlgorithm.RS256, testData, cancellationToken);
+            var verifyResult = await cryptoClient.VerifyDataAsync(Azure.Security.KeyVault.Keys.Cryptography.SignatureAlgorithm.RS256, testData, signResult.Signature, cancellationToken);
 
             // Cleanup
             await _keyClient.StartDeleteKeyAsync(testKeyName, cancellationToken);
@@ -673,19 +673,19 @@ public class ManagedHsmProvider : IHsmProvider
         return usage;
     }
 
-    private SignatureAlgorithm ConvertSigningAlgorithm(SigningAlgorithm algorithm)
+    private Azure.Security.KeyVault.Keys.Cryptography.SignatureAlgorithm ConvertSigningAlgorithm(SigningAlgorithm algorithm)
     {
         return algorithm switch
         {
-            SigningAlgorithm.RS256 => SignatureAlgorithm.RS256,
-            SigningAlgorithm.RS384 => SignatureAlgorithm.RS384,
-            SigningAlgorithm.RS512 => SignatureAlgorithm.RS512,
-            SigningAlgorithm.PS256 => SignatureAlgorithm.PS256,
-            SigningAlgorithm.PS384 => SignatureAlgorithm.PS384,
-            SigningAlgorithm.PS512 => SignatureAlgorithm.PS512,
-            SigningAlgorithm.ES256 => SignatureAlgorithm.ES256,
-            SigningAlgorithm.ES384 => SignatureAlgorithm.ES384,
-            SigningAlgorithm.ES512 => SignatureAlgorithm.ES512,
+            SigningAlgorithm.RS256 => Azure.Security.KeyVault.Keys.Cryptography.SignatureAlgorithm.RS256,
+            SigningAlgorithm.RS384 => Azure.Security.KeyVault.Keys.Cryptography.SignatureAlgorithm.RS384,
+            SigningAlgorithm.RS512 => Azure.Security.KeyVault.Keys.Cryptography.SignatureAlgorithm.RS512,
+            SigningAlgorithm.PS256 => Azure.Security.KeyVault.Keys.Cryptography.SignatureAlgorithm.PS256,
+            SigningAlgorithm.PS384 => Azure.Security.KeyVault.Keys.Cryptography.SignatureAlgorithm.PS384,
+            SigningAlgorithm.PS512 => Azure.Security.KeyVault.Keys.Cryptography.SignatureAlgorithm.PS512,
+            SigningAlgorithm.ES256 => Azure.Security.KeyVault.Keys.Cryptography.SignatureAlgorithm.ES256,
+            SigningAlgorithm.ES384 => Azure.Security.KeyVault.Keys.Cryptography.SignatureAlgorithm.ES384,
+            SigningAlgorithm.ES512 => Azure.Security.KeyVault.Keys.Cryptography.SignatureAlgorithm.ES512,
             _ => throw new NotSupportedException($"Signing algorithm {algorithm} not supported")
         };
     }

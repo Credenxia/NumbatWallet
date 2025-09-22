@@ -83,7 +83,7 @@ public class RotationResult
 public class RotationPolicy
 {
     public string KeyId { get; set; } = string.Empty;
-    public KeyType KeyType { get; set; }
+    public RotatableKeyType KeyType { get; set; }
     public int RotationIntervalDays { get; set; }
     public int GracePeriodDays { get; set; }
     public int WarningDays { get; set; }
@@ -103,7 +103,7 @@ public class KeyRotationStatus
 {
     public string KeyId { get; set; } = string.Empty;
     public string KeyName { get; set; } = string.Empty;
-    public KeyType KeyType { get; set; }
+    public RotatableKeyType KeyType { get; set; }
     public DateTime CreatedDate { get; set; }
     public DateTime? LastRotatedDate { get; set; }
     public DateTime? NextRotationDate { get; set; }
@@ -129,7 +129,7 @@ public class ComplianceReport
     public int FailedRotations { get; set; }
     public double CompliancePercentage { get; set; }
     public List<RotationAuditEntry> AuditEntries { get; set; } = new();
-    public Dictionary<KeyType, ComplianceStatistics> StatisticsByKeyType { get; set; } = new();
+    public Dictionary<RotatableKeyType, ComplianceStatistics> StatisticsByKeyType { get; set; } = new();
 }
 
 /// <summary>
@@ -151,7 +151,7 @@ public class RotationAuditEntry
 /// </summary>
 public class ComplianceStatistics
 {
-    public KeyType KeyType { get; set; }
+    public RotatableKeyType KeyType { get; set; }
     public int TotalKeys { get; set; }
     public int CompliantKeys { get; set; }
     public int NonCompliantKeys { get; set; }
@@ -162,7 +162,7 @@ public class ComplianceStatistics
 /// <summary>
 /// Types of keys that can be rotated
 /// </summary>
-public enum KeyType
+public enum RotatableKeyType
 {
     SigningKey,
     EncryptionKey,
