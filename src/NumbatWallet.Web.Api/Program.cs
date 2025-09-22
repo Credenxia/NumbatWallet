@@ -9,6 +9,7 @@ using NumbatWallet.Web.Api.Extensions;
 using NumbatWallet.Web.Api.Hubs;
 using NumbatWallet.Web.Api.Middleware;
 using Serilog;
+using Asp.Versioning.ApiExplorer;
 
 // Configure Serilog
 Log.Logger = new LoggerConfiguration()
@@ -41,6 +42,9 @@ try
     builder.Services.AddInfrastructure(builder.Configuration);
     builder.Services.AddWebApi(builder.Configuration);
 
+    // Add API versioning (must be before Swagger)
+    builder.Services.AddApiVersioningConfiguration(builder.Configuration);
+
     // Add GraphQL
     builder.Services.AddGraphQLServer(builder.Configuration);
 
@@ -50,14 +54,17 @@ try
     // Add health checks
     builder.Services.AddCustomHealthChecks(builder.Configuration);
 
-    // Add Swagger documentation
-    builder.Services.AddSwaggerDocumentation();
+    // Add versioned Swagger documentation
+    builder.Services.AddVersionedSwagger(builder.Configuration);
 
     // Add custom authentication
     builder.Services.AddCustomAuthentication(builder.Configuration);
 
-    // Add rate limiting
-    builder.Services.AddCustomRateLimiting(builder.Configuration);
+    // Add enhanced rate limiting
+    builder.Services.AddEnhancedRateLimiting(builder.Configuration);
+
+    // Add security headers
+    builder.Services.AddSecurityHeaders(builder.Configuration);
 
     // Add SignalR for real-time updates
     builder.Services.AddSignalR(options =>
@@ -72,6 +79,9 @@ try
 
     var app = builder.Build();
 
+    // Get API version description provider for Swagger
+    var apiVersionDescriptionProvider = app.Services.GetRequiredService<IApiVersionDescriptionProvider>();
+
     // Configure the HTTP request pipeline
     if (app.Environment.IsDevelopment())
     {
@@ -83,10 +93,14 @@ try
         app.UseHsts();
     }
 
-    // Enable Swagger for all environments (can be restricted later)
-    app.UseSwaggerDocumentation();
+    // Enable versioned Swagger
+    app.UseVersionedSwagger(apiVersionDescriptionProvider);
 
     app.UseHttpsRedirection();
+
+    // Add security headers early in the pipeline
+    app.UseSecurityHeaders();
+
     app.UseSerilogRequestLogging();
     app.UseCors("AllowedOrigins");
 
@@ -103,8 +117,11 @@ try
     app.UseAuthentication();
     app.UseAuthorization();
 
-    // Add rate limiting
-    app.UseCustomRateLimiting();
+    // Add enhanced rate limiting with blocking capabilities
+    app.UseEnhancedRateLimiting();
+
+    // Add API versioning middleware
+    app.UseMiddleware<ApiVersioningMiddleware>();
 
     // Map endpoints
     app.MapControllers();

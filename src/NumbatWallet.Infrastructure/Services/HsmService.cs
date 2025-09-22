@@ -432,6 +432,49 @@ public class HsmService : IHsmService
         }
     }
 
+    public async Task<string> RotateKeyAsync(
+        string keyName,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            // Get metadata from old key
+            var oldKey = await _provider.GetKeyAsync(keyName, cancellationToken);
+
+            // Generate new key name with version suffix
+            var newKeyName = $"{keyName}-v{DateTime.UtcNow:yyyyMMddHHmmss}";
+
+            // Generate new key with same properties
+            var request = new KeyGenerationRequest
+            {
+                KeyName = newKeyName,
+                KeyType = oldKey.Type,
+                KeySize = oldKey.KeySize,
+                Usage = oldKey.Usage,
+                Tags = new Dictionary<string, string>(oldKey.Tags)
+                {
+                    ["RotatedFrom"] = keyName,
+                    ["RotatedAt"] = DateTime.UtcNow.ToString("O")
+                }
+            };
+
+            var newKey = await _provider.GenerateKeyAsync(request, cancellationToken);
+
+            // Mark old key for deletion (soft delete)
+            await _provider.DeleteKeyAsync(keyName, false, cancellationToken);
+
+            _logger.LogInformation("Rotated key from {OldKey} to {NewKey}", keyName, newKeyName);
+
+            return newKeyName;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to rotate key {KeyName}", keyName);
+            throw;
+        }
+    }
+
+    // Additional overload for backwards compatibility
     public async Task<bool> RotateKeyAsync(
         string oldKeyName,
         string newKeyName,
@@ -564,6 +607,125 @@ public class HsmService : IHsmService
             },
             _ => KeyAlgorithm.RSA2048
         };
+    }
+
+    #endregion
+
+    #region Missing Interface Methods
+
+    public async Task<byte[]> GetPublicKeyAsync(
+        string keyName,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var key = await _provider.GetKeyAsync(keyName, cancellationToken);
+            return key.PublicKey;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to get public key for {KeyName}", keyName);
+            throw;
+        }
+    }
+
+    public async Task<byte[]> CreateCertificateSigningRequestAsync(
+        string keyName,
+        X500DistinguishedName subjectName,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            // Get the public key
+            var publicKey = await GetPublicKeyAsync(keyName, cancellationToken);
+
+            // Create CSR using the public key
+            using var rsa = RSA.Create();
+            rsa.ImportSubjectPublicKeyInfo(publicKey, out _);
+
+            var request = new CertificateRequest(
+                subjectName,
+                rsa,
+                HashAlgorithmName.SHA256,
+                RSASignaturePadding.Pkcs1);
+
+            // Convert to DER format (standard CSR format)
+            var csr = request.CreateSigningRequest();
+
+            _logger.LogInformation("Created CSR for key {KeyName}", keyName);
+            return csr;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to create CSR for key {KeyName}", keyName);
+            throw;
+        }
+    }
+
+    public async Task<bool> ImportCertificateAsync(
+        string keyName,
+        X509Certificate2 certificate,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            // Store certificate data as a tag on the key
+            var key = await _provider.GetKeyAsync(keyName, cancellationToken);
+            key.Tags["Certificate"] = Convert.ToBase64String(certificate.RawData);
+            key.Tags["CertificateThumbprint"] = certificate.Thumbprint;
+            key.Tags["CertificateSubject"] = certificate.Subject;
+
+            // Update key with certificate information
+            await _provider.UpdateKeyAsync(keyName, key.Tags, cancellationToken);
+
+            _logger.LogInformation("Imported certificate for key {KeyName}", keyName);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to import certificate for key {KeyName}", keyName);
+            throw;
+        }
+    }
+
+
+    async Task<IEnumerable<string>> IHsmService.ListKeysAsync(
+        CancellationToken cancellationToken)
+    {
+        var keys = await ListKeysAsync(cancellationToken);
+        return keys.Select(k => k.KeyName);
+    }
+
+    public async Task<HsmHealthStatus> GetHealthStatusAsync(
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var providerHealth = await _provider.CheckHealthAsync(cancellationToken);
+
+            return new HsmHealthStatus
+            {
+                IsHealthy = providerHealth.IsHealthy,
+                Status = providerHealth.Status,
+                Details = new Dictionary<string, object>
+                {
+                    ["Provider"] = _provider.ProviderType,
+                    ["ComplianceLevel"] = _provider.ComplianceLevel.ToString(),
+                    ["SupportsHardwareBackedKeys"] = _provider.SupportsHardwareBackedKeys
+                },
+                CheckedAt = DateTimeOffset.UtcNow
+            };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to get HSM health status");
+            return new HsmHealthStatus
+            {
+                IsHealthy = false,
+                Status = $"Health check failed: {ex.Message}",
+                CheckedAt = DateTimeOffset.UtcNow
+            };
+        }
     }
 
     #endregion
