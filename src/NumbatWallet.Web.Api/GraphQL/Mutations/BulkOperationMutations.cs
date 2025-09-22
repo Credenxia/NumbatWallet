@@ -193,7 +193,7 @@ public class BulkOperationMutations
             throw new GraphQLException("CSV file must contain headers and at least one data row");
         }
 
-        var headers = lines[0].Split(options?.Delimiter ?? ',');
+        var headers = lines[0].Split(options?.Delimiter ?? ",");
         var walletIdIndex = Array.IndexOf(headers, options?.WalletIdColumn ?? "WalletId");
 
         if (walletIdIndex < 0)
@@ -217,7 +217,7 @@ public class BulkOperationMutations
         // Collect all wallet IDs
         for (int i = 1; i < lines.Length; i++)
         {
-            var values = lines[i].Split(options?.Delimiter ?? ',');
+            var values = lines[i].Split(options?.Delimiter ?? ",");
             if (values.Length > walletIdIndex && Guid.TryParse(values[walletIdIndex], out var walletId))
             {
                 walletIds.Add(walletId);
