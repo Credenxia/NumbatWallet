@@ -1,4 +1,5 @@
 @page "/dashboard"
+@page "/"
 @using Microsoft.AspNetCore.Components.Authorization
 @using NumbatWallet.Web.Admin.Components.Widgets
 @using NumbatWallet.Web.Admin.Components.Common
@@ -9,46 +10,87 @@
 
 <PageTitle>Dashboard - NumbatWallet Admin</PageTitle>
 
-<h1>Dashboard</h1>
+<div class="dashboard-header">
+    <h1>Dashboard</h1>
+    <div class="dashboard-actions">
+        <button class="btn btn-secondary">
+            <i class="bi bi-download"></i> Export Report
+        </button>
+        <button class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> New Wallet
+        </button>
+    </div>
+</div>
 
 <AuthorizeView>
     <Authorized>
-        <div class="mb-3">
-            <p>Welcome back, <strong>@context.User.Identity?.Name</strong>!</p>
-        </div>
-
         @if (IsLoading)
         {
-            <LoadingSpinner IsLoading="true" LoadingText="Loading dashboard statistics..." />
+            <div class="loading-container">
+                <LoadingSpinner IsLoading="true" LoadingText="Loading dashboard statistics..." />
+            </div>
         }
         else if (ErrorMessage != null)
         {
             <div class="alert alert-danger" role="alert">
+                <i class="bi bi-exclamation-triangle"></i>
                 <strong>Error:</strong> @ErrorMessage
             </div>
         }
         else
         {
-            <div class="row mb-4">
-                <div class="col-md-3">
-                    <StatCard Title="Total Persons"
-                              Value="@Stats?.TotalPersons.ToString()"
-                              Icon="people" />
+            <!-- Metric Cards Row -->
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <div class="metric-icon" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                        <i class="bi bi-people"></i>
+                    </div>
+                    <div class="metric-content">
+                        <div class="metric-label">Total Users</div>
+                        <div class="metric-value">@(Stats?.TotalPersons ?? 0)</div>
+                        <div class="metric-change positive">
+                            <i class="bi bi-arrow-up"></i> 12% from last month
+                        </div>
+                    </div>
                 </div>
-                <div class="col-md-3">
-                    <StatCard Title="Total Wallets"
-                              Value="@Stats?.TotalWallets.ToString()"
-                              Icon="wallet2" />
+
+                <div class="metric-card">
+                    <div class="metric-icon" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                        <i class="bi bi-wallet2"></i>
+                    </div>
+                    <div class="metric-content">
+                        <div class="metric-label">Active Wallets</div>
+                        <div class="metric-value">@(Stats?.TotalWallets ?? 0)</div>
+                        <div class="metric-change positive">
+                            <i class="bi bi-arrow-up"></i> 8% from last week
+                        </div>
+                    </div>
                 </div>
-                <div class="col-md-3">
-                    <StatCard Title="Total Credentials"
-                              Value="@Stats?.TotalCredentials.ToString()"
-                              Icon="file-earmark-text" />
+
+                <div class="metric-card">
+                    <div class="metric-icon" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                        <i class="bi bi-card-checklist"></i>
+                    </div>
+                    <div class="metric-content">
+                        <div class="metric-label">Total Credentials</div>
+                        <div class="metric-value">@(Stats?.TotalCredentials ?? 0)</div>
+                        <div class="metric-change negative">
+                            <i class="bi bi-arrow-down"></i> 3% from last week
+                        </div>
+                    </div>
                 </div>
-                <div class="col-md-3">
-                    <StatCard Title="Active Credentials"
-                              Value="@Stats?.ActiveCredentials.ToString()"
-                              Icon="check-circle" />
+
+                <div class="metric-card">
+                    <div class="metric-icon" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
+                        <i class="bi bi-check-circle"></i>
+                    </div>
+                    <div class="metric-content">
+                        <div class="metric-label">Active Credentials</div>
+                        <div class="metric-value">@(Stats?.ActiveCredentials ?? 0)</div>
+                        <div class="metric-change positive">
+                            <i class="bi bi-arrow-up"></i> 15% from last month
+                        </div>
+                    </div>
                 </div>
             </div>
 

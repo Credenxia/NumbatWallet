@@ -2,6 +2,7 @@ using NumbatWallet.Application.DTOs;
 using NumbatWallet.Application.Interfaces;
 using NumbatWallet.Domain.Aggregates;
 using NumbatWallet.Domain.Interfaces;
+using NumbatWallet.SharedKernel.Interfaces;
 
 namespace NumbatWallet.Application.Services;
 
@@ -39,7 +40,7 @@ public class OrganizationService : IOrganizationService
         );
 
         await _organizationRepository.AddAsync(organization, cancellationToken);
-        await _unitOfWork.CommitAsync(cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return MapToDto(organization);
     }
@@ -48,16 +49,22 @@ public class OrganizationService : IOrganizationService
     {
         var organization = await _organizationRepository.GetByIdAsync(id, cancellationToken);
         if (organization == null)
+        {
             throw new InvalidOperationException($"Organization with ID {id} not found");
+        }
 
         if (dto.Name != null)
+        {
             organization.UpdateName(dto.Name);
+        }
 
         if (dto.Description != null)
+        {
             organization.UpdateDescription(dto.Description);
+        }
 
         await _organizationRepository.UpdateAsync(organization, cancellationToken);
-        await _unitOfWork.CommitAsync(cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return MapToDto(organization);
     }
@@ -66,23 +73,28 @@ public class OrganizationService : IOrganizationService
     {
         var organization = await _organizationRepository.GetByIdAsync(id, cancellationToken);
         if (organization == null)
+        {
             return false;
+        }
 
         await _organizationRepository.DeleteAsync(organization, cancellationToken);
-        await _unitOfWork.CommitAsync(cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
         return true;
     }
 
     private static OrganizationDto MapToDto(Organization organization)
     {
-        return new OrganizationDto
-        {
-            Id = organization.Id,
-            Name = organization.Name,
-            Type = organization.Type.ToString(),
-            Description = organization.Description,
-            CreatedAt = organization.CreatedAt,
-            UpdatedAt = organization.UpdatedAt
-        };
+        return new OrganizationDto(
+            organization.Id,
+            organization.Name,
+            organization.Name, // Using name as identifier for now
+            organization.Type,
+            "admin@example.com", // TODO: Add contact info to Organization
+            null,
+            null,
+            null,
+            false,
+            DateTime.UtcNow,
+            null);
     }
 }

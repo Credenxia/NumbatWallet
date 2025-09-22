@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Logging;
 using NumbatWallet.Domain.Aggregates;
+using NumbatWallet.Domain.Entities;
 using NumbatWallet.SharedKernel.Interfaces;
 using NumbatWallet.SharedKernel.Primitives;
 
@@ -33,6 +34,9 @@ public class NumbatWalletDbContext : DbContext, IUnitOfWork
     public DbSet<Credential> Credentials => Set<Credential>();
     public DbSet<Person> Persons => Set<Person>();
     public DbSet<Issuer> Issuers => Set<Issuer>();
+    public DbSet<TenantCertificate> TenantCertificates => Set<TenantCertificate>();
+    public DbSet<CertificateAuthority> CertificateAuthorities => Set<CertificateAuthority>();
+    public DbSet<CertificateTrustStore> CertificateTrustStores => Set<CertificateTrustStore>();
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {

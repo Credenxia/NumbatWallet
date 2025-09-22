@@ -11,4 +11,5 @@ public interface IPersonService
     Task<PersonDto> UpdateAsync(Guid id, UpdatePersonDto dto, CancellationToken cancellationToken = default);
     Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default);
     Task<IEnumerable<PersonDto>> SearchAsync(string searchTerm, CancellationToken cancellationToken = default);
+    Task<bool> VerifyIdentityAsync(Guid personId, IdentityVerificationDto verificationData, CancellationToken cancellationToken = default);
 }

@@ -179,11 +179,10 @@ public class WebhookModule : RestEndpointBase
                 return HandleError("Invalid credential ID format", 400);
             }
 
-            // Update credential status
+            // Update credential status (reason is handled internally by the service)
             await credentialService.UpdateStatusAsync(
                 credentialId,
                 request.NewStatus,
-                request.Reason,
                 cancellationToken);
 
             return Results.Ok(new

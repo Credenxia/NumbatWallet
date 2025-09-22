@@ -3,9 +3,12 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using NumbatWallet.Application.Interfaces;
 using NumbatWallet.Domain.Interfaces;
+using NumbatWallet.Domain.Services;
 using NumbatWallet.Infrastructure.Data;
 using NumbatWallet.Infrastructure.Data.Interceptors;
+using NumbatWallet.Infrastructure.Data.Repositories;
 using NumbatWallet.Infrastructure.Repositories;
+using NumbatWallet.Infrastructure.Security;
 using NumbatWallet.Infrastructure.Services;
 using NumbatWallet.SharedKernel.Interfaces;
 using StackExchange.Redis;
@@ -70,6 +73,20 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IWalletRepository, WalletRepository>();
         services.AddScoped<ICredentialRepository, CredentialRepository>();
         services.AddScoped<IIssuerRepository, IssuerRepository>();
+        services.AddScoped<IOrganizationRepository, OrganizationRepository>();
+        services.AddScoped<ITenantCertificateRepository, TenantCertificateRepository>();
+        services.AddScoped<ICertificateAuthorityRepository, CertificateAuthorityRepository>();
+        services.AddScoped<ICertificateTrustStoreRepository, CertificateTrustStoreRepository>();
+
+        // Register Domain Services
+        services.AddHttpClient<ICertificateValidationService, CertificateValidationService>();
+        services.AddScoped<IRevocationRegistryService, RevocationRegistryService>();
+
+        // Register Security Services
+        services.AddScoped<IRequestSigningService, RequestSigningService>();
+        services.AddScoped<ISessionService, DistributedSessionService>();
+        services.AddSingleton<IHsmService, HsmService>();
+        services.AddSingleton<IApiKeyService, ApiKeyService>();
 
         // Register Infrastructure Services
         services.AddScoped<Application.Interfaces.ITenantService, TenantService>();
@@ -83,7 +100,6 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IAuditService, AuditService>();
         services.AddScoped<INotificationService, NotificationService>();
         services.AddScoped<IEmailService, EmailService>();
-        services.AddScoped<IStatisticsService, StatisticsService>();
         // TODO: Add after fixing background jobs
         // services.AddScoped<Application.BackgroundJobs.IDatabaseMaintenanceService, DatabaseMaintenanceService>();
         // TODO: Implement these services

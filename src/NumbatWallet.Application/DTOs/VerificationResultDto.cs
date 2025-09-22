@@ -6,6 +6,7 @@ public class VerificationResultDto
     public VerificationChecksDto Checks { get; set; } = new();
     public string? ErrorMessage { get; set; }
     public DateTime VerifiedAt { get; set; } = DateTime.UtcNow;
+    public Dictionary<string, object> Claims { get; set; } = new();
 }
 
 public class VerificationChecksDto

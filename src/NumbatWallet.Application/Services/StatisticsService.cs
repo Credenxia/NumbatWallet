@@ -1,8 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using NumbatWallet.Application.DTOs;
 using NumbatWallet.Application.Interfaces;
-using NumbatWallet.Domain.Enums;
 using NumbatWallet.Domain.Interfaces;
+using NumbatWallet.SharedKernel.Enums;
 
 namespace NumbatWallet.Application.Services;
 
@@ -53,9 +53,9 @@ public class StatisticsService : IStatisticsService
                  c.ExpiresAt <= weekFromNow
         );
 
-        // Group by type
+        // Group by schema (type)
         stats.CredentialsByType = allCredentials
-            .GroupBy(c => c.Type.ToString())
+            .GroupBy(c => c.SchemaId)
             .ToDictionary(g => g.Key, g => g.Count());
 
         // Group wallets by status
@@ -87,7 +87,7 @@ public class StatisticsService : IStatisticsService
 
             dayStats.ByCredentialType = allCredentials
                 .Where(c => c.IssuedAt.Date == date)
-                .GroupBy(c => c.Type.ToString())
+                .GroupBy(c => c.CredentialType)
                 .ToDictionary(g => g.Key, g => g.Count());
 
             statistics.Add(dayStats);

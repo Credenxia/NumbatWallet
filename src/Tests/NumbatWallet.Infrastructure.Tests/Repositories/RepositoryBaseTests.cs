@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Data.Sqlite;
 using NumbatWallet.Infrastructure.Data;
-using NumbatWallet.Infrastructure.Repositories;
+using NumbatWallet.Infrastructure.Data.Repositories;
 using NumbatWallet.Domain.Aggregates;
 using NumbatWallet.SharedKernel.Specifications;
 using NumbatWallet.SharedKernel.Interfaces;
@@ -10,11 +10,40 @@ using Moq;
 
 namespace NumbatWallet.Infrastructure.Tests.Repositories;
 
+// Concrete test implementation of RepositoryBase for testing
+public class TestWalletRepository : RepositoryBase<Wallet, Guid>
+{
+    public TestWalletRepository(NumbatWalletDbContext context) : base(context)
+    {
+    }
+
+    // Add test-specific methods that tests expect
+    public async Task<int> CountAsync(ISpecification<Wallet> specification, CancellationToken cancellationToken = default)
+    {
+        var query = DbSet.AsQueryable();
+        if (specification?.Criteria != null)
+        {
+            query = query.Where(specification.Criteria);
+        }
+        return await query.CountAsync(cancellationToken);
+    }
+
+    public async Task<bool> AnyAsync(ISpecification<Wallet> specification, CancellationToken cancellationToken = default)
+    {
+        var query = DbSet.AsQueryable();
+        if (specification?.Criteria != null)
+        {
+            query = query.Where(specification.Criteria);
+        }
+        return await query.AnyAsync(cancellationToken);
+    }
+}
+
 [Collection("Database Collection")]
 public class RepositoryBaseTests : IDisposable
 {
     private readonly NumbatWalletDbContext _context;
-    private readonly RepositoryBase<Wallet, Guid> _repository;
+    private readonly TestWalletRepository _repository;
     private readonly Mock<ITenantService> _tenantServiceMock;
     private readonly Guid _tenantId;
     private readonly SqliteConnection _connection;
@@ -51,7 +80,7 @@ public class RepositoryBaseTests : IDisposable
 
         _context.Database.EnsureCreated();
 
-        _repository = new RepositoryBase<Wallet, Guid>(_context);
+        _repository = new TestWalletRepository(_context);
     }
 
     [Fact]

@@ -183,7 +183,15 @@ public class PersonEndpoints : ICarterModule
     {
         try
         {
-            var result = await personService.VerifyIdentityAsync(id, request, cancellationToken);
+            var verificationDto = new IdentityVerificationDto
+            {
+                DocumentType = request.DocumentType,
+                DocumentNumber = request.DocumentNumber,
+                DocumentImage = request.DocumentImage,
+                SelfieImage = null, // Not provided in request
+                AdditionalData = request.AdditionalData ?? new Dictionary<string, string>()
+            };
+            var result = await personService.VerifyIdentityAsync(id, verificationDto, cancellationToken);
             return Results.Ok(result);
         }
         catch (NotFoundException)

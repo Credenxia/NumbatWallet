@@ -173,7 +173,15 @@ public class Query
         CancellationToken cancellationToken)
     {
         var result = await statisticsService.GetDashboardStatisticsAsync(cancellationToken);
-        return (DashboardStatistics)result;
+        return new DashboardStatistics
+        {
+            TotalUsers = result.TotalUsers,
+            ActiveWallets = result.ActiveWallets,
+            TotalCredentials = result.TotalCredentials,
+            CredentialsIssuedToday = result.CredentialsIssuedToday,
+            CredentialsExpiringThisWeek = result.CredentialsExpiringThisWeek,
+            CredentialsByType = result.CredentialsByType
+        };
     }
 
     [Authorize(Roles = new[] { "Admin", "Officer" })]
@@ -184,7 +192,14 @@ public class Query
         CancellationToken cancellationToken)
     {
         var results = await statisticsService.GetIssuanceStatisticsAsync(startDate, endDate, cancellationToken);
-        return results.Select(r => (IssuanceStatistics)r);
+        return results.Select(r => new IssuanceStatistics
+        {
+            Date = r.Date,
+            IssuedCount = r.IssuedCount,
+            RevokedCount = r.RevokedCount,
+            ExpiredCount = r.ExpiredCount,
+            ByCredentialType = r.ByCredentialType
+        });
     }
 
     // Health Check Query
@@ -194,7 +209,19 @@ public class Query
         CancellationToken cancellationToken)
     {
         var result = await healthCheckService.GetHealthStatusAsync(cancellationToken);
-        return (HealthStatus)result;
+        return new HealthStatus
+        {
+            Status = result.Status,
+            Components = result.Components.ToDictionary(
+                kvp => kvp.Key,
+                kvp => new ComponentHealth
+                {
+                    Status = kvp.Value.Status,
+                    Description = kvp.Value.Description
+                }
+            ),
+            CheckedAt = result.CheckedAt
+        };
     }
 }
 

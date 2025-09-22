@@ -46,11 +46,17 @@ public class HealthCheckService : IHealthCheckService
         var hasDegraded = health.Components.Any(c => c.Value.Status == "Degraded");
 
         if (hasUnhealthy)
+        {
             health.Status = "Unhealthy";
+        }
         else if (hasDegraded)
+        {
             health.Status = "Degraded";
+        }
         else
+        {
             health.Status = "Healthy";
+        }
 
         return health;
     }
@@ -88,10 +94,11 @@ public class HealthCheckService : IHealthCheckService
         try
         {
             // Simple connectivity check - would list containers in production
-            var testKey = "health-check-" + Guid.NewGuid();
+            var testKey = "health-check-" + Guid.NewGuid() + ".txt";
             var testData = System.Text.Encoding.UTF8.GetBytes("test");
-            await _blobStorageService.UploadAsync("health", testKey, testData, cancellationToken);
-            await _blobStorageService.DeleteAsync("health", testKey, cancellationToken);
+            using var stream = new MemoryStream(testData);
+            await _blobStorageService.UploadAsync(stream, testKey, "health", null, cancellationToken);
+            await _blobStorageService.DeleteAsync(testKey, "health", cancellationToken);
             return true;
         }
         catch
@@ -113,7 +120,7 @@ public class HealthCheckService : IHealthCheckService
             if (canConnect)
             {
                 // Try a simple query
-                var count = await _dbContext.Set<Domain.Entities.Person>().CountAsync(cancellationToken);
+                var count = await _dbContext.Set<Domain.Aggregates.Person>().CountAsync(cancellationToken);
                 health.Status = "Healthy";
                 health.Description = $"Connected, {count} persons in database";
             }
@@ -189,10 +196,11 @@ public class HealthCheckService : IHealthCheckService
 
         try
         {
-            var testKey = "health-check-" + Guid.NewGuid();
+            var testKey = "health-check-" + Guid.NewGuid() + ".txt";
             var testData = System.Text.Encoding.UTF8.GetBytes("test");
-            await _blobStorageService.UploadAsync("health", testKey, testData, cancellationToken);
-            await _blobStorageService.DeleteAsync("health", testKey, cancellationToken);
+            using var stream = new MemoryStream(testData);
+            await _blobStorageService.UploadAsync(stream, testKey, "health", null, cancellationToken);
+            await _blobStorageService.DeleteAsync(testKey, "health", cancellationToken);
             stopwatch.Stop();
 
             health.Status = "Healthy";

@@ -1,4 +1,6 @@
+using System.Linq.Expressions;
 using NumbatWallet.SharedKernel.Primitives;
+using NumbatWallet.SharedKernel.Specifications;
 
 namespace NumbatWallet.SharedKernel.Interfaces;
 
@@ -12,4 +14,6 @@ public interface IRepository<TEntity, TId>
     Task UpdateAsync(TEntity entity, CancellationToken cancellationToken = default);
     Task DeleteAsync(TEntity entity, CancellationToken cancellationToken = default);
     Task<bool> ExistsAsync(TId id, CancellationToken cancellationToken = default);
+    Task<IEnumerable<TEntity>> FindAsync(Expression<Func<TEntity, bool>> predicate, CancellationToken cancellationToken = default);
+    Task<IEnumerable<TEntity>> FindAsync(ISpecification<TEntity> specification, CancellationToken cancellationToken = default);
 }

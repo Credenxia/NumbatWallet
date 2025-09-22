@@ -175,7 +175,7 @@ public class CredentialEndpoints : ICarterModule
         }
 
         // Check if user has access to this credential
-        if (!await credentialService.UserHasAccessAsync(id, userId, cancellationToken))
+        if (!await credentialService.UserHasAccessAsync(userId, id, cancellationToken))
         {
             return Results.Forbid();
         }
@@ -250,7 +250,7 @@ public class CredentialEndpoints : ICarterModule
         }
 
         // Check if user has access to this credential
-        if (!await credentialService.UserHasAccessAsync(id, userId, cancellationToken))
+        if (!await credentialService.UserHasAccessAsync(userId, id, cancellationToken))
         {
             return Results.Forbid();
         }

@@ -232,14 +232,16 @@ public class DtpModule : RestEndpointBase
             var issuerId = httpContextAccessor.HttpContext?.User.FindFirst("sub")?.Value
                 ?? throw new UnauthorizedAccessException("Issuer not authenticated");
 
-            var credential = await credentialService.IssueCredentialAsync(
-                walletId,
-                request.CredentialType,
-                request.Subject,
-                request.Claims,
-                issuerId,
-                request.ExpirationDate,
-                cancellationToken);
+            var issueDto = new IssueCredentialDto
+            {
+                WalletId = walletId,
+                Type = request.CredentialType,
+                Data = request.Claims,
+                ExpiresAt = request.ExpirationDate,
+                IssuerId = issuerId
+            };
+
+            var credential = await credentialService.IssueCredentialAsync(issueDto, cancellationToken);
 
             return Results.Created(
                 $"/api/v1/dtp/credentials/{credential.Id}",
@@ -278,7 +280,6 @@ public class DtpModule : RestEndpointBase
             var result = await credentialService.RevokeCredentialAsync(
                 credentialId,
                 request.Reason,
-                revokerId,
                 cancellationToken);
 
             if (result)

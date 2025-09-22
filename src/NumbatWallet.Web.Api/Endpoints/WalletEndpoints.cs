@@ -129,7 +129,7 @@ public class WalletEndpoints : ICarterModule
         }
 
         // Check if user has access to this wallet
-        if (!await walletService.UserHasAccessAsync(id, userId, cancellationToken))
+        if (!await walletService.UserHasAccessAsync(userId, id, cancellationToken))
         {
             return Results.Forbid();
         }
@@ -185,7 +185,7 @@ public class WalletEndpoints : ICarterModule
             return Results.Unauthorized();
         }
 
-        if (!await walletService.UserHasAccessAsync(id, userId, cancellationToken))
+        if (!await walletService.UserHasAccessAsync(userId, id, cancellationToken))
         {
             return Results.Forbid();
         }
@@ -227,7 +227,7 @@ public class WalletEndpoints : ICarterModule
             return Results.Unauthorized();
         }
 
-        if (!await walletService.UserHasAccessAsync(id, userId, cancellationToken))
+        if (!await walletService.UserHasAccessAsync(userId, id, cancellationToken))
         {
             return Results.Forbid();
         }
@@ -285,7 +285,7 @@ public class WalletEndpoints : ICarterModule
             return Results.Unauthorized();
         }
 
-        if (!await walletService.UserHasAccessAsync(id, userId, cancellationToken))
+        if (!await walletService.UserHasAccessAsync(userId, id, cancellationToken))
         {
             return Results.Forbid();
         }
@@ -314,7 +314,7 @@ public class WalletEndpoints : ICarterModule
             return Results.Unauthorized();
         }
 
-        if (!await walletService.UserHasAccessAsync(id, userId, cancellationToken))
+        if (!await walletService.UserHasAccessAsync(userId, id, cancellationToken))
         {
             return Results.Forbid();
         }
@@ -346,7 +346,7 @@ public class WalletEndpoints : ICarterModule
             return Results.Unauthorized();
         }
 
-        if (!await walletService.UserHasAccessAsync(id, userId, cancellationToken))
+        if (!await walletService.UserHasAccessAsync(userId, id, cancellationToken))
         {
             return Results.Forbid();
         }
@@ -378,7 +378,7 @@ public class WalletEndpoints : ICarterModule
             return Results.Unauthorized();
         }
 
-        if (!await walletService.UserHasAccessAsync(id, userId, cancellationToken))
+        if (!await walletService.UserHasAccessAsync(userId, id, cancellationToken))
         {
             return Results.Forbid();
         }
@@ -407,7 +407,7 @@ public class WalletEndpoints : ICarterModule
             return Results.Unauthorized();
         }
 
-        if (!await walletService.UserHasAccessAsync(id, userId, cancellationToken))
+        if (!await walletService.UserHasAccessAsync(userId, id, cancellationToken))
         {
             return Results.Forbid();
         }

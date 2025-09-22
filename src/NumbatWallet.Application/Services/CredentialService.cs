@@ -2,8 +2,10 @@ using Microsoft.EntityFrameworkCore;
 using NumbatWallet.Application.DTOs;
 using NumbatWallet.Application.Interfaces;
 using NumbatWallet.Domain.Aggregates;
-using NumbatWallet.Domain.Enums;
 using NumbatWallet.Domain.Interfaces;
+using NumbatWallet.SharedKernel.Interfaces;
+using NumbatWallet.SharedKernel.Enums;
+using NumbatWallet.SharedKernel.Results;
 using System.Text.Json;
 
 namespace NumbatWallet.Application.Services;
@@ -12,15 +14,18 @@ public class CredentialService : ICredentialService
 {
     private readonly ICredentialRepository _credentialRepository;
     private readonly IWalletRepository _walletRepository;
+    private readonly IPersonRepository _personRepository;
     private readonly IUnitOfWork _unitOfWork;
 
     public CredentialService(
         ICredentialRepository credentialRepository,
         IWalletRepository walletRepository,
+        IPersonRepository personRepository,
         IUnitOfWork unitOfWork)
     {
         _credentialRepository = credentialRepository;
         _walletRepository = walletRepository;
+        _personRepository = personRepository;
         _unitOfWork = unitOfWork;
     }
 
@@ -32,7 +37,9 @@ public class CredentialService : ICredentialService
 
     public async Task<IEnumerable<CredentialDto>> GetByWalletIdAsync(Guid walletId, CancellationToken cancellationToken = default)
     {
-        var credentials = await _credentialRepository.FindAsync(c => c.WalletId == walletId, cancellationToken);
+        // TODO: Implement specification pattern
+        var allCredentials = await _credentialRepository.GetAllAsync(cancellationToken);
+        var credentials = allCredentials.Where(c => c.WalletId == walletId);
         return credentials.Select(MapToDto);
     }
 
@@ -68,21 +75,29 @@ public class CredentialService : ICredentialService
     {
         var wallet = await _walletRepository.GetByIdAsync(dto.WalletId, cancellationToken);
         if (wallet == null)
+        {
             throw new InvalidOperationException($"Wallet with ID {dto.WalletId} not found");
+        }
 
-        var credentialType = Enum.Parse<CredentialType>(dto.Type);
         var dataJson = JsonSerializer.Serialize(dto.Data);
 
-        var credential = Credential.Create(
+        var credentialResult = Credential.Create(
             dto.WalletId,
-            credentialType,
+            Guid.Parse(dto.IssuerId ?? Guid.NewGuid().ToString()),
+            dto.Type, // credentialType as string
             dataJson,
-            dto.IssuerId ?? "system",
-            dto.ExpiresAt
+            "default-schema" // TODO: Add schema to DTO
         );
 
+        if (!credentialResult.IsSuccess)
+        {
+            throw new InvalidOperationException(credentialResult.Error.Message);
+        }
+
+        var credential = credentialResult.Value;
+
         await _credentialRepository.AddAsync(credential, cancellationToken);
-        await _unitOfWork.CommitAsync(cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return MapToDto(credential);
     }
@@ -91,11 +106,13 @@ public class CredentialService : ICredentialService
     {
         var credential = await _credentialRepository.GetByIdAsync(id, cancellationToken);
         if (credential == null)
+        {
             return false;
+        }
 
         credential.Revoke(reason);
         await _credentialRepository.UpdateAsync(credential, cancellationToken);
-        await _unitOfWork.CommitAsync(cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
         return true;
     }
 
@@ -139,7 +156,7 @@ public class CredentialService : ICredentialService
             result.Checks.Schema = true; // Mock: always valid
         }
 
-        result.Checks.Issuer = !string.IsNullOrEmpty(credential.IssuerId);
+        result.Checks.Issuer = credential.IssuerId != Guid.Empty;
 
         result.IsValid = result.Checks.Expiry &&
                         result.Checks.Revocation &&
@@ -154,7 +171,9 @@ public class CredentialService : ICredentialService
     {
         var credential = await _credentialRepository.GetByIdAsync(dto.CredentialId, cancellationToken);
         if (credential == null)
+        {
             throw new InvalidOperationException($"Credential with ID {dto.CredentialId} not found");
+        }
 
         // Create presentation (simplified - would involve actual ZK proofs in production)
         var presentation = new PresentationDto
@@ -187,20 +206,195 @@ public class CredentialService : ICredentialService
 
     private static CredentialDto MapToDto(Credential credential)
     {
+        var credentialData = JsonDocument.Parse(credential.CredentialData);
+        var credentialSubject = new Dictionary<string, object>();
+
+        // Extract credential subject from JSON data
+        if (credentialData.RootElement.TryGetProperty("credentialSubject", out var subjectElement))
+        {
+            foreach (var prop in subjectElement.EnumerateObject())
+            {
+                credentialSubject[prop.Name] = prop.Value.ToString();
+            }
+        }
+        else
+        {
+            // Use entire data as credential subject if not structured
+            foreach (var prop in credentialData.RootElement.EnumerateObject())
+            {
+                credentialSubject[prop.Name] = prop.Value.ToString();
+            }
+        }
+
         return new CredentialDto
         {
-            Id = credential.Id,
-            WalletId = credential.WalletId,
-            Type = credential.Type.ToString(),
-            Data = credential.Data,
+            Id = credential.Id.ToString(),
+            HolderId = credential.WalletId.ToString(), // Using WalletId as HolderId
+            IssuerId = credential.IssuerId.ToString(),
+            Type = credential.CredentialType,
+            CredentialSubject = credentialSubject,
             Status = credential.Status.ToString(),
-            IssuerId = credential.IssuerId,
-            IssuedAt = credential.IssuedAt,
-            ExpiresAt = credential.ExpiresAt,
-            RevokedAt = credential.RevokedAt,
-            RevokedReason = credential.RevokedReason,
-            CreatedAt = credential.CreatedAt,
-            UpdatedAt = credential.UpdatedAt
+            IssuanceDate = credential.IssuedAt.DateTime,
+            ExpirationDate = credential.ExpiresAt?.DateTime,
+            IsRevoked = credential.Status == CredentialStatus.Revoked,
+            RevocationDate = credential.RevokedAt?.DateTime,
+            RevocationReason = credential.RevocationReason
         };
+    }
+
+    public async Task<bool> UpdateStatusAsync(Guid id, string status, CancellationToken cancellationToken = default)
+    {
+        var credential = await _credentialRepository.GetByIdAsync(id, cancellationToken);
+        if (credential == null)
+        {
+            return false;
+        }
+
+        // Parse the status string to CredentialStatus enum
+        if (!Enum.TryParse<CredentialStatus>(status, true, out var credentialStatus))
+        {
+            return false;
+        }
+
+        // Update the status based on the parsed value
+        Result result;
+        switch (credentialStatus)
+        {
+            case CredentialStatus.Revoked:
+                result = credential.Revoke("Status updated via API");
+                break;
+            case CredentialStatus.Suspended:
+                result = credential.Suspend("Status updated via API");
+                break;
+            case CredentialStatus.Active:
+                result = credential.Activate();
+                break;
+            default:
+                return false;
+        }
+
+        if (!result.IsSuccess)
+        {
+            return false;
+        }
+
+        await _credentialRepository.UpdateAsync(credential, cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+        return true;
+    }
+
+    public async Task<bool> UserHasAccessAsync(string userId, Guid credentialId, CancellationToken cancellationToken = default)
+    {
+        var credential = await _credentialRepository.GetByIdAsync(credentialId, cancellationToken);
+        if (credential == null)
+        {
+            return false;
+        }
+
+        // Get the wallet to check ownership
+        var wallet = await _walletRepository.GetByIdAsync(credential.WalletId, cancellationToken);
+        if (wallet == null)
+        {
+            return false;
+        }
+
+        // Check if the user owns this wallet through person
+        var person = await _personRepository.GetByIdAsync(wallet.PersonId, cancellationToken);
+        if (person == null)
+        {
+            return false;
+        }
+
+        // Check if the user's external ID matches
+        return person.ExternalId == userId;
+    }
+
+    public async Task<VerificationResultDto> VerifyCredentialAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        var credential = await _credentialRepository.GetByIdAsync(id, cancellationToken);
+        if (credential == null)
+        {
+            return new VerificationResultDto
+            {
+                IsValid = false,
+                ErrorMessage = "Credential not found",
+                Checks = new VerificationChecksDto()
+            };
+        }
+
+        // Basic verification - check status and expiry
+        var errors = new List<string>();
+        var isValid = true;
+        var checks = new VerificationChecksDto
+        {
+            Signature = true, // Assume valid for now
+            Schema = true,    // Assume valid for now
+            Issuer = true     // Assume valid for now
+        };
+
+        if (credential.Status != CredentialStatus.Active)
+        {
+            isValid = false;
+            errors.Add($"Credential is {credential.Status}");
+            checks.Revocation = false;
+        }
+        else
+        {
+            checks.Revocation = true;
+        }
+
+        if (credential.IsExpired())
+        {
+            isValid = false;
+            errors.Add("Credential is expired");
+            checks.Expiry = false;
+        }
+        else
+        {
+            checks.Expiry = true;
+        }
+
+        return new VerificationResultDto
+        {
+            IsValid = isValid,
+            VerifiedAt = DateTime.UtcNow,
+            ErrorMessage = errors.Any() ? string.Join("; ", errors) : null,
+            Checks = checks
+        };
+    }
+
+    public async Task<CredentialDto> IssueCredentialAsync(IssueCredentialDto dto, CancellationToken cancellationToken = default)
+    {
+        // This is just a wrapper for the existing IssueAsync method
+        return await IssueAsync(dto, cancellationToken);
+    }
+
+    public async Task<bool> RevokeCredentialAsync(Guid id, string reason, CancellationToken cancellationToken = default)
+    {
+        // This is just a wrapper for the existing RevokeAsync method
+        return await RevokeAsync(id, reason, cancellationToken);
+    }
+
+    public async Task<IEnumerable<string>> GetAvailableCredentialTypesAsync(CancellationToken cancellationToken = default)
+    {
+        // Return a list of available credential types
+        return await Task.FromResult(new[]
+        {
+            "DriverLicense",
+            "WorkingWithChildren",
+            "ProofOfAge",
+            "StudentID",
+            "HealthCard",
+            "ProfessionalLicense",
+            "VaccinationCertificate",
+            "EducationCredential"
+        });
+    }
+
+    public async Task<bool> ValidateJwtVcAsync(string jwt, CancellationToken cancellationToken = default)
+    {
+        // TODO: Implement JWT VC validation
+        // For now, return true if the JWT is not empty
+        return await Task.FromResult(!string.IsNullOrWhiteSpace(jwt));
     }
 }

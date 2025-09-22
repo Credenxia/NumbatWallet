@@ -13,4 +13,8 @@ public interface IWalletService
     Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default);
     Task<bool> SuspendAsync(Guid id, string reason, CancellationToken cancellationToken = default);
     Task<bool> ReactivateAsync(Guid id, CancellationToken cancellationToken = default);
+    Task<bool> UserHasAccessAsync(string userId, Guid walletId, CancellationToken cancellationToken = default);
+    Task<Dictionary<string, object>> GetWalletStatisticsAsync(Guid walletId, CancellationToken cancellationToken = default);
+    Task<bool> LockWalletAsync(Guid walletId, CancellationToken cancellationToken = default);
+    Task<bool> UnlockWalletAsync(Guid walletId, string passphrase, CancellationToken cancellationToken = default);
 }

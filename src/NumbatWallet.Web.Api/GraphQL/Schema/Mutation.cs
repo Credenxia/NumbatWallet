@@ -219,8 +219,8 @@ public class Mutation
         return new VerificationResult
         {
             IsValid = result.IsValid,
-            Errors = result.Errors,
-            Claims = result.Claims
+            Errors = result.ErrorMessage != null ? new List<string> { result.ErrorMessage } : new List<string>(),
+            Claims = new Dictionary<string, object>() // Empty claims for now
         };
     }
 

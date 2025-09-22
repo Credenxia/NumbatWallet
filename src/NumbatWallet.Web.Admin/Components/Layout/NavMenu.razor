@@ -1,44 +1,97 @@
-﻿<div class="top-row ps-3 navbar navbar-dark">
-    <div class="container-fluid">
-        <a class="navbar-brand" href="">NumbatWallet Admin</a>
+<nav class="nav-menu">
+    <div class="nav-section">
+        <div class="nav-section-title">Main</div>
+        <NavLink class="nav-item" href="dashboard" Match="NavLinkMatch.All">
+            <i class="nav-icon bi bi-speedometer2"></i>
+            <span>Dashboard</span>
+        </NavLink>
+        <NavLink class="nav-item" href="tenants">
+            <i class="nav-icon bi bi-building"></i>
+            <span>Tenants</span>
+        </NavLink>
+        <NavLink class="nav-item" href="users">
+            <i class="nav-icon bi bi-people"></i>
+            <span>Users</span>
+        </NavLink>
     </div>
-</div>
 
-<input type="checkbox" title="Navigation menu" class="navbar-toggler" />
+    <div class="nav-section">
+        <div class="nav-section-title">Wallet Management</div>
+        <NavLink class="nav-item" href="wallets">
+            <i class="nav-icon bi bi-wallet2"></i>
+            <span>Wallets</span>
+        </NavLink>
+        <NavLink class="nav-item" href="credentials">
+            <i class="nav-icon bi bi-card-checklist"></i>
+            <span>Credentials</span>
+        </NavLink>
+        <NavLink class="nav-item" href="wallet-designer">
+            <i class="nav-icon bi bi-palette"></i>
+            <span>Wallet Designer</span>
+        </NavLink>
+    </div>
 
-<div class="nav-scrollable" onclick="document.querySelector('.navbar-toggler').click()">
-    <nav class="nav flex-column">
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="dashboard">
-                <span class="bi bi-speedometer2" aria-hidden="true"></span> Dashboard
-            </NavLink>
-        </div>
+    <div class="nav-section">
+        <div class="nav-section-title">Security & Compliance</div>
+        <NavLink class="nav-item" href="certificates">
+            <i class="nav-icon bi bi-shield-check"></i>
+            <span>Certificates</span>
+        </NavLink>
+        <NavLink class="nav-item" href="api-keys">
+            <i class="nav-icon bi bi-key"></i>
+            <span>API Keys</span>
+        </NavLink>
+        <NavLink class="nav-item" href="audit-logs">
+            <i class="nav-icon bi bi-journal-text"></i>
+            <span>Audit Logs</span>
+        </NavLink>
+    </div>
 
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="wallets">
-                <span class="bi bi-wallet2" aria-hidden="true"></span> Wallets
-            </NavLink>
-        </div>
+    <div class="nav-section">
+        <div class="nav-section-title">Analytics</div>
+        <NavLink class="nav-item" href="metrics">
+            <i class="nav-icon bi bi-graph-up"></i>
+            <span>Metrics</span>
+        </NavLink>
+        <NavLink class="nav-item" href="reports">
+            <i class="nav-icon bi bi-file-earmark-bar-graph"></i>
+            <span>Reports</span>
+        </NavLink>
+    </div>
 
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="credentials">
-                <span class="bi bi-card-checklist" aria-hidden="true"></span> Credentials
-            </NavLink>
-        </div>
+    <div class="nav-section">
+        <div class="nav-section-title">System</div>
+        <NavLink class="nav-item" href="integrations">
+            <i class="nav-icon bi bi-plug"></i>
+            <span>Integrations</span>
+        </NavLink>
+        <NavLink class="nav-item" href="webhooks">
+            <i class="nav-icon bi bi-arrow-left-right"></i>
+            <span>Webhooks</span>
+        </NavLink>
+        <NavLink class="nav-item" href="settings">
+            <i class="nav-icon bi bi-gear"></i>
+            <span>Settings</span>
+        </NavLink>
+    </div>
+</nav>
 
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="audit-logs">
-                <span class="bi bi-journal-text" aria-hidden="true"></span> Audit Logs
-            </NavLink>
-        </div>
+<style>
+    .nav-section {
+        margin-bottom: 1.5rem;
+    }
 
-        <hr class="text-white-50" />
+    .nav-section-title {
+        padding: 0.5rem 1.5rem;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--text-muted);
+        font-weight: 600;
+    }
 
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="settings">
-                <span class="bi bi-gear" aria-hidden="true"></span> Settings
-            </NavLink>
-        </div>
-    </nav>
-</div>
+    .nav-item i {
+        font-size: 1.125rem;
+    }
+</style>
 

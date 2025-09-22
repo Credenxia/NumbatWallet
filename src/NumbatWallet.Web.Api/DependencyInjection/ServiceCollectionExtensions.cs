@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Mvc.Versioning;
 using Microsoft.Identity.Web;
 using Microsoft.OpenApi.Models;
 using NumbatWallet.Web.Api.Authorization.Handlers;
+using NumbatWallet.Web.Api.Middleware;
 // TODO: Implement GraphQL types
 // using NumbatWallet.Web.Api.GraphQL;
 using HotChocolate.Execution.Configuration;
@@ -47,6 +48,10 @@ public static class ServiceCollectionExtensions
             options.GroupNameFormat = "'v'VVV";
             options.SubstituteApiVersionInUrl = true;
         });
+
+        // Configure Security Middleware Options
+        services.Configure<MutualTlsOptions>(configuration.GetSection("Security:MutualTls"));
+        services.Configure<RequestSignatureOptions>(configuration.GetSection("Security:RequestSignature"));
 
         // Add CORS
         services.AddCors(options =>

@@ -80,6 +80,10 @@ try
     // Add custom middleware for tenant resolution
     app.UseTenantResolution();
 
+    // Add security middleware
+    app.UseMiddleware<MutualTlsMiddleware>();
+    app.UseMiddleware<RequestSignatureMiddleware>();
+
     // Add API key authentication if enabled
     app.UseApiKeyAuthentication();
 
