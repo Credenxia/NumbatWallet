@@ -58,11 +58,13 @@
 - [ ] MockDocumentSigningService - DSC operations
 - [ ] MockRevocationService - CRL/OCSP simulation
 
-#### 2. Update Bicep Templates
-**Priority: HIGH**
-- [ ] Update keyVaultPremium.bicep for HSM-backed keys
-- [ ] Add configuration for provider selection
-- [ ] Setup migration path parameters
+#### 2. Update Bicep Templates ✅
+**Priority: HIGH - COMPLETED**
+- [x] Created keyVaultPremium.bicep for HSM-backed keys
+- [x] Created managedHsm.bicep for Phase 2 deployment
+- [x] Updated main.bicep with HSM provider configuration
+- [x] Added migration path parameters
+- [x] Created deployment scripts for all environments
 
 #### 3. Implement Envelope Encryption (Issue #155)
 **Priority: HIGH**

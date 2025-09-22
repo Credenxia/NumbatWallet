@@ -80,6 +80,40 @@ param tags object = {
 }
 
 // ========================================
+// HSM Provider Parameters
+// ========================================
+
+@description('HSM Provider Type for key management')
+@allowed([
+  'Software'      // Development only
+  'KeyVault'      // Standard Key Vault
+  'KeyVaultHSM'   // Key Vault Premium
+  'ManagedHSM'    // Managed HSM (Phase 2)
+])
+param hsmProvider string = environment == 'dev' ? 'Software' : environment == 'test' ? 'KeyVault' : 'KeyVaultHSM'
+
+@description('Enable envelope encryption (KEK/DEK pattern)')
+param enableEnvelopeEncryption bool = environment != 'dev'
+
+@description('Enable tenant-specific key isolation')
+param enableTenantIsolation bool = true
+
+@description('Maximum number of tenants for capacity planning')
+param maxTenants int = 100
+
+@description('Enable key rotation automation')
+param enableKeyRotation bool = environment != 'dev'
+
+@description('Key rotation period in days')
+param keyRotationDays int = 90
+
+@description('Deploy Managed HSM (Phase 2 only)')
+param deployManagedHsm bool = false
+
+@description('Initial admin object IDs for Managed HSM')
+param hsmInitialAdminObjectIds array = []
+
+// ========================================
 // Variables
 // ========================================
 
@@ -120,14 +154,20 @@ module virtualNetworkModule 'modules/virtual-network.bicep' = if (empty(existing
   }
 }
 
-// Deploy Key Vault
-module keyVaultModule 'modules/key-vault.bicep' = {
+// Deploy Key Vault with HSM Provider Support
+module keyVaultModule 'modules/keyVaultPremium.bicep' = if (hsmProvider != 'ManagedHSM' || !deployManagedHsm) {
   name: 'deploy-keyvault-${environment}'
   scope: resourceGroup
   params: {
     keyVaultName: keyVaultName
     location: location
-    sku: environment == 'prod' ? 'premium' : 'standard'
+    environmentType: environment == 'dev' ? 'Development' : environment == 'test' ? 'Staging' : 'Production'
+    hsmProvider: hsmProvider == 'ManagedHSM' ? 'KeyVaultHSM' : hsmProvider // Fallback if ManagedHSM not deployed
+    enableEnvelopeEncryption: enableEnvelopeEncryption
+    enableTenantIsolation: enableTenantIsolation
+    maxTenants: maxTenants
+    enableKeyRotation: enableKeyRotation
+    keyRotationDays: keyRotationDays
     enableSoftDelete: true
     softDeleteRetentionDays: environment == 'prod' ? 90 : 30
     enablePurgeProtection: environment == 'prod'
@@ -137,6 +177,7 @@ module keyVaultModule 'modules/key-vault.bicep' = {
     managedIdentityObjectId: managedIdentityObjectId
     enablePrivateEndpoint: enablePrivateEndpoints
     privateEndpointSubnetId: !empty(existingVnetName) ? privateEndpointSubnetId : virtualNetworkModule.outputs.privateEndpointSubnetId
+    privateDnsZoneId: '' // Will be configured later
     logAnalyticsWorkspaceId: logAnalyticsModule.outputs.workspaceId
     tags: tags
     accessPolicies: [
@@ -150,6 +191,29 @@ module keyVaultModule 'modules/key-vault.bicep' = {
         }
       }
     ]
+  }
+}
+
+// Deploy Managed HSM (Phase 2 - Production only)
+module managedHsmModule 'modules/managedHsm.bicep' = if (deployManagedHsm && hsmProvider == 'ManagedHSM') {
+  name: 'deploy-managedhsm-${environment}'
+  scope: resourceGroup
+  params: {
+    hsmName: take('hsm-${namingPrefix}', 24)
+    location: location
+    initialAdminObjectIds: empty(hsmInitialAdminObjectIds) ? [administratorObjectId, managedIdentityObjectId] : hsmInitialAdminObjectIds
+    enablePurgeProtection: true
+    softDeleteRetentionDays: 90
+    enablePublicNetworkAccess: false
+    allowedIpAddresses: allowedIpAddresses
+    privateEndpointSubnetId: !empty(existingVnetName) ? privateEndpointSubnetId : virtualNetworkModule.outputs.privateEndpointSubnetId
+    privateDnsZoneId: '' // Will be configured later
+    enableDiagnostics: true
+    logAnalyticsWorkspaceId: logAnalyticsModule.outputs.workspaceId
+    enableKeyRotation: enableKeyRotation
+    keyRotationDays: keyRotationDays
+    tenantKeyCount: min(maxTenants, 10)
+    tags: tags
   }
 }
 
@@ -301,6 +365,8 @@ output vnetId string = empty(existingVnetName) ? virtualNetworkModule.outputs.vn
 output vnetName string = empty(existingVnetName) ? virtualNetworkModule.outputs.vnetName : existingVnetName
 output keyVaultId string = keyVaultModule.outputs.keyVaultId
 output keyVaultUri string = keyVaultModule.outputs.keyVaultUri
+output hsmProvider string = keyVaultModule.outputs.hsmProvider
+output hsmApplicationConfig object = deployManagedHsm && hsmProvider == 'ManagedHSM' ? managedHsmModule.outputs.applicationConfig : keyVaultModule.outputs.applicationConfig
 output appInsightsInstrumentationKey string = appInsightsModule.outputs.instrumentationKey
 output appInsightsConnectionString string = appInsightsModule.outputs.connectionString
 output storageAccountId string = storageAccountModule.outputs.storageAccountId
