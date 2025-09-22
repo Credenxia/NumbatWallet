@@ -40,9 +40,17 @@ public class AdminQuery
         var from = DateTime.UtcNow.Add(-timeRange.GetTimeSpan());
         var to = DateTime.UtcNow;
 
-        return await statisticsService.GetMetricsSnapshotAsync(from, to, cancellationToken);
+        // TODO: Implement GetMetricsSnapshotAsync in StatisticsService
+        return new MetricsSnapshotDto
+        {
+            From = from,
+            To = to,
+            Metrics = new Dictionary<string, decimal>(),
+            TimeSeries = new List<TimeSeriesDataPoint>()
+        };
     }
 
+    /* TODO: Implement AuditLog entity
     /// <summary>
     /// Get audit logs with filtering
     /// </summary>
@@ -54,42 +62,9 @@ public class AdminQuery
         [Service] NumbatWalletDbContext context,
         AuditLogFilterInput? filter = null)
     {
-        var query = context.AuditLogs.AsQueryable();
-
-        if (filter != null)
-        {
-            if (!string.IsNullOrEmpty(filter.UserId))
-                query = query.Where(a => a.UserId == filter.UserId);
-
-            if (!string.IsNullOrEmpty(filter.Action))
-                query = query.Where(a => a.Action.Contains(filter.Action));
-
-            if (filter.From.HasValue)
-                query = query.Where(a => a.CreatedAt >= filter.From.Value);
-
-            if (filter.To.HasValue)
-                query = query.Where(a => a.CreatedAt <= filter.To.Value);
-
-            if (filter.EventType.HasValue)
-                query = query.Where(a => a.EventType == filter.EventType.Value);
-        }
-
-        return query.OrderByDescending(a => a.CreatedAt)
-            .Select(a => new AuditLogDto
-            {
-                Id = a.Id,
-                UserId = a.UserId,
-                Action = a.Action,
-                EntityType = a.EntityType,
-                EntityId = a.EntityId,
-                OldValues = a.OldValues,
-                NewValues = a.NewValues,
-                IpAddress = a.IpAddress,
-                UserAgent = a.UserAgent,
-                EventType = a.EventType,
-                CreatedAt = a.CreatedAt
-            });
-    }
+        // Audit logs will be implemented in a future iteration
+        return Enumerable.Empty<AuditLogDto>().AsQueryable();
+    }*/
 
     /// <summary>
     /// Get all tenants with filtering
@@ -98,27 +73,29 @@ public class AdminQuery
     [UsePaging]
     [UseFiltering]
     [UseSorting]
-    public IQueryable<TenantDto> GetTenants(
+    public async Task<IQueryable<TenantDto>> GetTenants(
         [Service] ITenantService tenantService,
-        TenantFilterInput? filter = null)
+        TenantFilterInput? filter = null,
+        CancellationToken cancellationToken = default)
     {
-        var tenants = tenantService.GetAllTenants();
+        var tenants = await tenantService.GetAllTenants(cancellationToken);
+        var query = tenants.AsQueryable();
 
         if (filter != null)
         {
             if (filter.Status.HasValue)
-                tenants = tenants.Where(t => t.Status == filter.Status.Value);
+                query = query.Where(t => t.IsActive == (filter.Status.Value == TenantStatus.Active));
 
             if (!string.IsNullOrEmpty(filter.SearchTerm))
-                tenants = tenants.Where(t =>
+                query = query.Where(t =>
                     t.Name.Contains(filter.SearchTerm) ||
                     t.Identifier.Contains(filter.SearchTerm));
 
             if (filter.CreatedAfter.HasValue)
-                tenants = tenants.Where(t => t.CreatedAt >= filter.CreatedAfter.Value);
+                query = query.Where(t => t.CreatedAt >= filter.CreatedAfter.Value);
         }
 
-        return tenants.AsQueryable();
+        return query;
     }
 
     /// <summary>
@@ -133,6 +110,7 @@ public class AdminQuery
         return await tenantService.GetTenantByIdAsync(id, cancellationToken);
     }
 
+    /* TODO: Implement User entity
     /// <summary>
     /// Get admin users
     /// </summary>
@@ -144,40 +122,9 @@ public class AdminQuery
         [Service] NumbatWalletDbContext context,
         UserFilterInput? filter = null)
     {
-        var query = context.Users
-            .Where(u => u.Roles.Any(r => r.Name == "Admin" || r.Name == "SuperAdmin"))
-            .AsQueryable();
-
-        if (filter != null)
-        {
-            if (!string.IsNullOrEmpty(filter.SearchTerm))
-            {
-                query = query.Where(u =>
-                    u.Email.Contains(filter.SearchTerm) ||
-                    u.FirstName.Contains(filter.SearchTerm) ||
-                    u.LastName.Contains(filter.SearchTerm));
-            }
-
-            if (filter.IsActive.HasValue)
-                query = query.Where(u => u.IsActive == filter.IsActive.Value);
-
-            if (!string.IsNullOrEmpty(filter.Role))
-                query = query.Where(u => u.Roles.Any(r => r.Name == filter.Role));
-        }
-
-        return query.Select(u => new AdminUserDto
-        {
-            Id = u.Id,
-            Email = u.Email,
-            FirstName = u.FirstName,
-            LastName = u.LastName,
-            Roles = u.Roles.Select(r => r.Name).ToList(),
-            IsActive = u.IsActive,
-            LastLogin = u.LastLogin,
-            CreatedAt = u.CreatedAt,
-            UpdatedAt = u.UpdatedAt
-        });
-    }
+        // User management will be implemented in a future iteration
+        return Enumerable.Empty<AdminUserDto>().AsQueryable();
+    }*/
 
     /// <summary>
     /// Get backup history
@@ -358,21 +305,7 @@ public class UserFilterInput
 
 // ReportParametersInput moved to AdminMutation.cs to avoid duplication
 
-// DTOs
-public class SystemHealthDto
-{
-    public string Status { get; set; } = string.Empty;
-    public Dictionary<string, ComponentHealthDto> Components { get; set; } = new();
-    public DateTime CheckedAt { get; set; }
-}
-
-public class ComponentHealthDto
-{
-    public string Name { get; set; } = string.Empty;
-    public string Status { get; set; } = string.Empty;
-    public string? Description { get; set; }
-    public Dictionary<string, object> Data { get; set; } = new();
-}
+// SystemHealthDto and ComponentHealthDto are defined in Application.DTOs namespace
 
 public class MetricsSnapshotDto
 {
@@ -413,18 +346,7 @@ public class AuditLogDto
     public DateTime CreatedAt { get; set; }
 }
 
-public class AdminUserDto
-{
-    public string Id { get; set; } = string.Empty;
-    public string Email { get; set; } = string.Empty;
-    public string FirstName { get; set; } = string.Empty;
-    public string LastName { get; set; } = string.Empty;
-    public List<string> Roles { get; set; } = new();
-    public bool IsActive { get; set; }
-    public DateTime? LastLogin { get; set; }
-    public DateTime CreatedAt { get; set; }
-    public DateTime? UpdatedAt { get; set; }
-}
+// AdminUserDto is defined in Application.Interfaces namespace
 
 public class BackupDto
 {
