@@ -15,12 +15,14 @@ public class HsmServiceTests
 {
     private readonly Mock<IConfiguration> _configurationMock;
     private readonly Mock<ILogger<HsmService>> _loggerMock;
+    private readonly Mock<IServiceProvider> _serviceProviderMock;
     private readonly IConfiguration _configuration;
 
     public HsmServiceTests()
     {
         _configurationMock = new Mock<IConfiguration>();
         _loggerMock = new Mock<ILogger<HsmService>>();
+        _serviceProviderMock = new Mock<IServiceProvider>();
 
         // Setup configuration
         var inMemorySettings = new Dictionary<string, string?>
@@ -38,7 +40,7 @@ public class HsmServiceTests
     public void Constructor_WithValidConfiguration_ShouldCreateInstance()
     {
         // Arrange & Act
-        var service = new HsmService(_configuration, _loggerMock.Object);
+        var service = new HsmService(_serviceProviderMock.Object, _configuration, _loggerMock.Object);
 
         // Assert
         Assert.NotNull(service);
@@ -77,7 +79,7 @@ public class HsmServiceTests
     public async Task GetHealthStatusAsync_ShouldReturnHealthStatus()
     {
         // Arrange
-        var service = new HsmService(_configuration, _loggerMock.Object);
+        var service = new HsmService(_serviceProviderMock.Object, _configuration, _loggerMock.Object);
 
         // Act
         // This will fail to connect to Azure Key Vault but should handle the error gracefully
@@ -113,7 +115,7 @@ public class HsmServiceTests
     public void GetOcspResponderUrl_WithCertificateWithoutOcsp_ShouldReturnNull()
     {
         // Arrange
-        var service = new HsmService(_configuration, _loggerMock.Object);
+        var service = new HsmService(_serviceProviderMock.Object, _configuration, _loggerMock.Object);
 
         // Create a test certificate without OCSP extension
         using var cert = CreateTestCertificate();
@@ -132,7 +134,7 @@ public class HsmServiceTests
     public void CreateCertificateSigningRequestAsync_ShouldRequireSubjectName()
     {
         // Arrange
-        var service = new HsmService(_configuration, _loggerMock.Object);
+        var service = new HsmService(_serviceProviderMock.Object, _configuration, _loggerMock.Object);
         var subjectName = new X500DistinguishedName("CN=Test Certificate");
 
         // Assert
