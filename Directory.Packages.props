@@ -6,6 +6,7 @@
   </PropertyGroup>
   <ItemGroup>
     <!-- ASP.NET Core & .NET -->
+    <PackageVersion Include="Azure.Messaging.ServiceBus" Version="7.20.1" />
     <PackageVersion Include="Azure.Security.KeyVault.Certificates" Version="4.8.0" />
     <PackageVersion Include="Azure.Security.KeyVault.Keys" Version="4.8.0" />
     <PackageVersion Include="Blazored.SessionStorage" Version="2.4.0" />

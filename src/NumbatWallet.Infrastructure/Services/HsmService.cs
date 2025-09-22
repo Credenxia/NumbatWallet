@@ -332,7 +332,7 @@ public class HsmService : IHsmService
         }
     }
 
-    public async Task<KeyMetadata> GetKeyMetadataAsync(
+    public async Task<HsmKeyMetadata> GetKeyMetadataAsync(
         string keyName,
         CancellationToken cancellationToken = default)
     {
@@ -340,7 +340,7 @@ public class HsmService : IHsmService
         {
             var key = await _provider.GetKeyAsync(keyName, cancellationToken);
 
-            return new KeyMetadata
+            return new HsmKeyMetadata
             {
                 KeyId = key.Id,
                 KeyName = key.Name,
@@ -358,14 +358,14 @@ public class HsmService : IHsmService
         }
     }
 
-    public async Task<IEnumerable<KeyMetadata>> ListKeysAsync(
+    public async Task<IEnumerable<HsmKeyMetadata>> ListKeysAsync(
         CancellationToken cancellationToken = default)
     {
         try
         {
             var keys = await _provider.ListKeysAsync(null, cancellationToken);
 
-            return keys.Select(k => new KeyMetadata
+            return keys.Select(k => new HsmKeyMetadata
             {
                 KeyId = k.Id,
                 KeyName = k.Name,
