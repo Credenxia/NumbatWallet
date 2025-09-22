@@ -3,10 +3,12 @@ using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Moq;
 using NumbatWallet.Domain.Interfaces;
 using NumbatWallet.Infrastructure.Services;
+using NumbatWallet.Infrastructure.Services.Providers;
 using Xunit;
 
 namespace NumbatWallet.Infrastructure.Tests.Services;
@@ -17,6 +19,7 @@ public class HsmServiceTests
     private readonly Mock<ILogger<HsmService>> _loggerMock;
     private readonly Mock<IServiceProvider> _serviceProviderMock;
     private readonly IConfiguration _configuration;
+    private readonly IServiceProvider _realServiceProvider;
 
     public HsmServiceTests()
     {
@@ -34,13 +37,50 @@ public class HsmServiceTests
         _configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(inMemorySettings)
             .Build();
+
+        // Setup service provider to return SoftwareHsmProvider
+        var mockHsmProvider = new Mock<SoftwareHsmProvider>(
+            Mock.Of<ILogger<SoftwareHsmProvider>>());
+
+        // Setup for both GetService and GetRequiredService calls
+        _serviceProviderMock
+            .Setup(x => x.GetService(typeof(SoftwareHsmProvider)))
+            .Returns(mockHsmProvider.Object);
+
+        // Since GetRequiredService is an extension method, we need to use a real ServiceProvider
+        var services = new ServiceCollection();
+        services.AddSingleton(mockHsmProvider.Object);
+        services.AddSingleton<KeyVaultHsmProvider>(provider =>
+            new Mock<KeyVaultHsmProvider>(Mock.Of<ILogger<KeyVaultHsmProvider>>()).Object);
+        services.AddSingleton<ManagedHsmProvider>(provider =>
+            new Mock<ManagedHsmProvider>(Mock.Of<ILogger<ManagedHsmProvider>>()).Object);
+
+        _realServiceProvider = services.BuildServiceProvider();
+        _serviceProviderMock
+            .Setup(x => x.GetService(It.IsAny<Type>()))
+            .Returns((Type type) => _realServiceProvider.GetService(type));
+    }
+
+    private IServiceProvider GetMockedServiceProvider()
+    {
+        var services = new ServiceCollection();
+        services.AddSingleton<SoftwareHsmProvider>(sp =>
+            new Mock<SoftwareHsmProvider>(Mock.Of<ILogger<SoftwareHsmProvider>>()).Object);
+        services.AddSingleton<KeyVaultHsmProvider>(sp =>
+            new Mock<KeyVaultHsmProvider>(Mock.Of<ILogger<KeyVaultHsmProvider>>()).Object);
+        services.AddSingleton<ManagedHsmProvider>(sp =>
+            new Mock<ManagedHsmProvider>(Mock.Of<ILogger<ManagedHsmProvider>>()).Object);
+        return services.BuildServiceProvider();
     }
 
     [Fact]
     public void Constructor_WithValidConfiguration_ShouldCreateInstance()
     {
-        // Arrange & Act
-        var service = new HsmService(_serviceProviderMock.Object, _configuration, _loggerMock.Object);
+        // Arrange
+        var serviceProvider = GetMockedServiceProvider();
+
+        // Act
+        var service = new HsmService(serviceProvider, _configuration, _loggerMock.Object);
 
         // Assert
         Assert.NotNull(service);
@@ -54,7 +94,7 @@ public class HsmServiceTests
 
         // Act & Assert
         var exception = Assert.Throws<InvalidOperationException>(
-            () => new HsmService(_serviceProviderMock.Object, emptyConfig, _loggerMock.Object));
+            () => new HsmService(GetMockedServiceProvider(), emptyConfig, _loggerMock.Object));
 
         Assert.Contains("Azure Key Vault URI not configured", exception.Message);
     }
@@ -79,7 +119,7 @@ public class HsmServiceTests
     public async Task GetHealthStatusAsync_ShouldReturnHealthStatus()
     {
         // Arrange
-        var service = new HsmService(_serviceProviderMock.Object, _configuration, _loggerMock.Object);
+        var service = new HsmService(GetMockedServiceProvider(), _configuration, _loggerMock.Object);
 
         // Act
         // This will fail to connect to Azure Key Vault but should handle the error gracefully
@@ -115,7 +155,7 @@ public class HsmServiceTests
     public void GetOcspResponderUrl_WithCertificateWithoutOcsp_ShouldReturnNull()
     {
         // Arrange
-        var service = new HsmService(_serviceProviderMock.Object, _configuration, _loggerMock.Object);
+        var service = new HsmService(GetMockedServiceProvider(), _configuration, _loggerMock.Object);
 
         // Create a test certificate without OCSP extension
         using var cert = CreateTestCertificate();
@@ -134,7 +174,7 @@ public class HsmServiceTests
     public void CreateCertificateSigningRequestAsync_ShouldRequireSubjectName()
     {
         // Arrange
-        var service = new HsmService(_serviceProviderMock.Object, _configuration, _loggerMock.Object);
+        var service = new HsmService(GetMockedServiceProvider(), _configuration, _loggerMock.Object);
         var subjectName = new X500DistinguishedName("CN=Test Certificate");
 
         // Assert
