@@ -3,7 +3,8 @@ using HotChocolate.AspNetCore.Authorization;
 using HotChocolate.Subscriptions;
 using NumbatWallet.Application.Commands.Credentials;
 using NumbatWallet.Application.CQRS.Interfaces;
-using NumbatWallet.SharedKernel.Models;
+using NumbatWallet.Domain.Enums;
+using NumbatWallet.SharedKernel.Enums;
 using NumbatWallet.SharedKernel.Results;
 
 namespace NumbatWallet.Web.Api.GraphQL.Mutations;
@@ -26,47 +27,37 @@ public class BulkOperationMutations
         BulkIssueCredentialsInput input,
         CancellationToken cancellationToken = default)
     {
-        // Convert input to command
-        var command = new BulkIssueCredentialsCommand
-        {
-            IssuerId = input.IssuerId,
-            Credentials = input.Credentials.Select(c => new BulkCredentialRequest
-            {
-                SubjectId = c.SubjectId,
-                CredentialType = c.CredentialType,
-                Claims = c.Claims.ToDictionary(x => x.Key, x => (object)x.Value),
-                ExpiresAt = c.ExpiresAt,
-                Metadata = c.Metadata ?? new Dictionary<string, string>()
-            }).ToList(),
-            Options = new BulkProcessingOptions
-            {
-                ContinueOnError = input.Options?.ContinueOnError ?? true,
-                MaxConcurrency = input.Options?.MaxConcurrency ?? 10,
-                EnableProgressTracking = input.Options?.EnableProgressTracking ?? true,
-                ValidateBeforeProcessing = input.Options?.ValidateBeforeProcessing ?? true,
-                Timeout = input.Options?.TimeoutSeconds.HasValue
-                    ? TimeSpan.FromSeconds(input.Options.TimeoutSeconds.Value)
-                    : TimeSpan.FromMinutes(5)
-            }
-        };
+        // Convert input to command using the record constructor
+        var command = new BulkIssueCredentialsCommand(
+            input.WalletIds.Select(id => Guid.Parse(id)).ToList(),
+            input.CredentialType,
+            input.Template ?? new Dictionary<string, object>(),
+            input.IssuerId,
+            Guid.Parse(input.IssuerOrganizationId),
+            input.ValidFrom ?? DateTime.UtcNow,
+            input.ValidUntil);
 
         // Execute command
-        var result = await dispatcher.DispatchAsync<BulkIssueCredentialsCommand, BulkIssueResult>(
-            command,
-            cancellationToken);
+        var result = await dispatcher.SendAsync(command, cancellationToken);
 
-        if (result.IsFailure)
+        // Convert to BulkIssueResult DTO for GraphQL
+        var bulkResult = new BulkIssueResult
         {
-            throw new GraphQLException(result.Error.Message);
-        }
+            OperationId = Guid.NewGuid().ToString(),
+            TotalCount = result.TotalRequested,
+            SuccessCount = result.SuccessCount,
+            FailureCount = result.FailureCount,
+            FailedIds = result.Errors.Select(e => e.WalletId.ToString()).ToList(),
+            Errors = result.Errors.ToDictionary(e => e.WalletId.ToString(), e => e.Error)
+        };
 
         // Send initial subscription event
         await eventSender.SendAsync(
-            $"OnBulkOperationStarted_{result.Value.OperationId}",
-            result.Value,
+            $"OnBulkOperationStarted_{bulkResult.OperationId}",
+            bulkResult,
             cancellationToken);
 
-        return result.Value;
+        return bulkResult;
     }
 
     /// <summary>
@@ -80,33 +71,32 @@ public class BulkOperationMutations
         BulkRevokeCredentialsInput input,
         CancellationToken cancellationToken = default)
     {
-        var command = new BulkRevokeCredentialsCommand
+        // Convert string IDs to Guids
+        var credentialIds = input.CredentialIds.Select(id => Guid.Parse(id)).ToList();
+
+        // Create command using record constructor
+        var command = new BulkRevokeCredentialsCommand(
+            credentialIds,
+            input.Reason);
+
+        var result = await dispatcher.SendAsync(command, cancellationToken);
+
+        // Convert to BulkRevokeResult DTO for GraphQL
+        var bulkResult = new BulkRevokeResult
         {
-            CredentialIds = input.CredentialIds,
-            Reason = input.Reason,
-            Options = new BulkProcessingOptions
-            {
-                ContinueOnError = input.Options?.ContinueOnError ?? true,
-                MaxConcurrency = input.Options?.MaxConcurrency ?? 10,
-                EnableProgressTracking = input.Options?.EnableProgressTracking ?? true
-            }
+            OperationId = Guid.NewGuid().ToString(),
+            TotalCount = result.TotalRequested,
+            SuccessCount = result.SuccessCount,
+            FailureCount = result.FailureCount,
+            FailedIds = result.Errors.Select(e => e.CredentialId.ToString()).ToList()
         };
 
-        var result = await dispatcher.DispatchAsync<BulkRevokeCredentialsCommand, BulkRevokeResult>(
-            command,
-            cancellationToken);
-
-        if (result.IsFailure)
-        {
-            throw new GraphQLException(result.Error.Message);
-        }
-
         await eventSender.SendAsync(
-            $"OnBulkOperationStarted_{result.Value.OperationId}",
-            result.Value,
+            $"OnBulkOperationStarted_{bulkResult.OperationId}",
+            bulkResult,
             cancellationToken);
 
-        return result.Value;
+        return bulkResult;
     }
 
     /// <summary>
@@ -119,27 +109,24 @@ public class BulkOperationMutations
         BulkVerifyCredentialsInput input,
         CancellationToken cancellationToken = default)
     {
-        var command = new BulkVerifyCredentialsCommand
+        // Convert string IDs to Guids
+        var credentialIds = input.CredentialIds.Select(id => Guid.Parse(id)).ToList();
+
+        // Create command using record constructor
+        var command = new BulkVerifyCredentialsCommand(credentialIds);
+
+        var result = await dispatcher.SendAsync(command, cancellationToken);
+
+        // Convert to BulkVerificationResult DTO for GraphQL
+        return new BulkVerificationResult
         {
-            CredentialIds = input.CredentialIds,
-            VerificationOptions = new VerificationOptions
-            {
-                CheckRevocation = input.Options?.CheckRevocation ?? true,
-                CheckExpiry = input.Options?.CheckExpiry ?? true,
-                CheckSignature = input.Options?.CheckSignature ?? true
-            }
+            TotalCount = result.TotalRequested,
+            ValidCount = result.SuccessCount,
+            InvalidCount = result.FailureCount,
+            Results = result.Results.ToDictionary(
+                r => r.CredentialId.ToString(),
+                r => r.IsValid ? VerificationStatus.Verified : VerificationStatus.Failed)
         };
-
-        var result = await dispatcher.DispatchAsync<BulkVerifyCredentialsCommand, BulkVerificationResult>(
-            command,
-            cancellationToken);
-
-        if (result.IsFailure)
-        {
-            throw new GraphQLException(result.Error.Message);
-        }
-
-        return result.Value;
     }
 
     /// <summary>
@@ -160,54 +147,45 @@ public class BulkOperationMutations
         var content = await reader.ReadToEndAsync(cancellationToken);
 
         // Parse based on file type
-        List<BulkCredentialRequest> credentials;
-        if (file.Name.EndsWith(".csv", StringComparison.OrdinalIgnoreCase))
-        {
-            credentials = ParseCsvCredentials(content, input.CsvOptions);
-        }
-        else if (file.Name.EndsWith(".json", StringComparison.OrdinalIgnoreCase))
-        {
-            credentials = ParseJsonCredentials(content);
-        }
-        else
-        {
-            throw new GraphQLException("Unsupported file format. Use CSV or JSON.");
-        }
+        var (walletIds, template) = file.Name.EndsWith(".csv", StringComparison.OrdinalIgnoreCase)
+            ? ParseCsvCredentials(content, input.CsvOptions)
+            : ParseJsonCredentials(content);
 
         // Create command
-        var command = new BulkIssueCredentialsCommand
+        var command = new BulkIssueCredentialsCommand(
+            walletIds,
+            input.CredentialType,
+            template,
+            input.IssuerId,
+            Guid.Parse(input.IssuerOrganizationId),
+            input.ValidFrom ?? DateTime.UtcNow,
+            input.ValidUntil);
+
+        var result = await dispatcher.SendAsync(command, cancellationToken);
+
+        // Convert to BulkIssueResult DTO for GraphQL
+        var bulkResult = new BulkIssueResult
         {
-            IssuerId = input.IssuerId,
-            Credentials = credentials,
-            Options = new BulkProcessingOptions
-            {
-                ContinueOnError = input.Options?.ContinueOnError ?? true,
-                MaxConcurrency = input.Options?.MaxConcurrency ?? 10,
-                EnableProgressTracking = true,
-                ValidateBeforeProcessing = true
-            }
+            OperationId = Guid.NewGuid().ToString(),
+            TotalCount = result.TotalRequested,
+            SuccessCount = result.SuccessCount,
+            FailureCount = result.FailureCount,
+            FailedIds = result.Errors.Select(e => e.WalletId.ToString()).ToList(),
+            Errors = result.Errors.ToDictionary(e => e.WalletId.ToString(), e => e.Error)
         };
 
-        var result = await dispatcher.DispatchAsync<BulkIssueCredentialsCommand, BulkIssueResult>(
-            command,
-            cancellationToken);
-
-        if (result.IsFailure)
-        {
-            throw new GraphQLException(result.Error.Message);
-        }
-
         await eventSender.SendAsync(
-            $"OnBulkOperationStarted_{result.Value.OperationId}",
-            result.Value,
+            $"OnBulkOperationStarted_{bulkResult.OperationId}",
+            bulkResult,
             cancellationToken);
 
-        return result.Value;
+        return bulkResult;
     }
 
-    private List<BulkCredentialRequest> ParseCsvCredentials(string content, CsvImportOptions? options)
+    private (List<Guid>, Dictionary<string, object>) ParseCsvCredentials(string content, CsvImportOptions? options)
     {
-        var credentials = new List<BulkCredentialRequest>();
+        var walletIds = new List<Guid>();
+        var template = new Dictionary<string, object>();
         var lines = content.Split('\n', StringSplitOptions.RemoveEmptyEntries);
 
         if (lines.Length < 2)
@@ -216,88 +194,80 @@ public class BulkOperationMutations
         }
 
         var headers = lines[0].Split(options?.Delimiter ?? ',');
-        var subjectIdIndex = Array.IndexOf(headers, options?.SubjectIdColumn ?? "SubjectId");
-        var typeIndex = Array.IndexOf(headers, options?.CredentialTypeColumn ?? "CredentialType");
+        var walletIdIndex = Array.IndexOf(headers, options?.WalletIdColumn ?? "WalletId");
 
-        if (subjectIdIndex < 0 || typeIndex < 0)
+        if (walletIdIndex < 0)
         {
-            throw new GraphQLException("CSV must contain SubjectId and CredentialType columns");
+            throw new GraphQLException("CSV must contain WalletId column");
         }
 
+        // First row of data becomes the template
+        if (lines.Length > 1)
+        {
+            var firstDataRow = lines[1].Split(options?.Delimiter ?? ',');
+            for (int j = 0; j < headers.Length; j++)
+            {
+                if (j != walletIdIndex)
+                {
+                    template[headers[j]] = firstDataRow[j];
+                }
+            }
+        }
+
+        // Collect all wallet IDs
         for (int i = 1; i < lines.Length; i++)
         {
             var values = lines[i].Split(options?.Delimiter ?? ',');
-
-            if (values.Length < headers.Length)
+            if (values.Length > walletIdIndex && Guid.TryParse(values[walletIdIndex], out var walletId))
             {
-                continue; // Skip malformed rows
+                walletIds.Add(walletId);
             }
-
-            var claims = new Dictionary<string, object>();
-            for (int j = 0; j < headers.Length; j++)
-            {
-                if (j != subjectIdIndex && j != typeIndex)
-                {
-                    claims[headers[j]] = values[j];
-                }
-            }
-
-            credentials.Add(new BulkCredentialRequest
-            {
-                SubjectId = values[subjectIdIndex],
-                CredentialType = values[typeIndex],
-                Claims = claims
-            });
         }
 
-        return credentials;
+        return (walletIds, template);
     }
 
-    private List<BulkCredentialRequest> ParseJsonCredentials(string content)
+    private (List<Guid>, Dictionary<string, object>) ParseJsonCredentials(string content)
     {
         try
         {
-            var json = System.Text.Json.JsonSerializer.Deserialize<List<BulkCredentialRequest>>(content);
-            return json ?? new List<BulkCredentialRequest>();
+            var json = System.Text.Json.JsonSerializer.Deserialize<ImportData>(content);
+            if (json == null)
+            {
+                throw new GraphQLException("Invalid JSON format");
+            }
+
+            return (json.WalletIds.Select(id => Guid.Parse(id)).ToList(), json.Template);
         }
         catch (Exception ex)
         {
             throw new GraphQLException($"Invalid JSON format: {ex.Message}");
         }
     }
+
+    private class ImportData
+    {
+        public List<string> WalletIds { get; set; } = new();
+        public Dictionary<string, object> Template { get; set; } = new();
+    }
 }
 
 // GraphQL Input Types
 public class BulkIssueCredentialsInput
 {
+    public List<string> WalletIds { get; set; } = new();
+    public CredentialType CredentialType { get; set; }
+    public Dictionary<string, object> Template { get; set; } = new();
     public string IssuerId { get; set; } = string.Empty;
-    public List<BulkCredentialInput> Credentials { get; set; } = new();
-    public BulkProcessingOptionsInput? Options { get; set; }
-}
-
-public class BulkCredentialInput
-{
-    public string SubjectId { get; set; } = string.Empty;
-    public string CredentialType { get; set; } = string.Empty;
-    public Dictionary<string, string> Claims { get; set; } = new();
-    public DateTime? ExpiresAt { get; set; }
-    public Dictionary<string, string>? Metadata { get; set; }
-}
-
-public class BulkProcessingOptionsInput
-{
-    public bool? ContinueOnError { get; set; }
-    public int? MaxConcurrency { get; set; }
-    public bool? EnableProgressTracking { get; set; }
-    public bool? ValidateBeforeProcessing { get; set; }
-    public int? TimeoutSeconds { get; set; }
+    public string IssuerOrganizationId { get; set; } = string.Empty;
+    public DateTime? ValidFrom { get; set; }
+    public DateTime? ValidUntil { get; set; }
 }
 
 public class BulkRevokeCredentialsInput
 {
     public List<string> CredentialIds { get; set; } = new();
     public string Reason { get; set; } = string.Empty;
-    public BulkProcessingOptionsInput? Options { get; set; }
 }
 
 public class BulkVerifyCredentialsInput
@@ -315,70 +285,45 @@ public class VerificationOptionsInput
 
 public class ImportCredentialsInput
 {
+    public CredentialType CredentialType { get; set; }
     public string IssuerId { get; set; } = string.Empty;
-    public BulkProcessingOptionsInput? Options { get; set; }
+    public string IssuerOrganizationId { get; set; } = string.Empty;
+    public DateTime? ValidFrom { get; set; }
+    public DateTime? ValidUntil { get; set; }
     public CsvImportOptions? CsvOptions { get; set; }
 }
 
 public class CsvImportOptions
 {
-    public char? Delimiter { get; set; }
-    public string? SubjectIdColumn { get; set; }
-    public string? CredentialTypeColumn { get; set; }
+    public string? Delimiter { get; set; }
+    public string? WalletIdColumn { get; set; }
+    public bool HasHeaders { get; set; } = true;
 }
 
-// Additional types and commands
-public class BulkCredentialRequest
+// Result types
+public class BulkIssueResult
 {
-    public Guid SubjectId { get; set; }
-    public string CredentialType { get; set; } = string.Empty;
-    public Dictionary<string, object> Claims { get; set; } = new();
-    public DateTime? ExpiresAt { get; set; }
-    public Dictionary<string, string> Metadata { get; set; } = new();
+    public string OperationId { get; set; } = string.Empty;
+    public int TotalCount { get; set; }
+    public int SuccessCount { get; set; }
+    public int FailureCount { get; set; }
+    public List<string> FailedIds { get; set; } = new();
+    public Dictionary<string, string> Errors { get; set; } = new();
 }
 
-public class BulkProcessingOptions
+public class BulkRevokeResult
 {
-    public bool ContinueOnError { get; set; } = true;
-    public int MaxConcurrency { get; set; } = 10;
-    public bool EnableProgressTracking { get; set; } = true;
-    public bool ValidateBeforeProcessing { get; set; } = true;
-    public TimeSpan Timeout { get; set; } = TimeSpan.FromMinutes(5);
-}
-
-public class BulkRevokeCredentialsCommand : ICommand<BulkRevokeResult>
-{
-    public List<string> CredentialIds { get; set; } = new();
-    public string Reason { get; set; } = string.Empty;
-    public BulkProcessingOptions Options { get; set; } = new();
-}
-
-public class BulkVerifyCredentialsCommand : ICommand<BulkVerificationResult>
-{
-    public List<string> CredentialIds { get; set; } = new();
-    public VerificationOptions VerificationOptions { get; set; } = new();
+    public string OperationId { get; set; } = string.Empty;
+    public int TotalCount { get; set; }
+    public int SuccessCount { get; set; }
+    public int FailureCount { get; set; }
+    public List<string> FailedIds { get; set; } = new();
 }
 
 public class BulkVerificationResult
 {
-    public string OperationId { get; set; } = string.Empty;
     public int TotalCount { get; set; }
     public int ValidCount { get; set; }
     public int InvalidCount { get; set; }
-    public List<VerificationResultItem> Results { get; set; } = new();
-    public DateTime VerifiedAt { get; set; }
-}
-
-public class VerificationResultItem
-{
-    public string CredentialId { get; set; } = string.Empty;
-    public bool IsValid { get; set; }
-    public List<string> ValidationErrors { get; set; } = new();
-}
-
-public class VerificationOptions
-{
-    public bool CheckRevocation { get; set; } = true;
-    public bool CheckExpiry { get; set; } = true;
-    public bool CheckSignature { get; set; } = true;
+    public Dictionary<string, VerificationStatus> Results { get; set; } = new();
 }

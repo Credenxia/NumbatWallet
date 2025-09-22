@@ -3,6 +3,7 @@ using HotChocolate.AspNetCore.Authorization;
 using HotChocolate.Execution;
 using HotChocolate.Subscriptions;
 using HotChocolate.Types;
+using System.Runtime.CompilerServices;
 
 namespace NumbatWallet.Web.Api.GraphQL.Admin;
 
@@ -21,7 +22,7 @@ public class AdminSubscription
     [GraphQLDescription("Real-time system metrics updates")]
     public async IAsyncEnumerable<MetricsUpdateDto> SystemMetrics(
         [Service] ITopicEventReceiver eventReceiver,
-        CancellationToken cancellationToken)
+        [EnumeratorCancellation] CancellationToken cancellationToken)
     {
         var stream = await eventReceiver.SubscribeAsync<MetricsUpdateDto>(
             "SystemMetrics",
@@ -40,7 +41,7 @@ public class AdminSubscription
     [GraphQLDescription("Real-time audit log entries")]
     public async IAsyncEnumerable<AuditLogEntryDto> AuditLogAdded(
         [Service] ITopicEventReceiver eventReceiver,
-        CancellationToken cancellationToken)
+        [EnumeratorCancellation] CancellationToken cancellationToken)
     {
         var stream = await eventReceiver.SubscribeAsync<AuditLogEntryDto>(
             "AuditLog",
@@ -99,7 +100,7 @@ public class AdminSubscription
     public async IAsyncEnumerable<SystemAlertDto> SystemAlert(
         [Service] ITopicEventReceiver eventReceiver,
         AlertSeverity? minSeverity,
-        CancellationToken cancellationToken)
+        [EnumeratorCancellation] CancellationToken cancellationToken)
     {
         var stream = await eventReceiver.SubscribeAsync<SystemAlertDto>(
             "SystemAlerts",
@@ -122,7 +123,7 @@ public class AdminSubscription
     public async IAsyncEnumerable<TenantActivityDto> TenantActivity(
         [Service] ITopicEventReceiver eventReceiver,
         string? tenantId,
-        CancellationToken cancellationToken)
+        [EnumeratorCancellation] CancellationToken cancellationToken)
     {
         var topic = string.IsNullOrEmpty(tenantId)
             ? "TenantActivity"
@@ -145,7 +146,7 @@ public class AdminSubscription
     [GraphQLDescription("Real-time database performance metrics")]
     public async IAsyncEnumerable<DatabaseMetricsDto> DatabaseMetrics(
         [Service] ITopicEventReceiver eventReceiver,
-        CancellationToken cancellationToken)
+        [EnumeratorCancellation] CancellationToken cancellationToken)
     {
         var stream = await eventReceiver.SubscribeAsync<DatabaseMetricsDto>(
             "DatabaseMetrics",
@@ -164,7 +165,7 @@ public class AdminSubscription
     [GraphQLDescription("Real-time API usage statistics")]
     public async IAsyncEnumerable<ApiUsageMetricsDto> ApiUsageMetrics(
         [Service] ITopicEventReceiver eventReceiver,
-        CancellationToken cancellationToken)
+        [EnumeratorCancellation] CancellationToken cancellationToken)
     {
         var stream = await eventReceiver.SubscribeAsync<ApiUsageMetricsDto>(
             "ApiUsage",
@@ -185,7 +186,7 @@ public class AdminSubscription
     public async IAsyncEnumerable<SecurityEventDto> SecurityEvents(
         [Service] ITopicEventReceiver eventReceiver,
         SecurityEventType? eventType,
-        CancellationToken cancellationToken)
+        [EnumeratorCancellation] CancellationToken cancellationToken)
     {
         var stream = await eventReceiver.SubscribeAsync<SecurityEventDto>(
             "SecurityEvents",

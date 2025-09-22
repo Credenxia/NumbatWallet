@@ -36,7 +36,7 @@ public class BulkOperationEndpoints : ICarterModule
             .WithName("BulkRevokeCredentials")
             .WithSummary("Bulk revoke multiple credentials")
             .WithDescription("Revoke multiple credentials with configurable error handling")
-            .Produces<BulkOperationResult>(StatusCodes.Status202Accepted)
+            .Produces<BulkRevokeResult>(StatusCodes.Status202Accepted)
             .Produces<ProblemDetails>(StatusCodes.Status400BadRequest);
 
         // Bulk verify credentials

@@ -186,7 +186,7 @@ public class SwaggerDefaultValues : IOperationFilter
     {
         var apiDescription = context.ApiDescription;
 
-        operation.Deprecated |= apiDescription.IsDeprecated();
+        operation.Deprecated |= Asp.Versioning.Mvc.ApiExplorer.ApiDescriptionExtensions.IsDeprecated(apiDescription);
 
         foreach (var responseType in context.ApiDescription.SupportedResponseTypes)
         {

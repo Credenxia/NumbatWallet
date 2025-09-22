@@ -4,6 +4,7 @@ using HotChocolate.Subscriptions;
 using HotChocolate.Types;
 using NumbatWallet.Application.Commands.Credentials;
 using NumbatWallet.Application.Interfaces;
+using System.Runtime.CompilerServices;
 
 namespace NumbatWallet.Web.Api.GraphQL.Subscriptions;
 
@@ -44,7 +45,7 @@ public class BulkOperationSubscriptions
     [GraphQLDescription("Subscribe to all bulk operations starting for the current tenant")]
     public async IAsyncEnumerable<BulkOperationStartedEvent> OnBulkOperationStarted(
         [Service] ITopicEventReceiver eventReceiver,
-        CancellationToken cancellationToken)
+        [EnumeratorCancellation] CancellationToken cancellationToken)
     {
         var stream = await eventReceiver.SubscribeAsync<BulkOperationStartedEvent>(
             "BulkOperationStarted",
@@ -63,7 +64,7 @@ public class BulkOperationSubscriptions
     [GraphQLDescription("Subscribe to bulk operation completion events")]
     public async IAsyncEnumerable<BulkOperationCompletedEvent> OnBulkOperationCompleted(
         [Service] ITopicEventReceiver eventReceiver,
-        CancellationToken cancellationToken)
+        [EnumeratorCancellation] CancellationToken cancellationToken)
     {
         var stream = await eventReceiver.SubscribeAsync<BulkOperationCompletedEvent>(
             "BulkOperationCompleted",
@@ -83,7 +84,7 @@ public class BulkOperationSubscriptions
     public async IAsyncEnumerable<BulkOperationErrorEvent> OnBulkOperationError(
         [Service] ITopicEventReceiver eventReceiver,
         string? operationId,
-        CancellationToken cancellationToken)
+        [EnumeratorCancellation] CancellationToken cancellationToken)
     {
         var topic = string.IsNullOrEmpty(operationId)
             ? "BulkOperationError"

@@ -63,6 +63,10 @@ public record BulkIssueError(
     Guid WalletId,
     string Error);
 
+public record BulkRevokeCredentialsCommand(
+    List<Guid> CredentialIds,
+    string Reason) : ICommand<BulkRevokeResult>;
+
 public record BulkRevokeResult(
     int TotalRequested,
     int SuccessCount,
@@ -73,6 +77,9 @@ public record BulkRevokeResult(
 public record BulkRevokeError(
     Guid CredentialId,
     string Error);
+
+public record BulkVerifyCredentialsCommand(
+    List<Guid> CredentialIds) : ICommand<BulkVerificationResult>;
 
 public record BulkVerificationResult(
     int TotalRequested,

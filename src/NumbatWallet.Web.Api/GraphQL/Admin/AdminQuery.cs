@@ -447,25 +447,7 @@ public class BackupStatusDto
     public DateTime? EstimatedCompletion { get; set; }
 }
 
-public class FeatureFlagDto
-{
-    public string Id { get; set; } = string.Empty;
-    public string Name { get; set; } = string.Empty;
-    public string Description { get; set; } = string.Empty;
-    public bool IsEnabled { get; set; }
-    public DateTime? EnabledAt { get; set; }
-    public string? EnabledBy { get; set; }
-}
-
-public class ConfigurationDto
-{
-    public string Key { get; set; } = string.Empty;
-    public string Value { get; set; } = string.Empty;
-    public string Type { get; set; } = string.Empty;
-    public string Environment { get; set; } = string.Empty;
-    public bool IsSecret { get; set; }
-    public DateTime UpdatedAt { get; set; }
-}
+// ConfigurationDto and FeatureFlagDto are defined in Application.DTOs namespace
 
 public class ReportDto
 {

@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
+using System.Runtime.CompilerServices;
 using NumbatWallet.Application.Commands.Credentials;
 using System.Collections.Concurrent;
 
@@ -214,7 +215,7 @@ public class SignalRProgressNotificationService : IProgressNotificationService
         });
     }
 
-    public async IAsyncEnumerable<ProgressUpdate> SubscribeToProgressAsync(string operationId, CancellationToken cancellationToken = default)
+    public async IAsyncEnumerable<ProgressUpdate> SubscribeToProgressAsync(string operationId, [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
         // Yield progress updates as they occur
         while (!cancellationToken.IsCancellationRequested)
