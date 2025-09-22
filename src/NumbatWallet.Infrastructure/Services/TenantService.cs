@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging;
 using NumbatWallet.Application.DTOs;
 using NumbatWallet.Application.Interfaces;
 using NumbatWallet.Domain.Exceptions;
+using NumbatWallet.SharedKernel.Exceptions;
 
 namespace NumbatWallet.Infrastructure.Services;
 
@@ -36,10 +37,10 @@ public class TenantService : ITenantService
             return null;
         }
 
-        return await GetTenantByIdAsync(tenantId);
+        return await GetTenantByIdAsync(tenantId, CancellationToken.None);
     }
 
-    public async Task<TenantDto?> GetTenantByIdAsync(string tenantId)
+    public async Task<TenantDto?> GetTenantByIdAsync(string tenantId, CancellationToken cancellationToken = default)
     {
         return await _cache.GetOrCreateAsync($"tenant_{tenantId}", async entry =>
         {
@@ -107,7 +108,7 @@ public class TenantService : ITenantService
 
     public async Task<bool> ValidateTenantAsync(string tenantId)
     {
-        var tenant = await GetTenantByIdAsync(tenantId);
+        var tenant = await GetTenantByIdAsync(tenantId, CancellationToken.None);
         return tenant != null && tenant.IsActive;
     }
 
@@ -119,7 +120,7 @@ public class TenantService : ITenantService
         foreach (var tenantSection in tenantsSection.GetChildren())
         {
             var tenantId = tenantSection.Key;
-            var tenant = await GetTenantByIdAsync(tenantId);
+            var tenant = await GetTenantByIdAsync(tenantId, CancellationToken.None);
             if (tenant != null)
             {
                 tenants.Add(tenant);
@@ -163,5 +164,87 @@ public class TenantService : ITenantService
 
         // Replace database name with tenant-specific database
         return baseConnection.Replace("numbatwallet", $"numbatwallet_{tenantId.ToLowerInvariant()}");
+    }
+
+    public async Task<IEnumerable<TenantDto>> GetAllTenants(CancellationToken cancellationToken = default)
+    {
+        return await GetAllTenantsAsync();
+    }
+
+    public async Task<TenantDto> CreateTenantAsync(CreateTenantDto dto, CancellationToken cancellationToken = default)
+    {
+        // In production, this would create tenant in database
+        // For now, return a mock tenant
+        var tenant = new TenantDto
+        {
+            Id = Guid.NewGuid().ToString(),
+            Name = dto.Name,
+            Identifier = dto.Identifier,
+            IsActive = dto.IsActive,
+            CreatedAt = DateTime.UtcNow
+        };
+
+        _logger.LogInformation("Created tenant {TenantId} with name {TenantName}", tenant.TenantId, tenant.Name);
+        return tenant;
+    }
+
+    public async Task<TenantDto> UpdateTenantAsync(string tenantId, UpdateTenantDto dto, CancellationToken cancellationToken = default)
+    {
+        var existing = await GetTenantByIdAsync(tenantId, cancellationToken);
+        if (existing == null)
+        {
+            throw new EntityNotFoundException("Tenant", tenantId);
+        }
+
+        // In production, this would update tenant in database
+        if (dto.Name != null) existing.Name = dto.Name;
+        if (dto.Description != null) existing.Description = dto.Description;
+        if (dto.IsActive.HasValue) existing.IsActive = dto.IsActive.Value;
+
+        _cache.Remove($"tenant_{tenantId}");
+        _logger.LogInformation("Updated tenant {TenantId}", tenantId);
+        return existing;
+    }
+
+    public async Task<bool> DeleteTenantAsync(string tenantId, CancellationToken cancellationToken = default)
+    {
+        var existing = await GetTenantByIdAsync(tenantId, cancellationToken);
+        if (existing == null)
+        {
+            return false;
+        }
+
+        // In production, this would delete tenant from database
+        _cache.Remove($"tenant_{tenantId}");
+        _logger.LogWarning("Deleted tenant {TenantId}", tenantId);
+        return true;
+    }
+
+    public async Task<bool> ActivateTenantAsync(string tenantId, CancellationToken cancellationToken = default)
+    {
+        var tenant = await GetTenantByIdAsync(tenantId, cancellationToken);
+        if (tenant == null)
+        {
+            return false;
+        }
+
+        tenant.IsActive = true;
+        _cache.Remove($"tenant_{tenantId}");
+        _logger.LogInformation("Activated tenant {TenantId}", tenantId);
+        return true;
+    }
+
+    public async Task<bool> DeactivateTenantAsync(string tenantId, CancellationToken cancellationToken = default)
+    {
+        var tenant = await GetTenantByIdAsync(tenantId, cancellationToken);
+        if (tenant == null)
+        {
+            return false;
+        }
+
+        tenant.IsActive = false;
+        _cache.Remove($"tenant_{tenantId}");
+        _logger.LogInformation("Deactivated tenant {TenantId}", tenantId);
+        return true;
     }
 }

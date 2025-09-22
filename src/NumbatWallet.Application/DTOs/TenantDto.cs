@@ -3,8 +3,10 @@ namespace NumbatWallet.Application.DTOs;
 public class TenantDto
 {
     public string Id { get; set; } = string.Empty;
+    public string TenantId => Id; // Alias for compatibility
     public string Name { get; set; } = string.Empty;
     public string Identifier { get; set; } = string.Empty;
+    public string? Description { get; set; }
     public bool IsActive { get; set; }
     public string ConnectionString { get; set; } = string.Empty;
     public Dictionary<string, string> Settings { get; set; } = new();

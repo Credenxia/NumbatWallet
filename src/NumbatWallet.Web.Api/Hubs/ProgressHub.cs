@@ -161,12 +161,13 @@ public class SignalRProgressNotificationService : IProgressNotificationService
         var operationId = Guid.NewGuid().ToString();
         var update = new ProgressUpdate
         {
+            OperationId = operationId,
             OperationName = operationName,
             TotalItems = totalItems,
             ProcessedItems = 0,
-            PercentComplete = 0,
-            Status = "Started",
-            Message = $"Starting operation: {operationName}"
+            Status = ProgressStatus.InProgress,
+            CurrentMessage = $"Starting operation: {operationName}",
+            StartTime = DateTime.UtcNow
         };
 
         await NotifyProgressAsync(operationId, update, cancellationToken);
@@ -177,10 +178,10 @@ public class SignalRProgressNotificationService : IProgressNotificationService
     {
         var update = new ProgressUpdate
         {
+            OperationId = operationId,
             ProcessedItems = processedItems,
-            PercentComplete = processedItems, // This should be calculated based on total
-            Status = "InProgress",
-            Message = message ?? $"Processed {processedItems} items"
+            Status = ProgressStatus.InProgress,
+            CurrentMessage = message ?? $"Processed {processedItems} items"
         };
 
         await NotifyProgressAsync(operationId, update, cancellationToken);
@@ -190,9 +191,10 @@ public class SignalRProgressNotificationService : IProgressNotificationService
     {
         var update = new ProgressUpdate
         {
-            PercentComplete = 100,
-            Status = success ? "Completed" : "Failed",
-            Message = message ?? (success ? "Operation completed successfully" : "Operation failed")
+            OperationId = operationId,
+            Status = success ? ProgressStatus.Completed : ProgressStatus.Failed,
+            CurrentMessage = message ?? (success ? "Operation completed successfully" : "Operation failed"),
+            EndTime = DateTime.UtcNow
         };
 
         await NotifyProgressAsync(operationId, update, cancellationToken);
@@ -203,11 +205,12 @@ public class SignalRProgressNotificationService : IProgressNotificationService
         // This would typically retrieve from a cache or database
         return await Task.FromResult(new ProgressUpdate
         {
+            OperationId = operationId,
             OperationName = "Operation",
             ProcessedItems = 0,
             TotalItems = 100,
-            PercentComplete = 0,
-            Status = "InProgress"
+            Status = ProgressStatus.InProgress,
+            StartTime = DateTime.UtcNow
         });
     }
 
@@ -218,11 +221,12 @@ public class SignalRProgressNotificationService : IProgressNotificationService
         {
             var update = new ProgressUpdate
             {
+                OperationId = operationId,
                 OperationName = "Operation",
                 ProcessedItems = 0,
                 TotalItems = 100,
-                PercentComplete = 0,
-                Status = "InProgress"
+                Status = ProgressStatus.InProgress,
+                StartTime = DateTime.UtcNow
             };
 
             yield return update;

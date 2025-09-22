@@ -26,7 +26,7 @@ public static class ApiVersioningExtensions
         services.AddApiVersioning(options =>
         {
             // Specify the default API version
-            options.DefaultApiVersion = new ApiVersion(1, 0);
+            options.DefaultApiVersion = new Asp.Versioning.ApiVersion(1, 0);
 
             // Assume default version when not specified
             options.AssumeDefaultVersionWhenUnspecified = true;
@@ -35,11 +35,11 @@ public static class ApiVersioningExtensions
             options.ReportApiVersions = true;
 
             // API version readers (how version is specified)
-            options.ApiVersionReader = ApiVersionReader.Combine(
-                new UrlSegmentApiVersionReader(),           // /api/v1/...
-                new HeaderApiVersionReader("X-API-Version"), // Header: X-API-Version: 1.0
-                new MediaTypeApiVersionReader("version"),    // Accept: application/json;version=1.0
-                new QueryStringApiVersionReader("api-version") // ?api-version=1.0
+            options.ApiVersionReader = Asp.Versioning.ApiVersionReader.Combine(
+                new Asp.Versioning.UrlSegmentApiVersionReader(),           // /api/v1/...
+                new Asp.Versioning.HeaderApiVersionReader("X-API-Version"), // Header: X-API-Version: 1.0
+                new Asp.Versioning.MediaTypeApiVersionReader("version"),    // Accept: application/json;version=1.0
+                new Asp.Versioning.QueryStringApiVersionReader("api-version") // ?api-version=1.0
             );
         })
         .AddApiExplorer(options =>
@@ -206,7 +206,7 @@ public class ApiVersionOperationFilter : IOperationFilter
         // Add API version parameter
         var apiVersion = context.ApiDescription
             .ActionDescriptor.EndpointMetadata
-            .OfType<ApiVersionAttribute>()
+            .OfType<Asp.Versioning.ApiVersionAttribute>()
             .FirstOrDefault();
 
         if (apiVersion != null)
