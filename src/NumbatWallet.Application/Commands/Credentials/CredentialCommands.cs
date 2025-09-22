@@ -62,3 +62,25 @@ public record BulkIssueResult(
 public record BulkIssueError(
     Guid WalletId,
     string Error);
+
+public record BulkRevokeResult(
+    int TotalRequested,
+    int SuccessCount,
+    int FailureCount,
+    List<Guid> RevokedCredentialIds,
+    List<BulkRevokeError> Errors);
+
+public record BulkRevokeError(
+    Guid CredentialId,
+    string Error);
+
+public record BulkVerificationResult(
+    int TotalRequested,
+    int SuccessCount,
+    int FailureCount,
+    List<VerificationResultItem> Results);
+
+public record VerificationResultItem(
+    Guid CredentialId,
+    bool IsValid,
+    string? Error);

@@ -1,4 +1,5 @@
 global using FluentValidation;
+global using HotChocolate.Authorization;
 global using NumbatWallet.Application.Interfaces;
 global using NumbatWallet.Application.CQRS.Interfaces;
 global using NumbatWallet.Domain.Exceptions;

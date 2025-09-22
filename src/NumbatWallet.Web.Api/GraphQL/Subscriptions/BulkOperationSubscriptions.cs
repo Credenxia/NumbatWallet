@@ -101,7 +101,27 @@ public class BulkOperationSubscriptions
     }
 }
 
-// Event types for subscriptions
+// Event and result types for subscriptions
+public class BulkOperationResult
+{
+    public string OperationId { get; set; } = string.Empty;
+    public BulkOperationStatus Status { get; set; }
+    public int TotalCount { get; set; }
+    public int ProcessedCount { get; set; }
+    public int SuccessCount { get; set; }
+    public int FailureCount { get; set; }
+    public DateTime? CompletedAt { get; set; }
+}
+
+public enum BulkOperationStatus
+{
+    Pending,
+    InProgress,
+    Completed,
+    Failed,
+    PartiallyCompleted
+}
+
 public class BulkOperationStartedEvent
 {
     public string OperationId { get; set; } = string.Empty;

@@ -8,6 +8,7 @@ using NumbatWallet.Application.CQRS.Interfaces;
 using NumbatWallet.Application.DTOs;
 using NumbatWallet.Application.Interfaces;
 using NumbatWallet.Domain.Enums;
+using WalletCommands = NumbatWallet.Application.Commands.Wallets;
 
 namespace NumbatWallet.Web.Api.GraphQL.Schema;
 
@@ -144,9 +145,9 @@ public class Mutation
     }
 
     [Authorize]
-    public async Task<BackupResult> BackupWallet(
+    public async Task<WalletCommands.BackupResult> BackupWallet(
         Guid walletId,
-        [Service] ICommandHandler<BackupWalletCommand, BackupResult> handler,
+        [Service] ICommandHandler<BackupWalletCommand, WalletCommands.BackupResult> handler,
         CancellationToken cancellationToken)
     {
         var command = new BackupWalletCommand(walletId);

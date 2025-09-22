@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Options;
 using System.Security.Cryptography;
 
 namespace NumbatWallet.Web.Api.Middleware;

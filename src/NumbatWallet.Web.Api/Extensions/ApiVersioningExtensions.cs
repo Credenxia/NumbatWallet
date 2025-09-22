@@ -129,7 +129,7 @@ public static class ApiVersioningExtensions
     }
 
     private static OpenApiInfo CreateInfoForApiVersion(
-        ApiVersionDescription description,
+        Asp.Versioning.ApiExplorer.ApiVersionDescription description,
         IConfiguration configuration)
     {
         var info = new OpenApiInfo

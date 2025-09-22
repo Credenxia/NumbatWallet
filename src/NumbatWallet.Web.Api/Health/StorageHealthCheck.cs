@@ -1,5 +1,6 @@
 using Azure.Storage.Blobs;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
+using HealthCheckResult = Microsoft.Extensions.Diagnostics.HealthChecks.HealthCheckResult;
 
 namespace NumbatWallet.Web.Api.Health;
 
@@ -19,7 +20,7 @@ public class StorageHealthCheck : IHealthCheck
         _logger = logger;
     }
 
-    public async Task<HealthCheckResult> CheckHealthAsync(
+    public async Task<Microsoft.Extensions.Diagnostics.HealthChecks.HealthCheckResult> CheckHealthAsync(
         HealthCheckContext context,
         CancellationToken cancellationToken = default)
     {

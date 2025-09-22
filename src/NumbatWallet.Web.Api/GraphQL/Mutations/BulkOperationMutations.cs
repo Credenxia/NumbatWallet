@@ -20,7 +20,7 @@ public class BulkOperationMutations
     /// </summary>
     [Authorize]
     [GraphQLDescription("Bulk issue credentials with async processing and real-time progress tracking")]
-    public async Task<BulkOperationResult> BulkIssueCredentials(
+    public async Task<BulkIssueResult> BulkIssueCredentials(
         [Service] IDispatcher dispatcher,
         [Service] ITopicEventSender eventSender,
         BulkIssueCredentialsInput input,
@@ -51,7 +51,7 @@ public class BulkOperationMutations
         };
 
         // Execute command
-        var result = await dispatcher.DispatchAsync<BulkIssueCredentialsCommand, BulkOperationResult>(
+        var result = await dispatcher.DispatchAsync<BulkIssueCredentialsCommand, BulkIssueResult>(
             command,
             cancellationToken);
 
@@ -74,7 +74,7 @@ public class BulkOperationMutations
     /// </summary>
     [Authorize]
     [GraphQLDescription("Bulk revoke multiple credentials")]
-    public async Task<BulkOperationResult> BulkRevokeCredentials(
+    public async Task<BulkRevokeResult> BulkRevokeCredentials(
         [Service] IDispatcher dispatcher,
         [Service] ITopicEventSender eventSender,
         BulkRevokeCredentialsInput input,
@@ -92,7 +92,7 @@ public class BulkOperationMutations
             }
         };
 
-        var result = await dispatcher.DispatchAsync<BulkRevokeCredentialsCommand, BulkOperationResult>(
+        var result = await dispatcher.DispatchAsync<BulkRevokeCredentialsCommand, BulkRevokeResult>(
             command,
             cancellationToken);
 
@@ -147,7 +147,7 @@ public class BulkOperationMutations
     /// </summary>
     [Authorize]
     [GraphQLDescription("Import credentials from CSV or JSON file")]
-    public async Task<BulkOperationResult> ImportCredentials(
+    public async Task<BulkIssueResult> ImportCredentials(
         [Service] IDispatcher dispatcher,
         [Service] ITopicEventSender eventSender,
         IFile file,
@@ -188,7 +188,7 @@ public class BulkOperationMutations
             }
         };
 
-        var result = await dispatcher.DispatchAsync<BulkIssueCredentialsCommand, BulkOperationResult>(
+        var result = await dispatcher.DispatchAsync<BulkIssueCredentialsCommand, BulkIssueResult>(
             command,
             cancellationToken);
 
@@ -327,8 +327,26 @@ public class CsvImportOptions
     public string? CredentialTypeColumn { get; set; }
 }
 
-// Additional command types
-public class BulkRevokeCredentialsCommand : ICommand<BulkOperationResult>
+// Additional types and commands
+public class BulkCredentialRequest
+{
+    public Guid SubjectId { get; set; }
+    public string CredentialType { get; set; } = string.Empty;
+    public Dictionary<string, object> Claims { get; set; } = new();
+    public DateTime? ExpiresAt { get; set; }
+    public Dictionary<string, string> Metadata { get; set; } = new();
+}
+
+public class BulkProcessingOptions
+{
+    public bool ContinueOnError { get; set; } = true;
+    public int MaxConcurrency { get; set; } = 10;
+    public bool EnableProgressTracking { get; set; } = true;
+    public bool ValidateBeforeProcessing { get; set; } = true;
+    public TimeSpan Timeout { get; set; } = TimeSpan.FromMinutes(5);
+}
+
+public class BulkRevokeCredentialsCommand : ICommand<BulkRevokeResult>
 {
     public List<string> CredentialIds { get; set; } = new();
     public string Reason { get; set; } = string.Empty;
