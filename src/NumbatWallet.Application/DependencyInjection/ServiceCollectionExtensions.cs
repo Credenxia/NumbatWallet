@@ -2,6 +2,7 @@ using Microsoft.Extensions.DependencyInjection;
 using NumbatWallet.Application.CQRS;
 using NumbatWallet.Application.CQRS.Interfaces;
 using NumbatWallet.Application.Interfaces;
+using NumbatWallet.Application.Services;
 using NumbatWallet.Domain.Events;
 using System.Reflection;
 using FluentValidation;
@@ -65,6 +66,10 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IOrganizationService, Services.OrganizationService>();
         services.AddScoped<IStatisticsService, Services.StatisticsService>();
         // Note: IHealthCheckService is registered in Infrastructure layer
+
+        // Register Bulk Operation Services
+        services.AddSingleton<IBulkOperationStatusService, Services.BulkOperationStatusService>();
+        services.AddHostedService<Services.BulkOperationCleanupService>();
 
         // TODO: Register Background Jobs after fixing them
         // services.AddHostedService<BackgroundJobs.CredentialExpiryCheckJob>();
