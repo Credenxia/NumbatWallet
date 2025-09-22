@@ -90,7 +90,7 @@ public class BulkOperationEndpoints : ICarterModule
     }
 
     private static async Task<IResult> BulkIssueCredentials(
-        [FromBody] BulkIssueCredentialsRequest request,
+        [FromBody] BulkCredentialIssuanceRequest request,
         [FromServices] IDispatcher dispatcher,
         [FromServices] IProgressNotificationService progressService,
         CancellationToken cancellationToken)
@@ -487,7 +487,7 @@ public class BulkOperationEndpoints : ICarterModule
 }
 
 // Request DTOs
-public class BulkIssueCredentialsRequest
+public class BulkCredentialIssuanceRequest
 {
     public string IssuerId { get; set; } = string.Empty;
     public List<CredentialRequestDto> Credentials { get; set; } = new();

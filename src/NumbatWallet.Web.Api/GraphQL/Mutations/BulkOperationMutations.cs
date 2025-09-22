@@ -3,6 +3,7 @@ using HotChocolate.AspNetCore.Authorization;
 using HotChocolate.Subscriptions;
 using NumbatWallet.Application.Commands.Credentials;
 using NumbatWallet.Application.CQRS.Interfaces;
+using NumbatWallet.SharedKernel.Models;
 using NumbatWallet.SharedKernel.Results;
 
 namespace NumbatWallet.Web.Api.GraphQL.Mutations;

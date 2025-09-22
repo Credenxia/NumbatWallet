@@ -1,0 +1,106 @@
+using System;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
+
+namespace NumbatWallet.Application.Interfaces;
+
+/// <summary>
+/// Service for managing system users and administrators
+/// </summary>
+public interface IUserManagementService
+{
+    /// <summary>
+    /// Create a new user
+    /// </summary>
+    Task<SystemUserDto> CreateUserAsync(CreateSystemUserDto request, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Update user information
+    /// </summary>
+    Task<SystemUserDto> UpdateUserAsync(Guid userId, UpdateSystemUserDto request, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Delete a user
+    /// </summary>
+    Task<bool> DeleteUserAsync(Guid userId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Get user by ID
+    /// </summary>
+    Task<SystemUserDto?> GetUserByIdAsync(Guid userId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Get user by email
+    /// </summary>
+    Task<SystemUserDto?> GetUserByEmailAsync(string email, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Get all users
+    /// </summary>
+    Task<List<SystemUserDto>> GetAllUsersAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Assign role to user
+    /// </summary>
+    Task<bool> AssignRoleAsync(Guid userId, string roleName, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Remove role from user
+    /// </summary>
+    Task<bool> RemoveRoleAsync(Guid userId, string roleName, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Reset user password
+    /// </summary>
+    Task<bool> ResetPasswordAsync(Guid userId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Lock user account
+    /// </summary>
+    Task<bool> LockUserAsync(Guid userId, string reason, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Unlock user account
+    /// </summary>
+    Task<bool> UnlockUserAsync(Guid userId, CancellationToken cancellationToken = default);
+}
+
+/// <summary>
+/// System user data transfer object
+/// </summary>
+public class SystemUserDto
+{
+    public Guid Id { get; set; }
+    public string Email { get; set; } = string.Empty;
+    public string FirstName { get; set; } = string.Empty;
+    public string LastName { get; set; } = string.Empty;
+    public List<string> Roles { get; set; } = new();
+    public bool IsActive { get; set; }
+    public bool IsLocked { get; set; }
+    public DateTime CreatedAt { get; set; }
+    public DateTime? LastLoginAt { get; set; }
+}
+
+/// <summary>
+/// Create system user request
+/// </summary>
+public class CreateSystemUserDto
+{
+    public string Email { get; set; } = string.Empty;
+    public string FirstName { get; set; } = string.Empty;
+    public string LastName { get; set; } = string.Empty;
+    public string? Password { get; set; }
+    public List<string> Roles { get; set; } = new();
+}
+
+/// <summary>
+/// Update system user request
+/// </summary>
+public class UpdateSystemUserDto
+{
+    public string? FirstName { get; set; }
+    public string? LastName { get; set; }
+    public string? Email { get; set; }
+    public bool? IsActive { get; set; }
+}

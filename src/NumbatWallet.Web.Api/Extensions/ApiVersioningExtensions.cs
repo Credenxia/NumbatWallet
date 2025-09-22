@@ -66,7 +66,7 @@ public static class ApiVersioningExtensions
         {
             // Add versions dynamically
             var provider = services.BuildServiceProvider()
-                .GetRequiredService<IApiVersionDescriptionProvider>();
+                .GetRequiredService<Asp.Versioning.ApiExplorer.IApiVersionDescriptionProvider>();
 
             foreach (var description in provider.ApiVersionDescriptions)
             {
@@ -170,7 +170,7 @@ public static class ApiVersioningExtensions
 
     public static IApplicationBuilder UseVersionedSwagger(
         this IApplicationBuilder app,
-        IApiVersionDescriptionProvider provider)
+        Asp.Versioning.ApiExplorer.IApiVersionDescriptionProvider provider)
     {
         app.UseSwagger();
         app.UseSwaggerUI(options =>
