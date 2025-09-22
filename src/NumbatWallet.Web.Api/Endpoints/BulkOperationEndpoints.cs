@@ -4,7 +4,8 @@ using Microsoft.AspNetCore.Mvc;
 using NumbatWallet.Application.Commands.Credentials;
 using NumbatWallet.Application.CQRS.Interfaces;
 using NumbatWallet.Application.DTOs;
-using NumbatWallet.Application.Services;
+using NumbatWallet.Application.Interfaces;
+using NumbatWallet.Domain.Enums;
 using NumbatWallet.SharedKernel.Results;
 using System.Text.Json;
 
@@ -50,95 +51,62 @@ public class BulkOperationEndpoints : ICarterModule
         // Import credentials from file
         group.MapPost("/credentials/import", ImportCredentials)
             .WithName("ImportCredentials")
-            .WithSummary("Import credentials from CSV or JSON")
-            .WithDescription("Import credentials from uploaded CSV or JSON file")
-            .DisableAntiforgery()
+            .WithSummary("Import credentials from CSV or JSON file")
+            .WithDescription("Import multiple credentials from a file with validation")
             .Produces<BulkIssueResult>(StatusCodes.Status202Accepted)
-            .Produces<ProblemDetails>(StatusCodes.Status400BadRequest);
+            .Produces<ProblemDetails>(StatusCodes.Status400BadRequest)
+            .DisableAntiforgery();
 
-        // Get operation status
+        // Get bulk operation status
         group.MapGet("/operations/{operationId}/status", GetOperationStatus)
-            .WithName("GetOperationStatus")
-            .WithSummary("Get bulk operation status")
-            .WithDescription("Get the current status of a bulk operation")
-            .Produces<OperationStatusDto>(StatusCodes.Status200OK)
-            .Produces<ProblemDetails>(StatusCodes.Status404NotFound);
+            .WithName("GetBulkOperationStatus")
+            .WithSummary("Get the status of a bulk operation")
+            .WithDescription("Check the progress and status of a running bulk operation")
+            .Produces<BulkOperationStatus>(StatusCodes.Status200OK)
+            .Produces(StatusCodes.Status404NotFound);
 
-        // Cancel operation
-        group.MapPost("/operations/{operationId}/cancel", CancelOperation)
-            .WithName("CancelOperation")
+        // Cancel bulk operation
+        group.MapDelete("/operations/{operationId}", CancelOperation)
+            .WithName("CancelBulkOperation")
             .WithSummary("Cancel a running bulk operation")
-            .WithDescription("Request cancellation of a running bulk operation")
+            .WithDescription("Attempt to cancel an in-progress bulk operation")
             .Produces(StatusCodes.Status204NoContent)
-            .Produces<ProblemDetails>(StatusCodes.Status404NotFound);
+            .Produces(StatusCodes.Status404NotFound);
 
-        // Get operation results
-        group.MapGet("/operations/{operationId}/results", GetOperationResults)
-            .WithName("GetOperationResults")
-            .WithSummary("Get bulk operation results")
-            .WithDescription("Get detailed results of a completed bulk operation")
-            .Produces<OperationResultsDto>(StatusCodes.Status200OK)
-            .Produces<ProblemDetails>(StatusCodes.Status404NotFound);
+        // Get bulk operation history
+        group.MapGet("/operations", GetOperationHistory)
+            .WithName("GetBulkOperationHistory")
+            .WithSummary("Get bulk operation history")
+            .WithDescription("Retrieve the history of bulk operations with filtering")
+            .Produces<List<BulkOperationSummary>>(StatusCodes.Status200OK);
 
-        // Export operation results
+        // Export bulk operation results
         group.MapGet("/operations/{operationId}/export", ExportOperationResults)
-            .WithName("ExportOperationResults")
-            .WithSummary("Export operation results")
-            .WithDescription("Export operation results as CSV or JSON")
-            .Produces(StatusCodes.Status200OK, contentType: "application/octet-stream")
-            .Produces<ProblemDetails>(StatusCodes.Status404NotFound);
+            .WithName("ExportBulkOperationResults")
+            .WithSummary("Export bulk operation results")
+            .WithDescription("Export the results of a completed bulk operation")
+            .Produces<FileContentResult>(StatusCodes.Status200OK, "text/csv")
+            .Produces(StatusCodes.Status404NotFound);
     }
 
     private static async Task<IResult> BulkIssueCredentials(
         [FromBody] BulkCredentialIssuanceRequest request,
         [FromServices] IDispatcher dispatcher,
-        [FromServices] IProgressNotificationService progressService,
         CancellationToken cancellationToken)
     {
-        var command = new BulkIssueCredentialsCommand
-        {
-            IssuerId = request.IssuerId,
-            Credentials = request.Credentials.Select(c => new BulkCredentialRequest
-            {
-                SubjectId = c.SubjectId,
-                CredentialType = c.CredentialType,
-                Claims = c.Claims.ToDictionary(x => x.Key, x => (object)x.Value),
-                ExpiresAt = c.ExpiresAt,
-                Metadata = c.Metadata ?? new Dictionary<string, string>()
-            }).ToList(),
-            Options = MapProcessingOptions(request.Options)
-        };
+        // Convert request to command using record constructor
+        var command = new BulkIssueCredentialsCommand(
+            request.WalletIds.Select(id => Guid.Parse(id)).ToList(),
+            request.CredentialType,
+            request.Template ?? new Dictionary<string, object>(),
+            request.IssuerId,
+            Guid.Parse(request.IssuerOrganizationId),
+            request.ValidFrom ?? DateTime.UtcNow,
+            request.ValidUntil);
 
-        var result = await dispatcher.DispatchAsync<BulkIssueCredentialsCommand, BulkIssueResult>(
-            command, cancellationToken);
+        var result = await dispatcher.SendAsync(command, cancellationToken);
 
-        if (result.IsFailure)
-        {
-            return Results.BadRequest(new ProblemDetails
-            {
-                Title = "Bulk Issue Failed",
-                Detail = result.Error.Message,
-                Status = StatusCodes.Status400BadRequest
-            });
-        }
-
-        // Start progress tracking
-        _ = Task.Run(async () =>
-        {
-            await progressService.NotifyProgressAsync(
-                result.Value.OperationId,
-                new ProgressUpdate
-                {
-                    OperationId = result.Value.OperationId,
-                    Status = "Started",
-                    ProcessedCount = 0,
-                    TotalCount = request.Credentials.Count,
-                    PercentComplete = 0,
-                    UpdatedAt = DateTime.UtcNow
-                });
-        }, cancellationToken);
-
-        return Results.Accepted($"/api/v1/bulk/operations/{result.Value.OperationId}/status", result.Value);
+        return Results.Accepted($"/api/v1/bulk/operations/{Guid.NewGuid()}/status", result);
     }
 
     private static async Task<IResult> BulkRevokeCredentials(
@@ -146,27 +114,14 @@ public class BulkOperationEndpoints : ICarterModule
         [FromServices] IDispatcher dispatcher,
         CancellationToken cancellationToken)
     {
-        var command = new BulkRevokeCredentialsCommand
-        {
-            CredentialIds = request.CredentialIds,
-            Reason = request.Reason,
-            Options = MapProcessingOptions(request.Options)
-        };
+        // Convert request to command using record constructor
+        var command = new BulkRevokeCredentialsCommand(
+            request.CredentialIds.Select(id => Guid.Parse(id)).ToList(),
+            request.Reason);
 
-        var result = await dispatcher.DispatchAsync<BulkRevokeCredentialsCommand, BulkOperationResult>(
-            command, cancellationToken);
+        var result = await dispatcher.SendAsync(command, cancellationToken);
 
-        if (result.IsFailure)
-        {
-            return Results.BadRequest(new ProblemDetails
-            {
-                Title = "Bulk Revoke Failed",
-                Detail = result.Error.Message,
-                Status = StatusCodes.Status400BadRequest
-            });
-        }
-
-        return Results.Accepted($"/api/v1/bulk/operations/{result.Value.OperationId}/status", result.Value);
+        return Results.Accepted($"/api/v1/bulk/operations/{Guid.NewGuid()}/status", result);
     }
 
     private static async Task<IResult> BulkVerifyCredentials(
@@ -174,135 +129,85 @@ public class BulkOperationEndpoints : ICarterModule
         [FromServices] IDispatcher dispatcher,
         CancellationToken cancellationToken)
     {
-        var command = new BulkVerifyCredentialsCommand
-        {
-            CredentialIds = request.CredentialIds,
-            VerificationOptions = new VerificationOptions
-            {
-                CheckRevocation = request.Options?.CheckRevocation ?? true,
-                CheckExpiry = request.Options?.CheckExpiry ?? true,
-                CheckSignature = request.Options?.CheckSignature ?? true
-            }
-        };
+        // Convert request to command using record constructor
+        var command = new BulkVerifyCredentialsCommand(
+            request.CredentialIds.Select(id => Guid.Parse(id)).ToList());
 
-        var result = await dispatcher.DispatchAsync<BulkVerifyCredentialsCommand, BulkVerificationResult>(
-            command, cancellationToken);
+        var result = await dispatcher.SendAsync(command, cancellationToken);
 
-        if (result.IsFailure)
-        {
-            return Results.BadRequest(new ProblemDetails
-            {
-                Title = "Bulk Verify Failed",
-                Detail = result.Error.Message,
-                Status = StatusCodes.Status400BadRequest
-            });
-        }
-
-        return Results.Ok(result.Value);
+        return Results.Ok(result);
     }
 
     private static async Task<IResult> ImportCredentials(
-        [FromForm] ImportCredentialsFormRequest request,
+        IFormFile file,
+        [FromForm] string issuerId,
+        [FromForm] string issuerOrganizationId,
+        [FromForm] string credentialType,
         [FromServices] IDispatcher dispatcher,
         CancellationToken cancellationToken)
     {
-        if (request.File == null || request.File.Length == 0)
+        if (file == null || file.Length == 0)
         {
             return Results.BadRequest(new ProblemDetails
             {
                 Title = "Invalid File",
-                Detail = "No file was uploaded",
+                Detail = "No file was uploaded or the file is empty",
                 Status = StatusCodes.Status400BadRequest
             });
         }
 
-        var allowedExtensions = new[] { ".csv", ".json" };
-        var extension = Path.GetExtension(request.File.FileName).ToLowerInvariant();
+        // Read file content
+        using var stream = file.OpenReadStream();
+        using var reader = new StreamReader(stream);
+        var content = await reader.ReadToEndAsync(cancellationToken);
 
-        if (!allowedExtensions.Contains(extension))
+        // Parse based on file type
+        List<Guid> walletIds;
+        Dictionary<string, object> template;
+
+        if (file.FileName.EndsWith(".csv", StringComparison.OrdinalIgnoreCase))
+        {
+            (walletIds, template) = ParseCsvFile(content);
+        }
+        else if (file.FileName.EndsWith(".json", StringComparison.OrdinalIgnoreCase))
+        {
+            (walletIds, template) = ParseJsonFile(content);
+        }
+        else
         {
             return Results.BadRequest(new ProblemDetails
             {
-                Title = "Invalid File Type",
+                Title = "Unsupported File Type",
                 Detail = "Only CSV and JSON files are supported",
                 Status = StatusCodes.Status400BadRequest
             });
         }
 
-        try
-        {
-            using var stream = request.File.OpenReadStream();
-            using var reader = new StreamReader(stream);
-            var content = await reader.ReadToEndAsync(cancellationToken);
+        // Create command
+        var command = new BulkIssueCredentialsCommand(
+            walletIds,
+            Enum.Parse<CredentialType>(credentialType),
+            template,
+            issuerId,
+            Guid.Parse(issuerOrganizationId),
+            DateTime.UtcNow,
+            null);
 
-            List<BulkCredentialRequest> credentials;
-            if (extension == ".csv")
-            {
-                credentials = ParseCsvCredentials(content, request.CsvOptions);
-            }
-            else
-            {
-                credentials = JsonSerializer.Deserialize<List<BulkCredentialRequest>>(content)
-                    ?? new List<BulkCredentialRequest>();
-            }
+        var result = await dispatcher.SendAsync(command, cancellationToken);
 
-            var command = new BulkIssueCredentialsCommand
-            {
-                IssuerId = request.IssuerId,
-                Credentials = credentials,
-                Options = MapProcessingOptions(request.ProcessingOptions)
-            };
-
-            var result = await dispatcher.DispatchAsync<BulkIssueCredentialsCommand, BulkIssueResult>(
-                command, cancellationToken);
-
-            if (result.IsFailure)
-            {
-                return Results.BadRequest(new ProblemDetails
-                {
-                    Title = "Import Failed",
-                    Detail = result.Error.Message,
-                    Status = StatusCodes.Status400BadRequest
-                });
-            }
-
-            return Results.Accepted($"/api/v1/bulk/operations/{result.Value.OperationId}/status", result.Value);
-        }
-        catch (JsonException ex)
-        {
-            return Results.BadRequest(new ProblemDetails
-            {
-                Title = "Invalid JSON",
-                Detail = ex.Message,
-                Status = StatusCodes.Status400BadRequest
-            });
-        }
-        catch (Exception ex)
-        {
-            return Results.BadRequest(new ProblemDetails
-            {
-                Title = "Import Error",
-                Detail = ex.Message,
-                Status = StatusCodes.Status400BadRequest
-            });
-        }
+        return Results.Accepted($"/api/v1/bulk/operations/{Guid.NewGuid()}/status", result);
     }
 
     private static async Task<IResult> GetOperationStatus(
         string operationId,
-        [FromServices] IBulkOperationStatusService statusService,
+        [FromServices] IBulkOperationService operationService,
         CancellationToken cancellationToken)
     {
-        var status = await statusService.GetOperationStatusAsync(operationId, cancellationToken);
+        var status = await operationService.GetOperationStatusAsync(operationId, cancellationToken);
 
         if (status == null)
         {
-            return Results.NotFound(new ProblemDetails
-            {
-                Title = "Operation Not Found",
-                Detail = $"Operation {operationId} not found",
-                Status = StatusCodes.Status404NotFound
-            });
+            return Results.NotFound();
         }
 
         return Results.Ok(status);
@@ -310,241 +215,163 @@ public class BulkOperationEndpoints : ICarterModule
 
     private static async Task<IResult> CancelOperation(
         string operationId,
-        [FromServices] IBulkOperationStatusService statusService,
+        [FromServices] IBulkOperationService operationService,
         CancellationToken cancellationToken)
     {
-        var cancelled = await statusService.CancelOperationAsync(operationId, cancellationToken);
+        var cancelled = await operationService.CancelOperationAsync(operationId, cancellationToken);
 
         if (!cancelled)
         {
-            return Results.NotFound(new ProblemDetails
-            {
-                Title = "Operation Not Found",
-                Detail = $"Operation {operationId} not found or already completed",
-                Status = StatusCodes.Status404NotFound
-            });
+            return Results.NotFound();
         }
 
         return Results.NoContent();
     }
 
-    private static async Task<IResult> GetOperationResults(
-        string operationId,
-        [FromServices] IBulkOperationStatusService statusService,
+    private static async Task<IResult> GetOperationHistory(
+        [FromQuery] DateTime? from,
+        [FromQuery] DateTime? to,
+        [FromQuery] string? operationType,
+        [FromServices] IBulkOperationService operationService,
         CancellationToken cancellationToken)
     {
-        var results = await statusService.GetOperationResultsAsync(operationId, cancellationToken);
+        var history = await operationService.GetOperationHistoryAsync(
+            from ?? DateTime.UtcNow.AddDays(-7),
+            to ?? DateTime.UtcNow,
+            operationType,
+            cancellationToken);
 
-        if (results == null)
-        {
-            return Results.NotFound(new ProblemDetails
-            {
-                Title = "Results Not Found",
-                Detail = $"Results for operation {operationId} not found",
-                Status = StatusCodes.Status404NotFound
-            });
-        }
-
-        return Results.Ok(results);
+        return Results.Ok(history);
     }
 
     private static async Task<IResult> ExportOperationResults(
         string operationId,
         [FromQuery] string format,
-        [FromServices] IBulkOperationStatusService statusService,
+        [FromServices] IBulkOperationService operationService,
         CancellationToken cancellationToken)
     {
-        if (format != "csv" && format != "json")
+        var data = await operationService.ExportOperationResultsAsync(
+            operationId,
+            format ?? "csv",
+            cancellationToken);
+
+        if (data == null)
         {
-            return Results.BadRequest(new ProblemDetails
-            {
-                Title = "Invalid Format",
-                Detail = "Format must be 'csv' or 'json'",
-                Status = StatusCodes.Status400BadRequest
-            });
+            return Results.NotFound();
         }
 
-        var results = await statusService.GetOperationResultsAsync(operationId, cancellationToken);
+        var contentType = format?.ToLower() == "json"
+            ? "application/json"
+            : "text/csv";
 
-        if (results == null)
-        {
-            return Results.NotFound(new ProblemDetails
-            {
-                Title = "Results Not Found",
-                Detail = $"Results for operation {operationId} not found",
-                Status = StatusCodes.Status404NotFound
-            });
-        }
-
-        byte[] content;
-        string contentType;
-        string fileName;
-
-        if (format == "csv")
-        {
-            content = ExportToCsv(results);
-            contentType = "text/csv";
-            fileName = $"operation-{operationId}-results.csv";
-        }
-        else
-        {
-            content = ExportToJson(results);
-            contentType = "application/json";
-            fileName = $"operation-{operationId}-results.json";
-        }
-
-        return Results.File(content, contentType, fileName);
+        return Results.File(data, contentType, $"bulk-operation-{operationId}.{format ?? "csv"}");
     }
 
-    private static BulkProcessingOptions MapProcessingOptions(ProcessingOptionsDto? options)
+    private static (List<Guid>, Dictionary<string, object>) ParseCsvFile(string content)
     {
-        return new BulkProcessingOptions
-        {
-            ContinueOnError = options?.ContinueOnError ?? true,
-            MaxConcurrency = options?.MaxConcurrency ?? 10,
-            EnableProgressTracking = options?.EnableProgressTracking ?? true,
-            ValidateBeforeProcessing = options?.ValidateBeforeProcessing ?? true,
-            Timeout = options?.TimeoutSeconds.HasValue
-                ? TimeSpan.FromSeconds(options.TimeoutSeconds.Value)
-                : TimeSpan.FromMinutes(5)
-        };
-    }
+        var walletIds = new List<Guid>();
+        var template = new Dictionary<string, object>();
 
-    private static List<BulkCredentialRequest> ParseCsvCredentials(string content, CsvOptionsDto? options)
-    {
-        var credentials = new List<BulkCredentialRequest>();
         var lines = content.Split('\n', StringSplitOptions.RemoveEmptyEntries);
-
         if (lines.Length < 2)
         {
             throw new InvalidOperationException("CSV file must contain headers and at least one data row");
         }
 
-        var delimiter = options?.Delimiter ?? ',';
-        var headers = lines[0].Split(delimiter);
-        var subjectIdColumn = options?.SubjectIdColumn ?? "SubjectId";
-        var typeColumn = options?.CredentialTypeColumn ?? "CredentialType";
+        var headers = lines[0].Split(',');
+        var walletIdIndex = Array.IndexOf(headers, "WalletId");
 
-        var subjectIdIndex = Array.IndexOf(headers, subjectIdColumn);
-        var typeIndex = Array.IndexOf(headers, typeColumn);
-
-        if (subjectIdIndex < 0 || typeIndex < 0)
+        if (walletIdIndex < 0)
         {
-            throw new InvalidOperationException($"CSV must contain '{subjectIdColumn}' and '{typeColumn}' columns");
+            throw new InvalidOperationException("CSV must contain WalletId column");
         }
 
-        for (int i = 1; i < lines.Length; i++)
+        // Use first row as template
+        if (lines.Length > 1)
         {
-            var values = lines[i].Split(delimiter);
-
-            if (values.Length < headers.Length)
+            var firstRow = lines[1].Split(',');
+            for (int i = 0; i < headers.Length; i++)
             {
-                continue; // Skip malformed rows
-            }
-
-            var claims = new Dictionary<string, object>();
-            for (int j = 0; j < headers.Length; j++)
-            {
-                if (j != subjectIdIndex && j != typeIndex)
+                if (i != walletIdIndex)
                 {
-                    claims[headers[j]] = values[j];
+                    template[headers[i]] = firstRow[i];
                 }
             }
+        }
 
-            credentials.Add(new BulkCredentialRequest
+        // Collect all wallet IDs
+        for (int i = 1; i < lines.Length; i++)
+        {
+            var values = lines[i].Split(',');
+            if (values.Length > walletIdIndex && Guid.TryParse(values[walletIdIndex], out var walletId))
             {
-                SubjectId = values[subjectIdIndex].Trim(),
-                CredentialType = values[typeIndex].Trim(),
-                Claims = claims
-            });
+                walletIds.Add(walletId);
+            }
         }
 
-        return credentials;
+        return (walletIds, template);
     }
 
-    private static byte[] ExportToCsv(OperationResultsDto results)
+    private static (List<Guid>, Dictionary<string, object>) ParseJsonFile(string content)
     {
-        var csv = new System.Text.StringBuilder();
-        csv.AppendLine("CredentialId,Status,ErrorMessage,ProcessedAt");
-
-        foreach (var item in results.Items)
+        var json = JsonSerializer.Deserialize<BulkImportData>(content);
+        if (json == null)
         {
-            csv.AppendLine($"{item.CredentialId},{item.Status},\"{item.ErrorMessage}\",{item.ProcessedAt:yyyy-MM-dd HH:mm:ss}");
+            throw new InvalidOperationException("Invalid JSON format");
         }
 
-        return System.Text.Encoding.UTF8.GetBytes(csv.ToString());
-    }
-
-    private static byte[] ExportToJson(OperationResultsDto results)
-    {
-        var json = JsonSerializer.Serialize(results, new JsonSerializerOptions
-        {
-            WriteIndented = true
-        });
-
-        return System.Text.Encoding.UTF8.GetBytes(json);
+        return (json.WalletIds.Select(id => Guid.Parse(id)).ToList(), json.Template);
     }
 }
 
 // Request DTOs
 public class BulkCredentialIssuanceRequest
 {
+    public List<string> WalletIds { get; set; } = new();
+    public CredentialType CredentialType { get; set; }
+    public Dictionary<string, object>? Template { get; set; }
     public string IssuerId { get; set; } = string.Empty;
-    public List<CredentialRequestDto> Credentials { get; set; } = new();
-    public ProcessingOptionsDto? Options { get; set; }
-}
-
-public class CredentialRequestDto
-{
-    public string SubjectId { get; set; } = string.Empty;
-    public string CredentialType { get; set; } = string.Empty;
-    public Dictionary<string, string> Claims { get; set; } = new();
-    public DateTime? ExpiresAt { get; set; }
-    public Dictionary<string, string>? Metadata { get; set; }
-}
-
-public class ProcessingOptionsDto
-{
-    public bool? ContinueOnError { get; set; }
-    public int? MaxConcurrency { get; set; }
-    public bool? EnableProgressTracking { get; set; }
-    public bool? ValidateBeforeProcessing { get; set; }
-    public int? TimeoutSeconds { get; set; }
+    public string IssuerOrganizationId { get; set; } = string.Empty;
+    public DateTime? ValidFrom { get; set; }
+    public DateTime? ValidUntil { get; set; }
 }
 
 public class BulkRevokeCredentialsRequest
 {
     public List<string> CredentialIds { get; set; } = new();
     public string Reason { get; set; } = string.Empty;
-    public ProcessingOptionsDto? Options { get; set; }
 }
 
 public class BulkVerifyCredentialsRequest
 {
     public List<string> CredentialIds { get; set; } = new();
-    public VerificationOptionsDto? Options { get; set; }
 }
 
-public class VerificationOptionsDto
+public class BulkImportData
 {
-    public bool? CheckRevocation { get; set; }
-    public bool? CheckExpiry { get; set; }
-    public bool? CheckSignature { get; set; }
+    public List<string> WalletIds { get; set; } = new();
+    public Dictionary<string, object> Template { get; set; } = new();
 }
 
-public class ImportCredentialsFormRequest
+public class BulkOperationStatus
 {
-    public IFormFile? File { get; set; }
-    public string IssuerId { get; set; } = string.Empty;
-    public ProcessingOptionsDto? ProcessingOptions { get; set; }
-    public CsvOptionsDto? CsvOptions { get; set; }
+    public string OperationId { get; set; } = string.Empty;
+    public string Type { get; set; } = string.Empty;
+    public string Status { get; set; } = string.Empty;
+    public int ProcessedCount { get; set; }
+    public int TotalCount { get; set; }
+    public int SuccessCount { get; set; }
+    public int FailureCount { get; set; }
+    public DateTime StartedAt { get; set; }
+    public DateTime? CompletedAt { get; set; }
 }
 
-public class CsvOptionsDto
+public class BulkOperationSummary
 {
-    public char? Delimiter { get; set; }
-    public string? SubjectIdColumn { get; set; }
-    public string? CredentialTypeColumn { get; set; }
+    public string OperationId { get; set; } = string.Empty;
+    public string Type { get; set; } = string.Empty;
+    public string Status { get; set; } = string.Empty;
+    public int TotalCount { get; set; }
+    public DateTime StartedAt { get; set; }
+    public DateTime? CompletedAt { get; set; }
 }
-
-// DTOs are defined in NumbatWallet.Application.DTOs

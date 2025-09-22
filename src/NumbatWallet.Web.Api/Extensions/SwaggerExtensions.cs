@@ -186,7 +186,12 @@ public class SwaggerDefaultValues : IOperationFilter
     {
         var apiDescription = context.ApiDescription;
 
-        operation.Deprecated |= Asp.Versioning.Mvc.ApiExplorer.ApiDescriptionExtensions.IsDeprecated(apiDescription);
+        // Check if the endpoint is deprecated
+        var endpointMetadata = apiDescription.ActionDescriptor?.EndpointMetadata;
+        if (endpointMetadata != null)
+        {
+            operation.Deprecated |= endpointMetadata.Any(m => m is ObsoleteAttribute);
+        }
 
         foreach (var responseType in context.ApiDescription.SupportedResponseTypes)
         {
