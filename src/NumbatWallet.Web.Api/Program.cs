@@ -1,10 +1,12 @@
 using Carter;
 using Microsoft.EntityFrameworkCore;
+using NumbatWallet.Application.Commands.Credentials;
 using NumbatWallet.Application.DependencyInjection;
 using NumbatWallet.Infrastructure.Data;
 using NumbatWallet.Infrastructure.DependencyInjection;
 using NumbatWallet.Web.Api.DependencyInjection;
 using NumbatWallet.Web.Api.Extensions;
+using NumbatWallet.Web.Api.Hubs;
 using NumbatWallet.Web.Api.Middleware;
 using Serilog;
 
@@ -57,6 +59,17 @@ try
     // Add rate limiting
     builder.Services.AddCustomRateLimiting(builder.Configuration);
 
+    // Add SignalR for real-time updates
+    builder.Services.AddSignalR(options =>
+    {
+        options.EnableDetailedErrors = builder.Environment.IsDevelopment();
+        options.MaximumReceiveMessageSize = 1024 * 1024; // 1MB
+        options.KeepAliveInterval = TimeSpan.FromSeconds(15);
+    });
+
+    // Register progress notification service
+    builder.Services.AddSingleton<IProgressNotificationService, SignalRProgressNotificationService>();
+
     var app = builder.Build();
 
     // Configure the HTTP request pipeline
@@ -98,6 +111,7 @@ try
     app.MapCarter(); // Map Carter endpoints first
     app.MapGraphQL();
     app.MapHealthChecks();
+    app.MapHub<ProgressHub>("/hubs/progress"); // SignalR hub for progress tracking
     app.MapDefaultEndpoints();
 
     // Database migration is handled by MigrationHelper hosted service
