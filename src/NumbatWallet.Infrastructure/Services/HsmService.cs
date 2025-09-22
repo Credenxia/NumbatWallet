@@ -1,41 +1,48 @@
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
-using Azure.Identity;
-using Azure.Security.KeyVault.Keys;
-using Azure.Security.KeyVault.Keys.Cryptography;
-using Azure.Security.KeyVault.Certificates;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using NumbatWallet.Domain.Interfaces;
+using NumbatWallet.Infrastructure.Services.Providers;
 
 namespace NumbatWallet.Infrastructure.Services;
 
 /// <summary>
-/// Azure Key Vault Managed HSM implementation for hardware security operations
+/// HSM service that uses provider pattern for phased security implementation
+/// Phase 1: Software (Dev) / Key Vault Premium (Prod)
+/// Phase 2: Managed HSM
+/// Phase 3: Dedicated HSM
 /// </summary>
 public class HsmService : IHsmService
 {
-    private readonly KeyClient _keyClient;
-    private readonly CertificateClient _certificateClient;
+    private readonly IHsmProvider _provider;
     private readonly IConfiguration _configuration;
     private readonly ILogger<HsmService> _logger;
-    private readonly Dictionary<string, CryptographyClient> _cryptoClients;
+    private readonly string _providerType;
 
     public HsmService(
+        IServiceProvider serviceProvider,
         IConfiguration configuration,
         ILogger<HsmService> logger)
     {
         _configuration = configuration;
         _logger = logger;
-        _cryptoClients = new Dictionary<string, CryptographyClient>();
 
-        var keyVaultUri = new Uri(_configuration["AzureKeyVault:Uri"]
-            ?? throw new InvalidOperationException("Azure Key Vault URI not configured"));
+        // Select provider based on configuration
+        _providerType = configuration["Hsm:Provider"] ?? "Software";
 
-        var credential = new DefaultAzureCredential();
-        _keyClient = new KeyClient(keyVaultUri, credential);
-        _certificateClient = new CertificateClient(keyVaultUri, credential);
+        _provider = _providerType.ToLowerInvariant() switch
+        {
+            "software" => serviceProvider.GetRequiredService<SoftwareHsmProvider>(),
+            "keyvault" => serviceProvider.GetRequiredService<KeyVaultHsmProvider>(),
+            "managedhsm" => serviceProvider.GetRequiredService<ManagedHsmProvider>(),
+            _ => throw new NotSupportedException($"HSM provider '{_providerType}' not supported")
+        };
+
+        _logger.LogInformation("HSM Service initialized with {Provider} provider (FIPS: {Compliance})",
+            _provider.ProviderType, _provider.ComplianceLevel);
     }
 
     public async Task<string> GenerateKeyPairAsync(
@@ -45,75 +52,26 @@ public class HsmService : IHsmService
     {
         try
         {
-            KeyVaultKey keyResponse;
-
-            switch (algorithm)
+            var request = new KeyGenerationRequest
             {
-                case KeyAlgorithm.RSA2048:
-                case KeyAlgorithm.RSA3072:
-                case KeyAlgorithm.RSA4096:
-                    var rsaOptions = new CreateRsaKeyOptions(keyName)
-                    {
-                        KeySize = algorithm switch
-                        {
-                            KeyAlgorithm.RSA2048 => 2048,
-                            KeyAlgorithm.RSA3072 => 3072,
-                            KeyAlgorithm.RSA4096 => 4096,
-                            _ => 2048
-                        },
-                        Enabled = true,
-                        ExpiresOn = DateTimeOffset.UtcNow.AddYears(2)
-                    };
-                    rsaOptions.KeyOperations.Add(KeyOperation.Sign);
-                    rsaOptions.KeyOperations.Add(KeyOperation.Verify);
-                    rsaOptions.KeyOperations.Add(KeyOperation.Encrypt);
-                    rsaOptions.KeyOperations.Add(KeyOperation.Decrypt);
-                    keyResponse = await _keyClient.CreateRsaKeyAsync(rsaOptions, cancellationToken);
-                    break;
+                KeyName = keyName,
+                KeyType = ConvertAlgorithmToKeyType(algorithm),
+                KeySize = GetKeySize(algorithm),
+                Usage = KeyUsage.Sign | KeyUsage.Verify | KeyUsage.Encrypt | KeyUsage.Decrypt,
+                Exportable = false,
+                Tags = new Dictionary<string, string>
+                {
+                    ["Algorithm"] = algorithm.ToString(),
+                    ["CreatedBy"] = "HsmService"
+                }
+            };
 
-                case KeyAlgorithm.ECC_P256:
-                case KeyAlgorithm.ECC_P384:
-                case KeyAlgorithm.ECC_P521:
-                    var ecOptions = new CreateEcKeyOptions(keyName)
-                    {
-                        CurveName = algorithm switch
-                        {
-                            KeyAlgorithm.ECC_P256 => KeyCurveName.P256,
-                            KeyAlgorithm.ECC_P384 => KeyCurveName.P384,
-                            KeyAlgorithm.ECC_P521 => KeyCurveName.P521,
-                            _ => KeyCurveName.P256
-                        },
-                        Enabled = true,
-                        ExpiresOn = DateTimeOffset.UtcNow.AddYears(2)
-                    };
-                    ecOptions.KeyOperations.Add(KeyOperation.Sign);
-                    ecOptions.KeyOperations.Add(KeyOperation.Verify);
-                    keyResponse = await _keyClient.CreateEcKeyAsync(ecOptions, cancellationToken);
-                    break;
+            var key = await _provider.GenerateKeyAsync(request, cancellationToken);
 
-                case KeyAlgorithm.AES128:
-                case KeyAlgorithm.AES256:
-                    var aesOptions = new CreateOctKeyOptions(keyName)
-                    {
-                        KeySize = algorithm == KeyAlgorithm.AES128 ? 128 : 256,
-                        Enabled = true,
-                        ExpiresOn = DateTimeOffset.UtcNow.AddYears(2)
-                    };
-                    aesOptions.KeyOperations.Add(KeyOperation.Encrypt);
-                    aesOptions.KeyOperations.Add(KeyOperation.Decrypt);
-                    aesOptions.KeyOperations.Add(KeyOperation.WrapKey);
-                    aesOptions.KeyOperations.Add(KeyOperation.UnwrapKey);
-                    keyResponse = await _keyClient.CreateOctKeyAsync(aesOptions, cancellationToken);
-                    break;
+            _logger.LogInformation("Generated key pair {KeyName} with algorithm {Algorithm} using {Provider}",
+                keyName, algorithm, _provider.ProviderType);
 
-                default:
-                    throw new NotSupportedException($"Algorithm {algorithm} not supported for key generation");
-            }
-
-            _logger.LogInformation("Generated key pair {KeyName} with algorithm {Algorithm}",
-                keyName, algorithm);
-
-            return keyResponse.Key.Id.ToString();
+            return key.Id;
         }
         catch (Exception ex)
         {
@@ -125,36 +83,16 @@ public class HsmService : IHsmService
     public async Task<byte[]> SignDataAsync(
         string keyName,
         byte[] data,
-        Domain.Interfaces.SignatureAlgorithm algorithm,
+        SignatureAlgorithm algorithm,
         CancellationToken cancellationToken = default)
     {
         try
         {
-            var cryptoClient = await GetCryptographyClientAsync(keyName, cancellationToken);
+            var signingAlgorithm = ConvertSignatureAlgorithm(algorithm);
+            var signature = await _provider.SignAsync(keyName, data, signingAlgorithm, cancellationToken);
 
-            var signAlgorithm = algorithm switch
-            {
-                Domain.Interfaces.SignatureAlgorithm.RS256 => Azure.Security.KeyVault.Keys.Cryptography.SignatureAlgorithm.RS256,
-                Domain.Interfaces.SignatureAlgorithm.RS384 => Azure.Security.KeyVault.Keys.Cryptography.SignatureAlgorithm.RS384,
-                Domain.Interfaces.SignatureAlgorithm.RS512 => Azure.Security.KeyVault.Keys.Cryptography.SignatureAlgorithm.RS512,
-                Domain.Interfaces.SignatureAlgorithm.ES256 => Azure.Security.KeyVault.Keys.Cryptography.SignatureAlgorithm.ES256,
-                Domain.Interfaces.SignatureAlgorithm.ES384 => Azure.Security.KeyVault.Keys.Cryptography.SignatureAlgorithm.ES384,
-                Domain.Interfaces.SignatureAlgorithm.ES512 => Azure.Security.KeyVault.Keys.Cryptography.SignatureAlgorithm.ES512,
-                Domain.Interfaces.SignatureAlgorithm.PS256 => Azure.Security.KeyVault.Keys.Cryptography.SignatureAlgorithm.PS256,
-                Domain.Interfaces.SignatureAlgorithm.PS384 => Azure.Security.KeyVault.Keys.Cryptography.SignatureAlgorithm.PS384,
-                Domain.Interfaces.SignatureAlgorithm.PS512 => Azure.Security.KeyVault.Keys.Cryptography.SignatureAlgorithm.PS512,
-                _ => throw new NotSupportedException($"Signature algorithm {algorithm} not supported")
-            };
-
-            var signResult = await cryptoClient.SignDataAsync(
-                signAlgorithm,
-                data,
-                cancellationToken);
-
-            _logger.LogDebug("Signed data with key {KeyName} using {Algorithm}",
-                keyName, algorithm);
-
-            return signResult.Signature;
+            _logger.LogDebug("Signed data with key {KeyName} using {Algorithm}", keyName, algorithm);
+            return signature;
         }
         catch (Exception ex)
         {
@@ -167,37 +105,18 @@ public class HsmService : IHsmService
         string keyName,
         byte[] data,
         byte[] signature,
-        Domain.Interfaces.SignatureAlgorithm algorithm,
+        SignatureAlgorithm algorithm,
         CancellationToken cancellationToken = default)
     {
         try
         {
-            var cryptoClient = await GetCryptographyClientAsync(keyName, cancellationToken);
-
-            var signAlgorithm = algorithm switch
-            {
-                Domain.Interfaces.SignatureAlgorithm.RS256 => Azure.Security.KeyVault.Keys.Cryptography.SignatureAlgorithm.RS256,
-                Domain.Interfaces.SignatureAlgorithm.RS384 => Azure.Security.KeyVault.Keys.Cryptography.SignatureAlgorithm.RS384,
-                Domain.Interfaces.SignatureAlgorithm.RS512 => Azure.Security.KeyVault.Keys.Cryptography.SignatureAlgorithm.RS512,
-                Domain.Interfaces.SignatureAlgorithm.ES256 => Azure.Security.KeyVault.Keys.Cryptography.SignatureAlgorithm.ES256,
-                Domain.Interfaces.SignatureAlgorithm.ES384 => Azure.Security.KeyVault.Keys.Cryptography.SignatureAlgorithm.ES384,
-                Domain.Interfaces.SignatureAlgorithm.ES512 => Azure.Security.KeyVault.Keys.Cryptography.SignatureAlgorithm.ES512,
-                Domain.Interfaces.SignatureAlgorithm.PS256 => Azure.Security.KeyVault.Keys.Cryptography.SignatureAlgorithm.PS256,
-                Domain.Interfaces.SignatureAlgorithm.PS384 => Azure.Security.KeyVault.Keys.Cryptography.SignatureAlgorithm.PS384,
-                Domain.Interfaces.SignatureAlgorithm.PS512 => Azure.Security.KeyVault.Keys.Cryptography.SignatureAlgorithm.PS512,
-                _ => throw new NotSupportedException($"Signature algorithm {algorithm} not supported")
-            };
-
-            var verifyResult = await cryptoClient.VerifyDataAsync(
-                signAlgorithm,
-                data,
-                signature,
-                cancellationToken);
+            var signingAlgorithm = ConvertSignatureAlgorithm(algorithm);
+            var isValid = await _provider.VerifyAsync(keyName, data, signature, signingAlgorithm, cancellationToken);
 
             _logger.LogDebug("Verified signature with key {KeyName} using {Algorithm}: {IsValid}",
-                keyName, algorithm, verifyResult.IsValid);
+                keyName, algorithm, isValid);
 
-            return verifyResult.IsValid;
+            return isValid;
         }
         catch (Exception ex)
         {
@@ -213,16 +132,14 @@ public class HsmService : IHsmService
     {
         try
         {
-            var cryptoClient = await GetCryptographyClientAsync(keyName, cancellationToken);
-
-            var encryptResult = await cryptoClient.EncryptAsync(
-                EncryptionAlgorithm.RsaOaep256,
+            var ciphertext = await _provider.EncryptAsync(
+                keyName,
                 plaintext,
+                EncryptionAlgorithm.RSA_OAEP_256,
                 cancellationToken);
 
             _logger.LogDebug("Encrypted data with key {KeyName}", keyName);
-
-            return encryptResult.Ciphertext;
+            return ciphertext;
         }
         catch (Exception ex)
         {
@@ -238,16 +155,14 @@ public class HsmService : IHsmService
     {
         try
         {
-            var cryptoClient = await GetCryptographyClientAsync(keyName, cancellationToken);
-
-            var decryptResult = await cryptoClient.DecryptAsync(
-                EncryptionAlgorithm.RsaOaep256,
+            var plaintext = await _provider.DecryptAsync(
+                keyName,
                 ciphertext,
+                EncryptionAlgorithm.RSA_OAEP_256,
                 cancellationToken);
 
             _logger.LogDebug("Decrypted data with key {KeyName}", keyName);
-
-            return decryptResult.Plaintext;
+            return plaintext;
         }
         catch (Exception ex)
         {
@@ -263,16 +178,14 @@ public class HsmService : IHsmService
     {
         try
         {
-            var cryptoClient = await GetCryptographyClientAsync(wrappingKeyName, cancellationToken);
-
-            var wrapResult = await cryptoClient.WrapKeyAsync(
-                KeyWrapAlgorithm.RsaOaep256,
+            var wrappedKey = await _provider.WrapKeyAsync(
+                wrappingKeyName,
                 keyToWrap,
+                KeyWrapAlgorithm.RSA_OAEP_256,
                 cancellationToken);
 
             _logger.LogInformation("Wrapped key with {WrappingKeyName}", wrappingKeyName);
-
-            return wrapResult.EncryptedKey;
+            return wrappedKey;
         }
         catch (Exception ex)
         {
@@ -288,16 +201,14 @@ public class HsmService : IHsmService
     {
         try
         {
-            var cryptoClient = await GetCryptographyClientAsync(wrappingKeyName, cancellationToken);
-
-            var unwrapResult = await cryptoClient.UnwrapKeyAsync(
-                KeyWrapAlgorithm.RsaOaep256,
+            var unwrappedKey = await _provider.UnwrapKeyAsync(
+                wrappingKeyName,
                 wrappedKey,
+                KeyWrapAlgorithm.RSA_OAEP_256,
                 cancellationToken);
 
             _logger.LogInformation("Unwrapped key with {WrappingKeyName}", wrappingKeyName);
-
-            return unwrapResult.Key;
+            return unwrappedKey;
         }
         catch (Exception ex)
         {
@@ -312,200 +223,133 @@ public class HsmService : IHsmService
     {
         try
         {
-            var deleteOperation = await _keyClient.StartDeleteKeyAsync(
-                keyName,
-                cancellationToken);
+            var permanentDelete = _configuration.GetValue<bool>("Hsm:EnablePermanentDelete");
+            var result = await _provider.DeleteKeyAsync(keyName, permanentDelete, cancellationToken);
 
-            await deleteOperation.WaitForCompletionAsync(cancellationToken);
-
-            // Optionally purge the key immediately (requires purge permission)
-            if (_configuration.GetValue<bool>("AzureKeyVault:EnablePurge"))
-            {
-                await _keyClient.PurgeDeletedKeyAsync(keyName, cancellationToken);
-            }
-
-            _cryptoClients.Remove(keyName);
-
-            _logger.LogWarning("Deleted key {KeyName}", keyName);
-
-            return true;
+            _logger.LogWarning("Deleted key {KeyName} (permanent: {Permanent})", keyName, permanentDelete);
+            return result;
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to delete key {KeyName}", keyName);
-            return false;
-        }
-    }
-
-    public async Task<string> RotateKeyAsync(
-        string keyName,
-        CancellationToken cancellationToken = default)
-    {
-        try
-        {
-            // Get current key metadata
-            var currentKey = await _keyClient.GetKeyAsync(keyName, cancellationToken: cancellationToken);
-
-            // Rotate the key (creates new version)
-            var rotatedKey = await _keyClient.RotateKeyAsync(keyName, cancellationToken);
-
-            // Clear cached crypto client for this key
-            _cryptoClients.Remove(keyName);
-
-            _logger.LogInformation("Rotated key {KeyName} from version {OldVersion} to {NewVersion}",
-                keyName,
-                currentKey.Value.Properties.Version,
-                rotatedKey.Value.Properties.Version);
-
-            return rotatedKey.Value.Id.ToString();
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to rotate key {KeyName}", keyName);
             throw;
         }
     }
 
-    public async Task<byte[]> GetPublicKeyAsync(
-        string keyName,
+    public async Task<X509Certificate2> GenerateCertificateAsync(
+        string certificateName,
+        string subject,
+        int validityDays,
         CancellationToken cancellationToken = default)
     {
         try
         {
-            var key = await _keyClient.GetKeyAsync(keyName, cancellationToken: cancellationToken);
-
-            // Export public key based on key type
-            if (key.Value.KeyType == KeyType.Rsa)
+            // Generate key for certificate
+            var keyRequest = new KeyGenerationRequest
             {
-                using var rsa = RSA.Create();
-                rsa.ImportParameters(new RSAParameters
+                KeyName = $"{certificateName}-key",
+                KeyType = Domain.Interfaces.KeyType.RSA,
+                KeySize = 2048,
+                Usage = KeyUsage.Sign | KeyUsage.Verify,
+                Tags = new Dictionary<string, string>
                 {
-                    Modulus = key.Value.Key.N,
-                    Exponent = key.Value.Key.E
-                });
-                return rsa.ExportSubjectPublicKeyInfo();
-            }
-            else if (key.Value.KeyType == KeyType.Ec)
-            {
-                using var ecdsa = ECDsa.Create();
-                ecdsa.ImportParameters(new ECParameters
-                {
-                    Curve = key.Value.Key.CurveName?.ToString() switch
-                    {
-                        "P-256" => ECCurve.NamedCurves.nistP256,
-                        "P-384" => ECCurve.NamedCurves.nistP384,
-                        "P-521" => ECCurve.NamedCurves.nistP521,
-                        _ => ECCurve.NamedCurves.nistP256
-                    },
-                    Q = new ECPoint
-                    {
-                        X = key.Value.Key.X,
-                        Y = key.Value.Key.Y
-                    }
-                });
-                return ecdsa.ExportSubjectPublicKeyInfo();
-            }
+                    ["Certificate"] = certificateName,
+                    ["Subject"] = subject
+                }
+            };
 
-            throw new NotSupportedException($"Key type {key.Value.KeyType} not supported for public key export");
+            var key = await _provider.GenerateKeyAsync(keyRequest, cancellationToken);
+
+            // Create certificate request
+            using var rsa = RSA.Create(2048);
+            var request = new CertificateRequest(
+                subject,
+                rsa,
+                HashAlgorithmName.SHA256,
+                RSASignaturePadding.Pkcs1);
+
+            // Add extensions
+            request.CertificateExtensions.Add(
+                new X509KeyUsageExtension(
+                    X509KeyUsageFlags.DigitalSignature | X509KeyUsageFlags.NonRepudiation,
+                    critical: true));
+
+            request.CertificateExtensions.Add(
+                new X509SubjectKeyIdentifierExtension(request.PublicKey, critical: false));
+
+            // Create self-signed certificate (mock for now)
+            var certificate = request.CreateSelfSigned(
+                DateTime.UtcNow,
+                DateTime.UtcNow.AddDays(validityDays));
+
+            _logger.LogInformation("Generated certificate {CertificateName} with subject {Subject}",
+                certificateName, subject);
+
+            return certificate;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to get public key for {KeyName}", keyName);
+            _logger.LogError(ex, "Failed to generate certificate {CertificateName}", certificateName);
             throw;
         }
     }
 
-    public async Task<byte[]> CreateCertificateSigningRequestAsync(
-        string keyName,
-        X500DistinguishedName subjectName,
-        CancellationToken cancellationToken = default)
+    public async Task<HsmHealthStatus> CheckHealthAsync(CancellationToken cancellationToken = default)
     {
         try
         {
-            // Create certificate policy for CSR generation
-            var policy = new CertificatePolicy("Unknown", subjectName.Name)
+            var healthCheck = await _provider.CheckHealthAsync(cancellationToken);
+
+            var status = new HsmHealthStatus
             {
-                ValidityInMonths = 12,
-                Enabled = true
+                IsHealthy = healthCheck.IsHealthy,
+                Provider = _provider.ProviderType,
+                ComplianceLevel = _provider.ComplianceLevel.ToString(),
+                Message = healthCheck.Status,
+                CheckedAt = DateTime.UtcNow
             };
 
-            // Start the certificate creation (this generates CSR)
-            var operation = await _certificateClient.StartCreateCertificateAsync(
-                keyName,
-                policy,
-                cancellationToken: cancellationToken);
+            if (healthCheck.Metrics != null)
+            {
+                status.Metrics = healthCheck.Metrics;
+            }
 
-            // The CSR is in the pending operation
-            // Note: Azure Key Vault doesn't directly expose CSR as raw bytes in the same way
-            // This is a simplified implementation
-            _logger.LogInformation("Started certificate creation for key {KeyName}", keyName);
+            _logger.LogInformation("HSM health check: {Status} for provider {Provider}",
+                status.IsHealthy ? "Healthy" : "Unhealthy", _provider.ProviderType);
 
-            // For actual CSR, you would need to implement proper X.509 CSR generation
-            // or use the certificate operation's properties
-            return Encoding.UTF8.GetBytes($"CSR_FOR_{keyName}");
+            return status;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to create CSR for key {KeyName}", keyName);
-            throw;
-        }
-    }
-
-    public async Task<bool> ImportCertificateAsync(
-        string keyName,
-        X509Certificate2 certificate,
-        CancellationToken cancellationToken = default)
-    {
-        try
-        {
-            // Export certificate as PFX (with empty password for Key Vault)
-            var certificateBytes = certificate.Export(X509ContentType.Pfx);
-
-            var importOptions = new ImportCertificateOptions(
-                keyName,
-                certificateBytes)
+            _logger.LogError(ex, "HSM health check failed");
+            return new HsmHealthStatus
             {
-                Enabled = true,
-                Policy = new CertificatePolicy("Unknown", certificate.Subject)
+                IsHealthy = false,
+                Provider = _provider.ProviderType,
+                Message = $"Health check failed: {ex.Message}",
+                CheckedAt = DateTime.UtcNow
             };
-
-            await _certificateClient.ImportCertificateAsync(
-                importOptions,
-                cancellationToken);
-
-            _logger.LogInformation("Imported certificate for key {KeyName}", keyName);
-
-            return true;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to import certificate for key {KeyName}", keyName);
-            return false;
         }
     }
 
-    public async Task<HsmKeyMetadata> GetKeyMetadataAsync(
+    public async Task<KeyMetadata> GetKeyMetadataAsync(
         string keyName,
         CancellationToken cancellationToken = default)
     {
         try
         {
-            var key = await _keyClient.GetKeyAsync(keyName, cancellationToken: cancellationToken);
+            var key = await _provider.GetKeyAsync(keyName, cancellationToken);
 
-            var metadata = new HsmKeyMetadata
+            return new KeyMetadata
             {
-                KeyId = key.Value.Id.ToString(),
-                KeyName = key.Value.Name,
-                Algorithm = DetermineKeyAlgorithm(key.Value),
-                CreatedAt = key.Value.Properties.CreatedOn ?? DateTimeOffset.MinValue,
-                ExpiresAt = key.Value.Properties.ExpiresOn,
-                Version = key.Value.Properties.Version,
-                Enabled = key.Value.Properties.Enabled ?? false,
-                Tags = new Dictionary<string, string>(key.Value.Properties.Tags ?? new Dictionary<string, string>()),
-                AllowedOperations = key.Value.Key.KeyOps?.Select(op => op.ToString()).ToList() ?? new List<string>()
+                KeyId = key.Id,
+                KeyName = key.Name,
+                Algorithm = ConvertKeyTypeToAlgorithm(key.Type, key.KeySize),
+                CreatedOn = key.CreatedOn,
+                ExpiresOn = key.ExpiresOn,
+                Enabled = key.Enabled,
+                HardwareBacked = key.IsHardwareBacked
             };
-
-            return metadata;
         }
         catch (Exception ex)
         {
@@ -514,138 +358,213 @@ public class HsmService : IHsmService
         }
     }
 
-    public async Task<IEnumerable<string>> ListKeysAsync(
+    public async Task<IEnumerable<KeyMetadata>> ListKeysAsync(
         CancellationToken cancellationToken = default)
     {
         try
         {
-            var keys = new List<string>();
+            var keys = await _provider.ListKeysAsync(null, cancellationToken);
 
-            await foreach (var key in _keyClient.GetPropertiesOfKeysAsync(cancellationToken))
+            return keys.Select(k => new KeyMetadata
             {
-                if (key.Enabled == true)
-                {
-                    keys.Add(key.Name);
-                }
-            }
-
-            _logger.LogDebug("Listed {Count} keys from HSM", keys.Count);
-
-            return keys;
+                KeyId = k.Id,
+                KeyName = k.Name,
+                Algorithm = ConvertKeyTypeToAlgorithm(k.Type, k.KeySize),
+                CreatedOn = k.CreatedOn,
+                ExpiresOn = k.ExpiresOn,
+                Enabled = k.Enabled,
+                HardwareBacked = k.IsHardwareBacked
+            });
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to list keys from HSM");
+            _logger.LogError(ex, "Failed to list keys");
             throw;
         }
     }
 
-    public async Task<HsmHealthStatus> GetHealthStatusAsync(
+    public async Task<string> BackupKeyAsync(
+        string keyName,
         CancellationToken cancellationToken = default)
     {
         try
         {
-            var status = new HsmHealthStatus
-            {
-                CheckedAt = DateTimeOffset.UtcNow,
-                Details = new Dictionary<string, object>()
-            };
+            var backup = await _provider.BackupKeyAsync(keyName, cancellationToken);
 
-            // Try to list keys as a health check
-            var keyCount = 0;
-            await foreach (var key in _keyClient.GetPropertiesOfKeysAsync(cancellationToken))
-            {
-                keyCount++;
-                if (keyCount >= 1)
-                {
-                    break; // Just check if we can access at least one
-                }
-            }
+            // Store backup reference (in production, this would be stored securely)
+            var backupId = $"backup_{keyName}_{DateTime.UtcNow:yyyyMMddHHmmss}";
 
-            status.IsHealthy = true;
-            status.Status = "Healthy";
-            status.Details["accessible"] = true;
-            status.Details["keyVaultUri"] = _configuration["AzureKeyVault:Uri"] ?? "Not configured";
-            status.Details["timestamp"] = DateTimeOffset.UtcNow.ToString("O");
+            _logger.LogInformation("Backed up key {KeyName} with backup ID {BackupId}", keyName, backupId);
 
-            _logger.LogDebug("HSM health check passed");
-
-            return status;
+            return backupId;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "HSM health check failed");
+            _logger.LogError(ex, "Failed to backup key {KeyName}", keyName);
+            throw;
+        }
+    }
 
-            return new HsmHealthStatus
+    public async Task<bool> RestoreKeyAsync(
+        string backupId,
+        byte[] backupData,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var backupDataObj = new KeyBackupData
             {
-                IsHealthy = false,
-                Status = "Unhealthy",
-                CheckedAt = DateTimeOffset.UtcNow,
-                Details = new Dictionary<string, object>
+                BackupBlob = backupData,
+                BackupDate = DateTime.UtcNow,
+                SourceProvider = _provider.ProviderType
+            };
+
+            var restoredKeyId = await _provider.RestoreKeyAsync(backupDataObj, cancellationToken);
+
+            _logger.LogInformation("Restored key from backup {BackupId} as {KeyId}", backupId, restoredKeyId);
+
+            return !string.IsNullOrEmpty(restoredKeyId);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to restore key from backup {BackupId}", backupId);
+            throw;
+        }
+    }
+
+    public async Task<bool> RotateKeyAsync(
+        string oldKeyName,
+        string newKeyName,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            // Get metadata from old key
+            var oldKey = await _provider.GetKeyAsync(oldKeyName, cancellationToken);
+
+            // Generate new key with same properties
+            var request = new KeyGenerationRequest
+            {
+                KeyName = newKeyName,
+                KeyType = oldKey.Type,
+                KeySize = oldKey.KeySize,
+                Usage = oldKey.Usage,
+                Tags = new Dictionary<string, string>(oldKey.Tags)
                 {
-                    ["error"] = ex.Message,
-                    ["accessible"] = false,
-                    ["timestamp"] = DateTimeOffset.UtcNow.ToString("O")
+                    ["RotatedFrom"] = oldKeyName,
+                    ["RotatedAt"] = DateTime.UtcNow.ToString("O")
                 }
             };
+
+            var newKey = await _provider.GenerateKeyAsync(request, cancellationToken);
+
+            // Mark old key for deletion (soft delete)
+            await _provider.DeleteKeyAsync(oldKeyName, false, cancellationToken);
+
+            _logger.LogInformation("Rotated key from {OldKey} to {NewKey}", oldKeyName, newKeyName);
+
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to rotate key from {OldKey} to {NewKey}", oldKeyName, newKeyName);
+            throw;
         }
     }
 
-    private async Task<CryptographyClient> GetCryptographyClientAsync(
-        string keyName,
-        CancellationToken cancellationToken)
+    public async Task<bool> MigrateToProviderAsync(
+        string targetProviderType,
+        CancellationToken cancellationToken = default)
     {
-        if (!_cryptoClients.TryGetValue(keyName, out var client))
+        try
         {
-            var key = await _keyClient.GetKeyAsync(keyName, cancellationToken: cancellationToken);
-            client = new CryptographyClient(key.Value.Id, new DefaultAzureCredential());
-            _cryptoClients[keyName] = client;
-        }
+            _logger.LogInformation("Starting migration from {Current} to {Target}",
+                _provider.ProviderType, targetProviderType);
 
-        return client;
+            // This would be implemented to migrate all keys to a new provider
+            // For now, return true as placeholder
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to migrate to provider {Provider}", targetProviderType);
+            throw;
+        }
     }
 
-    private static KeyAlgorithm DetermineKeyAlgorithm(KeyVaultKey key)
+    #region Helper Methods
+
+    private Domain.Interfaces.KeyType ConvertAlgorithmToKeyType(KeyAlgorithm algorithm)
     {
-        if (key.KeyType == KeyType.Rsa)
+        return algorithm switch
         {
-            var keySize = key.Key.N?.Length * 8 ?? 0;
-            if (keySize <= 2048)
-            {
-                return KeyAlgorithm.RSA2048;
-            }
-            if (keySize <= 3072)
-            {
-                return KeyAlgorithm.RSA3072;
-            }
-            if (keySize <= 4096)
-            {
-                return KeyAlgorithm.RSA4096;
-            }
-            return KeyAlgorithm.RSA4096;
-        }
-        else if (key.KeyType == KeyType.Ec)
-        {
-            var curveName = key.Key.CurveName?.ToString();
-            if (curveName == "P-256")
-            {
-                return KeyAlgorithm.ECC_P256;
-            }
-            if (curveName == "P-384")
-            {
-                return KeyAlgorithm.ECC_P384;
-            }
-            if (curveName == "P-521")
-            {
-                return KeyAlgorithm.ECC_P521;
-            }
-            return KeyAlgorithm.ECC_P256;
-        }
-        else if (key.KeyType == KeyType.Oct)
-        {
-            return KeyAlgorithm.AES256;
-        }
-
-        return KeyAlgorithm.RSA2048; // Default fallback
+            KeyAlgorithm.RSA2048 or KeyAlgorithm.RSA3072 or KeyAlgorithm.RSA4096 => Domain.Interfaces.KeyType.RSA,
+            KeyAlgorithm.ECC_P256 or KeyAlgorithm.ECC_P384 or KeyAlgorithm.ECC_P521 => Domain.Interfaces.KeyType.EC,
+            KeyAlgorithm.AES128 or KeyAlgorithm.AES256 => Domain.Interfaces.KeyType.AES,
+            _ => Domain.Interfaces.KeyType.RSA
+        };
     }
+
+    private int GetKeySize(KeyAlgorithm algorithm)
+    {
+        return algorithm switch
+        {
+            KeyAlgorithm.RSA2048 => 2048,
+            KeyAlgorithm.RSA3072 => 3072,
+            KeyAlgorithm.RSA4096 => 4096,
+            KeyAlgorithm.ECC_P256 => 256,
+            KeyAlgorithm.ECC_P384 => 384,
+            KeyAlgorithm.ECC_P521 => 521,
+            KeyAlgorithm.AES128 => 128,
+            KeyAlgorithm.AES256 => 256,
+            _ => 2048
+        };
+    }
+
+    private SigningAlgorithm ConvertSignatureAlgorithm(SignatureAlgorithm algorithm)
+    {
+        return algorithm switch
+        {
+            SignatureAlgorithm.RS256 => SigningAlgorithm.RS256,
+            SignatureAlgorithm.RS384 => SigningAlgorithm.RS384,
+            SignatureAlgorithm.RS512 => SigningAlgorithm.RS512,
+            SignatureAlgorithm.PS256 => SigningAlgorithm.PS256,
+            SignatureAlgorithm.PS384 => SigningAlgorithm.PS384,
+            SignatureAlgorithm.PS512 => SigningAlgorithm.PS512,
+            SignatureAlgorithm.ES256 => SigningAlgorithm.ES256,
+            SignatureAlgorithm.ES384 => SigningAlgorithm.ES384,
+            SignatureAlgorithm.ES512 => SigningAlgorithm.ES512,
+            _ => SigningAlgorithm.RS256
+        };
+    }
+
+    private KeyAlgorithm ConvertKeyTypeToAlgorithm(Domain.Interfaces.KeyType keyType, int keySize)
+    {
+        return keyType switch
+        {
+            Domain.Interfaces.KeyType.RSA => keySize switch
+            {
+                2048 => KeyAlgorithm.RSA2048,
+                3072 => KeyAlgorithm.RSA3072,
+                4096 => KeyAlgorithm.RSA4096,
+                _ => KeyAlgorithm.RSA2048
+            },
+            Domain.Interfaces.KeyType.EC => keySize switch
+            {
+                256 => KeyAlgorithm.ECC_P256,
+                384 => KeyAlgorithm.ECC_P384,
+                521 => KeyAlgorithm.ECC_P521,
+                _ => KeyAlgorithm.ECC_P256
+            },
+            Domain.Interfaces.KeyType.AES => keySize switch
+            {
+                128 => KeyAlgorithm.AES128,
+                256 => KeyAlgorithm.AES256,
+                _ => KeyAlgorithm.AES256
+            },
+            _ => KeyAlgorithm.RSA2048
+        };
+    }
+
+    #endregion
 }
