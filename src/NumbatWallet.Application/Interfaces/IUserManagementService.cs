@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using NumbatWallet.Application.DTOs;
 
 namespace NumbatWallet.Application.Interfaces;
 
@@ -56,6 +57,21 @@ public interface IUserManagementService
     Task<bool> ResetPasswordAsync(Guid userId, CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Reset user password (string ID overload for GraphQL)
+    /// </summary>
+    Task<ResetPasswordResult> ResetPasswordAsync(string userId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Create admin user (for GraphQL compatibility)
+    /// </summary>
+    Task<AdminUserDto> CreateAdminUserAsync(CreateUserCommand command, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Update admin user (for GraphQL compatibility)
+    /// </summary>
+    Task<AdminUserDto> UpdateAdminUserAsync(string id, UpdateUserCommand command, CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Lock user account
     /// </summary>
     Task<bool> LockUserAsync(Guid userId, string reason, CancellationToken cancellationToken = default);
@@ -103,4 +119,41 @@ public class UpdateSystemUserDto
     public string? LastName { get; set; }
     public string? Email { get; set; }
     public bool? IsActive { get; set; }
+}
+
+// Additional DTOs for GraphQL compatibility
+public class CreateUserCommand
+{
+    public string Email { get; set; } = string.Empty;
+    public string FirstName { get; set; } = string.Empty;
+    public string LastName { get; set; } = string.Empty;
+    public List<string> Roles { get; set; } = new();
+}
+
+public class UpdateUserCommand
+{
+    public string? FirstName { get; set; }
+    public string? LastName { get; set; }
+    public List<string>? Roles { get; set; }
+    public bool? IsActive { get; set; }
+}
+
+public class AdminUserDto
+{
+    public string Id { get; set; } = string.Empty;
+    public string Email { get; set; } = string.Empty;
+    public string FirstName { get; set; } = string.Empty;
+    public string LastName { get; set; } = string.Empty;
+    public string DisplayName => $"{FirstName} {LastName}".Trim();
+    public List<string> Roles { get; set; } = new();
+    public bool IsActive { get; set; }
+    public DateTime CreatedAt { get; set; }
+    public DateTime? LastLoginAt { get; set; }
+}
+
+public class ResetPasswordResult
+{
+    public bool Success { get; set; }
+    public string TemporaryPassword { get; set; } = string.Empty;
+    public DateTime ExpiresAt { get; set; }
 }

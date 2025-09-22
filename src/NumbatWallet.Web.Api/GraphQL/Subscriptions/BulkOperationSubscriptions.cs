@@ -3,6 +3,7 @@ using HotChocolate.Execution;
 using HotChocolate.Subscriptions;
 using HotChocolate.Types;
 using NumbatWallet.Application.Commands.Credentials;
+using NumbatWallet.Application.Interfaces;
 
 namespace NumbatWallet.Web.Api.GraphQL.Subscriptions;
 
@@ -26,15 +27,13 @@ public class BulkOperationSubscriptions
         return new ProgressUpdate
         {
             OperationId = operationResult.OperationId,
-            Status = operationResult.Status.ToString(),
-            ProcessedCount = operationResult.ProcessedCount,
-            TotalCount = operationResult.TotalCount,
-            SuccessCount = operationResult.SuccessCount,
-            FailureCount = operationResult.FailureCount,
-            PercentComplete = operationResult.TotalCount > 0
-                ? (double)operationResult.ProcessedCount / operationResult.TotalCount * 100
-                : 0,
-            UpdatedAt = operationResult.CompletedAt ?? DateTime.UtcNow
+            OperationName = $"Bulk Operation {operationResult.OperationId}",
+            Status = ConvertStatus(operationResult.Status),
+            ProcessedItems = operationResult.ProcessedCount,
+            TotalItems = operationResult.TotalCount,
+            CurrentMessage = $"Processed {operationResult.ProcessedCount} of {operationResult.TotalCount} items",
+            StartTime = DateTime.UtcNow.AddMinutes(-5), // Mock start time
+            EndTime = operationResult.CompletedAt
         };
     }
 
@@ -98,6 +97,19 @@ public class BulkOperationSubscriptions
         {
             yield return @event;
         }
+    }
+
+    private static ProgressStatus ConvertStatus(BulkOperationStatus status)
+    {
+        return status switch
+        {
+            BulkOperationStatus.Pending => ProgressStatus.NotStarted,
+            BulkOperationStatus.InProgress => ProgressStatus.InProgress,
+            BulkOperationStatus.Completed => ProgressStatus.Completed,
+            BulkOperationStatus.Failed => ProgressStatus.Failed,
+            BulkOperationStatus.PartiallyCompleted => ProgressStatus.Completed,
+            _ => ProgressStatus.InProgress
+        };
     }
 }
 

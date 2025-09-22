@@ -54,6 +54,27 @@ public interface IKeyManagementService
     /// Update key rotation schedule
     /// </summary>
     Task<bool> UpdateRotationScheduleAsync(string keyId, KeyRotationSchedule schedule, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Rotate keys of a specific type (for GraphQL)
+    /// </summary>
+    Task<KeyRotationResultDto> RotateKeysAsync(KeyType keyType, CancellationToken cancellationToken = default);
+}
+
+// DTOs for key management
+public class KeyRotationResultDto
+{
+    public bool Success { get; set; }
+    public int KeysRotated { get; set; }
+    public List<string> NewKeyIds { get; set; } = new();
+    public DateTime CompletedAt { get; set; }
+}
+
+public enum KeyType
+{
+    Encryption,
+    Signing,
+    All
 }
 
 public class KeyInfo

@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using NumbatWallet.Application.DTOs;
 
 namespace NumbatWallet.Application.Interfaces;
 
@@ -18,6 +19,11 @@ public interface IConfigurationService
     /// Set a configuration value
     /// </summary>
     Task SetConfigurationAsync(string key, string value, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Update a configuration value with environment support
+    /// </summary>
+    Task<ConfigurationDto> UpdateConfigurationAsync(string key, string value, string environment, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Get all configuration values for a prefix

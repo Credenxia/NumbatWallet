@@ -129,12 +129,12 @@ public class ProgressHub : Hub
         await hubContext.Clients.Group($"operation-{operationId}").SendAsync("ProgressUpdate", progress);
 
         // Clean up completed operations after a delay
-        if (progress.Status == "Completed" || progress.Status == "Failed" || progress.Status == "Cancelled")
+        if (progress.Status == ProgressStatus.Completed || progress.Status == ProgressStatus.Failed || progress.Status == ProgressStatus.Cancelled)
         {
-            _ = Task.Delay(TimeSpan.FromMinutes(5)).ContinueWith(_ =>
+            _ = Task.Delay(TimeSpan.FromMinutes(5)).ContinueWith(t =>
             {
-                _latestProgress.TryRemove(operationId, out _);
-                _operationConnections.TryRemove(operationId, out _);
+                _latestProgress.TryRemove(operationId, out var _);
+                _operationConnections.TryRemove(operationId, out var _);
             });
         }
     }

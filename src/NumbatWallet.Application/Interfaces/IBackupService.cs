@@ -54,6 +54,16 @@ public interface IBackupService
     /// Get backup status
     /// </summary>
     Task<BackupStatus> GetBackupStatusAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Start a backup operation (for GraphQL compatibility)
+    /// </summary>
+    Task<BackupJob> StartBackupAsync(BackupOptions options, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Start a restore operation (for GraphQL compatibility)
+    /// </summary>
+    Task<RestoreJob> StartRestoreAsync(string backupId, RestoreOptions? options, CancellationToken cancellationToken = default);
 }
 
 /// <summary>
@@ -112,10 +122,13 @@ public class BackupValidationResult
 /// </summary>
 public class BackupOptions
 {
+    public BackupType Type { get; set; } = BackupType.Full;
     public bool IncludeData { get; set; } = true;
     public bool IncludeConfiguration { get; set; } = true;
     public bool IncludeSecrets { get; set; } = false;
+    public bool IncludeMedia { get; set; } = false;
     public bool CompressBackup { get; set; } = true;
+    public bool Compress => CompressBackup; // Alias for GraphQL
     public bool EncryptBackup { get; set; } = true;
     public string? Description { get; set; }
     public int RetentionDays { get; set; } = 30;
@@ -130,7 +143,11 @@ public class RestoreOptions
     public bool RestoreConfiguration { get; set; } = true;
     public bool RestoreSecrets { get; set; } = false;
     public bool ValidateBeforeRestore { get; set; } = true;
+    public bool ValidateIntegrity => ValidateBeforeRestore; // Alias for GraphQL
     public bool CreateBackupBeforeRestore { get; set; } = true;
+    public bool OverwriteExisting { get; set; } = false;
+    public List<string>? IncludeTables { get; set; }
+    public List<string>? ExcludeTables { get; set; }
 }
 
 /// <summary>
@@ -188,4 +205,35 @@ public class BackupStatus
     public DateTime? LastSuccessfulBackup { get; set; }
     public DateTime? LastFailedBackup { get; set; }
     public string? LastError { get; set; }
+}
+
+/// <summary>
+/// Backup job (for GraphQL operations)
+/// </summary>
+public class BackupJob
+{
+    public string Id { get; set; } = string.Empty;
+    public string Status { get; set; } = string.Empty;
+    public BackupType Type { get; set; }
+    public DateTime StartedAt { get; set; }
+}
+
+/// <summary>
+/// Restore job (for GraphQL operations)
+/// </summary>
+public class RestoreJob
+{
+    public string Id { get; set; } = string.Empty;
+    public string Status { get; set; } = string.Empty;
+    public DateTime StartedAt { get; set; }
+}
+
+/// <summary>
+/// Backup type enum
+/// </summary>
+public enum BackupType
+{
+    Full,
+    Incremental,
+    Differential
 }

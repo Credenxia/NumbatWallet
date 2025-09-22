@@ -356,26 +356,7 @@ public class UserFilterInput
     public string? Role { get; set; }
 }
 
-public class ReportParametersInput
-{
-    public DateTime? StartDate { get; set; }
-    public DateTime? EndDate { get; set; }
-    public List<string> IncludeTypes { get; set; } = new();
-    public List<string> ExcludeTypes { get; set; } = new();
-    public string? Format { get; set; }
-
-    public ReportParameters ToReportParameters()
-    {
-        return new ReportParameters
-        {
-            StartDate = StartDate ?? DateTime.UtcNow.AddDays(-30),
-            EndDate = EndDate ?? DateTime.UtcNow,
-            IncludeTypes = IncludeTypes,
-            ExcludeTypes = ExcludeTypes,
-            Format = Format ?? "PDF"
-        };
-    }
-}
+// ReportParametersInput moved to AdminMutation.cs to avoid duplication
 
 // DTOs
 public class SystemHealthDto
@@ -507,15 +488,7 @@ public class ScheduledReportDto
     public DateTime? NextRun { get; set; }
 }
 
-public enum ReportType
-{
-    Usage,
-    Security,
-    Compliance,
-    Performance,
-    Financial,
-    Audit
-}
+// ReportType moved to AdminMutation.cs to avoid duplication
 
 public enum AuditEventType
 {
@@ -537,14 +510,7 @@ public enum TenantStatus
     Deleted
 }
 
-public class ReportParameters
-{
-    public DateTime StartDate { get; set; }
-    public DateTime EndDate { get; set; }
-    public List<string> IncludeTypes { get; set; } = new();
-    public List<string> ExcludeTypes { get; set; } = new();
-    public string Format { get; set; } = "PDF";
-}
+// ReportParameters moved to AdminMutation.cs to avoid duplication
 
 // Entity for backup metadata
 public class BackupMetadata

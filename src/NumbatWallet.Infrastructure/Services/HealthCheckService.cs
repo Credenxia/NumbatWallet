@@ -61,6 +61,37 @@ public class HealthCheckService : IHealthCheckService
         return health;
     }
 
+    public async Task<SystemHealthDto> GetSystemHealthAsync(CancellationToken cancellationToken = default)
+    {
+        var healthStatus = await GetHealthStatusAsync(cancellationToken);
+
+        // Convert HealthStatusDto to SystemHealthDto
+        var systemHealth = new SystemHealthDto
+        {
+            Status = healthStatus.Status,
+            Components = healthStatus.Components,
+            CheckedAt = DateTime.UtcNow
+        };
+
+        // Add system metrics
+        var process = Process.GetCurrentProcess();
+        systemHealth.Metrics = new SystemMetrics
+        {
+            MemoryUsed = process.WorkingSet64,
+            MemoryTotal = GC.GetTotalMemory(false),
+            CpuUsage = 0, // Would need performance counters for actual CPU
+            ActiveConnections = 0, // Would need to track this
+            RequestsPerSecond = 0, // Would need to track this
+            AverageResponseTime = 0,
+            TotalRequests = 0,
+            FailedRequests = 0,
+            DiskUsed = 0,
+            DiskTotal = 0
+        };
+
+        return systemHealth;
+    }
+
     public async Task<bool> CheckDatabaseAsync(CancellationToken cancellationToken = default)
     {
         try

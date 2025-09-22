@@ -73,9 +73,9 @@ public static class ServiceCollectionExtensions
             .AddMicrosoftIdentityWebApi(configuration.GetSection("AzureAd"));
 
         // Register authorization handlers
-        services.AddSingleton<IAuthorizationHandler, TenantAccessHandler>();
-        services.AddScoped<IAuthorizationHandler, CredentialOwnerHandler>();
-        services.AddScoped<IAuthorizationHandler, WalletOwnerHandler>();
+        services.AddSingleton<Microsoft.AspNetCore.Authorization.IAuthorizationHandler, TenantAccessHandler>();
+        services.AddScoped<Microsoft.AspNetCore.Authorization.IAuthorizationHandler, CredentialOwnerHandler>();
+        services.AddScoped<Microsoft.AspNetCore.Authorization.IAuthorizationHandler, WalletOwnerHandler>();
         services.AddHttpContextAccessor(); // Required for TenantAccessHandler
 
         // Add Authorization

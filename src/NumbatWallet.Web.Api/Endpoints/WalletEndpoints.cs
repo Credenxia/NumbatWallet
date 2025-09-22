@@ -50,7 +50,7 @@ public class WalletEndpoints : ICarterModule
         group.MapPost("/{id:guid}/backup", BackupWallet)
             .WithName("BackupWallet")
             .WithOpenApi()
-            .Produces<BackupResult>(StatusCodes.Status200OK)
+            .Produces<NumbatWallet.Application.Commands.Wallets.BackupResult>(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status404NotFound);
 
         // POST /api/v1/wallets/restore

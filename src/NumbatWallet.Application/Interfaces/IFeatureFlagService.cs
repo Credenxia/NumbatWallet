@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using NumbatWallet.Application.DTOs;
 
 namespace NumbatWallet.Application.Interfaces;
 
@@ -38,4 +39,9 @@ public interface IFeatureFlagService
     /// Check if a feature is enabled for a specific user
     /// </summary>
     Task<bool> IsFeatureEnabledForUserAsync(string featureName, string userId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Toggle a feature flag and return its DTO
+    /// </summary>
+    Task<FeatureFlagDto> ToggleFlagAsync(string flagId, bool enabled, CancellationToken cancellationToken = default);
 }

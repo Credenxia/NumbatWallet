@@ -118,7 +118,7 @@ public static class ApiVersioningExtensions
 
             // Include XML comments if available
             var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
-            var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+            var xmlPath = System.IO.Path.Combine(AppContext.BaseDirectory, xmlFile);
             if (File.Exists(xmlPath))
             {
                 options.IncludeXmlComments(xmlPath);
@@ -277,7 +277,7 @@ public class ApiVersioningMiddleware
     public async Task InvokeAsync(HttpContext context)
     {
         // Get requested version
-        var apiVersion = context.GetRequestedApiVersion();
+        var apiVersion = Microsoft.AspNetCore.Http.HttpContextExtensions.GetRequestedApiVersion(context);
 
         // Add version to response headers
         if (apiVersion != null)
@@ -358,12 +358,12 @@ public abstract class VersionedApiControllerBase : ControllerBase
 
     protected string GetApiVersion()
     {
-        return HttpContext.GetRequestedApiVersion()?.ToString() ?? "1.0";
+        return Microsoft.AspNetCore.Http.HttpContextExtensions.GetRequestedApiVersion(HttpContext)?.ToString() ?? "1.0";
     }
 
     protected bool IsDeprecatedVersion()
     {
-        var version = HttpContext.GetRequestedApiVersion();
+        var version = Microsoft.AspNetCore.Http.HttpContextExtensions.GetRequestedApiVersion(HttpContext);
         return version?.Status == "Deprecated";
     }
 
