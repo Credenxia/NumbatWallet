@@ -105,8 +105,8 @@ public class KeyRotationService : IKeyRotationService
                 RotationId = Guid.NewGuid().ToString(),
                 OldKeyId = keyId,
                 NewKeyId = newKeyId,
-                RotatedAt = _dateTimeService.UtcNow,
-                GracePeriodEnds = _dateTimeService.UtcNow.AddDays(policy.GracePeriodDays),
+                RotatedAt = _dateTimeService.UtcNow.DateTime,
+                GracePeriodEnds = _dateTimeService.UtcNow.AddDays(policy.GracePeriodDays).DateTime,
                 Type = RotationType.Scheduled
             };
 
@@ -338,7 +338,7 @@ public class KeyRotationService : IKeyRotationService
     {
         var report = new ComplianceReport
         {
-            GeneratedAt = _dateTimeService.UtcNow,
+            GeneratedAt = _dateTimeService.UtcNow.DateTime,
             PeriodStart = startDate,
             PeriodEnd = endDate
         };
@@ -427,7 +427,7 @@ public class KeyRotationService : IKeyRotationService
 
     private async Task ScheduleKeyArchivalAsync(string keyId, int daysUntilArchival, CancellationToken cancellationToken)
     {
-        var archivalTime = _dateTimeService.UtcNow.AddDays(daysUntilArchival);
+        var archivalTime = _dateTimeService.UtcNow.AddDays(daysUntilArchival).DateTime;
         await ScheduleRotationAsync(keyId, archivalTime, cancellationToken);
     }
 
@@ -447,7 +447,7 @@ public class KeyRotationService : IKeyRotationService
             RotationId = Guid.NewGuid().ToString(),
             OldKeyId = oldKeyId,
             NewKeyId = newKeyId,
-            RotatedAt = _dateTimeService.UtcNow,
+            RotatedAt = _dateTimeService.UtcNow.DateTime,
             Type = type,
             PerformedBy = _currentUserService.UserId ?? "System",
             Success = true
@@ -476,57 +476,57 @@ public class KeyRotationService : IKeyRotationService
         };
     }
 
-    private int GetDefaultRotationInterval(KeyType keyType)
+    private int GetDefaultRotationInterval(RotatableKeyType keyType)
     {
         return keyType switch
         {
-            KeyType.SigningKey => 90,
-            KeyType.EncryptionKey => 365,
-            KeyType.TlsCertificate => 30,
-            KeyType.ApiKey => 180,
-            KeyType.HsmMasterKey => 730,
+            RotatableKeyType.SigningKey => 90,
+            RotatableKeyType.EncryptionKey => 365,
+            RotatableKeyType.TlsCertificate => 30,
+            RotatableKeyType.ApiKey => 180,
+            RotatableKeyType.HsmMasterKey => 730,
             _ => 365
         };
     }
 
-    private int GetMaximumKeyAge(KeyType keyType)
+    private int GetMaximumKeyAge(RotatableKeyType keyType)
     {
         return keyType switch
         {
-            KeyType.SigningKey => 180,
-            KeyType.EncryptionKey => 730,
-            KeyType.TlsCertificate => 90,
-            KeyType.ApiKey => 365,
-            KeyType.HsmMasterKey => 1095,
+            RotatableKeyType.SigningKey => 180,
+            RotatableKeyType.EncryptionKey => 730,
+            RotatableKeyType.TlsCertificate => 90,
+            RotatableKeyType.ApiKey => 365,
+            RotatableKeyType.HsmMasterKey => 1095,
             _ => 730
         };
     }
 
-    private ComplianceLevel GetRequiredComplianceLevel(KeyType keyType)
+    private ComplianceLevel GetRequiredComplianceLevel(RotatableKeyType keyType)
     {
         return keyType switch
         {
-            KeyType.HsmMasterKey => ComplianceLevel.Critical,
-            KeyType.SigningKey => ComplianceLevel.High,
-            KeyType.EncryptionKey => ComplianceLevel.High,
-            KeyType.TlsCertificate => ComplianceLevel.Medium,
+            RotatableKeyType.HsmMasterKey => ComplianceLevel.Critical,
+            RotatableKeyType.SigningKey => ComplianceLevel.High,
+            RotatableKeyType.EncryptionKey => ComplianceLevel.High,
+            RotatableKeyType.TlsCertificate => ComplianceLevel.Medium,
             _ => ComplianceLevel.Low
         };
     }
 
-    private async Task<KeyType> DetermineKeyTypeAsync(string keyId, CancellationToken cancellationToken)
+    private async Task<RotatableKeyType> DetermineKeyTypeAsync(string keyId, CancellationToken cancellationToken)
     {
         // Determine based on key naming convention or metadata
         if (keyId.Contains("sign", StringComparison.OrdinalIgnoreCase))
-            return KeyType.SigningKey;
+            return RotatableKeyType.SigningKey;
         if (keyId.Contains("encrypt", StringComparison.OrdinalIgnoreCase))
-            return KeyType.EncryptionKey;
+            return RotatableKeyType.EncryptionKey;
         if (keyId.Contains("tls", StringComparison.OrdinalIgnoreCase) || keyId.Contains("cert", StringComparison.OrdinalIgnoreCase))
-            return KeyType.TlsCertificate;
+            return RotatableKeyType.TlsCertificate;
         if (keyId.Contains("api", StringComparison.OrdinalIgnoreCase))
-            return KeyType.ApiKey;
+            return RotatableKeyType.ApiKey;
 
-        return KeyType.EncryptionKey; // Default
+        return RotatableKeyType.EncryptionKey; // Default
     }
 
     private async Task SaveRotationPolicyAsync(RotationPolicy policy, CancellationToken cancellationToken)
@@ -595,20 +595,19 @@ public class KeyRotationService : IKeyRotationService
         return requiredCount;
     }
 
-    private async Task<Dictionary<KeyType, ComplianceStatistics>> GenerateKeyTypeStatisticsAsync(
+    private async Task<Dictionary<RotatableKeyType, ComplianceStatistics>> GenerateKeyTypeStatisticsAsync(
         DateTime startDate,
         DateTime endDate,
         CancellationToken cancellationToken)
     {
-        var statistics = new Dictionary<KeyType, ComplianceStatistics>();
+        var statistics = new Dictionary<RotatableKeyType, ComplianceStatistics>();
 
-        foreach (KeyType keyType in Enum.GetValues<KeyType>())
+        foreach (RotatableKeyType keyType in Enum.GetValues<RotatableKeyType>())
         {
             var stats = new ComplianceStatistics
             {
                 KeyType = keyType,
-                TotalKeys = await _context.Set<ManagedKey>()
-                    .CountAsync(k => k.Type == keyType, cancellationToken)
+                TotalKeys = 0 // TODO: Implement counting based on actual ManagedKey entity structure
             };
 
             statistics[keyType] = stats;

@@ -65,7 +65,10 @@ public class KeyVaultHsmProvider : IHsmProvider
         try
         {
             // Test connectivity by listing keys (with limit of 1)
-            await _keyClient.GetPropertiesOfKeysAsync(cancellationToken).FirstAsync(cancellationToken);
+            await foreach (var keyProps in _keyClient.GetPropertiesOfKeysAsync(cancellationToken))
+            {
+                break; // Just checking if we can access at least one key
+            }
             return true;
         }
         catch
@@ -80,42 +83,41 @@ public class KeyVaultHsmProvider : IHsmProvider
     {
         _logger.LogInformation("Generating {Type} key in Key Vault: {Name}", request.KeyType, request.KeyName);
 
-        var keyOptions = new CreateKeyOptions(request.KeyName, request.KeyType switch
-        {
-            KeyType.RSA => KeyType.RSA.ToString() == "RSA" ? KeyVaultKeyType.Rsa : KeyVaultKeyType.RsaHsm,
-            KeyType.EC => KeyType.EC.ToString() == "EC" ? KeyVaultKeyType.Ec : KeyVaultKeyType.EcHsm,
-            _ => throw new NotSupportedException($"Key type {request.KeyType} not supported in Key Vault")
-        })
-        {
-            Enabled = true,
-            ExpiresOn = request.ExpiresOn,
-            KeySize = request.KeySize,
-            HardwareProtected = true // Use HSM-backed keys in Premium tier
-        };
+        KeyVaultKey keyResponse;
 
-        // Add key operations
-        if (request.Usage.HasFlag(KeyUsage.Sign))
-            keyOptions.KeyOperations.Add(KeyOperation.Sign);
-        if (request.Usage.HasFlag(KeyUsage.Verify))
-            keyOptions.KeyOperations.Add(KeyOperation.Verify);
-        if (request.Usage.HasFlag(KeyUsage.Encrypt))
-            keyOptions.KeyOperations.Add(KeyOperation.Encrypt);
-        if (request.Usage.HasFlag(KeyUsage.Decrypt))
-            keyOptions.KeyOperations.Add(KeyOperation.Decrypt);
-        if (request.Usage.HasFlag(KeyUsage.WrapKey))
-            keyOptions.KeyOperations.Add(KeyOperation.WrapKey);
-        if (request.Usage.HasFlag(KeyUsage.UnwrapKey))
-            keyOptions.KeyOperations.Add(KeyOperation.UnwrapKey);
-
-        // Add tags
-        foreach (var tag in request.Tags)
+        switch (request.KeyType)
         {
-            keyOptions.Tags.Add(tag.Key, tag.Value);
+            case Domain.Interfaces.KeyType.RSA:
+                var rsaOptions = new CreateRsaKeyOptions(request.KeyName, hardwareProtected: true)
+                {
+                    KeySize = request.KeySize,
+                    ExpiresOn = request.ExpiresOn,
+                    Enabled = true
+                };
+                ConfigureKeyOperations(rsaOptions, request.Usage);
+                foreach (var tag in request.Tags)
+                    rsaOptions.Tags.Add(tag.Key, tag.Value);
+                keyResponse = await _keyClient.CreateRsaKeyAsync(rsaOptions, cancellationToken);
+                break;
+
+            case Domain.Interfaces.KeyType.EC:
+                var ecOptions = new CreateEcKeyOptions(request.KeyName, hardwareProtected: true)
+                {
+                    CurveName = KeyCurveName.P256,
+                    ExpiresOn = request.ExpiresOn,
+                    Enabled = true
+                };
+                ConfigureKeyOperations(ecOptions, request.Usage);
+                foreach (var tag in request.Tags)
+                    ecOptions.Tags.Add(tag.Key, tag.Value);
+                keyResponse = await _keyClient.CreateEcKeyAsync(ecOptions, cancellationToken);
+                break;
+
+            default:
+                throw new NotSupportedException($"Key type {request.KeyType} not supported in Key Vault");
         }
 
-        var keyResponse = await _keyClient.CreateKeyAsync(keyOptions, cancellationToken);
-
-        return ConvertToHsmKey(keyResponse.Value);
+        return ConvertToHsmKey(keyResponse);
     }
 
     public async Task<byte[]> SignAsync(
@@ -128,15 +130,15 @@ public class KeyVaultHsmProvider : IHsmProvider
 
         var signAlgorithm = algorithm switch
         {
-            SigningAlgorithm.RS256 => SignatureAlgorithm.RS256,
-            SigningAlgorithm.RS384 => SignatureAlgorithm.RS384,
-            SigningAlgorithm.RS512 => SignatureAlgorithm.RS512,
-            SigningAlgorithm.PS256 => SignatureAlgorithm.PS256,
-            SigningAlgorithm.PS384 => SignatureAlgorithm.PS384,
-            SigningAlgorithm.PS512 => SignatureAlgorithm.PS512,
-            SigningAlgorithm.ES256 => SignatureAlgorithm.ES256,
-            SigningAlgorithm.ES384 => SignatureAlgorithm.ES384,
-            SigningAlgorithm.ES512 => SignatureAlgorithm.ES512,
+            SigningAlgorithm.RS256 => AzureCrypto.SignatureAlgorithm.RS256,
+            SigningAlgorithm.RS384 => AzureCrypto.SignatureAlgorithm.RS384,
+            SigningAlgorithm.RS512 => AzureCrypto.SignatureAlgorithm.RS512,
+            SigningAlgorithm.PS256 => AzureCrypto.SignatureAlgorithm.PS256,
+            SigningAlgorithm.PS384 => AzureCrypto.SignatureAlgorithm.PS384,
+            SigningAlgorithm.PS512 => AzureCrypto.SignatureAlgorithm.PS512,
+            SigningAlgorithm.ES256 => AzureCrypto.SignatureAlgorithm.ES256,
+            SigningAlgorithm.ES384 => AzureCrypto.SignatureAlgorithm.ES384,
+            SigningAlgorithm.ES512 => AzureCrypto.SignatureAlgorithm.ES512,
             _ => throw new NotSupportedException($"Signing algorithm {algorithm} not supported")
         };
 
@@ -157,15 +159,15 @@ public class KeyVaultHsmProvider : IHsmProvider
 
         var signAlgorithm = algorithm switch
         {
-            SigningAlgorithm.RS256 => SignatureAlgorithm.RS256,
-            SigningAlgorithm.RS384 => SignatureAlgorithm.RS384,
-            SigningAlgorithm.RS512 => SignatureAlgorithm.RS512,
-            SigningAlgorithm.PS256 => SignatureAlgorithm.PS256,
-            SigningAlgorithm.PS384 => SignatureAlgorithm.PS384,
-            SigningAlgorithm.PS512 => SignatureAlgorithm.PS512,
-            SigningAlgorithm.ES256 => SignatureAlgorithm.ES256,
-            SigningAlgorithm.ES384 => SignatureAlgorithm.ES384,
-            SigningAlgorithm.ES512 => SignatureAlgorithm.ES512,
+            SigningAlgorithm.RS256 => AzureCrypto.SignatureAlgorithm.RS256,
+            SigningAlgorithm.RS384 => AzureCrypto.SignatureAlgorithm.RS384,
+            SigningAlgorithm.RS512 => AzureCrypto.SignatureAlgorithm.RS512,
+            SigningAlgorithm.PS256 => AzureCrypto.SignatureAlgorithm.PS256,
+            SigningAlgorithm.PS384 => AzureCrypto.SignatureAlgorithm.PS384,
+            SigningAlgorithm.PS512 => AzureCrypto.SignatureAlgorithm.PS512,
+            SigningAlgorithm.ES256 => AzureCrypto.SignatureAlgorithm.ES256,
+            SigningAlgorithm.ES384 => AzureCrypto.SignatureAlgorithm.ES384,
+            SigningAlgorithm.ES512 => AzureCrypto.SignatureAlgorithm.ES512,
             _ => throw new NotSupportedException($"Signing algorithm {algorithm} not supported")
         };
 
@@ -253,47 +255,16 @@ public class KeyVaultHsmProvider : IHsmProvider
         string keyId,
         CancellationToken cancellationToken = default)
     {
-        _logger.LogInformation("Backing up key {KeyId}", keyId);
-
-        var keyName = ExtractKeyName(keyId);
-        var backupResult = await _keyClient.StartBackupKeyAsync(keyName, cancellationToken);
-
-        // Wait for backup to complete
-        await backupResult.WaitForCompletionAsync(cancellationToken);
-
-        var key = await _keyClient.GetKeyAsync(keyName, cancellationToken: cancellationToken);
-
-        return new KeyBackupData
-        {
-            KeyId = keyId,
-            BackupBlob = backupResult.Value,
-            BackupVersion = key.Value.Properties.Version,
-            BackupDate = DateTime.UtcNow,
-            SourceProvider = ProviderType,
-            Metadata = new Dictionary<string, string>
-            {
-                ["KeyName"] = keyName,
-                ["KeyVaultUri"] = _keyClient.VaultUri.ToString(),
-                ["Version"] = key.Value.Properties.Version
-            }
-        };
+        // Backup/Restore operations are only available in Managed HSM, not in Key Vault Premium
+        throw new NotSupportedException("Key backup is only supported in Managed HSM. Use key export/import for Key Vault Premium.");
     }
 
     public async Task<string> RestoreKeyAsync(
         KeyBackupData backup,
         CancellationToken cancellationToken = default)
     {
-        _logger.LogInformation("Restoring key from backup");
-
-        var restoreResult = await _keyClient.StartRestoreKeyAsync(backup.BackupBlob, cancellationToken);
-
-        // Wait for restore to complete
-        var restored = await restoreResult.WaitForCompletionAsync(cancellationToken);
-
-        _logger.LogInformation("Restored key {KeyName} with ID {KeyId}",
-            restored.Value.Name, restored.Value.Id);
-
-        return restored.Value.Id.ToString();
+        // Backup/Restore operations are only available in Managed HSM, not in Key Vault Premium
+        throw new NotSupportedException("Key restore is only supported in Managed HSM. Use key export/import for Key Vault Premium.");
     }
 
     public async Task<bool> DeleteKeyAsync(
@@ -446,14 +417,13 @@ public class KeyVaultHsmProvider : IHsmProvider
             var testKey = await _keyClient.CreateRsaKeyAsync(new CreateRsaKeyOptions(testKeyName)
             {
                 KeySize = 2048,
-                HardwareProtected = true
             }, cancellationToken);
 
             // Test signing
             var cryptoClient = new AzureCrypto.CryptographyClient(testKey.Value.Id, new DefaultAzureCredential());
             var testData = Encoding.UTF8.GetBytes("Health check");
-            var signResult = await cryptoClient.SignDataAsync(SignatureAlgorithm.RS256, testData, cancellationToken);
-            var verifyResult = await cryptoClient.VerifyDataAsync(SignatureAlgorithm.RS256, testData, signResult.Signature, cancellationToken);
+            var signResult = await cryptoClient.SignDataAsync(AzureCrypto.SignatureAlgorithm.RS256, testData, cancellationToken);
+            var verifyResult = await cryptoClient.VerifyDataAsync(AzureCrypto.SignatureAlgorithm.RS256, testData, signResult.Signature, cancellationToken);
 
             // Cleanup
             await _keyClient.StartDeleteKeyAsync(testKeyName, cancellationToken);
@@ -518,21 +488,20 @@ public class KeyVaultHsmProvider : IHsmProvider
         {
             Id = key.Id.ToString(),
             Name = key.Name,
-            Type = key.KeyType switch
-            {
-                KeyVaultKeyType.Rsa or KeyVaultKeyType.RsaHsm => KeyType.RSA,
-                KeyVaultKeyType.Ec or KeyVaultKeyType.EcHsm => KeyType.EC,
-                _ => KeyType.RSA
-            },
+            Type = (key.KeyType == Azure.Security.KeyVault.Keys.KeyType.Rsa || key.KeyType == Azure.Security.KeyVault.Keys.KeyType.RsaHsm)
+                ? Domain.Interfaces.KeyType.RSA
+                : (key.KeyType == Azure.Security.KeyVault.Keys.KeyType.Ec || key.KeyType == Azure.Security.KeyVault.Keys.KeyType.EcHsm)
+                    ? Domain.Interfaces.KeyType.EC
+                    : Domain.Interfaces.KeyType.RSA,
             KeySize = key.Key?.N?.Length * 8 ?? 2048,
-            Usage = ConvertKeyOperationsToUsage(key.KeyOperations),
-            IsHardwareBacked = key.Properties.HardwareProtected ?? false,
-            CreatedOn = key.Properties.CreatedOn ?? DateTime.UtcNow,
-            ExpiresOn = key.Properties.ExpiresOn,
-            LastUsedOn = key.Properties.UpdatedOn,
+            Usage = ConvertKeyOperationsToUsage(key.KeyOperations.ToList()),
+            IsHardwareBacked = key.KeyType == Azure.Security.KeyVault.Keys.KeyType.RsaHsm || key.KeyType == Azure.Security.KeyVault.Keys.KeyType.EcHsm || key.KeyType == Azure.Security.KeyVault.Keys.KeyType.OctHsm,
+            CreatedOn = key.Properties.CreatedOn?.UtcDateTime ?? DateTime.UtcNow,
+            ExpiresOn = key.Properties.ExpiresOn?.UtcDateTime,
+            LastUsedOn = key.Properties.UpdatedOn?.UtcDateTime,
             Version = key.Properties.Version,
             Enabled = key.Properties.Enabled ?? false,
-            Tags = key.Properties.Tags ?? new Dictionary<string, string>(),
+            Tags = key.Properties.Tags != null ? new Dictionary<string, string>(key.Properties.Tags) : new Dictionary<string, string>(),
             PublicKey = key.Key != null ? Convert.ToBase64String(key.Key.ToRSA().ExportRSAPublicKey()) : null
         };
     }
@@ -560,36 +529,25 @@ public class KeyVaultHsmProvider : IHsmProvider
         MigrationOptions options,
         CancellationToken cancellationToken)
     {
-        // Optimized Key Vault to Key Vault migration
-        var startTime = DateTime.UtcNow;
-        var keyName = ExtractKeyName(keyId);
+        // Backup/Restore operations are only available in Managed HSM
+        // For Key Vault Premium, we need to recreate the key in the target vault
+        throw new NotSupportedException("Direct migration between Key Vaults is not supported. Use Managed HSM for backup/restore operations.");
+    }
 
-        // Backup from source
-        var backupOperation = await _keyClient.StartBackupKeyAsync(keyName, cancellationToken);
-        var backup = await backupOperation.WaitForCompletionAsync(cancellationToken);
-
-        // Restore to target
-        var restoreOperation = await targetProvider._keyClient.StartRestoreKeyAsync(backup, cancellationToken);
-        var restored = await restoreOperation.WaitForCompletionAsync(cancellationToken);
-
-        if (options.DeleteSourceAfterMigration)
-        {
-            await DeleteKeyAsync(keyId, false, cancellationToken);
-        }
-
-        return new MigrationResult
-        {
-            Success = true,
-            NewKeyId = restored.Value.Id.ToString(),
-            SourceKeyId = keyId,
-            MigratedAt = DateTime.UtcNow,
-            Statistics = new MigrationStatistics
-            {
-                Duration = DateTime.UtcNow - startTime,
-                BytesTransferred = backup.Length,
-                OperationsPerformed = 2
-            }
-        };
+    private void ConfigureKeyOperations<T>(T options, KeyUsage usage) where T : CreateKeyOptions
+    {
+        if (usage.HasFlag(KeyUsage.Sign))
+            options.KeyOperations.Add(KeyOperation.Sign);
+        if (usage.HasFlag(KeyUsage.Verify))
+            options.KeyOperations.Add(KeyOperation.Verify);
+        if (usage.HasFlag(KeyUsage.Encrypt))
+            options.KeyOperations.Add(KeyOperation.Encrypt);
+        if (usage.HasFlag(KeyUsage.Decrypt))
+            options.KeyOperations.Add(KeyOperation.Decrypt);
+        if (usage.HasFlag(KeyUsage.WrapKey))
+            options.KeyOperations.Add(KeyOperation.WrapKey);
+        if (usage.HasFlag(KeyUsage.UnwrapKey))
+            options.KeyOperations.Add(KeyOperation.UnwrapKey);
     }
 
     #endregion

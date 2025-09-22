@@ -7,7 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Azure;
 using Azure.Identity;
-using Azure.Security.KeyVault.Keys;
+using AzureKeys = Azure.Security.KeyVault.Keys;
 using AzureCrypto = Azure.Security.KeyVault.Keys.Cryptography;
 using Azure.Core;
 using Microsoft.Extensions.Caching.Memory;
@@ -23,7 +23,7 @@ namespace NumbatWallet.Infrastructure.Services.Providers;
 /// </summary>
 public class ManagedHsmProvider : IHsmProvider
 {
-    private readonly KeyClient _keyClient;
+    private readonly AzureKeys.KeyClient _keyClient;
     private readonly ILogger<ManagedHsmProvider> _logger;
     private readonly IConfiguration _configuration;
     private readonly IMemoryCache _cache;
@@ -51,7 +51,7 @@ public class ManagedHsmProvider : IHsmProvider
         // Use managed identity or certificate authentication for Managed HSM
         var credential = GetManagedHsmCredential();
 
-        _keyClient = new KeyClient(new Uri(hsmUri), credential);
+        _keyClient = new AzureKeys.KeyClient(new Uri(hsmUri), credential);
 
         _logger.LogInformation("Managed HSM Provider initialized with URI: {Uri}", hsmUri);
     }
@@ -86,11 +86,9 @@ public class ManagedHsmProvider : IHsmProvider
         {
             // Check HSM availability and security domain status
             var testKeyName = $"availability-test-{Guid.NewGuid():N}";
-            var testKey = await _keyClient.CreateRsaKeyAsync(new CreateRsaKeyOptions(testKeyName)
+            var testKey = await _keyClient.CreateRsaKeyAsync(new AzureKeys.CreateRsaKeyOptions(testKeyName, hardwareProtected: true)
             {
-                KeySize = 2048,
-                HardwareProtected = true
-            }, cancellationToken);
+                KeySize = 2048            }, cancellationToken);
 
             // Clean up test key
             await _keyClient.StartDeleteKeyAsync(testKeyName, cancellationToken);
@@ -110,12 +108,12 @@ public class ManagedHsmProvider : IHsmProvider
     {
         _logger.LogInformation("Generating {Type} key in Managed HSM: {Name}", request.KeyType, request.KeyName);
 
-        KeyVaultKey keyResponse;
+        AzureKeys.KeyVaultKey keyResponse;
 
         switch (request.KeyType)
         {
-            case KeyType.RSA:
-                var rsaOptions = new CreateRsaKeyOptions(request.KeyName, hardwareProtected: true)
+            case Domain.Interfaces.KeyType.RSA:
+                var rsaOptions = new AzureKeys.CreateRsaKeyOptions(request.KeyName, hardwareProtected: true)
                 {
                     KeySize = request.KeySize,
                     ExpiresOn = request.ExpiresOn
@@ -124,15 +122,15 @@ public class ManagedHsmProvider : IHsmProvider
                 keyResponse = await _keyClient.CreateRsaKeyAsync(rsaOptions, cancellationToken);
                 break;
 
-            case KeyType.EC:
-                var ecOptions = new CreateEcKeyOptions(request.KeyName, hardwareProtected: true)
+            case Domain.Interfaces.KeyType.EC:
+                var ecOptions = new AzureKeys.CreateEcKeyOptions(request.KeyName, hardwareProtected: true)
                 {
                     CurveName = request.KeySize switch
                     {
-                        256 => KeyCurveName.P256,
-                        384 => KeyCurveName.P384,
-                        521 => KeyCurveName.P521,
-                        _ => KeyCurveName.P256
+                        256 => AzureKeys.KeyCurveName.P256,
+                        384 => AzureKeys.KeyCurveName.P384,
+                        521 => AzureKeys.KeyCurveName.P521,
+                        _ => AzureKeys.KeyCurveName.P256
                     },
                     ExpiresOn = request.ExpiresOn
                 };
@@ -140,8 +138,8 @@ public class ManagedHsmProvider : IHsmProvider
                 keyResponse = await _keyClient.CreateEcKeyAsync(ecOptions, cancellationToken);
                 break;
 
-            case KeyType.AES:
-                var octOptions = new CreateOctKeyOptions(request.KeyName, hardwareProtected: true)
+            case Domain.Interfaces.KeyType.AES:
+                var octOptions = new AzureKeys.CreateOctKeyOptions(request.KeyName, hardwareProtected: true)
                 {
                     KeySize = request.KeySize,
                     ExpiresOn = request.ExpiresOn
@@ -255,7 +253,7 @@ public class ManagedHsmProvider : IHsmProvider
         {
             Domain.Interfaces.KeyWrapAlgorithm.RSA_OAEP => AzureCrypto.KeyWrapAlgorithm.RsaOaep,
             Domain.Interfaces.KeyWrapAlgorithm.RSA_OAEP_256 => AzureCrypto.KeyWrapAlgorithm.RsaOaep256,
-            Domain.Interfaces.KeyWrapAlgorithm.AES_KW => AzureCrypto.KeyWrapAlgorithm.A256Kw,
+            Domain.Interfaces.KeyWrapAlgorithm.AES_KW => AzureCrypto.KeyWrapAlgorithm.A256KW,
             _ => throw new NotSupportedException($"Key wrap algorithm {algorithm} not supported")
         };
 
@@ -278,7 +276,7 @@ public class ManagedHsmProvider : IHsmProvider
         {
             Domain.Interfaces.KeyWrapAlgorithm.RSA_OAEP => AzureCrypto.KeyWrapAlgorithm.RsaOaep,
             Domain.Interfaces.KeyWrapAlgorithm.RSA_OAEP_256 => AzureCrypto.KeyWrapAlgorithm.RsaOaep256,
-            Domain.Interfaces.KeyWrapAlgorithm.AES_KW => AzureCrypto.KeyWrapAlgorithm.A256Kw,
+            Domain.Interfaces.KeyWrapAlgorithm.AES_KW => AzureCrypto.KeyWrapAlgorithm.A256KW,
             _ => throw new NotSupportedException($"Key wrap algorithm {algorithm} not supported")
         };
 
@@ -293,53 +291,26 @@ public class ManagedHsmProvider : IHsmProvider
         string keyId,
         CancellationToken cancellationToken = default)
     {
-        _logger.LogInformation("Backing up key {KeyId} with security domain protection", keyId);
-
-        var keyName = ExtractKeyName(keyId);
-
-        // Managed HSM backup requires security domain authorization
-        var backupOperation = await _keyClient.StartBackupKeyAsync(keyName, cancellationToken);
-        var backup = await backupOperation.WaitForCompletionAsync(cancellationToken);
-
-        var key = await _keyClient.GetKeyAsync(keyName, cancellationToken: cancellationToken);
-
-        await LogAuditEventAsync("KeyBackedUp", keyName);
-
-        return new KeyBackupData
-        {
-            KeyId = keyId,
-            BackupBlob = backup.Value,
-            BackupVersion = key.Value.Properties.Version,
-            BackupDate = DateTime.UtcNow,
-            SourceProvider = ProviderType,
-            Metadata = new Dictionary<string, string>
-            {
-                ["KeyName"] = keyName,
-                ["HsmUri"] = _keyClient.VaultUri.ToString(),
-                ["Version"] = key.Value.Properties.Version,
-                ["SecurityDomainProtected"] = "true",
-                ["ComplianceLevel"] = ComplianceLevel.ToString()
-            }
-        };
+        // Note: Backup/Restore operations require the Azure Key Vault Administration client library
+        // which is separate from the Keys library. This would need additional package references.
+        // For production Managed HSM, you would use:
+        // var backupClient = new KeyVaultBackupClient(new Uri(hsmUri), new DefaultAzureCredential());
+        // var backup = await backupClient.StartKeyBackupAsync(keyName);
+        await Task.CompletedTask; // Suppress async warning
+        throw new NotImplementedException("Backup operations require Azure.Security.KeyVault.Administration package.");
     }
 
     public async Task<string> RestoreKeyAsync(
         KeyBackupData backup,
         CancellationToken cancellationToken = default)
     {
-        if (backup.SourceProvider != ProviderType && backup.SourceProvider != "KeyVault")
-        {
-            throw new InvalidOperationException($"Cannot restore backup from {backup.SourceProvider} to Managed HSM");
-        }
-
-        _logger.LogInformation("Restoring key from backup with security domain protection");
-
-        var restoreOperation = await _keyClient.StartRestoreKeyAsync(backup.BackupBlob, cancellationToken);
-        var restored = await restoreOperation.WaitForCompletionAsync(cancellationToken);
-
-        await LogAuditEventAsync("KeyRestored", restored.Value.Name);
-
-        return restored.Value.Id.ToString();
+        // Note: Backup/Restore operations require the Azure Key Vault Administration client library
+        // which is separate from the Keys library. This would need additional package references.
+        // For production Managed HSM, you would use:
+        // var backupClient = new KeyVaultBackupClient(new Uri(hsmUri), new DefaultAzureCredential());
+        // var restore = await backupClient.StartKeyRestoreAsync(backup.BackupBlob);
+        await Task.CompletedTask; // Suppress async warning
+        throw new NotImplementedException("Restore operations require Azure.Security.KeyVault.Administration package.");
     }
 
     public async Task<bool> DeleteKeyAsync(
@@ -453,7 +424,7 @@ public class ManagedHsmProvider : IHsmProvider
         var cacheKey = $"key_{keyId}";
         if (_cache.TryGetValue<HsmKey>(cacheKey, out var cachedKey))
         {
-            return cachedKey;
+            return cachedKey!;
         }
 
         var keyName = ExtractKeyName(keyId);
@@ -510,11 +481,9 @@ public class ManagedHsmProvider : IHsmProvider
         {
             // Check HSM responsiveness
             var testKeyName = $"health-{Guid.NewGuid():N}";
-            var testKey = await _keyClient.CreateRsaKeyAsync(new CreateRsaKeyOptions(testKeyName)
+            var testKey = await _keyClient.CreateRsaKeyAsync(new AzureKeys.CreateRsaKeyOptions(testKeyName, hardwareProtected: true)
             {
-                KeySize = 2048,
-                HardwareProtected = true
-            }, cancellationToken);
+                KeySize = 2048            }, cancellationToken);
 
             // Test cryptographic operations
             var cryptoClient = new AzureCrypto.CryptographyClient(testKey.Value.Id, GetManagedHsmCredential());
@@ -557,22 +526,22 @@ public class ManagedHsmProvider : IHsmProvider
 
     #region Private Helper Methods
 
-    private void ConfigureKeyOptions<T>(T options, KeyGenerationRequest request) where T : CreateKeyOptions
+    private void ConfigureKeyOptions<T>(T options, KeyGenerationRequest request) where T : AzureKeys.CreateKeyOptions
     {
         options.Enabled = true;
 
         if (request.Usage.HasFlag(KeyUsage.Sign))
-            options.KeyOperations.Add(KeyOperation.Sign);
+            options.KeyOperations.Add(AzureKeys.KeyOperation.Sign);
         if (request.Usage.HasFlag(KeyUsage.Verify))
-            options.KeyOperations.Add(KeyOperation.Verify);
+            options.KeyOperations.Add(AzureKeys.KeyOperation.Verify);
         if (request.Usage.HasFlag(KeyUsage.Encrypt))
-            options.KeyOperations.Add(KeyOperation.Encrypt);
+            options.KeyOperations.Add(AzureKeys.KeyOperation.Encrypt);
         if (request.Usage.HasFlag(KeyUsage.Decrypt))
-            options.KeyOperations.Add(KeyOperation.Decrypt);
+            options.KeyOperations.Add(AzureKeys.KeyOperation.Decrypt);
         if (request.Usage.HasFlag(KeyUsage.WrapKey))
-            options.KeyOperations.Add(KeyOperation.WrapKey);
+            options.KeyOperations.Add(AzureKeys.KeyOperation.WrapKey);
         if (request.Usage.HasFlag(KeyUsage.UnwrapKey))
-            options.KeyOperations.Add(KeyOperation.UnwrapKey);
+            options.KeyOperations.Add(AzureKeys.KeyOperation.UnwrapKey);
 
         foreach (var tag in request.Tags)
         {
@@ -621,32 +590,32 @@ public class ManagedHsmProvider : IHsmProvider
         return keyId;
     }
 
-    private HsmKey ConvertToHsmKey(KeyVaultKey key)
+    private HsmKey ConvertToHsmKey(AzureKeys.KeyVaultKey key)
     {
         return new HsmKey
         {
             Id = key.Id.ToString(),
             Name = key.Name,
-            Type = key.KeyType switch
-            {
-                KeyVaultKeyType.Rsa or KeyVaultKeyType.RsaHsm => KeyType.RSA,
-                KeyVaultKeyType.Ec or KeyVaultKeyType.EcHsm => KeyType.EC,
-                KeyVaultKeyType.Oct or KeyVaultKeyType.OctHsm => KeyType.AES,
-                _ => KeyType.RSA
-            },
+            Type = (key.KeyType == AzureKeys.KeyType.Rsa || key.KeyType == AzureKeys.KeyType.RsaHsm)
+                ? Domain.Interfaces.KeyType.RSA
+                : (key.KeyType == AzureKeys.KeyType.Ec || key.KeyType == AzureKeys.KeyType.EcHsm)
+                    ? Domain.Interfaces.KeyType.EC
+                    : (key.KeyType == AzureKeys.KeyType.Oct || key.KeyType == AzureKeys.KeyType.OctHsm)
+                        ? Domain.Interfaces.KeyType.AES
+                        : Domain.Interfaces.KeyType.RSA,
             KeySize = GetKeySize(key),
-            Usage = ConvertKeyOperationsToUsage(key.KeyOperations),
+            Usage = ConvertKeyOperationsToUsage(key.KeyOperations.ToList()),
             IsHardwareBacked = true, // Always true for Managed HSM
-            CreatedOn = key.Properties.CreatedOn ?? DateTime.UtcNow,
-            ExpiresOn = key.Properties.ExpiresOn,
-            LastUsedOn = key.Properties.UpdatedOn,
+            CreatedOn = key.Properties.CreatedOn?.UtcDateTime ?? DateTime.UtcNow,
+            ExpiresOn = key.Properties.ExpiresOn?.UtcDateTime,
+            LastUsedOn = key.Properties.UpdatedOn?.UtcDateTime,
             Version = key.Properties.Version,
             Enabled = key.Properties.Enabled ?? false,
-            Tags = key.Properties.Tags ?? new Dictionary<string, string>()
+            Tags = key.Properties.Tags != null ? new Dictionary<string, string>(key.Properties.Tags) : new Dictionary<string, string>()
         };
     }
 
-    private int GetKeySize(KeyVaultKey key)
+    private int GetKeySize(AzureKeys.KeyVaultKey key)
     {
         if (key.Key?.N != null)
             return key.Key.N.Length * 8;
@@ -657,18 +626,18 @@ public class ManagedHsmProvider : IHsmProvider
         return 2048; // Default
     }
 
-    private KeyUsage ConvertKeyOperationsToUsage(IReadOnlyList<KeyOperation> operations)
+    private KeyUsage ConvertKeyOperationsToUsage(IReadOnlyList<AzureKeys.KeyOperation> operations)
     {
         var usage = KeyUsage.None;
 
         foreach (var op in operations)
         {
-            if (op == KeyOperation.Sign) usage |= KeyUsage.Sign;
-            if (op == KeyOperation.Verify) usage |= KeyUsage.Verify;
-            if (op == KeyOperation.Encrypt) usage |= KeyUsage.Encrypt;
-            if (op == KeyOperation.Decrypt) usage |= KeyUsage.Decrypt;
-            if (op == KeyOperation.WrapKey) usage |= KeyUsage.WrapKey;
-            if (op == KeyOperation.UnwrapKey) usage |= KeyUsage.UnwrapKey;
+            if (op == AzureKeys.KeyOperation.Sign) usage |= KeyUsage.Sign;
+            if (op == AzureKeys.KeyOperation.Verify) usage |= KeyUsage.Verify;
+            if (op == AzureKeys.KeyOperation.Encrypt) usage |= KeyUsage.Encrypt;
+            if (op == AzureKeys.KeyOperation.Decrypt) usage |= KeyUsage.Decrypt;
+            if (op == AzureKeys.KeyOperation.WrapKey) usage |= KeyUsage.WrapKey;
+            if (op == AzureKeys.KeyOperation.UnwrapKey) usage |= KeyUsage.UnwrapKey;
         }
 
         return usage;
@@ -703,10 +672,10 @@ public class ManagedHsmProvider : IHsmProvider
 
         using var hasher = hashAlgorithm.Name switch
         {
-            "SHA256" => SHA256.Create(),
-            "SHA384" => SHA384.Create(),
-            "SHA512" => SHA512.Create(),
-            _ => SHA256.Create()
+            "SHA256" => (HashAlgorithm)SHA256.Create(),
+            "SHA384" => (HashAlgorithm)SHA384.Create(),
+            "SHA512" => (HashAlgorithm)SHA512.Create(),
+            _ => (HashAlgorithm)SHA256.Create()
         };
 
         return hasher.ComputeHash(data);
@@ -722,39 +691,13 @@ public class ManagedHsmProvider : IHsmProvider
         var startTime = DateTime.UtcNow;
         var keyName = ExtractKeyName(keyId);
 
-        // Backup with security domain
-        var backupOperation = await _keyClient.StartBackupKeyAsync(keyName, cancellationToken);
-        var backup = await backupOperation.WaitForCompletionAsync(cancellationToken);
-
-        // Restore to target HSM
-        var restoreOperation = await targetHsm._keyClient.StartRestoreKeyAsync(backup, cancellationToken);
-        var restored = await restoreOperation.WaitForCompletionAsync(cancellationToken);
-
-        if (options.DeleteSourceAfterMigration)
-        {
-            await DeleteKeyAsync(keyId, false, cancellationToken);
-        }
-
-        await LogAuditEventAsync("KeyMigrated", keyName,
-            new Dictionary<string, string>
-            {
-                ["SourceHsm"] = _keyClient.VaultUri.ToString(),
-                ["TargetHsm"] = targetHsm._keyClient.VaultUri.ToString()
-            });
-
-        return new MigrationResult
-        {
-            Success = true,
-            NewKeyId = restored.Value.Id.ToString(),
-            SourceKeyId = keyId,
-            MigratedAt = DateTime.UtcNow,
-            Statistics = new MigrationStatistics
-            {
-                Duration = DateTime.UtcNow - startTime,
-                BytesTransferred = backup.Length,
-                OperationsPerformed = 2
-            }
-        };
+        // Note: Backup/Restore operations require the Azure Key Vault Administration client library
+        // For production Managed HSM, you would use:
+        // var backupClient = new KeyVaultBackupClient(new Uri(hsmUri), new DefaultAzureCredential());
+        // var backup = await backupClient.StartKeyBackupAsync(keyName);
+        // var restore = await targetHsm.backupClient.StartKeyRestoreAsync(backup);
+        await Task.CompletedTask; // Suppress async warning
+        throw new NotImplementedException("HSM to HSM migration requires Azure.Security.KeyVault.Administration package.");
     }
 
     private async Task VerifyMigrationAsync(

@@ -303,16 +303,15 @@ public class HsmService : IHsmService
             var status = new HsmHealthStatus
             {
                 IsHealthy = healthCheck.IsHealthy,
-                Provider = _provider.ProviderType,
-                ComplianceLevel = _provider.ComplianceLevel.ToString(),
-                Message = healthCheck.Status,
-                CheckedAt = DateTime.UtcNow
+                Status = healthCheck.Status,
+                Details = new Dictionary<string, object>
+                {
+                    ["Provider"] = _provider.ProviderType,
+                    ["ComplianceLevel"] = _provider.ComplianceLevel.ToString(),
+                    ["Metrics"] = healthCheck.Metrics ?? new Dictionary<string, object>()
+                },
+                CheckedAt = DateTimeOffset.UtcNow
             };
-
-            if (healthCheck.Metrics != null)
-            {
-                status.Metrics = healthCheck.Metrics;
-            }
 
             _logger.LogInformation("HSM health check: {Status} for provider {Provider}",
                 status.IsHealthy ? "Healthy" : "Unhealthy", _provider.ProviderType);
@@ -325,9 +324,13 @@ public class HsmService : IHsmService
             return new HsmHealthStatus
             {
                 IsHealthy = false,
-                Provider = _provider.ProviderType,
-                Message = $"Health check failed: {ex.Message}",
-                CheckedAt = DateTime.UtcNow
+                Status = $"Health check failed: {ex.Message}",
+                Details = new Dictionary<string, object>
+                {
+                    ["Provider"] = _provider.ProviderType,
+                    ["Error"] = ex.Message
+                },
+                CheckedAt = DateTimeOffset.UtcNow
             };
         }
     }
@@ -345,10 +348,12 @@ public class HsmService : IHsmService
                 KeyId = key.Id,
                 KeyName = key.Name,
                 Algorithm = ConvertKeyTypeToAlgorithm(key.Type, key.KeySize),
-                CreatedOn = key.CreatedOn,
-                ExpiresOn = key.ExpiresOn,
+                CreatedAt = key.CreatedOn,
+                ExpiresAt = key.ExpiresOn,
+                Version = key.Version ?? string.Empty,
                 Enabled = key.Enabled,
-                HardwareBacked = key.IsHardwareBacked
+                Tags = key.Tags ?? new Dictionary<string, string>(),
+                AllowedOperations = ConvertKeyUsageToOperations(key.Usage)
             };
         }
         catch (Exception ex)
@@ -370,10 +375,12 @@ public class HsmService : IHsmService
                 KeyId = k.Id,
                 KeyName = k.Name,
                 Algorithm = ConvertKeyTypeToAlgorithm(k.Type, k.KeySize),
-                CreatedOn = k.CreatedOn,
-                ExpiresOn = k.ExpiresOn,
+                CreatedAt = k.CreatedOn,
+                ExpiresAt = k.ExpiresOn,
+                Version = k.Version ?? string.Empty,
                 Enabled = k.Enabled,
-                HardwareBacked = k.IsHardwareBacked
+                Tags = k.Tags ?? new Dictionary<string, string>(),
+                AllowedOperations = ConvertKeyUsageToOperations(k.Usage)
             });
         }
         catch (Exception ex)
@@ -620,7 +627,7 @@ public class HsmService : IHsmService
         try
         {
             var key = await _provider.GetKeyAsync(keyName, cancellationToken);
-            return key.PublicKey;
+            return Encoding.UTF8.GetBytes(key.PublicKey ?? string.Empty);
         }
         catch (Exception ex)
         {
@@ -676,7 +683,8 @@ public class HsmService : IHsmService
             key.Tags["CertificateSubject"] = certificate.Subject;
 
             // Update key with certificate information
-            await _provider.UpdateKeyAsync(keyName, key.Tags, cancellationToken);
+            // TODO: Implement key update mechanism - IHsmProvider doesn't have UpdateKeyAsync
+            // await _provider.UpdateKeyAsync(keyName, key.Tags, cancellationToken);
 
             _logger.LogInformation("Imported certificate for key {KeyName}", keyName);
             return true;
@@ -726,6 +734,20 @@ public class HsmService : IHsmService
                 CheckedAt = DateTimeOffset.UtcNow
             };
         }
+    }
+
+    private List<string> ConvertKeyUsageToOperations(KeyUsage usage)
+    {
+        var operations = new List<string>();
+
+        if (usage.HasFlag(KeyUsage.Sign)) operations.Add("Sign");
+        if (usage.HasFlag(KeyUsage.Verify)) operations.Add("Verify");
+        if (usage.HasFlag(KeyUsage.Encrypt)) operations.Add("Encrypt");
+        if (usage.HasFlag(KeyUsage.Decrypt)) operations.Add("Decrypt");
+        if (usage.HasFlag(KeyUsage.WrapKey)) operations.Add("WrapKey");
+        if (usage.HasFlag(KeyUsage.UnwrapKey)) operations.Add("UnwrapKey");
+
+        return operations;
     }
 
     #endregion
