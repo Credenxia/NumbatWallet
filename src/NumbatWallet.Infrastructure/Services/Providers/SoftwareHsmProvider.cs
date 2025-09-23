@@ -570,7 +570,7 @@ public class SoftwareHsmProvider : IHsmProvider
         };
     }
 
-    public async Task<HealthCheckResult> CheckHealthAsync(CancellationToken cancellationToken = default)
+    public virtual async Task<HealthCheckResult> CheckHealthAsync(CancellationToken cancellationToken = default)
     {
         var startTime = DateTime.UtcNow;
 

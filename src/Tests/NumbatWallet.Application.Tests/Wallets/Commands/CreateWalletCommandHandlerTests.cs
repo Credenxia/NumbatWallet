@@ -164,7 +164,7 @@ public class CreateWalletCommandHandlerTests
 
         // Assert
         await act.Should().ThrowAsync<ConflictException>()
-            .WithMessage("*already exists*");
+            .WithMessage("*Person already has a wallet in this tenant*");
 
         _walletRepositoryMock.Verify(x => x.AddAsync(It.IsAny<Wallet>(), It.IsAny<CancellationToken>()), Times.Never);
         _unitOfWorkMock.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
