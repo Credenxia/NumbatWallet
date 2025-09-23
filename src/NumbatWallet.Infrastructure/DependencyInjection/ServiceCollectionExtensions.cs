@@ -163,6 +163,11 @@ public static class ServiceCollectionExtensions
         {
             services.AddSingleton<IBlobStorageService, AzureBlobStorageService>();
         }
+        else
+        {
+            // Use mock service for development when Azure Storage is not configured
+            services.AddSingleton<IBlobStorageService, Services.Mocks.MockBlobStorageService>();
+        }
 
         // External API Clients
         services.AddHttpClient<IExternalApiClient, ExternalApiClient>("ExternalApi", client =>
