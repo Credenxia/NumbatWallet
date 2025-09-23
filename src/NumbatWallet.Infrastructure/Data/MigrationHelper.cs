@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Npgsql;
 
 namespace NumbatWallet.Infrastructure.Data;
 
@@ -24,6 +25,13 @@ public class MigrationHelper : IHostedService
 
         using var scope = _serviceProvider.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<NumbatWalletDbContext>();
+
+        // For now, run SQL script directly instead of EF migrations
+        if (IsDevelopment())
+        {
+            await RunSqlScriptAsync(context, cancellationToken);
+            return;
+        }
 
         try
         {
@@ -149,6 +157,97 @@ public class MigrationHelper : IHostedService
         {
             _logger.LogWarning("Could not mark migration as applied: {Error}", ex.Message);
         }
+    }
+
+    private async Task RunSqlScriptAsync(NumbatWalletDbContext context, CancellationToken cancellationToken)
+    {
+        try
+        {
+            _logger.LogInformation("Running SQL schema script");
+
+            var scriptPath = Path.Combine(AppContext.BaseDirectory, "Data", "Scripts", "001_InitialSchema.sql");
+            if (!File.Exists(scriptPath))
+            {
+                // Try alternate path
+                scriptPath = Path.Combine(Directory.GetCurrentDirectory(), "Data", "Scripts", "001_InitialSchema.sql");
+            }
+
+            if (!File.Exists(scriptPath))
+            {
+                // Try Infrastructure project path
+                var dir = Directory.GetCurrentDirectory();
+                if (dir.Contains("Web.Api"))
+                {
+                    scriptPath = Path.Combine(dir, "..", "NumbatWallet.Infrastructure", "Data", "Scripts", "001_InitialSchema.sql");
+                }
+            }
+
+            if (File.Exists(scriptPath))
+            {
+                var script = await File.ReadAllTextAsync(scriptPath, cancellationToken);
+                await context.Database.ExecuteSqlRawAsync(script, cancellationToken);
+                _logger.LogInformation("Database schema created successfully");
+            }
+            else
+            {
+                _logger.LogWarning("SQL script not found at {Path}. Attempting basic table creation.", scriptPath);
+                await CreateBasicSchemaAsync(context, cancellationToken);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error running SQL script");
+            if (ex.Message.Contains("already exists"))
+            {
+                _logger.LogInformation("Database schema appears to already exist");
+            }
+            else
+            {
+                throw;
+            }
+        }
+    }
+
+    private async Task CreateBasicSchemaAsync(NumbatWalletDbContext context, CancellationToken cancellationToken)
+    {
+        _logger.LogInformation("Creating basic schema");
+
+        // Create minimal tables to get started
+        var sql = @"
+            CREATE TABLE IF NOT EXISTS tenants (
+                id UUID PRIMARY KEY,
+                name VARCHAR(200) NOT NULL,
+                identifier VARCHAR(100) UNIQUE,
+                is_active BOOLEAN DEFAULT true,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+
+            CREATE TABLE IF NOT EXISTS persons (
+                id UUID PRIMARY KEY,
+                tenant_id UUID REFERENCES tenants(id),
+                first_name VARCHAR(100),
+                last_name VARCHAR(100),
+                email VARCHAR(255),
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+
+            CREATE TABLE IF NOT EXISTS wallets (
+                id UUID PRIMARY KEY,
+                tenant_id UUID REFERENCES tenants(id),
+                person_id UUID REFERENCES persons(id),
+                name VARCHAR(200),
+                status VARCHAR(50) DEFAULT 'Active',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+
+            CREATE TABLE IF NOT EXISTS \"__EFMigrationsHistory\" (
+                \"MigrationId\" VARCHAR(150) PRIMARY KEY,
+                \"ProductVersion\" VARCHAR(32) NOT NULL
+            );
+        ";
+
+        await context.Database.ExecuteSqlRawAsync(sql, cancellationToken);
+        _logger.LogInformation("Basic schema created");
     }
 
     public Task StopAsync(CancellationToken cancellationToken)

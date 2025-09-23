@@ -69,6 +69,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped(typeof(IRepository<,>), typeof(GenericRepository<,>));
 
         // Register Specific Repositories
+        services.AddScoped<ITenantRepository, TenantRepository>();
         services.AddScoped<IPersonRepository, PersonRepository>();
         services.AddScoped<IWalletRepository, WalletRepository>();
         services.AddScoped<ICredentialRepository, CredentialRepository>();
