@@ -1,5 +1,4 @@
 using NumbatWallet.SharedKernel.Primitives;
-using NumbatWallet.SharedKernel.Enums;
 using NumbatWallet.SharedKernel.Guards;
 
 namespace NumbatWallet.Domain.Entities;

@@ -85,7 +85,7 @@ public sealed class GetWalletCredentialsQueryHandler : IQueryHandler<GetWalletCr
                 RevocationReason = credential.RevocationReason,
                 CredentialSubject = credential.Claims.ToDictionary(
                     kvp => kvp.Key,
-                    kvp => kvp.Value as object ?? string.Empty),
+                    kvp => kvp.Value),
                 Proof = null, // Would need to implement proof generation
                 Metadata = new Dictionary<string, string>
                 {

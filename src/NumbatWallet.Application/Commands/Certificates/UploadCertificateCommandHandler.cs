@@ -1,4 +1,3 @@
-using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using Microsoft.Extensions.Logging;
 using NumbatWallet.Application.CQRS.Interfaces;
@@ -48,7 +47,7 @@ public class UploadCertificateCommandHandler : ICommandHandler<UploadCertificate
 
             // Check for duplicate
             var existing = await _certificateRepository.GetByThumbprintAsync(
-                x509Cert.Thumbprint!,
+                x509Cert.Thumbprint,
                 cancellationToken);
 
             if (existing != null)
@@ -64,7 +63,7 @@ public class UploadCertificateCommandHandler : ICommandHandler<UploadCertificate
             var certificate = new TenantCertificate(
                 command.TenantId,
                 command.CertificateData,
-                x509Cert.Thumbprint!,
+                x509Cert.Thumbprint,
                 x509Cert.SubjectName.Name,
                 x509Cert.IssuerName.Name,
                 new DateTimeOffset(x509Cert.NotBefore, TimeSpan.Zero),

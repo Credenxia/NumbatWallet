@@ -1,6 +1,5 @@
 using System.Text;
 using Microsoft.Extensions.Options;
-using NumbatWallet.Application.Interfaces;
 using NumbatWallet.Domain.Interfaces;
 
 namespace NumbatWallet.Web.Api.Middleware;

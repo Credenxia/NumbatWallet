@@ -1,5 +1,3 @@
-using NumbatWallet.Application.Commands.Credentials;
-
 namespace NumbatWallet.Application.Interfaces;
 
 /// <summary>

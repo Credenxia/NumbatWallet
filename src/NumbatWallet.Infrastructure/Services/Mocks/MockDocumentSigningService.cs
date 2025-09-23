@@ -2,7 +2,6 @@ using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using Microsoft.Extensions.Logging;
-using NumbatWallet.Domain.Interfaces;
 
 namespace NumbatWallet.Infrastructure.Services.Mocks;
 
@@ -353,7 +352,7 @@ public class MockDocumentSigningService : IDocumentSigningService
 
     public async Task<IEnumerable<SignatureAuditLog>> GetAuditLogsAsync(
         DateTime? from = null,
-        DateTime? to = null,
+        DateTime? toDate = null,
         string? certificateId = null,
         CancellationToken cancellationToken = default)
     {
@@ -366,9 +365,9 @@ public class MockDocumentSigningService : IDocumentSigningService
             query = query.Where(log => log.Timestamp >= from.Value);
         }
 
-        if (to.HasValue)
+        if (toDate.HasValue)
         {
-            query = query.Where(log => log.Timestamp <= to.Value);
+            query = query.Where(log => log.Timestamp <= toDate.Value);
         }
 
         if (!string.IsNullOrEmpty(certificateId))
@@ -451,7 +450,7 @@ public interface IDocumentSigningService
     Task<SignedDocument?> GetSignedDocumentAsync(string documentId, CancellationToken cancellationToken = default);
     Task<IEnumerable<DocumentSigningCertificate>> GetSigningCertificatesAsync(DocumentType? documentType = null, bool activeOnly = true, CancellationToken cancellationToken = default);
     Task<bool> RevokeCertificateAsync(string certificateId, string reason, CancellationToken cancellationToken = default);
-    Task<IEnumerable<SignatureAuditLog>> GetAuditLogsAsync(DateTime? from = null, DateTime? to = null, string? certificateId = null, CancellationToken cancellationToken = default);
+    Task<IEnumerable<SignatureAuditLog>> GetAuditLogsAsync(DateTime? from = null, DateTime? toDate = null, string? certificateId = null, CancellationToken cancellationToken = default);
 }
 
 public class DocumentSigningCertificate

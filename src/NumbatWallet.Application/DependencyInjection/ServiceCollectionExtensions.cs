@@ -46,8 +46,8 @@ public static class ServiceCollectionExtensions
             .WithScopedLifetime());
 
         // Register Application Services
-        services.AddScoped<IEventDispatcher, Services.EventDispatcher>();
-        services.AddScoped<SharedKernel.Interfaces.IEventDispatcher, Services.EventDispatcher>();
+        services.AddScoped<IEventDispatcher, EventDispatcher>();
+        services.AddScoped<SharedKernel.Interfaces.IEventDispatcher, EventDispatcher>();
 
         // Register Mock Services for Development
         services.AddScoped<Commands.Credentials.Handlers.IVerificationService, Commands.Credentials.Handlers.MockVerificationService>();
@@ -60,16 +60,16 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IDomainEventHandler<CredentialRevokedEvent>, EventHandlers.CredentialRevokedEventHandler>();
 
         // Register Application Services
-        services.AddScoped<IPersonService, Services.PersonService>();
-        services.AddScoped<IWalletService, Services.WalletService>();
-        services.AddScoped<ICredentialService, Services.CredentialService>();
-        services.AddScoped<IOrganizationService, Services.OrganizationService>();
-        services.AddScoped<IStatisticsService, Services.StatisticsService>();
+        services.AddScoped<IPersonService, PersonService>();
+        services.AddScoped<IWalletService, WalletService>();
+        services.AddScoped<ICredentialService, CredentialService>();
+        services.AddScoped<IOrganizationService, OrganizationService>();
+        services.AddScoped<IStatisticsService, StatisticsService>();
         // Note: IHealthCheckService is registered in Infrastructure layer
 
         // Register Bulk Operation Services
-        services.AddSingleton<IBulkOperationStatusService, Services.BulkOperationStatusService>();
-        services.AddHostedService<Services.BulkOperationCleanupService>();
+        services.AddSingleton<IBulkOperationStatusService, BulkOperationStatusService>();
+        services.AddHostedService<BulkOperationCleanupService>();
 
         // TODO: Register Background Jobs after fixing them
         // services.AddHostedService<BackgroundJobs.CredentialExpiryCheckJob>();

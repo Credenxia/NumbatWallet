@@ -1,11 +1,4 @@
-using HotChocolate;
 using HotChocolate.AspNetCore;
-using HotChocolate.Data;
-using HotChocolate.Diagnostics;
-using HotChocolate.Execution;
-using HotChocolate.Execution.Configuration;
-using HotChocolate.Types;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using NumbatWallet.Web.Api.GraphQL.Schema;
 
 namespace NumbatWallet.Web.Api.Extensions;

@@ -79,7 +79,7 @@ public class HandlingCaveatsAttribute : Attribute
     /// Creates a new HandlingCaveatsAttribute
     /// </summary>
     /// <param name="caveats">Handling caveats (e.g., "FOR-OFFICIAL-USE-ONLY", "CABINET-IN-CONFIDENCE")</param>
-    public HandlingCaveatsAttribute(params string[] caveats)
+    public HandlingCaveatsAttribute(params string[]? caveats)
     {
         Caveats = caveats ?? Array.Empty<string>();
     }

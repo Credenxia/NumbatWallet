@@ -92,7 +92,7 @@ public class TelemetryServiceTests : IDisposable
         _capturedTelemetry.Should().HaveCount(1);
         var eventTelemetry = _capturedTelemetry[0] as EventTelemetry;
         eventTelemetry.Should().NotBeNull();
-        eventTelemetry!.Name.Should().Be(eventName);
+        eventTelemetry.Name.Should().Be(eventName);
         eventTelemetry.Properties["Username"].Should().Be("***@example.com");
         eventTelemetry.Properties["IpAddress"].Should().Be("192.168.1.***");
         eventTelemetry.Properties["TenantId"].Should().Be("tenant-123");
@@ -131,7 +131,7 @@ public class TelemetryServiceTests : IDisposable
         _capturedTelemetry.Should().HaveCount(1);
         var eventTelemetry = _capturedTelemetry[0] as EventTelemetry;
         eventTelemetry.Should().NotBeNull();
-        eventTelemetry!.Name.Should().Be($"Security_{eventType}");
+        eventTelemetry.Name.Should().Be($"Security_{eventType}");
         eventTelemetry.Properties["Severity"].Should().Be(severity);
         eventTelemetry.Properties["EventType"].Should().Be(eventType);
         eventTelemetry.Properties.Should().ContainKey("Details");
@@ -168,7 +168,7 @@ public class TelemetryServiceTests : IDisposable
         _capturedTelemetry.Should().HaveCount(1);
         var exceptionTelemetry = _capturedTelemetry[0] as ExceptionTelemetry;
         exceptionTelemetry.Should().NotBeNull();
-        exceptionTelemetry!.Exception.Should().BeOfType<InvalidOperationException>();
+        exceptionTelemetry.Exception.Should().BeOfType<InvalidOperationException>();
         exceptionTelemetry.Message.Should().Contain("***@example.com");
         exceptionTelemetry.Message.Should().NotContain("john.doe@example.com");
         exceptionTelemetry.Properties["Operation"].Should().Be("GetUser");
@@ -196,7 +196,7 @@ public class TelemetryServiceTests : IDisposable
         _capturedTelemetry.Should().HaveCount(1);
         var metricTelemetry = _capturedTelemetry[0] as MetricTelemetry;
         metricTelemetry.Should().NotBeNull();
-        metricTelemetry!.Name.Should().Be(metricName);
+        metricTelemetry.Name.Should().Be(metricName);
         metricTelemetry.Sum.Should().Be(value);
         metricTelemetry.Properties["CredentialType"].Should().Be("DriversLicense");
         metricTelemetry.Properties["Issuer"].Should().Be("DOT");
@@ -236,7 +236,7 @@ public class TelemetryServiceTests : IDisposable
         _capturedTelemetry.Should().HaveCount(1);
         var dependencyTelemetry = _capturedTelemetry[0] as DependencyTelemetry;
         dependencyTelemetry.Should().NotBeNull();
-        dependencyTelemetry!.Type.Should().Be(dependencyType);
+        dependencyTelemetry.Type.Should().Be(dependencyType);
         dependencyTelemetry.Name.Should().Be(dependencyName);
         dependencyTelemetry.Data.Should().Be("GET /api/users/***@example.com");
         dependencyTelemetry.Timestamp.Should().Be(startTime);
@@ -276,7 +276,7 @@ public class TelemetryServiceTests : IDisposable
         _capturedTelemetry.Should().HaveCount(1);
         var pageViewTelemetry = _capturedTelemetry[0] as PageViewTelemetry;
         pageViewTelemetry.Should().NotBeNull();
-        pageViewTelemetry!.Name.Should().Be(pageName);
+        pageViewTelemetry.Name.Should().Be(pageName);
         pageViewTelemetry.Url.ToString().Should().Contain("***@example.com");
         pageViewTelemetry.Url.ToString().Should().NotContain("john.doe");
         pageViewTelemetry.Duration.Should().Be(duration);
@@ -334,7 +334,7 @@ public class TelemetryServiceTests : IDisposable
         _capturedTelemetry.Should().HaveCount(1);
         var requestTelemetry = _capturedTelemetry[0] as RequestTelemetry;
         requestTelemetry.Should().NotBeNull();
-        requestTelemetry!.Name.Should().Be(requestName);
+        requestTelemetry.Name.Should().Be(requestName);
         requestTelemetry.Timestamp.Should().Be(startTime);
         requestTelemetry.Duration.Should().Be(duration);
         requestTelemetry.ResponseCode.Should().Be(responseCode);
@@ -370,7 +370,7 @@ public class TelemetryServiceTests : IDisposable
         _capturedTelemetry.Should().HaveCount(1);
         var traceTelemetry = _capturedTelemetry[0] as TraceTelemetry;
         traceTelemetry.Should().NotBeNull();
-        traceTelemetry!.Message.Should().Be("Processing credential for ***@example.com");
+        traceTelemetry.Message.Should().Be("Processing credential for ***@example.com");
         traceTelemetry.SeverityLevel.Should().Be(SeverityLevel.Information);
         traceTelemetry.Properties["CredentialType"].Should().Be("PassportCredential");
         traceTelemetry.Properties["TenantId"].Should().Be("tenant-123");
@@ -402,7 +402,7 @@ public class TelemetryServiceTests : IDisposable
         _capturedTelemetry.Should().HaveCount(1);
         var availabilityTelemetry = _capturedTelemetry[0] as AvailabilityTelemetry;
         availabilityTelemetry.Should().NotBeNull();
-        availabilityTelemetry!.Name.Should().Be(testName);
+        availabilityTelemetry.Name.Should().Be(testName);
         availabilityTelemetry.Timestamp.Should().Be(startTime);
         availabilityTelemetry.Duration.Should().Be(duration);
         availabilityTelemetry.RunLocation.Should().Be(runLocation);
@@ -475,7 +475,7 @@ public class TelemetryServiceTests : IDisposable
         _capturedTelemetry.Should().HaveCount(1);
         var eventTelemetry = _capturedTelemetry[0] as EventTelemetry;
         eventTelemetry.Should().NotBeNull();
-        eventTelemetry!.Properties["Email"].Should().Be("***@example.com");
+        eventTelemetry.Properties["Email"].Should().Be("***@example.com");
         eventTelemetry.Properties["Phone"].Should().Be("+614****5678");
         eventTelemetry.Properties["Name"].Should().Be("Joh***");
         eventTelemetry.Properties["IpAddress"].Should().Be("192.168.1.***");
@@ -501,7 +501,7 @@ public class TelemetryServiceTests : IDisposable
         _capturedTelemetry.Should().HaveCount(1);
         var eventTelemetry = _capturedTelemetry[0] as EventTelemetry;
         eventTelemetry.Should().NotBeNull();
-        eventTelemetry!.Name.Should().Be(eventName);
+        eventTelemetry.Name.Should().Be(eventName);
         eventTelemetry.Properties["TenantId"].Should().Be("tenant-123");
         eventTelemetry.Metrics.Should().BeEmpty();
     }
@@ -509,6 +509,6 @@ public class TelemetryServiceTests : IDisposable
     public void Dispose()
     {
         _telemetryChannelMock.Object?.Flush();
-        (_telemetryChannelMock.Object as IDisposable)?.Dispose();
+        _telemetryChannelMock.Object?.Dispose();
     }
 }

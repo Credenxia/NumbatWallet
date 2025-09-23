@@ -1,8 +1,5 @@
-using Carter;
-using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using NumbatWallet.Web.Api.Rest.Common;
-using System.Text.Json;
 
 namespace NumbatWallet.Web.Api.Rest.Modules;
 

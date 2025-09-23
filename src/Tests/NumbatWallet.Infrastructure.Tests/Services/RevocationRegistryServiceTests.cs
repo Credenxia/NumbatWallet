@@ -1,20 +1,15 @@
-using System;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
-using System.Text;
-using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Moq;
-using Moq.Protected;
 using NumbatWallet.Domain.Entities;
 using NumbatWallet.Domain.Interfaces;
 using NumbatWallet.Infrastructure.Data;
 using NumbatWallet.Infrastructure.Services;
 using NumbatWallet.SharedKernel.Interfaces;
-using Xunit;
 
 namespace NumbatWallet.Infrastructure.Tests.Services;
 

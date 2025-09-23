@@ -1,5 +1,4 @@
 using FluentValidation;
-using NumbatWallet.SharedKernel.Enums;
 
 namespace NumbatWallet.Application.Wallets.Commands.CreateWallet;
 

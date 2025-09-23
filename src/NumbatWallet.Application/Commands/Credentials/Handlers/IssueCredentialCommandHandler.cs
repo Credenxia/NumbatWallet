@@ -71,7 +71,6 @@ public class IssueCredentialCommandHandler : ICommandHandler<IssueCredentialComm
             CredentialType.EducationalCertificate => "EducationalCertificate",
             CredentialType.ProofOfAge => "ProofOfAge",
             CredentialType.VerifiableCredential => "VerifiableCredential",
-            CredentialType.Custom => "Custom",
             _ => "Custom"
         };
 

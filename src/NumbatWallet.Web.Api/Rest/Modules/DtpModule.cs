@@ -1,11 +1,5 @@
-using Carter;
-using Carter.ModelBinding;
-using FluentValidation;
-using Microsoft.AspNetCore.Mvc;
 using NumbatWallet.Application.DTOs;
-using NumbatWallet.Application.Interfaces;
 using NumbatWallet.Web.Api.Rest.Common;
-using NumbatWallet.Web.Api.Rest.Validators;
 
 namespace NumbatWallet.Web.Api.Rest.Modules;
 

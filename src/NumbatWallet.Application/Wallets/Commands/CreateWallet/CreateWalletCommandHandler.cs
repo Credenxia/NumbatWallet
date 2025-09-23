@@ -7,7 +7,6 @@ using NumbatWallet.Domain.Aggregates;
 using NumbatWallet.Domain.Interfaces;
 using NumbatWallet.Domain.Services;
 using NumbatWallet.SharedKernel.Interfaces;
-using NumbatWallet.SharedKernel.Enums;
 
 namespace NumbatWallet.Application.Wallets.Commands.CreateWallet;
 

@@ -1,7 +1,5 @@
-using System;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
-using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -9,7 +7,6 @@ using Moq;
 using NumbatWallet.Domain.Interfaces;
 using NumbatWallet.Infrastructure.Services;
 using NumbatWallet.Infrastructure.Services.Providers;
-using Xunit;
 
 namespace NumbatWallet.Infrastructure.Tests.Services;
 
@@ -40,6 +37,7 @@ public class HsmServiceTests
 
         // Setup service provider to return SoftwareHsmProvider
         var mockHsmProvider = new Mock<SoftwareHsmProvider>(
+            Mock.Of<IConfiguration>(),
             Mock.Of<ILogger<SoftwareHsmProvider>>());
 
         // Setup for both GetService and GetRequiredService calls

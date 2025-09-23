@@ -107,7 +107,7 @@ public class MockBlobStorageService : IBlobStorageService
         var fullPrefix = string.IsNullOrEmpty(prefix) ? containerPrefix : $"{containerPrefix}{prefix}";
 
         var blobs = _inMemoryStorage.Keys
-            .Where(k => k.StartsWith(fullPrefix))
+            .Where(k => k.StartsWith(fullPrefix, StringComparison.Ordinal))
             .Select(k => k.Substring(containerPrefix.Length))
             .ToList();
 

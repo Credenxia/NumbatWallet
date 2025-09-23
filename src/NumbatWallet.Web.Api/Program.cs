@@ -1,13 +1,9 @@
 using Carter;
-using Microsoft.EntityFrameworkCore;
-using NumbatWallet.Application.Commands.Credentials;
 using NumbatWallet.Application.DependencyInjection;
-using NumbatWallet.Infrastructure.Data;
 using NumbatWallet.Infrastructure.DependencyInjection;
 using NumbatWallet.Web.Api.DependencyInjection;
 using NumbatWallet.Web.Api.Extensions;
 using NumbatWallet.Web.Api.Hubs;
-using NumbatWallet.Web.Api.Middleware;
 using Serilog;
 using Asp.Versioning.ApiExplorer;
 
@@ -27,7 +23,7 @@ try
 
     // Logging the connection string for debugging
     var connString = builder.Configuration.GetConnectionString("numbatwallet");
-    Log.Information($"Connection string from config: {connString}");
+    Log.Information("Connection string from config: {ConnectionString}", connString ?? "Not configured");
 
     // Add Serilog
     builder.Host.UseSerilog((context, services, configuration) => configuration

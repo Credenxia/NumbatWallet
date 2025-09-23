@@ -1,13 +1,7 @@
 using FluentAssertions;
-using HotChocolate;
-using HotChocolate.Execution;
-using Microsoft.Extensions.DependencyInjection;
 using Moq;
 using NumbatWallet.Application.DTOs;
 using NumbatWallet.Application.Interfaces;
-using NumbatWallet.Web.Api.GraphQL.Schema;
-using NumbatWallet.Web.Api.GraphQL.Admin;
-using Xunit;
 
 namespace NumbatWallet.Web.Api.Tests.GraphQL.Admin;
 
@@ -85,7 +79,7 @@ public class AdminQueryTests : IDisposable
     public async Task GetBackups_Should_Return_Backup_History()
     {
         // Arrange
-        var backups = new List<Application.Interfaces.BackupDto>
+        var backups = new List<BackupDto>
         {
             new() { Id = "1", Type = "Full", Status = "Complete" }
         };

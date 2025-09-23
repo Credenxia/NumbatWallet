@@ -1,6 +1,5 @@
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
-using System.Text;
 using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
@@ -10,7 +9,6 @@ using NumbatWallet.Domain.Entities;
 using NumbatWallet.Domain.Interfaces;
 using NumbatWallet.Domain.Services;
 using NumbatWallet.Web.Api.Middleware;
-using Xunit;
 
 namespace NumbatWallet.Web.Api.Tests.Middleware;
 
@@ -56,7 +54,7 @@ public class MutualTlsMiddlewareTests
 
         var tenantCert = CreateTenantCertificate(certificate);
         _certificateRepositoryMock
-            .Setup(x => x.GetByThumbprintAsync(certificate.Thumbprint!, It.IsAny<CancellationToken>()))
+            .Setup(x => x.GetByThumbprintAsync(certificate.Thumbprint, It.IsAny<CancellationToken>()))
             .ReturnsAsync(tenantCert);
 
         var trustStore = new CertificateTrustStore(
@@ -111,7 +109,7 @@ public class MutualTlsMiddlewareTests
         tenantCert.Deactivate(); // Simulate expired cert
 
         _certificateRepositoryMock
-            .Setup(x => x.GetByThumbprintAsync(certificate.Thumbprint!, It.IsAny<CancellationToken>()))
+            .Setup(x => x.GetByThumbprintAsync(certificate.Thumbprint, It.IsAny<CancellationToken>()))
             .ReturnsAsync(tenantCert);
 
         // Act
@@ -138,7 +136,7 @@ public class MutualTlsMiddlewareTests
         tenantCert.Revoke("Test revocation");
 
         _certificateRepositoryMock
-            .Setup(x => x.GetByThumbprintAsync(certificate.Thumbprint!, It.IsAny<CancellationToken>()))
+            .Setup(x => x.GetByThumbprintAsync(certificate.Thumbprint, It.IsAny<CancellationToken>()))
             .ReturnsAsync(tenantCert);
 
         // Act
@@ -184,7 +182,7 @@ public class MutualTlsMiddlewareTests
         tenantCert.UpdateTrustLevel(CertificateTrustLevel.Low); // Below required Medium
 
         _certificateRepositoryMock
-            .Setup(x => x.GetByThumbprintAsync(certificate.Thumbprint!, It.IsAny<CancellationToken>()))
+            .Setup(x => x.GetByThumbprintAsync(certificate.Thumbprint, It.IsAny<CancellationToken>()))
             .ReturnsAsync(tenantCert);
 
         var trustStore = new CertificateTrustStore(
@@ -257,7 +255,7 @@ public class MutualTlsMiddlewareTests
         return new TenantCertificate(
             Guid.NewGuid(),
             Convert.ToBase64String(x509Cert.Export(X509ContentType.Cert)),
-            x509Cert.Thumbprint!,
+            x509Cert.Thumbprint,
             x509Cert.SubjectName.Name,
             x509Cert.IssuerName.Name,
             new DateTimeOffset(x509Cert.NotBefore, TimeSpan.Zero),

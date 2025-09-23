@@ -197,9 +197,18 @@ public class TenantService : ITenantService
         }
 
         // In production, this would update tenant in database
-        if (dto.Name != null) existing.Name = dto.Name;
-        if (dto.Description != null) existing.Description = dto.Description;
-        if (dto.IsActive.HasValue) existing.IsActive = dto.IsActive.Value;
+        if (dto.Name != null)
+        {
+            existing.Name = dto.Name;
+        }
+        if (dto.Description != null)
+        {
+            existing.Description = dto.Description;
+        }
+        if (dto.IsActive.HasValue)
+        {
+            existing.IsActive = dto.IsActive.Value;
+        }
 
         _cache.Remove($"tenant_{tenantId}");
         _logger.LogInformation("Updated tenant {TenantId}", tenantId);

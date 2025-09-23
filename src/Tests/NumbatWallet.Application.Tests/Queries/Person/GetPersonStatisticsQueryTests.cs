@@ -3,7 +3,6 @@ using Moq;
 using NumbatWallet.Application.Queries.Person;
 using NumbatWallet.Domain.Interfaces;
 using NumbatWallet.SharedKernel.Enums;
-using Xunit;
 
 namespace NumbatWallet.Application.Tests.Queries.Person;
 

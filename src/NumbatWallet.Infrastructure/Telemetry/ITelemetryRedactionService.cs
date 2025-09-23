@@ -1,6 +1,3 @@
-using System;
-using System.Collections.Generic;
-
 namespace NumbatWallet.Infrastructure.Telemetry;
 
 public interface ITelemetryRedactionService

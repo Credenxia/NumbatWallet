@@ -5,7 +5,7 @@ namespace NumbatWallet.Domain.Credentials;
 /// </summary>
 public class CredentialManifestValidator
 {
-    public bool IsValid(CredentialManifest manifest)
+    public bool IsValid(CredentialManifest? manifest)
     {
         if (manifest == null)
         {
@@ -84,7 +84,7 @@ public class CredentialManifestValidator
         return true;
     }
 
-    public ValidationResult ValidateWithDetails(CredentialManifest manifest)
+    public ValidationResult ValidateWithDetails(CredentialManifest? manifest)
     {
         var result = new ValidationResult { IsValid = true };
 

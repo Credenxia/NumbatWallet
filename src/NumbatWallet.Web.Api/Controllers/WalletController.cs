@@ -1,6 +1,3 @@
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
-using NumbatWallet.Application.CQRS.Interfaces;
 using NumbatWallet.Application.DTOs;
 using NumbatWallet.Application.Wallets.Commands.CreateWallet;
 using NumbatWallet.SharedKernel.Enums;
@@ -58,7 +55,7 @@ public class WalletController : ControllerBase
                 new { id = walletDto.Id },
                 new CreateWalletResponse { WalletId = Guid.Parse(walletDto.Id) });
         }
-        catch (FluentValidation.ValidationException ex)
+        catch (ValidationException ex)
         {
             _logger.LogWarning("Validation failed for wallet creation: {Errors}",
                 string.Join(", ", ex.Errors.Select(e => e.ErrorMessage)));

@@ -1,5 +1,3 @@
-using System.Net.Http.Headers;
-
 namespace NumbatWallet.Web.Admin.Services;
 
 /// <summary>

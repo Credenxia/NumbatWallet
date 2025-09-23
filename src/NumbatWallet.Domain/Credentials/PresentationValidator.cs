@@ -7,7 +7,7 @@ namespace NumbatWallet.Domain.Credentials;
 /// </summary>
 public class PresentationValidator
 {
-    public bool ValidateAgainstManifest(Dictionary<string, object> presentation, CredentialManifest manifest)
+    public bool ValidateAgainstManifest(Dictionary<string, object>? presentation, CredentialManifest? manifest)
     {
         if (presentation == null || manifest == null)
         {
@@ -206,7 +206,7 @@ public class PresentationValidator
         };
     }
 
-    private bool TryConvertToNumber(object value, out double number)
+    private bool TryConvertToNumber(object? value, out double number)
     {
         number = 0;
 

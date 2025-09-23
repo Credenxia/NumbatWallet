@@ -1,8 +1,4 @@
 using Carter;
-using Carter.ModelBinding;
-using Carter.Response;
-using FluentValidation;
-using Microsoft.AspNetCore.Http.HttpResults;
 
 namespace NumbatWallet.Web.Api.Rest.Common;
 

@@ -1,12 +1,6 @@
 using Carter;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
 using NumbatWallet.Application.Commands.Credentials;
-using NumbatWallet.Application.CQRS.Interfaces;
-using NumbatWallet.Application.DTOs;
-using NumbatWallet.Application.Interfaces;
 using NumbatWallet.Domain.Enums;
-using NumbatWallet.SharedKernel.Results;
 using System.Text.Json;
 
 namespace NumbatWallet.Web.Api.Endpoints;
@@ -139,7 +133,7 @@ public class BulkOperationEndpoints : ICarterModule
     }
 
     private static async Task<IResult> ImportCredentials(
-        IFormFile file,
+        IFormFile? file,
         [FromForm] string issuerId,
         [FromForm] string issuerOrganizationId,
         [FromForm] string credentialType,
@@ -246,7 +240,7 @@ public class BulkOperationEndpoints : ICarterModule
 
     private static async Task<IResult> ExportOperationResults(
         string operationId,
-        [FromQuery] string format,
+        [FromQuery] string? format,
         [FromServices] IBulkOperationService operationService,
         CancellationToken cancellationToken)
     {

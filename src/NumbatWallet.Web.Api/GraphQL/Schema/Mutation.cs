@@ -1,13 +1,9 @@
-using HotChocolate;
-using HotChocolate.Authorization;
 using NumbatWallet.Application.Commands.Credentials;
 using NumbatWallet.Application.Commands.Organizations;
 using NumbatWallet.Application.Commands.Persons;
 using NumbatWallet.Application.Commands.Wallets;
 using NumbatWallet.Application.Wallets.Commands.CreateWallet;
-using NumbatWallet.Application.CQRS.Interfaces;
 using NumbatWallet.Application.DTOs;
-using NumbatWallet.Application.Interfaces;
 using NumbatWallet.Domain.Enums;
 using WalletCommands = NumbatWallet.Application.Commands.Wallets;
 
@@ -24,7 +20,7 @@ public class Mutation
         CancellationToken cancellationToken)
     {
         var userId = httpContextAccessor.HttpContext?.User.FindFirst("sub")?.Value
-            ?? throw new Domain.Exceptions.UnauthorizedException("User not authenticated");
+            ?? throw new UnauthorizedException("User not authenticated");
 
         var command = new CreatePersonCommand(
             input.Email,
@@ -78,7 +74,7 @@ public class Mutation
         CancellationToken cancellationToken)
     {
         var createdBy = httpContextAccessor.HttpContext?.User.FindFirst("sub")?.Value
-            ?? throw new Domain.Exceptions.UnauthorizedException("User not authenticated");
+            ?? throw new UnauthorizedException("User not authenticated");
 
         var command = new CreateOrganizationCommand(
             input.Name,
@@ -119,7 +115,7 @@ public class Mutation
         CancellationToken cancellationToken)
     {
         var userId = httpContextAccessor.HttpContext?.User.FindFirst("sub")?.Value
-            ?? throw new Domain.Exceptions.UnauthorizedException("User not authenticated");
+            ?? throw new UnauthorizedException("User not authenticated");
 
         var command = new CreateWalletCommand
         {
@@ -179,7 +175,7 @@ public class Mutation
         CancellationToken cancellationToken)
     {
         var issuerId = httpContextAccessor.HttpContext?.User.FindFirst("sub")?.Value
-            ?? throw new Domain.Exceptions.UnauthorizedException("Issuer not authenticated");
+            ?? throw new UnauthorizedException("Issuer not authenticated");
 
         var command = new IssueCredentialCommand(
             input.WalletId,
@@ -202,7 +198,7 @@ public class Mutation
         CancellationToken cancellationToken)
     {
         var revokerId = httpContextAccessor.HttpContext?.User.FindFirst("sub")?.Value
-            ?? throw new Domain.Exceptions.UnauthorizedException("User not authenticated");
+            ?? throw new UnauthorizedException("User not authenticated");
 
         var command = new RevokeCredentialCommand(
             input.CredentialId,
@@ -245,14 +241,14 @@ public class Mutation
 
     // Bulk Operations
     [Authorize(Roles = new[] { "Admin", "Officer" })]
-    public async Task<NumbatWallet.Application.Commands.Credentials.BulkIssueResult> BulkIssueCredentials(
+    public async Task<BulkIssueResult> BulkIssueCredentials(
         BulkIssueCredentialsInput input,
-        [Service] ICommandHandler<BulkIssueCredentialsCommand, NumbatWallet.Application.Commands.Credentials.BulkIssueResult> handler,
+        [Service] ICommandHandler<BulkIssueCredentialsCommand, BulkIssueResult> handler,
         [Service] IHttpContextAccessor httpContextAccessor,
         CancellationToken cancellationToken)
     {
         var issuerId = httpContextAccessor.HttpContext?.User.FindFirst("sub")?.Value
-            ?? throw new Domain.Exceptions.UnauthorizedException("Issuer not authenticated");
+            ?? throw new UnauthorizedException("Issuer not authenticated");
 
         var command = new BulkIssueCredentialsCommand(
             input.WalletIds,

@@ -1,6 +1,5 @@
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using NumbatWallet.Application.Commands.Credentials;
 using NumbatWallet.Application.DTOs;
 using System.Collections.Concurrent;
 

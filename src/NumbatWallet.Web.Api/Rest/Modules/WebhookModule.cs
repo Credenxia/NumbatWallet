@@ -1,10 +1,6 @@
-using Carter;
-using Microsoft.AspNetCore.Mvc;
-using NumbatWallet.Application.Interfaces;
 using NumbatWallet.Web.Api.Rest.Common;
 using System.Security.Cryptography;
 using System.Text;
-using System.Text.Json;
 
 namespace NumbatWallet.Web.Api.Rest.Modules;
 

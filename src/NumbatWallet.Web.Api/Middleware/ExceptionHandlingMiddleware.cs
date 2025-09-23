@@ -1,7 +1,4 @@
-using System.Net;
 using System.Text.Json;
-using NumbatWallet.Domain.Exceptions;
-using FluentValidation;
 
 namespace NumbatWallet.Web.Api.Middleware;
 
@@ -60,7 +57,7 @@ public class ExceptionHandlingMiddleware
     {
         var problemDetails = exception switch
         {
-            Domain.Exceptions.NotFoundException notFoundEx => new ProblemDetails
+            NotFoundException notFoundEx => new ProblemDetails
             {
                 Title = "Resource Not Found",
                 Status = StatusCodes.Status404NotFound,
@@ -69,7 +66,7 @@ public class ExceptionHandlingMiddleware
                 Instance = context.Request.Path
             },
 
-            Domain.Exceptions.ConflictException conflictEx => new ProblemDetails
+            ConflictException conflictEx => new ProblemDetails
             {
                 Title = "Conflict",
                 Status = StatusCodes.Status409Conflict,
@@ -78,7 +75,7 @@ public class ExceptionHandlingMiddleware
                 Instance = context.Request.Path
             },
 
-            Domain.Exceptions.UnauthorizedException unauthorizedEx => new ProblemDetails
+            UnauthorizedException unauthorizedEx => new ProblemDetails
             {
                 Title = "Unauthorized",
                 Status = StatusCodes.Status401Unauthorized,

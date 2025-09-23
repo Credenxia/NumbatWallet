@@ -1,6 +1,5 @@
 using FluentValidation;
 using NumbatWallet.Application.Commands.Credentials;
-using NumbatWallet.Domain.Enums;
 
 namespace NumbatWallet.Application.Validators;
 

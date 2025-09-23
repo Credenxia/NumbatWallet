@@ -1,11 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Security.Cryptography;
 using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-using Azure;
 using Azure.Identity;
 using Azure.Security.KeyVault.Keys;
 using AzureCrypto = Azure.Security.KeyVault.Keys.Cryptography;
@@ -96,7 +89,9 @@ public class KeyVaultHsmProvider : IHsmProvider
                 };
                 ConfigureKeyOperations(rsaOptions, request.Usage);
                 foreach (var tag in request.Tags)
+                {
                     rsaOptions.Tags.Add(tag.Key, tag.Value);
+                }
                 keyResponse = await _keyClient.CreateRsaKeyAsync(rsaOptions, cancellationToken);
                 break;
 
@@ -109,7 +104,9 @@ public class KeyVaultHsmProvider : IHsmProvider
                 };
                 ConfigureKeyOperations(ecOptions, request.Usage);
                 foreach (var tag in request.Tags)
+                {
                     ecOptions.Tags.Add(tag.Key, tag.Value);
+                }
                 keyResponse = await _keyClient.CreateEcKeyAsync(ecOptions, cancellationToken);
                 break;
 
@@ -178,15 +175,15 @@ public class KeyVaultHsmProvider : IHsmProvider
     public async Task<byte[]> EncryptAsync(
         string keyId,
         byte[] plaintext,
-        Domain.Interfaces.EncryptionAlgorithm algorithm,
+        EncryptionAlgorithm algorithm,
         CancellationToken cancellationToken = default)
     {
         var cryptoClient = await GetCryptoClientAsync(keyId, cancellationToken);
 
         var encryptAlgorithm = algorithm switch
         {
-            Domain.Interfaces.EncryptionAlgorithm.RSA_OAEP => AzureCrypto.EncryptionAlgorithm.RsaOaep,
-            Domain.Interfaces.EncryptionAlgorithm.RSA_OAEP_256 => AzureCrypto.EncryptionAlgorithm.RsaOaep256,
+            EncryptionAlgorithm.RSA_OAEP => AzureCrypto.EncryptionAlgorithm.RsaOaep,
+            EncryptionAlgorithm.RSA_OAEP_256 => AzureCrypto.EncryptionAlgorithm.RsaOaep256,
             _ => throw new NotSupportedException($"Encryption algorithm {algorithm} not supported")
         };
 
@@ -197,15 +194,15 @@ public class KeyVaultHsmProvider : IHsmProvider
     public async Task<byte[]> DecryptAsync(
         string keyId,
         byte[] ciphertext,
-        Domain.Interfaces.EncryptionAlgorithm algorithm,
+        EncryptionAlgorithm algorithm,
         CancellationToken cancellationToken = default)
     {
         var cryptoClient = await GetCryptoClientAsync(keyId, cancellationToken);
 
         var encryptAlgorithm = algorithm switch
         {
-            Domain.Interfaces.EncryptionAlgorithm.RSA_OAEP => AzureCrypto.EncryptionAlgorithm.RsaOaep,
-            Domain.Interfaces.EncryptionAlgorithm.RSA_OAEP_256 => AzureCrypto.EncryptionAlgorithm.RsaOaep256,
+            EncryptionAlgorithm.RSA_OAEP => AzureCrypto.EncryptionAlgorithm.RsaOaep,
+            EncryptionAlgorithm.RSA_OAEP_256 => AzureCrypto.EncryptionAlgorithm.RsaOaep256,
             _ => throw new NotSupportedException($"Encryption algorithm {algorithm} not supported")
         };
 
@@ -216,15 +213,15 @@ public class KeyVaultHsmProvider : IHsmProvider
     public async Task<byte[]> WrapKeyAsync(
         string wrappingKeyId,
         byte[] keyToWrap,
-        Domain.Interfaces.KeyWrapAlgorithm algorithm,
+        KeyWrapAlgorithm algorithm,
         CancellationToken cancellationToken = default)
     {
         var cryptoClient = await GetCryptoClientAsync(wrappingKeyId, cancellationToken);
 
         var wrapAlgorithm = algorithm switch
         {
-            Domain.Interfaces.KeyWrapAlgorithm.RSA_OAEP => AzureCrypto.KeyWrapAlgorithm.RsaOaep,
-            Domain.Interfaces.KeyWrapAlgorithm.RSA_OAEP_256 => AzureCrypto.KeyWrapAlgorithm.RsaOaep256,
+            KeyWrapAlgorithm.RSA_OAEP => AzureCrypto.KeyWrapAlgorithm.RsaOaep,
+            KeyWrapAlgorithm.RSA_OAEP_256 => AzureCrypto.KeyWrapAlgorithm.RsaOaep256,
             _ => throw new NotSupportedException($"Key wrap algorithm {algorithm} not supported")
         };
 
@@ -235,15 +232,15 @@ public class KeyVaultHsmProvider : IHsmProvider
     public async Task<byte[]> UnwrapKeyAsync(
         string unwrappingKeyId,
         byte[] wrappedKey,
-        Domain.Interfaces.KeyWrapAlgorithm algorithm,
+        KeyWrapAlgorithm algorithm,
         CancellationToken cancellationToken = default)
     {
         var cryptoClient = await GetCryptoClientAsync(unwrappingKeyId, cancellationToken);
 
         var wrapAlgorithm = algorithm switch
         {
-            Domain.Interfaces.KeyWrapAlgorithm.RSA_OAEP => AzureCrypto.KeyWrapAlgorithm.RsaOaep,
-            Domain.Interfaces.KeyWrapAlgorithm.RSA_OAEP_256 => AzureCrypto.KeyWrapAlgorithm.RsaOaep256,
+            KeyWrapAlgorithm.RSA_OAEP => AzureCrypto.KeyWrapAlgorithm.RsaOaep,
+            KeyWrapAlgorithm.RSA_OAEP_256 => AzureCrypto.KeyWrapAlgorithm.RsaOaep256,
             _ => throw new NotSupportedException($"Key wrap algorithm {algorithm} not supported")
         };
 
@@ -329,7 +326,9 @@ public class KeyVaultHsmProvider : IHsmProvider
                 var isValid = await targetProvider.VerifyAsync(newKeyId, testData, signature, SigningAlgorithm.RS256, cancellationToken);
 
                 if (!isValid)
+                {
                     throw new InvalidOperationException("Migration verification failed");
+                }
             }
 
             if (options.DeleteSourceAfterMigration)
@@ -378,7 +377,7 @@ public class KeyVaultHsmProvider : IHsmProvider
 
         await foreach (var keyProperties in _keyClient.GetPropertiesOfKeysAsync(cancellationToken))
         {
-            if (prefix == null || keyProperties.Name.StartsWith(prefix))
+            if (prefix == null || keyProperties.Name.StartsWith(prefix, StringComparison.Ordinal))
             {
                 var key = await _keyClient.GetKeyAsync(keyProperties.Name, cancellationToken: cancellationToken);
                 keys.Add(ConvertToHsmKey(key.Value));
@@ -458,7 +457,9 @@ public class KeyVaultHsmProvider : IHsmProvider
     private async Task<AzureCrypto.CryptographyClient> GetCryptoClientAsync(string keyId, CancellationToken cancellationToken)
     {
         if (_cryptoClients.TryGetValue(keyId, out var client))
+        {
             return client;
+        }
 
         var keyName = ExtractKeyName(keyId);
         var key = await _keyClient.GetKeyAsync(keyName, cancellationToken: cancellationToken);
@@ -472,7 +473,7 @@ public class KeyVaultHsmProvider : IHsmProvider
     private string ExtractKeyName(string keyId)
     {
         // Handle various key ID formats
-        if (keyId.StartsWith("https://"))
+        if (keyId.StartsWith("https://", StringComparison.Ordinal))
         {
             var uri = new Uri(keyId);
             var segments = uri.Segments;
@@ -512,12 +513,30 @@ public class KeyVaultHsmProvider : IHsmProvider
 
         foreach (var op in operations)
         {
-            if (op == KeyOperation.Sign) usage |= KeyUsage.Sign;
-            if (op == KeyOperation.Verify) usage |= KeyUsage.Verify;
-            if (op == KeyOperation.Encrypt) usage |= KeyUsage.Encrypt;
-            if (op == KeyOperation.Decrypt) usage |= KeyUsage.Decrypt;
-            if (op == KeyOperation.WrapKey) usage |= KeyUsage.WrapKey;
-            if (op == KeyOperation.UnwrapKey) usage |= KeyUsage.UnwrapKey;
+            if (op == KeyOperation.Sign)
+            {
+                usage |= KeyUsage.Sign;
+            }
+            if (op == KeyOperation.Verify)
+            {
+                usage |= KeyUsage.Verify;
+            }
+            if (op == KeyOperation.Encrypt)
+            {
+                usage |= KeyUsage.Encrypt;
+            }
+            if (op == KeyOperation.Decrypt)
+            {
+                usage |= KeyUsage.Decrypt;
+            }
+            if (op == KeyOperation.WrapKey)
+            {
+                usage |= KeyUsage.WrapKey;
+            }
+            if (op == KeyOperation.UnwrapKey)
+            {
+                usage |= KeyUsage.UnwrapKey;
+            }
         }
 
         return usage;
@@ -537,17 +556,29 @@ public class KeyVaultHsmProvider : IHsmProvider
     private void ConfigureKeyOperations<T>(T options, KeyUsage usage) where T : CreateKeyOptions
     {
         if (usage.HasFlag(KeyUsage.Sign))
+        {
             options.KeyOperations.Add(KeyOperation.Sign);
+        }
         if (usage.HasFlag(KeyUsage.Verify))
+        {
             options.KeyOperations.Add(KeyOperation.Verify);
+        }
         if (usage.HasFlag(KeyUsage.Encrypt))
+        {
             options.KeyOperations.Add(KeyOperation.Encrypt);
+        }
         if (usage.HasFlag(KeyUsage.Decrypt))
+        {
             options.KeyOperations.Add(KeyOperation.Decrypt);
+        }
         if (usage.HasFlag(KeyUsage.WrapKey))
+        {
             options.KeyOperations.Add(KeyOperation.WrapKey);
+        }
         if (usage.HasFlag(KeyUsage.UnwrapKey))
+        {
             options.KeyOperations.Add(KeyOperation.UnwrapKey);
+        }
     }
 
     #endregion

@@ -1,21 +1,14 @@
-using System;
-using System.Collections.Generic;
 using System.Text.Json;
-using System.Threading;
-using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using Moq;
 using NumbatWallet.Application.Commands.Credentials;
 using NumbatWallet.Application.Commands.Credentials.Handlers;
 using NumbatWallet.Application.Exceptions;
-using NumbatWallet.Application.Interfaces;
 using NumbatWallet.Domain.Aggregates;
 using NumbatWallet.Domain.Events;
 using NumbatWallet.Domain.Interfaces;
 using NumbatWallet.SharedKernel.Interfaces;
-using NumbatWallet.SharedKernel.Enums;
-using Xunit;
 
 namespace NumbatWallet.Application.Tests.Commands.Credentials;
 

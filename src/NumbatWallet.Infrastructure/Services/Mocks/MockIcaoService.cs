@@ -1,13 +1,7 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
-using NumbatWallet.Domain.Interfaces;
 
 namespace NumbatWallet.Infrastructure.Services.Mocks;
 
@@ -187,7 +181,7 @@ public class MockIcaoService : IIcaoService
 
         try
         {
-            var cert = new X509Certificate2(certificateData);
+            var cert = X509CertificateLoader.LoadCertificate(certificateData);
             var key = $"{countryCode}_{cert.Thumbprint}";
 
             _cscaCertificates[key] = cert;
@@ -366,7 +360,7 @@ public class MockIcaoService : IIcaoService
             DateTime.UtcNow.AddYears(-1),
             DateTime.UtcNow.AddYears(10));
 
-        return new X509Certificate2(
+        return X509CertificateLoader.LoadPkcs12(
             certificate.Export(X509ContentType.Pfx, "mock"),
             "mock",
             X509KeyStorageFlags.Exportable);
@@ -404,7 +398,7 @@ public class MockIcaoService : IIcaoService
             DateTime.UtcNow.AddYears(2),
             serialNumber);
 
-        return new X509Certificate2(
+        return X509CertificateLoader.LoadPkcs12(
             certificate.Export(X509ContentType.Pfx, "mock"),
             "mock",
             X509KeyStorageFlags.Exportable);
@@ -413,13 +407,17 @@ public class MockIcaoService : IIcaoService
     private byte[] GenerateMasterListSignature()
     {
         if (_masterListSigningCert == null)
+        {
             return Array.Empty<byte>();
+        }
 
         var dataToSign = Encoding.UTF8.GetBytes($"MasterList_v1.0.0_{DateTime.UtcNow:yyyyMMdd}");
 
         using var rsa = _masterListSigningCert.GetRSAPrivateKey();
         if (rsa == null)
+        {
             return Array.Empty<byte>();
+        }
 
         return rsa.SignData(dataToSign, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
     }

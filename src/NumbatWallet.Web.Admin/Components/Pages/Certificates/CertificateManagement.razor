@@ -1,6 +1,5 @@
 @page "/certificates"
 @using Microsoft.AspNetCore.Authorization
-@using NumbatWallet.Application.DTOs
 @using NumbatWallet.Domain.Entities
 @using NumbatWallet.Application.Interfaces
 @inject ITenantService TenantService
@@ -498,7 +497,6 @@
             CertificateTrustLevel.Full => "bg-success",
             CertificateTrustLevel.High => "bg-info",
             CertificateTrustLevel.Medium => "bg-warning",
-            CertificateTrustLevel.Low => "bg-secondary",
             _ => "bg-secondary"
         };
     }

@@ -1,9 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
-using NumbatWallet.Application.DTOs;
-
 namespace NumbatWallet.Application.Interfaces;
 
 /// <summary>

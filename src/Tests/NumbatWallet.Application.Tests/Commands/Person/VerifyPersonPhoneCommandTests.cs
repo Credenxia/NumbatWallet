@@ -4,7 +4,6 @@ using NumbatWallet.Application.Commands.Person;
 using NumbatWallet.Application.Common.Exceptions;
 using NumbatWallet.Domain.Interfaces;
 using NumbatWallet.SharedKernel.Interfaces;
-using Xunit;
 
 namespace NumbatWallet.Application.Tests.Commands.Person;
 

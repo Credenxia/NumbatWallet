@@ -1,5 +1,4 @@
 using Carter;
-using FluentValidation;
 using NumbatWallet.Web.Api.Rest.Modules;
 using NumbatWallet.Web.Api.Rest.Validators;
 

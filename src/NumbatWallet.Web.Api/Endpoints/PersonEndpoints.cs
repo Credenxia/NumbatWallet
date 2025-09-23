@@ -1,8 +1,6 @@
 using Carter;
-using Microsoft.AspNetCore.Mvc;
 using NumbatWallet.Application.Commands.Persons;
 using NumbatWallet.Application.DTOs;
-using NumbatWallet.Application.Interfaces;
 using NumbatWallet.Application.Queries.Persons;
 
 namespace NumbatWallet.Web.Api.Endpoints;

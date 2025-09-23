@@ -1,5 +1,3 @@
-using Microsoft.EntityFrameworkCore;
-using NumbatWallet.SharedKernel.Interfaces;
 using NumbatWallet.SharedKernel.Primitives;
 
 namespace NumbatWallet.Infrastructure.Data.Repositories;

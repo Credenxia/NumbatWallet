@@ -5,7 +5,6 @@ using Microsoft.Extensions.DependencyInjection;
 using NumbatWallet.Application.Interfaces;
 using NumbatWallet.SharedKernel.Attributes;
 using NumbatWallet.SharedKernel.Enums;
-using NumbatWallet.SharedKernel.Interfaces;
 using System.Reflection;
 
 namespace NumbatWallet.Infrastructure.Data.Interceptors;

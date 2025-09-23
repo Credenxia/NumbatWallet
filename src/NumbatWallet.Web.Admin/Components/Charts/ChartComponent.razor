@@ -1,4 +1,3 @@
-@using Microsoft.JSInterop
 @using System.Text.Json
 @using NumbatWallet.Web.Admin.Services
 @inject IJSRuntime JS
@@ -35,7 +34,7 @@
     [Parameter] public bool AutoRefresh { get; set; } = false;
     [Parameter] public int RefreshIntervalSeconds { get; set; } = 30;
 
-    private System.Threading.Timer? _refreshTimer;
+    private Timer? _refreshTimer;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -50,7 +49,7 @@
             // Set up auto-refresh if enabled
             if (AutoRefresh)
             {
-                _refreshTimer = new System.Threading.Timer(
+                _refreshTimer = new Timer(
                     async _ => await RefreshChart(),
                     null,
                     TimeSpan.FromSeconds(RefreshIntervalSeconds),

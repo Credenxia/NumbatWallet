@@ -61,7 +61,7 @@ public class CredentialRevokedEventHandler : IDomainEventHandler<CredentialRevok
                 ChangedFields = new Dictionary<string, object>
                 {
                     ["CredentialId"] = domainEvent.CredentialId,
-                    ["CredentialType"] = credential.CredentialType.ToString(),
+                    ["CredentialType"] = credential.CredentialType,
                     ["Reason"] = domainEvent.Reason,
                     ["IssuerId"] = domainEvent.IssuerId,
                     ["RevokedAt"] = domainEvent.RevokedAt,

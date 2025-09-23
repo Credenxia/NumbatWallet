@@ -1,4 +1,3 @@
-using FluentValidation;
 using NumbatWallet.Web.Api.Rest.Modules;
 
 namespace NumbatWallet.Web.Api.Rest.Validators;
@@ -72,7 +71,7 @@ public class DtpIssueRequestValidator : AbstractValidator<DtpIssueRequest>
         return _validCredentialTypes.Contains(type, StringComparer.OrdinalIgnoreCase);
     }
 
-    private bool HaveValidClaims(Dictionary<string, object> claims)
+    private bool HaveValidClaims(Dictionary<string, object>? claims)
     {
         if (claims == null)
         {

@@ -9,7 +9,7 @@ using NumbatWallet.SharedKernel.Enums;
 
 namespace NumbatWallet.Domain.Aggregates;
 
-public sealed partial class Issuer : AuditableEntity<Guid>, ITenantAware
+public sealed class Issuer : AuditableEntity<Guid>, ITenantAware
 {
     private readonly List<string> _trustedDomains = new();
     private readonly Dictionary<string, string> _supportedCredentialTypes = new();

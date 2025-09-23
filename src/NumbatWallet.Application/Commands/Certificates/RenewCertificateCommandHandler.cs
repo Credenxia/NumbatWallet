@@ -87,7 +87,7 @@ public class RenewCertificateCommandHandler : ICommandHandler<RenewCertificateCo
             var newCertificate = new TenantCertificate(
                 oldCertificate.TenantId,
                 command.NewCertificateData,
-                x509Cert.Thumbprint!,
+                x509Cert.Thumbprint,
                 x509Cert.SubjectName.Name,
                 x509Cert.IssuerName.Name,
                 new DateTimeOffset(x509Cert.NotBefore, TimeSpan.Zero),

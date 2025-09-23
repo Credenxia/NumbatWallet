@@ -9,7 +9,6 @@ using NumbatWallet.Domain.Aggregates;
 using NumbatWallet.Domain.Enums;
 using NumbatWallet.Domain.Events;
 using NumbatWallet.Domain.Interfaces;
-using NumbatWallet.SharedKernel.Enums;
 
 namespace NumbatWallet.Application.Tests.Commands.Credentials;
 

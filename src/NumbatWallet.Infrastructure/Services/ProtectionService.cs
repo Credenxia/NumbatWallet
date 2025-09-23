@@ -172,8 +172,6 @@ public class ProtectionService : IProtectionService
                 ? string.Concat(value.AsSpan(0, 3), new string('*', value.Length - 3))
                 : "****",
 
-            RedactionPattern.Full => "****",
-
             _ => "****"
         };
     }

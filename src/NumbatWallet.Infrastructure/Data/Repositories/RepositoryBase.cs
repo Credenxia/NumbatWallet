@@ -1,6 +1,5 @@
 using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
-using NumbatWallet.Infrastructure.Data;
 using NumbatWallet.SharedKernel.Interfaces;
 using NumbatWallet.SharedKernel.Primitives;
 using NumbatWallet.SharedKernel.Specifications;

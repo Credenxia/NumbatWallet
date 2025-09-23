@@ -1,10 +1,5 @@
-using HotChocolate;
-using HotChocolate.Authorization;
-using HotChocolate.Execution;
 using HotChocolate.Subscriptions;
-using HotChocolate.Types;
 using NumbatWallet.Application.DTOs;
-using NumbatWallet.Domain.Events;
 using System.Runtime.CompilerServices;
 
 namespace NumbatWallet.Web.Api.GraphQL.Schema;

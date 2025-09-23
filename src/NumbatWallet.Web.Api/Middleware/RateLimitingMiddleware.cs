@@ -1,6 +1,4 @@
-using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Caching.Distributed;
-using System.Threading.RateLimiting;
 
 namespace NumbatWallet.Web.Api.Middleware;
 

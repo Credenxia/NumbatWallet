@@ -1,13 +1,7 @@
-using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
-using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using NumbatWallet.Domain.Interfaces;
@@ -141,7 +135,9 @@ public class SoftwareHsmProvider : IHsmProvider
         CancellationToken cancellationToken = default)
     {
         if (!_keys.TryGetValue(keyId, out var key))
+        {
             throw new KeyNotFoundException($"Key {keyId} not found");
+        }
 
         key.LastUsedOn = DateTime.UtcNow;
 
@@ -195,7 +191,9 @@ public class SoftwareHsmProvider : IHsmProvider
         CancellationToken cancellationToken = default)
     {
         if (!_keys.TryGetValue(keyId, out var key))
+        {
             throw new KeyNotFoundException($"Key {keyId} not found");
+        }
 
         bool isValid;
         switch (key.Type)
@@ -245,7 +243,9 @@ public class SoftwareHsmProvider : IHsmProvider
         CancellationToken cancellationToken = default)
     {
         if (!_keys.TryGetValue(keyId, out var key))
+        {
             throw new KeyNotFoundException($"Key {keyId} not found");
+        }
 
         key.LastUsedOn = DateTime.UtcNow;
 
@@ -288,7 +288,9 @@ public class SoftwareHsmProvider : IHsmProvider
         CancellationToken cancellationToken = default)
     {
         if (!_keys.TryGetValue(keyId, out var key))
+        {
             throw new KeyNotFoundException($"Key {keyId} not found");
+        }
 
         key.LastUsedOn = DateTime.UtcNow;
 
@@ -331,7 +333,9 @@ public class SoftwareHsmProvider : IHsmProvider
         CancellationToken cancellationToken = default)
     {
         if (!_keys.TryGetValue(wrappingKeyId, out var key))
+        {
             throw new KeyNotFoundException($"Wrapping key {wrappingKeyId} not found");
+        }
 
         // For simplicity, encrypt the key material
         return await EncryptAsync(
@@ -348,7 +352,9 @@ public class SoftwareHsmProvider : IHsmProvider
         CancellationToken cancellationToken = default)
     {
         if (!_keys.TryGetValue(unwrappingKeyId, out var key))
+        {
             throw new KeyNotFoundException($"Unwrapping key {unwrappingKeyId} not found");
+        }
 
         // For simplicity, decrypt the key material
         return await DecryptAsync(
@@ -363,7 +369,9 @@ public class SoftwareHsmProvider : IHsmProvider
         CancellationToken cancellationToken = default)
     {
         if (!_keys.TryGetValue(keyId, out var key))
+        {
             throw new KeyNotFoundException($"Key {keyId} not found");
+        }
 
         var backup = new KeyBackup
         {
@@ -392,22 +400,22 @@ public class SoftwareHsmProvider : IHsmProvider
     }
 
     public async Task<string> RestoreKeyAsync(
-        KeyBackupData backupData,
+        KeyBackupData backup,
         CancellationToken cancellationToken = default)
     {
-        var decryptedBackup = DecryptWithMasterKey(backupData.BackupBlob);
+        var decryptedBackup = DecryptWithMasterKey(backup.BackupBlob);
         var json = Encoding.UTF8.GetString(decryptedBackup);
-        var backup = JsonSerializer.Deserialize<KeyBackup>(json)
+        var backupData = JsonSerializer.Deserialize<KeyBackup>(json)
             ?? throw new InvalidOperationException("Invalid backup data");
 
         var newKeyId = $"software-{Guid.NewGuid():N}";
-        backup.Key.Id = newKeyId;
-        backup.Key.Name = $"{backup.Key.Name}-restored-{DateTime.UtcNow:yyyyMMddHHmmss}";
+        backupData.Key.Id = newKeyId;
+        backupData.Key.Name = $"{backupData.Key.Name}-restored-{DateTime.UtcNow:yyyyMMddHHmmss}";
 
-        _keys[newKeyId] = backup.Key;
+        _keys[newKeyId] = backupData.Key;
         await PersistKeysAsync();
 
-        _logger.LogInformation("Restored key {OriginalId} as {NewId}", backupData.KeyId, newKeyId);
+        _logger.LogInformation("Restored key {OriginalId} as {NewId}", backup.KeyId, newKeyId);
         return newKeyId;
     }
 
@@ -458,7 +466,9 @@ public class SoftwareHsmProvider : IHsmProvider
                 var isValid = await targetProvider.VerifyAsync(newKeyId, testData, signature, SigningAlgorithm.RS256, cancellationToken);
 
                 if (!isValid)
+                {
                     throw new InvalidOperationException("Migration verification failed");
+                }
             }
 
             // Delete source if requested
@@ -496,7 +506,9 @@ public class SoftwareHsmProvider : IHsmProvider
     public async Task<HsmKey> GetKeyAsync(string keyId, CancellationToken cancellationToken = default)
     {
         if (!_keys.TryGetValue(keyId, out var key))
+        {
             throw new KeyNotFoundException($"Key {keyId} not found");
+        }
 
         return new HsmKey
         {
@@ -521,7 +533,7 @@ public class SoftwareHsmProvider : IHsmProvider
         CancellationToken cancellationToken = default)
     {
         var keys = _keys.Values
-            .Where(k => k.Enabled && (prefix == null || k.Name.StartsWith(prefix)))
+            .Where(k => k.Enabled && (prefix == null || k.Name.StartsWith(prefix, StringComparison.Ordinal)))
             .Select(k => new HsmKey
             {
                 Id = k.Id,
@@ -612,7 +624,9 @@ public class SoftwareHsmProvider : IHsmProvider
     {
         var keyFile = Path.Combine(_keyStorePath, "keys.enc");
         if (!File.Exists(keyFile))
+        {
             return;
+        }
 
         try
         {
@@ -700,7 +714,7 @@ public class SoftwareHsmProvider : IHsmProvider
         var ciphertext = new byte[plaintext.Length];
         var tag = new byte[AesGcm.TagByteSizes.MaxSize];
 
-        using var aesGcm = new AesGcm(key);
+        using var aesGcm = new AesGcm(key, AesGcm.TagByteSizes.MaxSize);
         aesGcm.Encrypt(nonce, plaintext, ciphertext, tag);
 
         var result = new byte[nonce.Length + tag.Length + ciphertext.Length];
@@ -722,7 +736,7 @@ public class SoftwareHsmProvider : IHsmProvider
         Buffer.BlockCopy(encryptedData, nonce.Length + tag.Length, ciphertext, 0, ciphertext.Length);
 
         var plaintext = new byte[ciphertext.Length];
-        using var aesGcm = new AesGcm(key);
+        using var aesGcm = new AesGcm(key, AesGcm.TagByteSizes.MaxSize);
         aesGcm.Decrypt(nonce, ciphertext, tag, plaintext);
 
         return plaintext;

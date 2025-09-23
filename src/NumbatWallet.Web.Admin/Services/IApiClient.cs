@@ -1,5 +1,3 @@
-using System.Net.Http;
-
 namespace NumbatWallet.Web.Admin.Services;
 
 public interface IApiClient

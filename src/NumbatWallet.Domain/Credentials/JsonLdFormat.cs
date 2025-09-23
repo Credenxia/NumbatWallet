@@ -127,7 +127,7 @@ public class JsonLdFormat : ICredentialFormat
         }
     }
 
-    public bool IsValidContext(string[] contexts)
+    public bool IsValidContext(string[]? contexts)
     {
         if (contexts == null || contexts.Length == 0)
         {

@@ -5,7 +5,6 @@ using Microsoft.Extensions.Logging;
 using NumbatWallet.Application.Interfaces;
 using NumbatWallet.Infrastructure.Crypto.Interfaces;
 using NumbatWallet.SharedKernel.Enums;
-using NumbatWallet.SharedKernel.Interfaces;
 
 namespace NumbatWallet.Infrastructure.Crypto;
 

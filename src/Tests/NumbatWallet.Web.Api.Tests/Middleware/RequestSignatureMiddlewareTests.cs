@@ -8,7 +8,6 @@ using NumbatWallet.Application.Interfaces;
 using NumbatWallet.Domain.Interfaces;
 using NumbatWallet.Domain.ValueObjects;
 using NumbatWallet.Web.Api.Middleware;
-using Xunit;
 
 namespace NumbatWallet.Web.Api.Tests.Middleware;
 
@@ -250,7 +249,7 @@ public class RequestSignatureMiddlewareTests
         var tenantCert = new Domain.Entities.TenantCertificate(
             Guid.NewGuid(),
             Convert.ToBase64String(certificate.Export(System.Security.Cryptography.X509Certificates.X509ContentType.Cert)),
-            certificate.Thumbprint!,
+            certificate.Thumbprint,
             certificate.SubjectName.Name,
             certificate.IssuerName.Name,
             DateTimeOffset.UtcNow.AddDays(-1),
@@ -258,7 +257,7 @@ public class RequestSignatureMiddlewareTests
             Domain.Entities.CertificatePurpose.Authentication);
 
         _certificateRepositoryMock
-            .Setup(x => x.GetByThumbprintAsync(certificate.Thumbprint!, It.IsAny<CancellationToken>()))
+            .Setup(x => x.GetByThumbprintAsync(certificate.Thumbprint, It.IsAny<CancellationToken>()))
             .ReturnsAsync(tenantCert);
 
         _signingServiceMock

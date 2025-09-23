@@ -1,9 +1,7 @@
 using Carter;
-using Microsoft.AspNetCore.Mvc;
 using NumbatWallet.Application.Commands.Wallets;
 using NumbatWallet.Application.Wallets.Commands.CreateWallet;
 using NumbatWallet.Application.DTOs;
-using NumbatWallet.Application.Interfaces;
 using NumbatWallet.Application.Queries.Wallets;
 using System.Security.Claims;
 
@@ -51,7 +49,7 @@ public class WalletEndpoints : ICarterModule
         group.MapPost("/{id:guid}/backup", BackupWallet)
             .WithName("BackupWallet")
             .WithOpenApi()
-            .Produces<NumbatWallet.Application.Commands.Wallets.BackupResult>(StatusCodes.Status200OK)
+            .Produces<Application.Commands.Wallets.BackupResult>(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status404NotFound);
 
         // POST /api/v1/wallets/restore
@@ -219,7 +217,7 @@ public class WalletEndpoints : ICarterModule
     private static async Task<IResult> BackupWallet(
         [FromRoute] Guid id,
         ClaimsPrincipal user,
-        [FromServices] ICommandHandler<BackupWalletCommand, NumbatWallet.Application.Commands.Wallets.BackupResult> handler,
+        [FromServices] ICommandHandler<BackupWalletCommand, Application.Commands.Wallets.BackupResult> handler,
         [FromServices] IWalletService walletService,
         CancellationToken cancellationToken)
     {

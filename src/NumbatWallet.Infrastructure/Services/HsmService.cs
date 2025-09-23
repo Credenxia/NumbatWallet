@@ -248,7 +248,7 @@ public class HsmService : IHsmService
             var keyRequest = new KeyGenerationRequest
             {
                 KeyName = $"{certificateName}-key",
-                KeyType = Domain.Interfaces.KeyType.RSA,
+                KeyType = KeyType.RSA,
                 KeySize = 2048,
                 Usage = KeyUsage.Sign | KeyUsage.Verify,
                 Tags = new Dictionary<string, string>
@@ -308,7 +308,7 @@ public class HsmService : IHsmService
                 {
                     ["Provider"] = _provider.ProviderType,
                     ["ComplianceLevel"] = _provider.ComplianceLevel.ToString(),
-                    ["Metrics"] = healthCheck.Metrics ?? new Dictionary<string, object>()
+                    ["Metrics"] = healthCheck.Metrics
                 },
                 CheckedAt = DateTimeOffset.UtcNow
             };
@@ -544,14 +544,14 @@ public class HsmService : IHsmService
 
     #region Helper Methods
 
-    private Domain.Interfaces.KeyType ConvertAlgorithmToKeyType(KeyAlgorithm algorithm)
+    private KeyType ConvertAlgorithmToKeyType(KeyAlgorithm algorithm)
     {
         return algorithm switch
         {
-            KeyAlgorithm.RSA2048 or KeyAlgorithm.RSA3072 or KeyAlgorithm.RSA4096 => Domain.Interfaces.KeyType.RSA,
-            KeyAlgorithm.ECC_P256 or KeyAlgorithm.ECC_P384 or KeyAlgorithm.ECC_P521 => Domain.Interfaces.KeyType.EC,
-            KeyAlgorithm.AES128 or KeyAlgorithm.AES256 => Domain.Interfaces.KeyType.AES,
-            _ => Domain.Interfaces.KeyType.RSA
+            KeyAlgorithm.RSA2048 or KeyAlgorithm.RSA3072 or KeyAlgorithm.RSA4096 => KeyType.RSA,
+            KeyAlgorithm.ECC_P256 or KeyAlgorithm.ECC_P384 or KeyAlgorithm.ECC_P521 => KeyType.EC,
+            KeyAlgorithm.AES128 or KeyAlgorithm.AES256 => KeyType.AES,
+            _ => KeyType.RSA
         };
     }
 
@@ -588,28 +588,27 @@ public class HsmService : IHsmService
         };
     }
 
-    private KeyAlgorithm ConvertKeyTypeToAlgorithm(Domain.Interfaces.KeyType keyType, int keySize)
+    private KeyAlgorithm ConvertKeyTypeToAlgorithm(KeyType keyType, int keySize)
     {
         return keyType switch
         {
-            Domain.Interfaces.KeyType.RSA => keySize switch
+            KeyType.RSA => keySize switch
             {
                 2048 => KeyAlgorithm.RSA2048,
                 3072 => KeyAlgorithm.RSA3072,
                 4096 => KeyAlgorithm.RSA4096,
                 _ => KeyAlgorithm.RSA2048
             },
-            Domain.Interfaces.KeyType.EC => keySize switch
+            KeyType.EC => keySize switch
             {
                 256 => KeyAlgorithm.ECC_P256,
                 384 => KeyAlgorithm.ECC_P384,
                 521 => KeyAlgorithm.ECC_P521,
                 _ => KeyAlgorithm.ECC_P256
             },
-            Domain.Interfaces.KeyType.AES => keySize switch
+            KeyType.AES => keySize switch
             {
                 128 => KeyAlgorithm.AES128,
-                256 => KeyAlgorithm.AES256,
                 _ => KeyAlgorithm.AES256
             },
             _ => KeyAlgorithm.RSA2048
@@ -740,12 +739,30 @@ public class HsmService : IHsmService
     {
         var operations = new List<string>();
 
-        if (usage.HasFlag(KeyUsage.Sign)) operations.Add("Sign");
-        if (usage.HasFlag(KeyUsage.Verify)) operations.Add("Verify");
-        if (usage.HasFlag(KeyUsage.Encrypt)) operations.Add("Encrypt");
-        if (usage.HasFlag(KeyUsage.Decrypt)) operations.Add("Decrypt");
-        if (usage.HasFlag(KeyUsage.WrapKey)) operations.Add("WrapKey");
-        if (usage.HasFlag(KeyUsage.UnwrapKey)) operations.Add("UnwrapKey");
+        if (usage.HasFlag(KeyUsage.Sign))
+        {
+            operations.Add("Sign");
+        }
+        if (usage.HasFlag(KeyUsage.Verify))
+        {
+            operations.Add("Verify");
+        }
+        if (usage.HasFlag(KeyUsage.Encrypt))
+        {
+            operations.Add("Encrypt");
+        }
+        if (usage.HasFlag(KeyUsage.Decrypt))
+        {
+            operations.Add("Decrypt");
+        }
+        if (usage.HasFlag(KeyUsage.WrapKey))
+        {
+            operations.Add("WrapKey");
+        }
+        if (usage.HasFlag(KeyUsage.UnwrapKey))
+        {
+            operations.Add("UnwrapKey");
+        }
 
         return operations;
     }

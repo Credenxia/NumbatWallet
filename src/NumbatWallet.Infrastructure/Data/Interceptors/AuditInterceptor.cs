@@ -81,7 +81,7 @@ public class AuditInterceptor : SaveChangesInterceptor
         return await base.SavingChangesAsync(eventData, result, cancellationToken);
     }
 
-    private AuditEntry? CreateAuditEntry(EntityEntry entry, string userId, Guid tenantId)
+    private AuditEntry CreateAuditEntry(EntityEntry entry, string userId, Guid tenantId)
     {
         var entityType = entry.Entity.GetType();
 

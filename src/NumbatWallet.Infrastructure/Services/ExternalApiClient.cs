@@ -68,10 +68,8 @@ public class ExternalApiClient : IExternalApiClient
             var json = JsonSerializer.Serialize(request, _jsonOptions);
             using var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-            using var httpRequest = new HttpRequestMessage(HttpMethod.Post, endpoint)
-            {
-                Content = content
-            };
+            using var httpRequest = new HttpRequestMessage(HttpMethod.Post, endpoint);
+            httpRequest.Content = content;
             AddHeaders(httpRequest, headers);
 
             using var response = await _httpClient.SendAsync(httpRequest, cancellationToken);
@@ -108,10 +106,8 @@ public class ExternalApiClient : IExternalApiClient
             var json = JsonSerializer.Serialize(request, _jsonOptions);
             using var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-            using var httpRequest = new HttpRequestMessage(HttpMethod.Put, endpoint)
-            {
-                Content = content
-            };
+            using var httpRequest = new HttpRequestMessage(HttpMethod.Put, endpoint);
+            httpRequest.Content = content;
             AddHeaders(httpRequest, headers);
 
             using var response = await _httpClient.SendAsync(httpRequest, cancellationToken);

@@ -1,4 +1,3 @@
-using Carter;
 using NumbatWallet.Web.Api.Rest.Common;
 
 namespace NumbatWallet.Web.Api.Rest.Modules;

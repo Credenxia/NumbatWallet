@@ -1,7 +1,5 @@
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 using System.Runtime.CompilerServices;
-using NumbatWallet.Application.Commands.Credentials;
 using System.Collections.Concurrent;
 
 namespace NumbatWallet.Web.Api.Hubs;

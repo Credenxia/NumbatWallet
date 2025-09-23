@@ -1,12 +1,5 @@
-using HotChocolate;
-using HotChocolate.AspNetCore.Authorization;
-using HotChocolate.Types;
-using NumbatWallet.Application.Commands.Credentials;
 using NumbatWallet.Application.Wallets.Commands.CreateWallet;
-using NumbatWallet.Application.CQRS.Interfaces;
 using NumbatWallet.Application.DTOs;
-using NumbatWallet.Application.Interfaces;
-using NumbatWallet.SharedKernel.Results;
 using NumbatWallet.Web.Api.GraphQL.Subscriptions;
 
 namespace NumbatWallet.Web.Api.GraphQL.Admin;
@@ -198,7 +191,7 @@ public class AdminMutation
     /// </summary>
     [GraphQLDescription("Reset an admin user's password")]
     [Authorize(Policy = "SuperAdmin")]
-    public async Task<Application.Interfaces.ResetPasswordResult> ResetAdminPassword(
+    public async Task<ResetPasswordResult> ResetAdminPassword(
         [Service] IUserManagementService userService,
         string id,
         CancellationToken cancellationToken = default)
@@ -263,7 +256,7 @@ public class AdminMutation
         GraphQLKeyType keyType,
         CancellationToken cancellationToken = default)
     {
-        var result = await keyService.RotateKeysAsync((Application.Interfaces.KeyType)(int)keyType, cancellationToken);
+        var result = await keyService.RotateKeysAsync((KeyType)(int)keyType, cancellationToken);
 
         return new KeyRotationResult
         {
@@ -447,9 +440,9 @@ public class CreateAdminUserInput
     public string LastName { get; set; } = string.Empty;
     public List<string> Roles { get; set; } = new();
 
-    public Application.Interfaces.CreateUserCommand ToCreateUserCommand()
+    public CreateUserCommand ToCreateUserCommand()
     {
-        return new Application.Interfaces.CreateUserCommand
+        return new CreateUserCommand
         {
             Email = Email,
             FirstName = FirstName,
@@ -466,9 +459,9 @@ public class UpdateAdminUserInput
     public List<string>? Roles { get; set; }
     public bool? IsActive { get; set; }
 
-    public Application.Interfaces.UpdateUserCommand ToUpdateUserCommand()
+    public UpdateUserCommand ToUpdateUserCommand()
     {
-        return new Application.Interfaces.UpdateUserCommand
+        return new UpdateUserCommand
         {
             FirstName = FirstName,
             LastName = LastName,
@@ -485,11 +478,11 @@ public class BackupInput
     public bool Compress { get; set; }
     public string? Description { get; set; }
 
-    public Application.Interfaces.BackupOptions ToBackupOptions()
+    public BackupOptions ToBackupOptions()
     {
-        return new Application.Interfaces.BackupOptions
+        return new BackupOptions
         {
-            Type = (Application.Interfaces.BackupType)(int)Type,
+            Type = (BackupType)(int)Type,
             IncludeMedia = IncludeMedia,
             CompressBackup = Compress,
             Description = Description
@@ -504,9 +497,9 @@ public class RestoreOptionsInput
     public List<string>? IncludeTables { get; set; }
     public List<string>? ExcludeTables { get; set; }
 
-    public Application.Interfaces.RestoreOptions ToRestoreOptions()
+    public RestoreOptions ToRestoreOptions()
     {
-        return new Application.Interfaces.RestoreOptions
+        return new RestoreOptions
         {
             ValidateBeforeRestore = ValidateIntegrity,
             OverwriteExisting = OverwriteExisting,
@@ -523,15 +516,15 @@ public class ScheduleReportInput
     public List<string> Recipients { get; set; } = new();
     public ReportParametersInput Parameters { get; set; } = new();
 
-    public Application.Interfaces.ScheduledReportRequest ToScheduleReportCommand()
+    public ScheduledReportRequest ToScheduleReportCommand()
     {
-        return new Application.Interfaces.ScheduledReportRequest
+        return new ScheduledReportRequest
         {
             ReportType = Type.ToString(),
             CronExpression = Schedule, // Schedule is the cron expression
             Recipients = Recipients,
             Parameters = Parameters.ToReportParameters().ToDictionary(),
-            Format = Application.Interfaces.ExportFormat.PDF,
+            Format = ExportFormat.PDF,
             Enabled = true
         };
     }

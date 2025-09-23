@@ -7,7 +7,6 @@ using Microsoft.Extensions.Logging;
 using NumbatWallet.Domain.Interfaces;
 using NumbatWallet.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
-using System.Net.Http;
 using System.Formats.Asn1;
 
 namespace NumbatWallet.Infrastructure.Services;
@@ -723,7 +722,7 @@ public class RevocationRegistryService : IRevocationRegistryService
             return await _hsmService.SignDataAsync(
                 keyName,
                 tbsCertList,
-                Domain.Interfaces.SignatureAlgorithm.RS256,
+                SignatureAlgorithm.RS256,
                 cancellationToken);
         }
 
@@ -841,7 +840,7 @@ public class RevocationRegistryService : IRevocationRegistryService
             return await _hsmService.SignDataAsync(
                 signingKeyName,
                 responseData,
-                Domain.Interfaces.SignatureAlgorithm.RS256,
+                SignatureAlgorithm.RS256,
                 cancellationToken);
         }
 

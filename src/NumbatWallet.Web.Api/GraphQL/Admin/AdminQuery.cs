@@ -1,11 +1,6 @@
-using HotChocolate;
-using HotChocolate.AspNetCore.Authorization;
-using HotChocolate.Types;
 using Microsoft.EntityFrameworkCore;
 using NumbatWallet.Application.DTOs;
-using NumbatWallet.Application.Interfaces;
 using NumbatWallet.Infrastructure.Data;
-using NumbatWallet.SharedKernel.Models;
 
 namespace NumbatWallet.Web.Api.GraphQL.Admin;
 

@@ -6,7 +6,6 @@ using NumbatWallet.Application.Interfaces;
 using NumbatWallet.Infrastructure.Crypto;
 using NumbatWallet.Infrastructure.Crypto.Interfaces;
 using NumbatWallet.SharedKernel.Enums;
-using NumbatWallet.SharedKernel.Interfaces;
 using FluentAssertions;
 
 namespace NumbatWallet.Infrastructure.Tests.Crypto;

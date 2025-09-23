@@ -4,7 +4,7 @@ using NumbatWallet.SharedKernel.Interfaces;
 
 namespace NumbatWallet.Infrastructure.Data;
 
-public class UnitOfWork : IUnitOfWork, IDisposable
+public class UnitOfWork : IUnitOfWork
 {
     private readonly NumbatWalletDbContext _context;
     private readonly Dictionary<Type, object> _repositories;

@@ -1,8 +1,4 @@
-using HotChocolate;
-using HotChocolate.AspNetCore.Authorization;
-using HotChocolate.Execution;
 using HotChocolate.Subscriptions;
-using HotChocolate.Types;
 using System.Runtime.CompilerServices;
 
 namespace NumbatWallet.Web.Api.GraphQL.Admin;

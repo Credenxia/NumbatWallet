@@ -155,7 +155,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<ICryptoService, Crypto.CryptoService>();
 
         // Health Check Service
-        services.AddScoped<IHealthCheckService, Services.HealthCheckService>();
+        services.AddScoped<IHealthCheckService, HealthCheckService>();
 
         // Blob Storage
         var storageConnectionString = configuration["Azure:Storage:ConnectionString"];

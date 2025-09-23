@@ -1,11 +1,10 @@
 @page "/audit"
 @using Microsoft.AspNetCore.Authorization
-@using Microsoft.AspNetCore.Components.Authorization
 @using NumbatWallet.Web.Admin.Services
 @using NumbatWallet.Web.Admin.Components.Common
 @attribute [Authorize(Roles = "Admin,SuperAdmin")]
 @inject IAuditLogService AuditLogService
-@inject ILogger<Components.Pages.AuditLogs> Logger
+@inject ILogger<AuditLogs> Logger
 @implements IDisposable
 
 <PageTitle>Audit Logs - NumbatWallet Admin</PageTitle>
@@ -242,9 +241,9 @@
 @code {
     private bool IsLoading = true;
     private bool IsRealTimeEnabled = false;
-    private List<Services.AuditLogEntry> AuditLogsList = new();
-    private Services.AuditLogEntry? SelectedLog;
-    private Services.AuditLogFilter Filter = new();
+    private List<AuditLogEntry> AuditLogsList = new();
+    private AuditLogEntry? SelectedLog;
+    private AuditLogFilter Filter = new();
     private int CurrentPage = 1;
     private int PageSize = 20;
     private int TotalPages = 1;
@@ -269,7 +268,7 @@
         catch (Exception ex)
         {
             Logger.LogError(ex, "Failed to load audit logs");
-            AuditLogsList = new List<Services.AuditLogEntry>();
+            AuditLogsList = new List<AuditLogEntry>();
         }
         finally
         {
@@ -285,12 +284,12 @@
 
     private async Task ClearFilters()
     {
-        Filter = new Services.AuditLogFilter();
+        Filter = new AuditLogFilter();
         CurrentPage = 1;
         await LoadAuditLogs();
     }
 
-    private void ShowDetails(Services.AuditLogEntry log)
+    private void ShowDetails(AuditLogEntry log)
     {
         SelectedLog = log;
     }

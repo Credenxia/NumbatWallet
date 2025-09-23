@@ -1,6 +1,5 @@
 using NumbatWallet.Domain.Aggregates;
 using NumbatWallet.SharedKernel.Interfaces;
-using NumbatWallet.SharedKernel.Specifications;
 
 namespace NumbatWallet.Domain.Interfaces;
 

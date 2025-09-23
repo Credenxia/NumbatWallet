@@ -256,7 +256,7 @@ public class RedisCacheService : ICacheService
     {
         try
         {
-            if (string.IsNullOrEmpty(cacheType) || cacheType?.ToLower() == "all")
+            if (string.IsNullOrEmpty(cacheType) || cacheType?.ToLowerInvariant() == "all")
             {
                 await ClearAsync(cancellationToken);
                 return true;
@@ -269,7 +269,7 @@ public class RedisCacheService : ICacheService
                 var server = _redis.GetServer(endpoint);
                 if (!server.IsReplica)
                 {
-                    var pattern = $"{cacheType!.ToLower()}:*";
+                    var pattern = $"{cacheType!.ToLowerInvariant()}:*";
                     var keys = server.Keys(pattern: pattern);
 
                     foreach (var key in keys)

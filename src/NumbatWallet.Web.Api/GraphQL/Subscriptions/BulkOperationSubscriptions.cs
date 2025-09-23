@@ -1,9 +1,4 @@
-using HotChocolate;
-using HotChocolate.Execution;
 using HotChocolate.Subscriptions;
-using HotChocolate.Types;
-using NumbatWallet.Application.Commands.Credentials;
-using NumbatWallet.Application.Interfaces;
 using System.Runtime.CompilerServices;
 
 namespace NumbatWallet.Web.Api.GraphQL.Subscriptions;

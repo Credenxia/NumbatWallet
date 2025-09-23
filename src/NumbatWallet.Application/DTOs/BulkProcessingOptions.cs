@@ -1,5 +1,3 @@
-using System;
-
 namespace NumbatWallet.Application.DTOs;
 
 /// <summary>

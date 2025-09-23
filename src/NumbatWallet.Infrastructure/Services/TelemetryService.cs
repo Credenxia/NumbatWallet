@@ -413,7 +413,6 @@ public class TelemetryService : ITelemetryService
             PiiType.DateOfBirth => RedactionPattern.Full,
             PiiType.PaymentCard => RedactionPattern.ShowLastFour,
             PiiType.TaxId => RedactionPattern.ShowLastFour,
-            PiiType.Address => RedactionPattern.Full,
             _ => RedactionPattern.Full
         };
     }

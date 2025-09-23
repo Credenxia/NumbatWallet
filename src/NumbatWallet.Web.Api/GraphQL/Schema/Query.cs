@@ -1,17 +1,4 @@
-using HotChocolate;
-using HotChocolate.Authorization;
-using HotChocolate.Data;
-using HotChocolate.Types;
-using NumbatWallet.Application.CQRS.Interfaces;
 using NumbatWallet.Application.DTOs;
-using NumbatWallet.Application.Interfaces;
-using NumbatWallet.Application.Queries.Credentials;
-using NumbatWallet.Application.Queries.Organizations;
-using NumbatWallet.Application.Queries.Persons;
-using NumbatWallet.Application.Queries.Wallets;
-using NumbatWallet.Domain.Entities;
-using NumbatWallet.Domain.Enums;
-using NumbatWallet.Domain.ValueObjects;
 
 namespace NumbatWallet.Web.Api.GraphQL.Schema;
 

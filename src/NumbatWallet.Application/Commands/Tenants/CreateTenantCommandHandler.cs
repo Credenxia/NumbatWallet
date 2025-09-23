@@ -100,7 +100,6 @@ public class CreateTenantCommandHandler : ICommandHandler<CreateTenantCommand, G
         {
             "enterprise" => new List<string> { "all", "bulk-operations", "api-access", "custom-branding", "advanced-reporting" },
             "professional" => new List<string> { "standard", "bulk-operations", "api-access" },
-            "basic" => new List<string> { "standard" },
             _ => new List<string> { "standard" }
         };
     }

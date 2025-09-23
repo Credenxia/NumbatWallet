@@ -1,7 +1,6 @@
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using Microsoft.Extensions.Logging;
-using NumbatWallet.Domain.Interfaces;
 
 namespace NumbatWallet.Infrastructure.Services.Mocks;
 

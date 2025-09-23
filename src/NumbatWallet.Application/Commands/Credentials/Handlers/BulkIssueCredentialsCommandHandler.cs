@@ -63,7 +63,6 @@ public class BulkIssueCredentialsCommandHandler : ICommandHandler<BulkIssueCrede
             CredentialType.EducationalCertificate => "EducationalCertificate",
             CredentialType.ProofOfAge => "ProofOfAge",
             CredentialType.VerifiableCredential => "VerifiableCredential",
-            CredentialType.Custom => "Custom",
             _ => "Custom"
         };
 

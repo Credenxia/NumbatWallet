@@ -1,9 +1,7 @@
 using FluentAssertions;
 using Moq;
-using NumbatWallet.Application.DTOs;
 using NumbatWallet.Application.Queries.Person;
 using NumbatWallet.Domain.Interfaces;
-using NumbatWallet.Domain.ValueObjects;
 using NumbatWallet.SharedKernel.Enums;
 
 namespace NumbatWallet.Application.Tests.Queries.Person;

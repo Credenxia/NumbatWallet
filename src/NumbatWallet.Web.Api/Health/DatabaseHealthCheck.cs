@@ -21,7 +21,7 @@ public class DatabaseHealthCheck : IHealthCheck
         _logger = logger;
     }
 
-    public async Task<Microsoft.Extensions.Diagnostics.HealthChecks.HealthCheckResult> CheckHealthAsync(
+    public async Task<HealthCheckResult> CheckHealthAsync(
         HealthCheckContext context,
         CancellationToken cancellationToken = default)
     {

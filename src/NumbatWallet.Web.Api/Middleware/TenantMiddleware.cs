@@ -1,6 +1,4 @@
 using System.Security.Claims;
-using NumbatWallet.Application.Interfaces;
-using NumbatWallet.Domain.Exceptions;
 
 namespace NumbatWallet.Web.Api.Middleware;
 

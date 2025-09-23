@@ -1,6 +1,4 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Authentication.OpenIdConnect;
-using Microsoft.Identity.Web;
 using Microsoft.IdentityModel.Tokens;
 using System.Security.Claims;
 using System.Text;

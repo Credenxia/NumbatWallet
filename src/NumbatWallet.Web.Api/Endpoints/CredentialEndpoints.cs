@@ -1,8 +1,6 @@
 using Carter;
-using Microsoft.AspNetCore.Mvc;
 using NumbatWallet.Application.Commands.Credentials;
 using NumbatWallet.Application.DTOs;
-using NumbatWallet.Application.Interfaces;
 using NumbatWallet.Application.Queries.Credentials;
 using NumbatWallet.Domain.Enums;
 using System.Security.Claims;
@@ -110,7 +108,7 @@ public class CredentialEndpoints : ICarterModule
         CancellationToken cancellationToken)
     {
         var issuerId = user.FindFirst("sub")?.Value
-            ?? throw new Domain.Exceptions.UnauthorizedException("Issuer not authenticated");
+            ?? throw new UnauthorizedException("Issuer not authenticated");
 
         var command = new IssueCredentialCommand(
             request.WalletId,
@@ -140,7 +138,7 @@ public class CredentialEndpoints : ICarterModule
         CancellationToken cancellationToken)
     {
         var issuerId = user.FindFirst("sub")?.Value
-            ?? throw new Domain.Exceptions.UnauthorizedException("Issuer not authenticated");
+            ?? throw new UnauthorizedException("Issuer not authenticated");
 
         var command = new BulkIssueCredentialsCommand(
             request.WalletIds,
@@ -213,7 +211,7 @@ public class CredentialEndpoints : ICarterModule
         CancellationToken cancellationToken)
     {
         var revokerId = user.FindFirst("sub")?.Value
-            ?? throw new Domain.Exceptions.UnauthorizedException("User not authenticated");
+            ?? throw new UnauthorizedException("User not authenticated");
 
         var command = new RevokeCredentialCommand(id, request.Reason, revokerId);
 
@@ -238,7 +236,7 @@ public class CredentialEndpoints : ICarterModule
         [FromRoute] Guid id,
         [FromBody] ShareCredentialRequest request,
         ClaimsPrincipal user,
-        [FromServices] ICommandHandler<ShareCredentialCommand, NumbatWallet.Application.Commands.Credentials.ShareCredentialResult> handler,
+        [FromServices] ICommandHandler<ShareCredentialCommand, ShareCredentialResult> handler,
         [FromServices] IValidator<ShareCredentialCommand> validator,
         [FromServices] ICredentialService credentialService,
         CancellationToken cancellationToken)
@@ -317,7 +315,7 @@ public class CredentialEndpoints : ICarterModule
     private static async Task<IResult> PresentCredential(
         [FromBody] PresentCredentialRequest request,
         ClaimsPrincipal user,
-        [FromServices] ICommandHandler<PresentCredentialCommand, NumbatWallet.Application.Commands.Credentials.PresentationResult> handler,
+        [FromServices] ICommandHandler<PresentCredentialCommand, PresentationResult> handler,
         [FromServices] IValidator<PresentCredentialCommand> validator,
         CancellationToken cancellationToken)
     {

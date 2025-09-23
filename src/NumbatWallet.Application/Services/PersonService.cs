@@ -1,11 +1,9 @@
-using Microsoft.EntityFrameworkCore;
 using NumbatWallet.Application.DTOs;
 using NumbatWallet.Application.Interfaces;
 using NumbatWallet.Domain.Aggregates;
 using NumbatWallet.Domain.Interfaces;
 using NumbatWallet.Domain.ValueObjects;
 using NumbatWallet.SharedKernel.Interfaces;
-using NumbatWallet.SharedKernel.Results;
 
 namespace NumbatWallet.Application.Services;
 

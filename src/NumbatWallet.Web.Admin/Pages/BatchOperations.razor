@@ -3,7 +3,6 @@
 @using Microsoft.AspNetCore.Components.Forms
 @using Microsoft.JSInterop
 @using NumbatWallet.Application.DTOs
-@using System.Text.Json
 @using System.Net.Http.Headers
 @attribute [Authorize(Roles = "Admin")]
 @inject HttpClient Http
@@ -362,7 +361,7 @@
     private List<OperationStatusDto> activeOperations = new();
     private List<OperationStatusDto> operationHistory = new();
     private OperationStatusDto? selectedOperation;
-    private System.Threading.Timer? refreshTimer;
+    private Timer? refreshTimer;
 
     protected override async Task OnInitializedAsync()
     {
@@ -575,7 +574,7 @@
 
     private void StartAutoRefresh()
     {
-        refreshTimer = new System.Threading.Timer(async _ =>
+        refreshTimer = new Timer(async _ =>
         {
             await InvokeAsync(async () =>
             {

@@ -1,8 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using Azure.Messaging.ServiceBus;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Distributed;
@@ -518,13 +513,21 @@ public class KeyRotationService : IKeyRotationService
     {
         // Determine based on key naming convention or metadata
         if (keyId.Contains("sign", StringComparison.OrdinalIgnoreCase))
+        {
             return RotatableKeyType.SigningKey;
+        }
         if (keyId.Contains("encrypt", StringComparison.OrdinalIgnoreCase))
+        {
             return RotatableKeyType.EncryptionKey;
+        }
         if (keyId.Contains("tls", StringComparison.OrdinalIgnoreCase) || keyId.Contains("cert", StringComparison.OrdinalIgnoreCase))
+        {
             return RotatableKeyType.TlsCertificate;
+        }
         if (keyId.Contains("api", StringComparison.OrdinalIgnoreCase))
+        {
             return RotatableKeyType.ApiKey;
+        }
 
         return RotatableKeyType.EncryptionKey; // Default
     }

@@ -66,7 +66,7 @@ public class ValidateCertificateCommandHandler : ICommandHandler<ValidateCertifi
             if (command.CheckRevocation && !certificate.IsRevoked)
             {
                 var revocationStatus = await _validationService.CheckRevocationStatusAsync(x509Cert);
-                if (revocationStatus == Application.Services.RevocationStatus.Revoked)
+                if (revocationStatus == Services.RevocationStatus.Revoked)
                 {
                     result = result with
                     {
