@@ -30,7 +30,7 @@ public class CredentialEndpoints : ICarterModule
 
         // POST /api/v1/credentials/bulk-issue
         group.MapPost("/bulk-issue", BulkIssueCredentials)
-            .WithName("BulkIssueCredentials")
+            .WithName("CredentialsBulkIssue")
             .WithOpenApi()
             .RequireAuthorization("CanIssueCredentials")
             .Accepts<BulkIssueCredentialsRequest>("application/json")
