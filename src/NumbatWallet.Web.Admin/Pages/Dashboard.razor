@@ -1,0 +1,219 @@
+@page "/"
+@page "/dashboard"
+@inject NavigationManager Navigation
+
+<h3>Dashboard - NumbatWallet Admin</h3>
+
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col">
+            <h1 class="h2">System Dashboard</h1>
+            <p class="text-muted">Real-time system overview and metrics</p>
+        </div>
+        <div class="col-auto">
+            <button class="btn btn-outline-secondary" @onclick="RefreshDashboard">
+                <i class="bi bi-arrow-clockwise"></i> Refresh
+            </button>
+        </div>
+    </div>
+
+    <!-- Key Metrics Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="card border-primary">
+                <div class="card-body">
+                    <h5 class="card-title text-muted">Active Wallets</h5>
+                    <h2 class="text-primary">@activeWallets.ToString("N0")</h2>
+                    <small class="text-success">
+                        <i class="bi bi-arrow-up"></i> 12.5%
+                    </small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-info">
+                <div class="card-body">
+                    <h5 class="card-title text-muted">Total Credentials</h5>
+                    <h2 class="text-info">@totalCredentials.ToString("N0")</h2>
+                    <small class="text-muted">
+                        @credentialsIssuedToday issued today
+                    </small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-success">
+                <div class="card-body">
+                    <h5 class="card-title text-muted">Active Tenants</h5>
+                    <h2 class="text-success">@activeTenants</h2>
+                    <small class="text-muted">
+                        @totalTenants total
+                    </small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-warning">
+                <div class="card-body">
+                    <h5 class="card-title text-muted">API Requests</h5>
+                    <h2 class="text-warning">@FormatNumber(apiRequestsPerMinute)</h2>
+                    <small class="text-muted">per minute</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- System Health -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">System Health</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span>API Health</span>
+                                <span class="badge bg-success">Healthy</span>
+                            </div>
+                            <div class="progress mb-3" style="height: 10px;">
+                                <div class="progress-bar bg-success" style="width: 100%"></div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span>Database Health</span>
+                                <span class="badge bg-success">Healthy</span>
+                            </div>
+                            <div class="progress mb-3" style="height: 10px;">
+                                <div class="progress-bar bg-success" style="width: 100%"></div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span>Cache Health</span>
+                                <span class="badge bg-success">Healthy</span>
+                            </div>
+                            <div class="progress mb-3" style="height: 10px;">
+                                <div class="progress-bar bg-success" style="width: 95%"></div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span>Storage Health</span>
+                                <span class="badge bg-warning">Degraded</span>
+                            </div>
+                            <div class="progress mb-3" style="height: 10px;">
+                                <div class="progress-bar bg-warning" style="width: 70%"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Performance Metrics -->
+                    <hr />
+                    <div class="row mt-3">
+                        <div class="col-md-4">
+                            <small class="text-muted">Avg Response Time</small>
+                            <h5>@avgResponseTime ms</h5>
+                        </div>
+                        <div class="col-md-4">
+                            <small class="text-muted">CPU Usage</small>
+                            <h5>@cpuUsage.ToString("F1")%</h5>
+                        </div>
+                        <div class="col-md-4">
+                            <small class="text-muted">Memory Usage</small>
+                            <h5>@FormatBytes(memoryUsage)</h5>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Quick Actions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-outline-primary text-start" @onclick='() => Navigation.NavigateTo("/wallets/new")'>
+                            <i class="bi bi-wallet2 me-2"></i> Create New Wallet
+                        </button>
+                        <button class="btn btn-outline-info text-start" @onclick='() => Navigation.NavigateTo("/credentials/issue")'>
+                            <i class="bi bi-award me-2"></i> Issue Credential
+                        </button>
+                        <button class="btn btn-outline-success text-start" @onclick='() => Navigation.NavigateTo("/tenants/new")'>
+                            <i class="bi bi-building me-2"></i> Add New Tenant
+                        </button>
+                        <button class="btn btn-outline-warning text-start" @onclick='() => Navigation.NavigateTo("/reports/generate")'>
+                            <i class="bi bi-file-earmark-text me-2"></i> Generate Report
+                        </button>
+                        <button class="btn btn-outline-danger text-start" @onclick='() => Navigation.NavigateTo("/system/backup")'>
+                            <i class="bi bi-archive me-2"></i> System Backup
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    // Mock data for now - will be replaced with real service calls
+    private int activeWallets = 1234;
+    private int totalCredentials = 5678;
+    private int credentialsIssuedToday = 42;
+    private int activeTenants = 8;
+    private int totalTenants = 10;
+    private long apiRequestsPerMinute = 2500;
+    private int avgResponseTime = 125;
+    private decimal cpuUsage = 35.2m;
+    private long memoryUsage = 1_073_741_824; // 1 GB
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Simulate loading data
+        await Task.Delay(100);
+        StateHasChanged();
+    }
+
+    private async Task RefreshDashboard()
+    {
+        // Simulate refresh
+        await Task.Delay(100);
+
+        // Update with random values for demo
+        var random = new Random();
+        activeWallets = random.Next(1000, 2000);
+        totalCredentials = random.Next(5000, 7000);
+        credentialsIssuedToday = random.Next(20, 100);
+        apiRequestsPerMinute = random.Next(2000, 3000);
+        avgResponseTime = random.Next(100, 200);
+        cpuUsage = (decimal)(random.NextDouble() * 100);
+        memoryUsage = random.Next(900_000_000, 1_500_000_000);
+
+        StateHasChanged();
+    }
+
+    private string FormatNumber(long number)
+    {
+        if (number >= 1_000_000)
+            return $"{number / 1_000_000.0:F1}M";
+        if (number >= 1_000)
+            return $"{number / 1_000.0:F1}K";
+        return number.ToString("N0");
+    }
+
+    private string FormatBytes(long bytes)
+    {
+        if (bytes >= 1_073_741_824)
+            return $"{bytes / 1_073_741_824.0:F2} GB";
+        if (bytes >= 1_048_576)
+            return $"{bytes / 1_048_576.0:F2} MB";
+        if (bytes >= 1_024)
+            return $"{bytes / 1_024.0:F2} KB";
+        return $"{bytes} B";
+    }
+}
