@@ -66,7 +66,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IUnitOfWork, UnitOfWork>();
 
         // Register Generic Repository
-        services.AddScoped(typeof(IRepository<,>), typeof(RepositoryBase<,>));
+        services.AddScoped(typeof(IRepository<,>), typeof(GenericRepository<,>));
 
         // Register Specific Repositories
         services.AddScoped<IPersonRepository, PersonRepository>();

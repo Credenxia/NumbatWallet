@@ -9,16 +9,17 @@ This repository contains the backend services, documentation, and infrastructure
 ## 🏆 Build Status
 
 [![Build Status](https://img.shields.io/badge/build-passing-brightgreen)](https://github.com/Credenxia/NumbatWallet)
-[![Tests](https://img.shields.io/badge/tests-340%2F367%20passing-yellow)](https://github.com/Credenxia/NumbatWallet)
+[![Tests](https://img.shields.io/badge/tests-340%2F362%20passing-yellow)](https://github.com/Credenxia/NumbatWallet)
 [![Code Quality](https://img.shields.io/badge/warnings-0-brightgreen)](https://github.com/Credenxia/NumbatWallet)
 [![Security](https://img.shields.io/badge/vulnerabilities-0-brightgreen)](https://github.com/Credenxia/NumbatWallet)
 
 - ✅ **ZERO Compilation Errors**
 - ✅ **ZERO Warnings**
 - ✅ **ZERO Security Vulnerabilities**
-- ✅ **340/367 Tests Passing** (92.6% pass rate)
+- ✅ **340/362 Tests Passing** (93.9% pass rate)
 - ✅ **Clean Architecture Maintained**
 - ✅ **DDD + CQRS Implementation**
+- ✅ **Runtime Issues Fixed** (Web API & Admin Portal)
 
 ## 📁 Repository Structure
 
