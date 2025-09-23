@@ -2,6 +2,8 @@ using Microsoft.EntityFrameworkCore;
 using NumbatWallet.Domain.Aggregates;
 using NumbatWallet.Domain.Interfaces;
 using NumbatWallet.SharedKernel.Enums;
+using NumbatWallet.SharedKernel.Specifications;
+using System.Linq.Expressions;
 
 namespace NumbatWallet.Infrastructure.Data.Repositories;
 
@@ -54,4 +56,34 @@ public class CredentialRepository : RepositoryBase<Credential, Guid>, ICredentia
     {
         return await DbSet.AnyAsync(c => c.WalletId == walletId && c.SchemaId == schemaId, cancellationToken);
     }
+
+    public async Task<int> CountAsync(ISpecification<Credential> specification, CancellationToken cancellationToken = default)
+    {
+        var query = ApplySpecification(specification);
+        return await query.CountAsync(cancellationToken);
+    }
+
+    public async Task<IEnumerable<Credential>> GetPagedAsync(
+        ISpecification<Credential> specification,
+        int skip,
+        int take,
+        Expression<Func<Credential, object>>? orderBy = null,
+        bool descending = false,
+        CancellationToken cancellationToken = default)
+    {
+        var query = ApplySpecification(specification);
+
+        if (orderBy != null)
+        {
+            query = descending
+                ? query.OrderByDescending(orderBy)
+                : query.OrderBy(orderBy);
+        }
+
+        return await query
+            .Skip(skip)
+            .Take(take)
+            .ToListAsync(cancellationToken);
+    }
+
 }
