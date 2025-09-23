@@ -282,17 +282,17 @@ public class ApiVersioningMiddleware
         // Add version to response headers
         if (apiVersion != null)
         {
-            context.Response.Headers.Add("X-API-Version", apiVersion.ToString());
+            context.Response.Headers.Append("X-API-Version", apiVersion.ToString());
 
             // Add deprecation warning if needed
             if (apiVersion.Status == "Deprecated")
             {
-                context.Response.Headers.Add("X-Deprecation-Warning",
+                context.Response.Headers.Append("X-Deprecation-Warning",
                     $"API version {apiVersion} is deprecated and will be removed in future releases");
 
                 // Also add Sunset header for deprecated versions
                 var sunsetDate = DateTime.UtcNow.AddMonths(6); // 6 months notice
-                context.Response.Headers.Add("Sunset", sunsetDate.ToString("R"));
+                context.Response.Headers.Append("Sunset", sunsetDate.ToString("R"));
 
                 _logger.LogWarning(
                     "Deprecated API version {Version} called from {IP}",
@@ -302,7 +302,7 @@ public class ApiVersioningMiddleware
 
         // Add supported versions header
         var supportedVersions = GetSupportedVersions();
-        context.Response.Headers.Add("X-Supported-Versions", string.Join(", ", supportedVersions));
+        context.Response.Headers.Append("X-Supported-Versions", string.Join(", ", supportedVersions));
 
         await _next(context);
     }
@@ -369,7 +369,7 @@ public abstract class VersionedApiControllerBase : ControllerBase
 
     protected IActionResult VersionedOk<T>(T data)
     {
-        Response.Headers.Add("X-API-Version", GetApiVersion());
+        Response.Headers.Append("X-API-Version", GetApiVersion());
         return Ok(new VersionedResponse<T>
         {
             Version = GetApiVersion(),
@@ -380,7 +380,7 @@ public abstract class VersionedApiControllerBase : ControllerBase
 
     protected IActionResult VersionedCreated<T>(string location, T data)
     {
-        Response.Headers.Add("X-API-Version", GetApiVersion());
+        Response.Headers.Append("X-API-Version", GetApiVersion());
         return Created(location, new VersionedResponse<T>
         {
             Version = GetApiVersion(),

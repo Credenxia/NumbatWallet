@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using NumbatWallet.Application.Commands.Tenants;
+using NumbatWallet.Application.CQRS.Interfaces;
 using NumbatWallet.Application.DTOs;
-using NumbatWallet.Application.Interfaces;
 using NumbatWallet.Application.Queries.Tenants;
 
 namespace NumbatWallet.Web.Api.Controllers;
@@ -13,7 +13,7 @@ namespace NumbatWallet.Web.Api.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/v1/[controller]")]
-[Authorize(Roles = "Admin,TenantAdmin")]
+[Microsoft.AspNetCore.Authorization.Authorize(Roles = "Admin,TenantAdmin")]
 public class TenantController : ControllerBase
 {
     private readonly ICommandHandler<CreateTenantCommand, Guid> _createHandler;
@@ -133,7 +133,7 @@ public class TenantController : ControllerBase
     [HttpDelete("{id:guid}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    [Authorize(Roles = "Admin")]
+    [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Admin")]
     public async Task<IActionResult> Delete(Guid id)
     {
         _logger.LogInformation("Deleting tenant {TenantId}", id);

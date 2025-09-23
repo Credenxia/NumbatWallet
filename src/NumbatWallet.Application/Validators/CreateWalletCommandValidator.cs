@@ -1,5 +1,5 @@
 using FluentValidation;
-using NumbatWallet.Application.Commands.Wallets;
+using NumbatWallet.Application.Wallets.Commands.CreateWallet;
 
 namespace NumbatWallet.Application.Validators;
 
@@ -15,8 +15,11 @@ public class CreateWalletCommandValidator : AbstractValidator<CreateWalletComman
             .Length(1, 100).WithMessage("Wallet name must be between 1 and 100 characters")
             .Matches(@"^[a-zA-Z0-9\s\-_]+$").WithMessage("Wallet name contains invalid characters");
 
-        RuleFor(x => x.UserId)
-            .NotEmpty().WithMessage("UserId is required")
-            .MaximumLength(200).WithMessage("UserId cannot exceed 200 characters");
+        RuleFor(x => x.Type)
+            .IsInEnum().WithMessage("Invalid wallet type");
+
+        RuleFor(x => x.TenantId)
+            .MaximumLength(100).WithMessage("TenantId cannot exceed 100 characters")
+            .When(x => !string.IsNullOrEmpty(x.TenantId));
     }
 }

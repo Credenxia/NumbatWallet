@@ -23,7 +23,7 @@ public interface IBulkOperationService
     /// </summary>
     Task<List<BulkOperationSummaryDto>> GetOperationHistoryAsync(
         DateTime from,
-        DateTime to,
+        DateTime toDate,
         string? operationType,
         CancellationToken cancellationToken = default);
 

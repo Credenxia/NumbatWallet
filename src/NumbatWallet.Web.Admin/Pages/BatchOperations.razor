@@ -11,7 +11,7 @@
 @inject NavigationManager Navigation
 @inject IJSRuntime JS
 
-<PageTitle>Batch Operations - NumbatWallet Admin</PageTitle>
+<Microsoft.AspNetCore.Components.Web.PageTitle>Batch Operations - NumbatWallet Admin</Microsoft.AspNetCore.Components.Web.PageTitle>
 
 <div class="container-fluid">
     <div class="row mb-4">
@@ -353,12 +353,11 @@
 @code {
     private string selectedOperationType = "";
     private string inputFormat = "csv";
-    private string processingMode = "async";
     private IBrowserFile? selectedFile;
     private bool isProcessing = false;
     private bool validateBeforeProcessing = true;
     private bool continueOnError = true;
-    private bool generateReport = true;
+    private bool generateReport = true; // Used in BatchOptions binding
 
     private List<OperationStatusDto> activeOperations = new();
     private List<OperationStatusDto> operationHistory = new();
@@ -416,6 +415,7 @@
             content.Add(new StringContent(inputFormat), "format");
             content.Add(new StringContent(validateBeforeProcessing.ToString()), "validate");
             content.Add(new StringContent(continueOnError.ToString()), "continueOnError");
+            content.Add(new StringContent(generateReport.ToString()), "generateReport");
 
             var response = await Http.PostAsync($"/api/v1/bulk/{selectedOperationType}", content);
 

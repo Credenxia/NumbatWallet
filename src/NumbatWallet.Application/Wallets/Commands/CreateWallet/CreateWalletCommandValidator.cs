@@ -1,4 +1,5 @@
 using FluentValidation;
+using NumbatWallet.SharedKernel.Enums;
 
 namespace NumbatWallet.Application.Wallets.Commands.CreateWallet;
 
@@ -17,5 +18,8 @@ public sealed class CreateWalletCommandValidator : AbstractValidator<CreateWalle
         RuleFor(x => x.Description)
             .MaximumLength(500).WithMessage("Description must not exceed 500 characters")
             .When(x => !string.IsNullOrEmpty(x.Description));
+
+        RuleFor(x => x.Type)
+            .IsInEnum().WithMessage("Invalid wallet type");
     }
 }

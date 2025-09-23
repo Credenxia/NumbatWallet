@@ -38,12 +38,15 @@ public sealed class Credential : AuditableEntity<Guid>, ITenantAware
     private readonly Dictionary<string, object> _claims = new();
     public IReadOnlyDictionary<string, object> Claims => _claims;
 
-#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring as nullable.
     private Credential() : base(Guid.Empty)
     {
-        // Required for persistence
+        // Required for persistence - initialize non-nullable fields
+        CredentialId = string.Empty;
+        CredentialType = string.Empty;
+        CredentialData = string.Empty;
+        SchemaId = string.Empty;
+        TenantId = string.Empty;
     }
-#pragma warning restore CS8618
 
     private Credential(
         Guid walletId,

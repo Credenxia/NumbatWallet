@@ -77,7 +77,9 @@ public class Tenant : Entity<Guid>
     public bool HasFeature(string feature)
     {
         if (!Settings.TryGetValue("features", out var featuresObj))
+        {
             return false;
+        }
 
         if (featuresObj is List<string> features)
         {

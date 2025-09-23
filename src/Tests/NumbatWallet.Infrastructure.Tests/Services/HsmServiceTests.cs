@@ -19,7 +19,7 @@ public class HsmServiceTests
     private readonly Mock<ILogger<HsmService>> _loggerMock;
     private readonly Mock<IServiceProvider> _serviceProviderMock;
     private readonly IConfiguration _configuration;
-    private readonly IServiceProvider _realServiceProvider;
+    private readonly ServiceProvider _realServiceProvider;
 
     public HsmServiceTests()
     {
@@ -61,7 +61,7 @@ public class HsmServiceTests
             .Returns((Type type) => _realServiceProvider.GetService(type));
     }
 
-    private IServiceProvider GetMockedServiceProvider()
+    private ServiceProvider GetMockedServiceProvider()
     {
         var services = new ServiceCollection();
         services.AddSingleton<SoftwareHsmProvider>(sp =>

@@ -1,7 +1,7 @@
 using AutoMapper;
 using Microsoft.Extensions.Logging;
+using NumbatWallet.Application.CQRS.Interfaces;
 using NumbatWallet.Application.DTOs;
-using NumbatWallet.Application.Interfaces;
 using NumbatWallet.Domain.Interfaces;
 
 namespace NumbatWallet.Application.Queries.Tenants;

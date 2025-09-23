@@ -2,10 +2,12 @@ using AutoMapper;
 using Microsoft.Extensions.Logging;
 using NumbatWallet.Application.Common.Exceptions;
 using NumbatWallet.Application.CQRS.Interfaces;
-using NumbatWallet.Application.Wallets.DTOs;
+using NumbatWallet.Application.DTOs;
 using NumbatWallet.Domain.Aggregates;
 using NumbatWallet.Domain.Interfaces;
+using NumbatWallet.Domain.Services;
 using NumbatWallet.SharedKernel.Interfaces;
+using NumbatWallet.SharedKernel.Enums;
 
 namespace NumbatWallet.Application.Wallets.Commands.CreateWallet;
 
@@ -17,6 +19,8 @@ public sealed class CreateWalletCommandHandler : ICommandHandler<CreateWalletCom
     private readonly IMapper _mapper;
     private readonly ILogger<CreateWalletCommandHandler> _logger;
     private readonly ITenantService _tenantService;
+    private readonly IWalletDomainService _walletDomainService;
+    private readonly IHsmService _hsmService;
 
     public CreateWalletCommandHandler(
         IWalletRepository walletRepository,
@@ -24,7 +28,9 @@ public sealed class CreateWalletCommandHandler : ICommandHandler<CreateWalletCom
         IUnitOfWork unitOfWork,
         IMapper mapper,
         ILogger<CreateWalletCommandHandler> logger,
-        ITenantService tenantService)
+        ITenantService tenantService,
+        IWalletDomainService walletDomainService,
+        IHsmService hsmService)
     {
         _walletRepository = walletRepository;
         _personRepository = personRepository;
@@ -32,13 +38,18 @@ public sealed class CreateWalletCommandHandler : ICommandHandler<CreateWalletCom
         _mapper = mapper;
         _logger = logger;
         _tenantService = tenantService;
+        _walletDomainService = walletDomainService;
+        _hsmService = hsmService;
     }
 
     public async Task<WalletDto> HandleAsync(
         CreateWalletCommand command,
         CancellationToken cancellationToken = default)
     {
-        _logger.LogInformation("Creating wallet for person {PersonId}", command.PersonId);
+        _logger.LogInformation("Creating {Type} wallet for person {PersonId}", command.Type, command.PersonId);
+
+        // Determine tenant ID
+        var tenantId = command.TenantId ?? _tenantService.TenantId.ToString();
 
         // Verify person exists
         var person = await _personRepository.GetByIdAsync(command.PersonId, cancellationToken);
@@ -47,21 +58,22 @@ public sealed class CreateWalletCommandHandler : ICommandHandler<CreateWalletCom
             throw new NotFoundException(nameof(Person), command.PersonId);
         }
 
-        // Check if person already has a wallet
+        // Check if person already has a wallet in this tenant
         var walletExists = await _walletRepository.WalletExistsForPersonAsync(
             command.PersonId,
-            _tenantService.TenantId,
+            Guid.Parse(tenantId),
             cancellationToken);
 
         if (walletExists)
         {
-            throw new ConflictException($"Wallet with name '{command.Name}' already exists for this person.");
+            throw new ConflictException($"Person already has a wallet in this tenant.");
         }
 
-        // Create wallet
+        // Create wallet with type
         var walletResult = Wallet.Create(
             command.PersonId,
-            command.Name);
+            command.Name,
+            command.Type);
 
         if (!walletResult.IsSuccess)
         {
@@ -71,13 +83,26 @@ public sealed class CreateWalletCommandHandler : ICommandHandler<CreateWalletCom
         var wallet = walletResult.Value;
 
         // Set the tenant ID
-        wallet.SetTenantId(_tenantService.TenantId.ToString());
+        wallet.SetTenantId(tenantId);
+
+        // Generate DID using did:key method
+        var didKeyName = $"wallet-{wallet.Id}";
+        var didKeyId = await _hsmService.GenerateKeyPairAsync(
+            didKeyName,
+            KeyAlgorithm.ECC_P256,
+            cancellationToken);
+
+        // Create did:key format DID
+        var walletDid = $"did:key:{didKeyId}";
+        // The DID is already set in the Wallet aggregate during creation
+
+        _logger.LogInformation("Generated DID {WalletDid} for wallet {WalletId}", walletDid, wallet.Id);
 
         // Save to repository
         await _walletRepository.AddAsync(wallet, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-        _logger.LogInformation("Wallet {WalletId} created successfully", wallet.Id);
+        _logger.LogInformation("Wallet {WalletId} created successfully with DID {WalletDid}", wallet.Id, walletDid);
 
         // Map to DTO and return
         return _mapper.Map<WalletDto>(wallet);

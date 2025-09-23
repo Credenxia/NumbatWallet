@@ -84,15 +84,21 @@ public class AdminQuery
         if (filter != null)
         {
             if (filter.Status.HasValue)
+            {
                 query = query.Where(t => t.IsActive == (filter.Status.Value == TenantStatus.Active));
+            }
 
             if (!string.IsNullOrEmpty(filter.SearchTerm))
+            {
                 query = query.Where(t =>
                     t.Name.Contains(filter.SearchTerm) ||
                     t.Identifier.Contains(filter.SearchTerm));
+            }
 
             if (filter.CreatedAfter.HasValue)
+            {
                 query = query.Where(t => t.CreatedAt >= filter.CreatedAfter.Value);
+            }
         }
 
         return query;
@@ -161,7 +167,10 @@ public class AdminQuery
         CancellationToken cancellationToken = default)
     {
         var status = await backupService.GetBackupStatusAsync(id, cancellationToken);
-        if (status == null) return null;
+        if (status == null)
+        {
+            return null;
+        }
 
         // Convert from Application DTO to Web DTO
         return new BackupStatusDto
@@ -209,7 +218,7 @@ public class AdminQuery
         CancellationToken cancellationToken = default)
     {
         // Convert to Application layer types
-        var appType = (Application.Interfaces.ReportType)Enum.Parse(typeof(Application.Interfaces.ReportType), type.ToString());
+        var appType = Enum.Parse<Application.Interfaces.ReportType>(type.ToString());
         var appParams = new Application.Interfaces.ReportParameters
         {
             StartDate = parameters.StartDate,
@@ -246,7 +255,7 @@ public class AdminQuery
         return reports.Select(r => new ScheduledReportDto
         {
             Id = r.Id,
-            Type = (ReportType)Enum.Parse(typeof(ReportType), r.Type.ToString()),
+            Type = Enum.Parse<ReportType>(r.Type.ToString()),
             Schedule = r.Schedule,
             Recipients = r.Recipients,
             IsActive = r.IsActive,

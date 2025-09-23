@@ -2,7 +2,7 @@ using HotChocolate;
 using HotChocolate.AspNetCore.Authorization;
 using HotChocolate.Types;
 using NumbatWallet.Application.Commands.Credentials;
-using NumbatWallet.Application.Commands.Wallets;
+using NumbatWallet.Application.Wallets.Commands.CreateWallet;
 using NumbatWallet.Application.CQRS.Interfaces;
 using NumbatWallet.Application.DTOs;
 using NumbatWallet.Application.Interfaces;
@@ -64,7 +64,9 @@ public class AdminMutation
             cancellationToken);
 
         if (tenant == null)
+        {
             throw new GraphQLException("Failed to create tenant");
+        }
 
         return tenant;
     }
@@ -85,7 +87,9 @@ public class AdminMutation
             cancellationToken);
 
         if (tenant == null)
+        {
             throw new GraphQLException("Tenant not found");
+        }
 
         return tenant;
     }
@@ -104,12 +108,16 @@ public class AdminMutation
         // SuspendTenantAsync doesn't exist, use DeactivateTenantAsync instead
         var success = await tenantService.DeactivateTenantAsync(id, cancellationToken);
         if (!success)
+        {
             throw new GraphQLException("Failed to suspend tenant");
+        }
 
         var tenant = await tenantService.GetTenantByIdAsync(id, cancellationToken);
 
         if (tenant == null)
+        {
             throw new GraphQLException("Tenant not found");
+        }
 
         return tenant;
     }
@@ -126,12 +134,16 @@ public class AdminMutation
     {
         var success = await tenantService.ActivateTenantAsync(id, cancellationToken);
         if (!success)
+        {
             throw new GraphQLException("Failed to activate tenant");
+        }
 
         var tenant = await tenantService.GetTenantByIdAsync(id, cancellationToken);
 
         if (tenant == null)
+        {
             throw new GraphQLException("Tenant not found");
+        }
 
         return tenant;
     }
@@ -151,7 +163,9 @@ public class AdminMutation
             cancellationToken);
 
         if (user == null)
+        {
             throw new GraphQLException("Failed to create admin user");
+        }
 
         return user;
     }
@@ -172,7 +186,9 @@ public class AdminMutation
             cancellationToken);
 
         if (user == null)
+        {
             throw new GraphQLException("Admin user not found");
+        }
 
         return user;
     }
@@ -364,7 +380,9 @@ public class AdminMutation
         var result = SharedKernel.Results.Result.Success(batchResult);
 
         if (result.IsFailure)
+        {
             throw new GraphQLException(result.Error.Message);
+        }
 
         return new BatchOperationResultDto
         {
@@ -533,10 +551,11 @@ public class CreateWalletInput
 
     public CreateWalletCommand ToCreateWalletCommand()
     {
-        return new CreateWalletCommand(
-            Guid.Parse(PersonId),
-            Name,
-            UserId);
+        return new CreateWalletCommand
+        {
+            PersonId = Guid.Parse(PersonId),
+            Name = Name
+        };
     }
 }
 
@@ -671,11 +690,17 @@ public class ReportParameters
         var dict = new Dictionary<string, object>();
 
         if (StartDate.HasValue)
+        {
             dict["StartDate"] = StartDate.Value;
+        }
         if (EndDate.HasValue)
+        {
             dict["EndDate"] = EndDate.Value;
+        }
         if (IncludeSections != null && IncludeSections.Any())
+        {
             dict["IncludeSections"] = IncludeSections;
+        }
         dict["Format"] = Format;
 
         return dict;

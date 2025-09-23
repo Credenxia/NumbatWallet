@@ -49,30 +49,30 @@ public class SecurityHeadersMiddleware
         // HSTS - Enforce HTTPS
         if (_options.UseHsts)
         {
-            headers.Add("Strict-Transport-Security",
+            headers.Append("Strict-Transport-Security",
                 $"max-age={_options.HstsMaxAge}; includeSubDomains; preload");
         }
 
         // Content Security Policy
         var csp = BuildContentSecurityPolicy();
-        headers.Add("Content-Security-Policy", csp);
-        headers.Add("Content-Security-Policy-Report-Only", csp); // For testing
+        headers.Append("Content-Security-Policy", csp);
+        headers.Append("Content-Security-Policy-Report-Only", csp); // For testing
 
         // XSS Protection (legacy browsers)
-        headers.Add("X-XSS-Protection", "1; mode=block");
+        headers.Append("X-XSS-Protection", "1; mode=block");
 
         // Content Type Options
-        headers.Add("X-Content-Type-Options", "nosniff");
+        headers.Append("X-Content-Type-Options", "nosniff");
 
         // Frame Options - Prevent clickjacking
-        headers.Add("X-Frame-Options", _options.XFrameOptions);
+        headers.Append("X-Frame-Options", _options.XFrameOptions);
 
         // Referrer Policy
-        headers.Add("Referrer-Policy", _options.ReferrerPolicy);
+        headers.Append("Referrer-Policy", _options.ReferrerPolicy);
 
         // Permissions Policy (formerly Feature Policy)
         var permissionsPolicy = BuildPermissionsPolicy();
-        headers.Add("Permissions-Policy", permissionsPolicy);
+        headers.Append("Permissions-Policy", permissionsPolicy);
 
         // CORS headers (if not already set)
         if (_options.EnableCors && !headers.ContainsKey("Access-Control-Allow-Origin"))
@@ -83,15 +83,15 @@ public class SecurityHeadersMiddleware
         // Cache Control for sensitive endpoints
         if (IsSensitiveEndpoint(context.Request.Path))
         {
-            headers.Add("Cache-Control", "no-store, no-cache, must-revalidate, private");
-            headers.Add("Pragma", "no-cache");
-            headers.Add("Expires", "0");
+            headers.Append("Cache-Control", "no-store, no-cache, must-revalidate, private");
+            headers.Append("Pragma", "no-cache");
+            headers.Append("Expires", "0");
         }
 
         // Add custom security headers
         foreach (var customHeader in _options.CustomHeaders)
         {
-            headers.Add(customHeader.Key, customHeader.Value);
+            headers.Append(customHeader.Key, customHeader.Value);
         }
 
         _logger.LogDebug("Security headers applied to response");
@@ -212,13 +212,13 @@ public class SecurityHeadersMiddleware
 
         if (IsAllowedOrigin(origin))
         {
-            headers.Add("Access-Control-Allow-Origin", origin);
-            headers.Add("Access-Control-Allow-Credentials", "true");
-            headers.Add("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
-            headers.Add("Access-Control-Allow-Headers",
+            headers.Append("Access-Control-Allow-Origin", origin);
+            headers.Append("Access-Control-Allow-Credentials", "true");
+            headers.Append("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+            headers.Append("Access-Control-Allow-Headers",
                 "Content-Type, Authorization, X-Requested-With, X-API-Key, X-Tenant-Id");
-            headers.Add("Access-Control-Max-Age", "86400"); // 24 hours
-            headers.Add("Access-Control-Expose-Headers",
+            headers.Append("Access-Control-Max-Age", "86400"); // 24 hours
+            headers.Append("Access-Control-Expose-Headers",
                 "X-Request-Id, X-RateLimit-Limit, X-RateLimit-Remaining");
         }
     }
@@ -226,12 +226,14 @@ public class SecurityHeadersMiddleware
     private bool IsAllowedOrigin(string origin)
     {
         if (string.IsNullOrEmpty(origin))
+        {
             return false;
+        }
 
         return _options.AllowedOrigins.Any(allowed =>
             allowed == "*" ||
             origin.Equals(allowed, StringComparison.OrdinalIgnoreCase) ||
-            (allowed.StartsWith("*.") && origin.EndsWith(allowed.Substring(1), StringComparison.OrdinalIgnoreCase)));
+            (allowed.StartsWith("*.", StringComparison.OrdinalIgnoreCase) && origin.EndsWith(allowed.Substring(1), StringComparison.OrdinalIgnoreCase)));
     }
 
     private bool IsSensitiveEndpoint(PathString path)

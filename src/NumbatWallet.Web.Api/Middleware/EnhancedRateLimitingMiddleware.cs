@@ -118,8 +118,7 @@ public class EnhancedRateLimitingMiddleware
 
     private string HashIdentifier(string identifier)
     {
-        using var sha256 = SHA256.Create();
-        var bytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(identifier));
+        var bytes = SHA256.HashData(Encoding.UTF8.GetBytes(identifier));
         return Convert.ToBase64String(bytes);
     }
 
@@ -249,10 +248,10 @@ public class EnhancedRateLimitingMiddleware
         }
 
         context.Response.StatusCode = 429; // Too Many Requests
-        context.Response.Headers.Add("X-RateLimit-Limit", _options.DefaultLimits[0].Requests.ToString());
-        context.Response.Headers.Add("X-RateLimit-Remaining", "0");
-        context.Response.Headers.Add("X-RateLimit-Reset", DateTimeOffset.UtcNow.AddMinutes(1).ToUnixTimeSeconds().ToString());
-        context.Response.Headers.Add("Retry-After", "60");
+        context.Response.Headers.Append("X-RateLimit-Limit", _options.DefaultLimits[0].Requests.ToString());
+        context.Response.Headers.Append("X-RateLimit-Remaining", "0");
+        context.Response.Headers.Append("X-RateLimit-Reset", DateTimeOffset.UtcNow.AddMinutes(1).ToUnixTimeSeconds().ToString());
+        context.Response.Headers.Append("Retry-After", "60");
 
         await context.Response.WriteAsJsonAsync(new
         {
@@ -375,7 +374,7 @@ public static class RateLimitingExtensions
             configuration.GetSection("RateLimiting"));
 
         // Add distributed cache (Redis in production)
-        if (configuration["Cache:Provider"] == "Redis")
+        if (string.Equals(configuration["Cache:Provider"], "Redis", StringComparison.OrdinalIgnoreCase))
         {
             services.AddStackExchangeRedisCache(options =>
             {

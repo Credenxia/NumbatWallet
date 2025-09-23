@@ -1,3 +1,5 @@
+using NumbatWallet.Application.CQRS.Interfaces;
+
 namespace NumbatWallet.Application.Commands.Tenants;
 
 /// <summary>
@@ -7,4 +9,4 @@ public record CreateTenantCommand(
     string Name,
     string Identifier,
     string SubscriptionTier = "Basic",
-    Dictionary<string, object>? Settings = null);
+    Dictionary<string, object>? Settings = null) : ICommand<Guid>;

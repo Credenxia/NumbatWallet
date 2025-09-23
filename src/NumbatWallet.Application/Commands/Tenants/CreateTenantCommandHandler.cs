@@ -1,6 +1,6 @@
 using FluentValidation;
 using Microsoft.Extensions.Logging;
-using NumbatWallet.Application.Interfaces;
+using NumbatWallet.Application.CQRS.Interfaces;
 using NumbatWallet.Domain.Entities;
 using NumbatWallet.Domain.Interfaces;
 using NumbatWallet.SharedKernel.Interfaces;
@@ -55,7 +55,6 @@ public class CreateTenantCommandHandler : ICommandHandler<CreateTenantCommand, G
         // Create the tenant entity
         var tenant = new Tenant
         {
-            Id = Guid.NewGuid(),
             Name = command.Name,
             Identifier = command.Identifier,
             IsActive = true,
@@ -85,7 +84,7 @@ public class CreateTenantCommandHandler : ICommandHandler<CreateTenantCommand, G
         await _tenantRepository.AddAsync(tenant, cancellationToken);
 
         // Commit the transaction
-        await _unitOfWork.CommitAsync(cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         _logger.LogInformation("Tenant created successfully with ID: {TenantId}", tenant.Id);
 
@@ -97,7 +96,7 @@ public class CreateTenantCommandHandler : ICommandHandler<CreateTenantCommand, G
 
     private List<string> GetDefaultFeatures(string subscriptionTier)
     {
-        return subscriptionTier.ToLower() switch
+        return subscriptionTier.ToLowerInvariant() switch
         {
             "enterprise" => new List<string> { "all", "bulk-operations", "api-access", "custom-branding", "advanced-reporting" },
             "professional" => new List<string> { "standard", "bulk-operations", "api-access" },
@@ -108,7 +107,7 @@ public class CreateTenantCommandHandler : ICommandHandler<CreateTenantCommand, G
 
     private int GetMaxUsers(string subscriptionTier)
     {
-        return subscriptionTier.ToLower() switch
+        return subscriptionTier.ToLowerInvariant() switch
         {
             "enterprise" => -1, // Unlimited
             "professional" => 500,
@@ -119,7 +118,7 @@ public class CreateTenantCommandHandler : ICommandHandler<CreateTenantCommand, G
 
     private int GetMaxWallets(string subscriptionTier)
     {
-        return subscriptionTier.ToLower() switch
+        return subscriptionTier.ToLowerInvariant() switch
         {
             "enterprise" => -1, // Unlimited
             "professional" => 1000,

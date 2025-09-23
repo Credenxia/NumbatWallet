@@ -4,6 +4,7 @@ using NumbatWallet.Application.Commands.Credentials;
 using NumbatWallet.Application.Commands.Organizations;
 using NumbatWallet.Application.Commands.Persons;
 using NumbatWallet.Application.Commands.Wallets;
+using NumbatWallet.Application.Wallets.Commands.CreateWallet;
 using NumbatWallet.Application.CQRS.Interfaces;
 using NumbatWallet.Application.DTOs;
 using NumbatWallet.Application.Interfaces;
@@ -120,10 +121,11 @@ public class Mutation
         var userId = httpContextAccessor.HttpContext?.User.FindFirst("sub")?.Value
             ?? throw new Domain.Exceptions.UnauthorizedException("User not authenticated");
 
-        var command = new CreateWalletCommand(
-            input.PersonId,
-            input.Name ?? "My Wallet",
-            userId);
+        var command = new CreateWalletCommand
+        {
+            PersonId = input.PersonId,
+            Name = input.Name ?? "My Wallet"
+        };
 
         return await handler.HandleAsync(command, cancellationToken);
     }

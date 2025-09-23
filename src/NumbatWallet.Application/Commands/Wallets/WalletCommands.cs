@@ -3,11 +3,6 @@ using NumbatWallet.Application.DTOs;
 
 namespace NumbatWallet.Application.Commands.Wallets;
 
-public record CreateWalletCommand(
-    Guid PersonId,
-    string Name,
-    string UserId) : ICommand<WalletDto>;
-
 public record UpdateWalletSettingsCommand(
     Guid WalletId,
     string? Name,

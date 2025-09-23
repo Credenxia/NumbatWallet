@@ -260,7 +260,7 @@ public class BulkOperationEndpoints : ICarterModule
             return Results.NotFound();
         }
 
-        var contentType = format?.ToLower() == "json"
+        var contentType = format?.ToLowerInvariant() == "json"
             ? "application/json"
             : "text/csv";
 

@@ -22,6 +22,7 @@ public sealed class Wallet : AuditableEntity<Guid>, ITenantAware
 
     [DataClassification(DataClassification.Official, "Wallet")]
     public string WalletDid { get; private set; }
+    public WalletType Type { get; private set; }
     public WalletStatus Status { get; private set; }
     public string? SuspensionReason { get; private set; }
     public string? LockReason { get; private set; }
@@ -30,29 +31,33 @@ public sealed class Wallet : AuditableEntity<Guid>, ITenantAware
     public IReadOnlyCollection<Guid> GetCredentials() => _credentialIds.AsReadOnly();
     public IReadOnlyCollection<Credential> Credentials { get; } = new List<Credential>();
 
-#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring as nullable.
     private Wallet() : base(Guid.Empty)
     {
-        // Required for persistence
+        // Required for persistence - initialize non-nullable fields
+        TenantId = string.Empty;
+        WalletName = string.Empty;
+        WalletDid = string.Empty;
     }
-#pragma warning restore CS8618
 
     private Wallet(
         Guid personId,
         string tenantId,
-        string walletName)
+        string walletName,
+        WalletType type = WalletType.Holder)
         : base(Guid.NewGuid())
     {
         PersonId = personId;
         TenantId = tenantId;
         WalletName = walletName;
+        Type = type;
         WalletDid = GenerateWalletDid();
         Status = WalletStatus.Active;
     }
 
     public static Result<Wallet> Create(
         Guid personId,
-        string walletName)
+        string walletName,
+        WalletType type = WalletType.Holder)
     {
         try
         {
@@ -62,7 +67,8 @@ public sealed class Wallet : AuditableEntity<Guid>, ITenantAware
             var wallet = new Wallet(
                 personId,
                 string.Empty, // Will be set by persistence layer
-                walletName);
+                walletName,
+                type);
 
             // Raise domain event
             wallet.AddDomainEvent(new WalletCreatedEvent(

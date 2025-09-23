@@ -1,9 +1,10 @@
 using Moq;
 using FluentAssertions;
 using NumbatWallet.Application.Wallets.Commands.CreateWallet;
-using NumbatWallet.Application.Wallets.DTOs;
+using NumbatWallet.Application.DTOs;
 using NumbatWallet.Application.Common.Exceptions;
 using NumbatWallet.Domain.Interfaces;
+using NumbatWallet.Domain.Services;
 using NumbatWallet.Domain.Aggregates;
 using AutoMapper;
 using Microsoft.Extensions.Logging;
@@ -19,6 +20,8 @@ public class CreateWalletCommandHandlerTests
     private readonly Mock<IMapper> _mapperMock;
     private readonly Mock<ILogger<CreateWalletCommandHandler>> _loggerMock;
     private readonly Mock<ITenantService> _tenantServiceMock;
+    private readonly Mock<IWalletDomainService> _walletDomainServiceMock;
+    private readonly Mock<IHsmService> _hsmServiceMock;
     private readonly CreateWalletCommandHandler _handler;
 
     public CreateWalletCommandHandlerTests()
@@ -29,6 +32,8 @@ public class CreateWalletCommandHandlerTests
         _mapperMock = new Mock<IMapper>();
         _loggerMock = new Mock<ILogger<CreateWalletCommandHandler>>();
         _tenantServiceMock = new Mock<ITenantService>();
+        _walletDomainServiceMock = new Mock<IWalletDomainService>();
+        _hsmServiceMock = new Mock<IHsmService>();
 
         _handler = new CreateWalletCommandHandler(
             _walletRepositoryMock.Object,
@@ -36,7 +41,9 @@ public class CreateWalletCommandHandlerTests
             _unitOfWorkMock.Object,
             _mapperMock.Object,
             _loggerMock.Object,
-            _tenantServiceMock.Object);
+            _tenantServiceMock.Object,
+            _walletDomainServiceMock.Object,
+            _hsmServiceMock.Object);
     }
 
     [Fact]
@@ -48,8 +55,7 @@ public class CreateWalletCommandHandlerTests
         var command = new CreateWalletCommand
         {
             PersonId = personId,
-            Name = "My Digital Wallet",
-            Description = "Primary wallet for credentials"
+            Name = "My Digital Wallet"
         };
 
         var personResult = Person.Create(
@@ -69,10 +75,10 @@ public class CreateWalletCommandHandlerTests
 
         var walletDto = new WalletDto
         {
-            Id = expectedWallet.Id,
-            PersonId = personId,
+            Id = expectedWallet.Id.ToString(),
+            PersonId = personId.ToString(),
+            PersonName = "John Doe",
             Name = command.Name,
-            Description = command.Description,
             Status = "Active",
             CreatedAt = DateTimeOffset.UtcNow
         };
@@ -93,8 +99,7 @@ public class CreateWalletCommandHandlerTests
         // Assert
         result.Should().NotBeNull();
         result.Name.Should().Be(command.Name);
-        result.Description.Should().Be(command.Description);
-        result.PersonId.Should().Be(personId);
+        result.PersonId.Should().Be(personId.ToString());
         result.Status.Should().Be("Active");
 
         _personRepositoryMock.Verify(x => x.GetByIdAsync(personId, It.IsAny<CancellationToken>()), Times.Once);
@@ -109,8 +114,7 @@ public class CreateWalletCommandHandlerTests
         var command = new CreateWalletCommand
         {
             PersonId = Guid.NewGuid(),
-            Name = "My Digital Wallet",
-            Description = "Primary wallet"
+            Name = "My Digital Wallet"
         };
 
         _tenantServiceMock.Setup(x => x.TenantId).Returns(Guid.NewGuid());
@@ -137,8 +141,7 @@ public class CreateWalletCommandHandlerTests
         var command = new CreateWalletCommand
         {
             PersonId = personId,
-            Name = "Existing Wallet",
-            Description = "Duplicate name test"
+            Name = "Existing Wallet"
         };
 
         var personResult = Person.Create(

@@ -130,7 +130,12 @@ public class MigrationHelper : IHostedService
                       $"SELECT '{migration}', '9.0.0' " +
                       $"WHERE NOT EXISTS (SELECT 1 FROM \"__EFMigrationsHistory\" WHERE \"MigrationId\" = '{migration}')";
 
-            await context.Database.ExecuteSqlRawAsync(sql, cancellationToken);
+            // Use direct connection to avoid format string issues
+        using var connection = context.Database.GetDbConnection();
+        await connection.OpenAsync(cancellationToken);
+        using var command = connection.CreateCommand();
+        command.CommandText = sql;
+        await command.ExecuteNonQueryAsync(cancellationToken);
         }
         catch (Exception ex)
         {
@@ -150,7 +155,12 @@ public class MigrationHelper : IHostedService
                       $"VALUES ('{migration}', '9.0.0') " +
                       $"ON CONFLICT (\"MigrationId\") DO NOTHING";
 
-            await context.Database.ExecuteSqlRawAsync(sql, cancellationToken);
+            // Use direct connection to avoid format string issues
+        using var connection = context.Database.GetDbConnection();
+        await connection.OpenAsync(cancellationToken);
+        using var command = connection.CreateCommand();
+        command.CommandText = sql;
+        await command.ExecuteNonQueryAsync(cancellationToken);
             _logger.LogInformation("Marked migration {Migration} as applied", migration);
         }
         catch (Exception ex)
@@ -185,7 +195,12 @@ public class MigrationHelper : IHostedService
             if (File.Exists(scriptPath))
             {
                 var script = await File.ReadAllTextAsync(scriptPath, cancellationToken);
-                await context.Database.ExecuteSqlRawAsync(script, cancellationToken);
+                // Use FromSqlRaw which doesn't interpret {} as format placeholders
+                using var connection = context.Database.GetDbConnection();
+                await connection.OpenAsync(cancellationToken);
+                using var command = connection.CreateCommand();
+                command.CommandText = script;
+                await command.ExecuteNonQueryAsync(cancellationToken);
                 _logger.LogInformation("Database schema created successfully");
             }
             else
@@ -240,13 +255,18 @@ public class MigrationHelper : IHostedService
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
 
-            CREATE TABLE IF NOT EXISTS \"__EFMigrationsHistory\" (
-                \"MigrationId\" VARCHAR(150) PRIMARY KEY,
-                \"ProductVersion\" VARCHAR(32) NOT NULL
+            CREATE TABLE IF NOT EXISTS ""__EFMigrationsHistory"" (
+                ""MigrationId"" VARCHAR(150) PRIMARY KEY,
+                ""ProductVersion"" VARCHAR(32) NOT NULL
             );
         ";
 
-        await context.Database.ExecuteSqlRawAsync(sql, cancellationToken);
+        // Use direct connection to avoid format string issues
+        using var connection = context.Database.GetDbConnection();
+        await connection.OpenAsync(cancellationToken);
+        using var command = connection.CreateCommand();
+        command.CommandText = sql;
+        await command.ExecuteNonQueryAsync(cancellationToken);
         _logger.LogInformation("Basic schema created");
     }
 

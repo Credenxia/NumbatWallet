@@ -1,6 +1,7 @@
 using Carter;
 using Microsoft.AspNetCore.Mvc;
 using NumbatWallet.Application.Commands.Wallets;
+using NumbatWallet.Application.Wallets.Commands.CreateWallet;
 using NumbatWallet.Application.DTOs;
 using NumbatWallet.Application.Interfaces;
 using NumbatWallet.Application.Queries.Wallets;
@@ -118,7 +119,7 @@ public class WalletEndpoints : ICarterModule
     private static async Task<IResult> GetWalletById(
         [FromRoute] Guid id,
         ClaimsPrincipal user,
-        [FromServices] IQueryHandler<GetWalletByIdQuery, WalletDto?> handler,
+        [FromServices] IQueryHandler<GetWalletQuery, WalletDto> handler,
         [FromServices] IWalletService walletService,
         CancellationToken cancellationToken)
     {
@@ -134,7 +135,7 @@ public class WalletEndpoints : ICarterModule
             return Results.Forbid();
         }
 
-        var query = new GetWalletByIdQuery(id);
+        var query = new GetWalletQuery { WalletId = id.ToString() };
         var result = await handler.HandleAsync(query, cancellationToken);
 
         return result != null
@@ -155,10 +156,11 @@ public class WalletEndpoints : ICarterModule
             return Results.Unauthorized();
         }
 
-        var command = new CreateWalletCommand(
-            request.PersonId,
-            request.Name ?? "My Wallet",
-            userId);
+        var command = new CreateWalletCommand
+        {
+            PersonId = request.PersonId,
+            Name = request.Name ?? "My Wallet"
+        };
 
         var validationResult = await validator.ValidateAsync(command, cancellationToken);
         if (!validationResult.IsValid)
