@@ -4,6 +4,7 @@ using NumbatWallet.Application.DTOs;
 using NumbatWallet.Application.Queries.Credentials;
 using NumbatWallet.Domain.Enums;
 using System.Security.Claims;
+using NumbatWallet.Web.Api.Extensions;
 
 namespace NumbatWallet.Web.Api.Endpoints;
 
@@ -161,6 +162,7 @@ public class CredentialEndpoints : ICarterModule
 
     private static async Task<IResult> GetCredentialById(
         [FromRoute] Guid id,
+        HttpContext context,
         ClaimsPrincipal user,
         [FromServices] IQueryHandler<GetCredentialByIdQuery, CredentialDto?> handler,
         [FromServices] ICredentialService credentialService,
@@ -178,7 +180,8 @@ public class CredentialEndpoints : ICarterModule
             return Results.Forbid();
         }
 
-        var query = new GetCredentialByIdQuery(id);
+        var tenantId = context.GetTenantIdOrDefault() ?? Guid.Empty;
+        var query = new GetCredentialByIdQuery(tenantId, id);
         var result = await handler.HandleAsync(query, cancellationToken);
 
         return result != null
@@ -287,17 +290,20 @@ public class CredentialEndpoints : ICarterModule
 
     private static async Task<IResult> SearchCredentials(
         [AsParameters] CredentialSearchRequest searchRequest,
-        [FromServices] IQueryHandler<SearchCredentialsQuery, IEnumerable<CredentialDto>> handler,
+        [FromServices] IQueryHandler<SearchCredentialsQuery, PagedResultDto<CredentialDto>> handler,
+        HttpContext context,
         CancellationToken cancellationToken)
     {
+        var tenantId = context.GetTenantId();
         var query = new SearchCredentialsQuery(
+            tenantId,
             searchRequest.SearchTerm,
-            searchRequest.CredentialType,
-            searchRequest.IssuerId,
-            searchRequest.WalletId,
-            searchRequest.IsActive,
-            searchRequest.IssuedAfter,
-            searchRequest.IssuedBefore);
+            searchRequest.CredentialType?.ToString(),
+            searchRequest.Status,
+            searchRequest.PageNumber,
+            searchRequest.PageSize,
+            searchRequest.SortBy,
+            searchRequest.SortDescending);
 
         var result = await handler.HandleAsync(query, cancellationToken);
         return Results.Ok(result);
@@ -381,11 +387,11 @@ public record PresentCredentialRequest(
 public record CredentialSearchRequest(
     [FromQuery] string? SearchTerm,
     [FromQuery] CredentialType? CredentialType,
-    [FromQuery] Guid? IssuerId,
-    [FromQuery] Guid? WalletId,
-    [FromQuery] bool? IsActive,
-    [FromQuery] DateTime? IssuedAfter,
-    [FromQuery] DateTime? IssuedBefore);
+    [FromQuery] string? Status,
+    [FromQuery] int PageNumber = 1,
+    [FromQuery] int PageSize = 20,
+    [FromQuery] string? SortBy = null,
+    [FromQuery] bool SortDescending = false);
 
 public record CredentialTypeInfo(
     string Type,

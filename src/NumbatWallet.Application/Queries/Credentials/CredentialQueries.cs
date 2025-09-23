@@ -4,23 +4,30 @@ using NumbatWallet.Domain.Enums;
 
 namespace NumbatWallet.Application.Queries.Credentials;
 
-public record GetCredentialByIdQuery(Guid CredentialId) : IQuery<CredentialDto?>;
+public record GetCredentialByIdQuery(
+    Guid TenantId,
+    Guid CredentialId) : IQuery<CredentialDto?>;
 
 public record GetCredentialsByWalletQuery(
+    Guid TenantId,
     Guid WalletId,
-    bool? ActiveOnly = null) : IQuery<IEnumerable<CredentialDto>>;
+    bool IncludeRevoked = false) : IQuery<IEnumerable<CredentialDto>>;
 
 public record SearchCredentialsQuery(
+    Guid TenantId,
     string? SearchTerm,
-    CredentialType? CredentialType,
-    Guid? IssuerId,
-    Guid? WalletId,
-    bool? IsActive,
-    DateTime? IssuedAfter,
-    DateTime? IssuedBefore) : IQuery<IEnumerable<CredentialDto>>;
+    string? CredentialType,
+    string? Status,
+    int PageNumber,
+    int PageSize,
+    string? SortBy,
+    bool SortDescending) : IQuery<PagedResultDto<CredentialDto>>;
 
-public record GetExpiredCredentialsQuery(Guid WalletId) : IQuery<IEnumerable<CredentialDto>>;
+public record GetExpiredCredentialsQuery(
+    Guid TenantId,
+    Guid WalletId) : IQuery<IEnumerable<CredentialDto>>;
 
 public record GetExpiringCredentialsQuery(
+    Guid TenantId,
     Guid WalletId,
     int DaysAhead = 30) : IQuery<IEnumerable<CredentialDto>>;
