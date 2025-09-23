@@ -1,22 +1,21 @@
-using Azure.Storage.Blobs;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
+using NumbatWallet.Application.Interfaces;
 using HealthCheckResult = Microsoft.Extensions.Diagnostics.HealthChecks.HealthCheckResult;
 
 namespace NumbatWallet.Web.Api.Health;
 
 public class StorageHealthCheck : IHealthCheck
 {
-    private readonly BlobServiceClient _blobServiceClient;
+    private readonly IBlobStorageService? _blobStorageService;
     private readonly ILogger<StorageHealthCheck> _logger;
 
     public StorageHealthCheck(
-        BlobServiceClient blobServiceClient,
+        IBlobStorageService? blobStorageService,
         ILogger<StorageHealthCheck> logger)
     {
-        ArgumentNullException.ThrowIfNull(blobServiceClient);
         ArgumentNullException.ThrowIfNull(logger);
 
-        _blobServiceClient = blobServiceClient;
+        _blobStorageService = blobStorageService;
         _logger = logger;
     }
 
@@ -26,26 +25,28 @@ public class StorageHealthCheck : IHealthCheck
     {
         try
         {
-            // Get account info to verify connectivity
-            var accountInfo = await _blobServiceClient.GetAccountInfoAsync(cancellationToken);
-
-            if (accountInfo == null)
+            // If blob storage service is not configured, return healthy (optional dependency)
+            if (_blobStorageService == null)
             {
-                _logger.LogWarning("Storage health check failed: Unable to get account info");
-                return HealthCheckResult.Unhealthy("Cannot connect to storage account");
+                _logger.LogDebug("Storage health check skipped: Blob storage service not configured");
+                return HealthCheckResult.Healthy("Storage service not configured (optional)",
+                    new Dictionary<string, object>
+                    {
+                        ["status"] = "not_configured",
+                        ["optional"] = true
+                    });
             }
 
-            // Try to list containers (limit to 1 for performance)
-            var containers = _blobServiceClient.GetBlobContainers(cancellationToken: cancellationToken);
-            var containerExists = await Task.Run(() => containers.Any(), cancellationToken);
+            // Try to check if service is available by attempting to list blobs
+            // This is a basic check since IBlobStorageService doesn't expose connection details
+            var exists = await _blobStorageService.ExistsAsync("health-check-test.txt", cancellationToken: cancellationToken);
 
             _logger.LogDebug("Storage health check passed");
 
-            return HealthCheckResult.Healthy("Storage account is accessible", new Dictionary<string, object>
+            return HealthCheckResult.Healthy("Storage service is accessible", new Dictionary<string, object>
             {
-                ["account_kind"] = accountInfo.Value.AccountKind.ToString(),
-                ["sku_name"] = accountInfo.Value.SkuName.ToString(),
-                ["is_hns_enabled"] = accountInfo.Value.IsHierarchicalNamespaceEnabled
+                ["status"] = "connected",
+                ["type"] = _blobStorageService.GetType().Name
             });
         }
         catch (Exception ex)
