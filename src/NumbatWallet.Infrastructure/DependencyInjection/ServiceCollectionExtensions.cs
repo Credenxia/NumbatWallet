@@ -193,7 +193,13 @@ public static class ServiceCollectionExtensions
 
         // Database Migration and Seeding
         services.AddScoped<DatabaseSeeder>();
-        services.AddHostedService<MigrationHelper>();
+
+        // Only add MigrationHelper if not explicitly disabled
+        var skipMigration = Environment.GetEnvironmentVariable("SKIP_DB_MIGRATION");
+        if (skipMigration != "true")
+        {
+            services.AddHostedService<MigrationHelper>();
+        }
 
         return services;
     }

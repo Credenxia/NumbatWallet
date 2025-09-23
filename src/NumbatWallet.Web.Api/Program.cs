@@ -18,20 +18,12 @@ try
 
     var builder = WebApplication.CreateBuilder(args);
 
-    // Add service defaults & Aspire components
+    // Add service defaults & Aspire components (includes Serilog)
     builder.AddServiceDefaults();
 
     // Logging the connection string for debugging
     var connString = builder.Configuration.GetConnectionString("numbatwallet");
     Log.Information("Connection string from config: {ConnectionString}", connString ?? "Not configured");
-
-    // Add Serilog
-    builder.Host.UseSerilog((context, services, configuration) => configuration
-        .ReadFrom.Configuration(context.Configuration)
-        .ReadFrom.Services(services)
-        .Enrich.FromLogContext()
-        .Enrich.WithProperty("Environment", context.HostingEnvironment.EnvironmentName)
-        .WriteTo.Console());
 
     // Add services to the container using our extension methods
     builder.Services.AddApplication();
@@ -97,7 +89,8 @@ try
     // Add security headers early in the pipeline
     app.UseSecurityHeaders();
 
-    app.UseSerilogRequestLogging();
+    // TODO: Fix Serilog configuration - DiagnosticContext not registered
+    // app.UseSerilogRequestLogging();
     app.UseCors("AllowedOrigins");
 
     // Add custom middleware for tenant resolution

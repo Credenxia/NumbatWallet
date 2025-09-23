@@ -59,6 +59,12 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IDomainEventHandler<CredentialIssuedEvent>, EventHandlers.CredentialIssuedEventHandler>();
         services.AddScoped<IDomainEventHandler<CredentialRevokedEvent>, EventHandlers.CredentialRevokedEventHandler>();
 
+        // Register Domain Services
+        services.AddScoped<Domain.Services.IWalletDomainService, Domain.Services.WalletDomainService>();
+        services.AddScoped<Domain.Services.ICredentialDomainService, Domain.Services.CredentialDomainService>();
+        services.AddScoped<Domain.Services.IVerificationDomainService, Domain.Services.VerificationDomainService>();
+        services.AddScoped<Domain.Services.IPersonVerificationService, Domain.Services.PersonVerificationService>();
+
         // Register Application Services
         services.AddScoped<IPersonService, PersonService>();
         services.AddScoped<IWalletService, WalletService>();
