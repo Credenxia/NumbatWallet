@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Logging;
 using NumbatWallet.Domain.Aggregates;
 using NumbatWallet.Domain.Entities;
+using NumbatWallet.Infrastructure.EventSourcing;
 using NumbatWallet.SharedKernel.Interfaces;
 using NumbatWallet.SharedKernel.Primitives;
 
@@ -39,6 +40,10 @@ public class NumbatWalletDbContext : DbContext, IUnitOfWork
     public DbSet<CertificateTrustStore> CertificateTrustStores => Set<CertificateTrustStore>();
     public DbSet<CertificateRevocation> CertificateRevocations => Set<CertificateRevocation>();
 
+    // Event sourcing entities
+    public DbSet<StoredEvent> StoredEvents => Set<StoredEvent>();
+    public DbSet<EventSnapshot> EventSnapshots => Set<EventSnapshot>();
+
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
         // Add interceptors for protection and auditing
@@ -66,6 +71,13 @@ public class NumbatWalletDbContext : DbContext, IUnitOfWork
 
         // Configure JSONB for PostgreSQL
         modelBuilder.HasPostgresExtension("pgcrypto"); // For encryption functions if needed
+
+        // Configure event sourcing entities
+        EventSourcingConfiguration.ConfigureEventSourcing(modelBuilder);
+
+        // Apply tenant filter to event store
+        modelBuilder.Entity<StoredEvent>().HasQueryFilter(e => e.TenantId == _tenantService.TenantId.ToString());
+        modelBuilder.Entity<EventSnapshot>().HasQueryFilter(s => s.TenantId == _tenantService.TenantId.ToString());
     }
 
     public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)

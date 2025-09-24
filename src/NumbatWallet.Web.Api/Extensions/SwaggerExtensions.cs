@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc.ApiExplorer;
 using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.SwaggerGen;
+using Swashbuckle.AspNetCore.Filters;
 using System.Reflection;
 
 namespace NumbatWallet.Web.Api.Extensions;
@@ -105,6 +106,9 @@ public static class SwaggerExtensions
 
             // Enable annotations
             options.EnableAnnotations();
+
+            // Add examples from Documentation namespace
+            options.ExampleFilters();
         });
 
         return services;

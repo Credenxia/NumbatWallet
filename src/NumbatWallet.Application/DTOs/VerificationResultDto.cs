@@ -24,4 +24,5 @@ public class VerificationOptionsDto
     public bool CheckExpiry { get; set; } = true;
     public bool CheckSignature { get; set; } = true;
     public bool CheckSchema { get; set; } = true;
+    public bool RequireTrustChain { get; set; } = false;
 }

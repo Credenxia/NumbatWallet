@@ -1,5 +1,8 @@
 using HotChocolate.AspNetCore;
 using NumbatWallet.Web.Api.GraphQL.Schema;
+using NumbatWallet.Web.Api.GraphQL.Types;
+using NumbatWallet.Web.Api.GraphQL.Queries;
+using NumbatWallet.Web.Api.GraphQL.Mutations;
 
 namespace NumbatWallet.Web.Api.Extensions;
 
@@ -13,6 +16,13 @@ public static class GraphQLExtensions
             .AddQueryType<Query>()
             .AddMutationType<Mutation>()
             .AddSubscriptionType<Subscription>()
+            // Register credential types
+            .AddType<CredentialType>()
+            .AddType<IssuanceType>()
+            .AddType<VerificationResultType>()
+            // Register credential queries and mutations
+            .AddTypeExtension<CredentialQuery>()
+            .AddTypeExtension<CredentialMutation>()
             .AddProjections()
             .AddFiltering()
             .AddSorting()

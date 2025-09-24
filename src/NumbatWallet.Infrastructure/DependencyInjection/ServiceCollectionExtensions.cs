@@ -157,6 +157,9 @@ public static class ServiceCollectionExtensions
         // Health Check Service
         services.AddScoped<IHealthCheckService, HealthCheckService>();
 
+        // System Metrics Service
+        services.AddScoped<ISystemMetricsService, SystemMetricsService>();
+
         // Blob Storage
         var storageConnectionString = configuration["Azure:Storage:ConnectionString"];
         var storageAccountName = configuration["Azure:Storage:AccountName"];

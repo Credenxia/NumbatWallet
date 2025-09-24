@@ -53,6 +53,13 @@ public class CacheService : ICacheService
     {
         try
         {
+            // If value is null, remove from cache
+            if (value == null)
+            {
+                await RemoveAsync(key, cancellationToken);
+                return;
+            }
+
             var options = new DistributedCacheEntryOptions();
             if (expiration.HasValue)
             {

@@ -1,5 +1,6 @@
 using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.SwaggerGen;
+using Swashbuckle.AspNetCore.Filters;
 using System.Reflection;
 
 namespace NumbatWallet.Web.Api.Extensions;
@@ -107,6 +108,9 @@ public static class ApiVersioningExtensions
 
             // Add custom schema filter for deprecation
             options.SchemaFilter<DeprecatedSchemaFilter>();
+
+            // Add examples from our examples providers
+            options.ExampleFilters();
 
             // Include XML comments if available
             var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";

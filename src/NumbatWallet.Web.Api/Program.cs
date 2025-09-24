@@ -4,10 +4,12 @@ using NumbatWallet.Infrastructure.DependencyInjection;
 using NumbatWallet.Web.Api.DependencyInjection;
 using NumbatWallet.Web.Api.Extensions;
 using NumbatWallet.Web.Api.Hubs;
+using NumbatWallet.Web.Api.Telemetry;
+using NumbatWallet.Web.Api.Security;
 using Serilog;
 using Asp.Versioning.ApiExplorer;
 
-// Configure Serilog
+// Configure bootstrap logger
 Log.Logger = new LoggerConfiguration()
     .WriteTo.Console()
     .CreateBootstrapLogger();
@@ -18,7 +20,10 @@ try
 
     var builder = WebApplication.CreateBuilder(args);
 
-    // Add service defaults & Aspire components (includes Serilog)
+    // Configure comprehensive Serilog logging
+    builder.ConfigureSerilog();
+
+    // Add service defaults & Aspire components
     builder.AddServiceDefaults();
 
     // Logging the connection string for debugging
@@ -45,14 +50,15 @@ try
     // Add versioned Swagger documentation
     builder.Services.AddVersionedSwagger(builder.Configuration);
 
+    // Add security services
+    builder.Services.AddSecurityServices(builder.Configuration);
+    builder.Services.AddSecurityAudit();
+
     // Add custom authentication
     builder.Services.AddCustomAuthentication(builder.Configuration);
 
     // Add enhanced rate limiting
-    builder.Services.AddEnhancedRateLimiting(builder.Configuration);
-
-    // Add security headers
-    builder.Services.AddSecurityHeaders(builder.Configuration);
+    builder.Services.AddSecurityRateLimiting(builder.Configuration);
 
     // Add SignalR for real-time updates
     builder.Services.AddSignalR(options =>
@@ -64,6 +70,18 @@ try
 
     // Register progress notification service
     builder.Services.AddSingleton<IProgressNotificationService, SignalRProgressNotificationService>();
+
+    // Add performance monitoring
+    builder.Services.AddPerformanceMonitoring();
+
+    // Add caching services
+    builder.Services.AddCachingServices(builder.Configuration);
+
+    // Add webhook services
+    builder.Services.AddWebhookServices(builder.Configuration);
+
+    // Add event sourcing services
+    builder.Services.AddEventSourcingServices(builder.Configuration);
 
     var app = builder.Build();
 
@@ -89,8 +107,20 @@ try
     // Add security headers early in the pipeline
     app.UseSecurityHeaders();
 
-    // TODO: Fix Serilog configuration - DiagnosticContext not registered
-    // app.UseSerilogRequestLogging();
+    // Add security audit
+    app.UseSecurityAudit();
+
+    // Add Serilog request logging with enhanced configuration
+    app.UseSerilogRequestLogging();
+    app.UseHealthCheckLogging();
+    app.UseGraphQLLogging();
+
+    // Add performance monitoring
+    app.UsePerformanceMonitoring();
+
+    // Add output caching
+    app.UseOutputCaching();
+
     app.UseCors("AllowedOrigins");
 
     // Add custom middleware for tenant resolution
@@ -106,8 +136,8 @@ try
     app.UseAuthentication();
     app.UseAuthorization();
 
-    // Add enhanced rate limiting with blocking capabilities
-    app.UseEnhancedRateLimiting();
+    // Add rate limiting
+    app.UseRateLimiter();
 
     // Add API versioning middleware
     app.UseMiddleware<ApiVersioningMiddleware>();
@@ -119,6 +149,9 @@ try
     app.MapHealthChecks();
     app.MapHub<ProgressHub>("/hubs/progress"); // SignalR hub for progress tracking
     app.MapDefaultEndpoints();
+
+    // Map Prometheus metrics endpoint
+    app.UseOpenTelemetryPrometheusScrapingEndpoint();
 
     // Database migration is handled by MigrationHelper hosted service
     // No need to manually ensure database creation here
