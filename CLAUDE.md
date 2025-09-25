@@ -138,14 +138,19 @@ Fixes #XXX
 | 014-Backend-Application | 0 | 14 | ✅ COMPLETE | Handlers fully wired |
 | 015-Backend-IaC | 1 | 18 | ✅ COMPLETE | Container Apps, ACR, VNet done |
 | 016-Backend-API | 2 | 13 | ✅ COMPLETE | CQRS handlers wired |
-| 017-Backend-Admin | 6 | 12 | 🟡 IN PROGRESS | Template builder needed |
+| 017-Backend-Admin | 5 | 13 | 🟡 IN PROGRESS | Azure deployment remaining |
 
-### Known Issues Needing Attention
-- **POA-181**: GraphQL implementation - returns mock data
-- **POA-013**: OIDC authentication - using MockWAIdXService
-- **POA-191**: Platform-specific wallet templates needed
-- **POA-083**: Integration test harness needed
-- **POA-200**: Wallet template builder implementation needed
+### Recently Completed (Sep 2025)
+- ✅ **POA-121**: JWT-VC implementation with full W3C support
+- ✅ **POA-123**: DIF Credential Manifest specification support
+- ✅ **POA-191**: Platform-specific wallet templates (Apple/Google/Web)
+- ✅ **POA-083**: Integration test harness with TestContainers
+- ✅ **POA-200**: Wallet template builder with preset templates
+- ✅ **All compilation errors fixed**: 0 errors, 14 warnings remaining
+
+### Remaining Items
+- **POA-181**: GraphQL implementation currently returns mock data
+- **Azure deployment**: App Service, Application Gateway, Log Analytics
 
 ### Issue Workflow
 1. Check blocking dependencies in GitHub
