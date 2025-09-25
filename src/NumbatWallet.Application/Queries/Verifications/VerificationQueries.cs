@@ -1,5 +1,4 @@
 using NumbatWallet.Application.CQRS.Interfaces;
-using NumbatWallet.Application.DTOs;
 using NumbatWallet.Application.Commands.Verifications;
 
 namespace NumbatWallet.Application.Queries.Verifications;

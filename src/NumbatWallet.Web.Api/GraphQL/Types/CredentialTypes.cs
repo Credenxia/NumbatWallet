@@ -1,5 +1,3 @@
-using HotChocolate;
-using HotChocolate.Types;
 using NumbatWallet.Application.DTOs;
 
 namespace NumbatWallet.Web.Api.GraphQL.Types;
@@ -97,9 +95,12 @@ public class IssueCredentialInput
 public class VerifyCredentialInput
 {
     public required string CredentialId { get; set; }
+    public string? CredentialData { get; set; }
     public bool CheckRevocation { get; set; } = true;
     public bool CheckExpiry { get; set; } = true;
     public bool CheckSignature { get; set; } = true;
+    public bool? CheckSchema { get; set; }
+    public bool? RequireTrustChain { get; set; }
 }
 
 /// <summary>

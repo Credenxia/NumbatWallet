@@ -1,3 +1,4 @@
+using Azure;
 using Azure.Identity;
 using Azure.Security.KeyVault.Secrets;
 using Microsoft.Extensions.Configuration;
@@ -70,7 +71,7 @@ public class AzureKeyVaultService : IKeyVaultService
             _logger.LogInformation("Retrieved secret '{SecretName}' from Key Vault", secretName);
             return secretValue;
         }
-        catch (Azure.RequestFailedException ex) when (ex.Status == 404)
+        catch (RequestFailedException ex) when (ex.Status == 404)
         {
             _logger.LogWarning("Secret '{SecretName}' not found in Key Vault", secretName);
             return null;
@@ -134,7 +135,7 @@ public class AzureKeyVaultService : IKeyVaultService
             // The secret will be soft-deleted first and can be recovered
             return true;
         }
-        catch (Azure.RequestFailedException ex) when (ex.Status == 404)
+        catch (RequestFailedException ex) when (ex.Status == 404)
         {
             _logger.LogWarning("Secret '{SecretName}' not found in Key Vault for deletion", secretName);
             return false;
@@ -182,7 +183,7 @@ public class AzureKeyVaultService : IKeyVaultService
             await _secretClient.GetSecretAsync(secretName, cancellationToken: cancellationToken);
             return true;
         }
-        catch (Azure.RequestFailedException ex) when (ex.Status == 404)
+        catch (RequestFailedException ex) when (ex.Status == 404)
         {
             return false;
         }

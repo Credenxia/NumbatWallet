@@ -8,7 +8,6 @@ using Moq;
 using NumbatWallet.Web.Api.Controllers;
 using NumbatWallet.Web.Api.Security;
 using NumbatWallet.Web.Api.Webhooks;
-using Xunit;
 
 namespace NumbatWallet.Web.Api.Tests.Controllers;
 

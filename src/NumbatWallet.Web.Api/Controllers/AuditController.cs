@@ -1,5 +1,3 @@
-using Asp.Versioning;
-using Microsoft.AspNetCore.Mvc;
 using NumbatWallet.Infrastructure.EventSourcing;
 using NumbatWallet.Web.Api.Security;
 using System.Security.Claims;
@@ -93,21 +91,21 @@ public class AuditController : ControllerBase
     /// <summary>
     /// Get aggregate state at a specific version
     /// </summary>
-    [HttpGet("state/{aggregateId:guid}/version/{version:int}")]
+    [HttpGet("state/{aggregateId:guid}/version/{aggregateVersion:int}")]
     [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> GetAggregateAtVersion(Guid aggregateId, int version)
+    public async Task<IActionResult> GetAggregateAtVersion(Guid aggregateId, int aggregateVersion)
     {
         _logger.LogInformation("Retrieving aggregate {AggregateId} at version {Version}",
-            aggregateId, version);
+            aggregateId, aggregateVersion);
 
         // For security, we'll return a generic object representation
         // In production, you might want to be more specific about the type
-        var aggregate = await _eventSourcingService.GetAggregateAtVersionAsync<object>(aggregateId, version);
+        var aggregate = await _eventSourcingService.GetAggregateAtVersionAsync<object>(aggregateId, aggregateVersion);
 
         if (aggregate == null)
         {
-            return NotFound($"Aggregate {aggregateId} not found at version {version}");
+            return NotFound($"Aggregate {aggregateId} not found at version {aggregateVersion}");
         }
 
         return Ok(aggregate);

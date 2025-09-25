@@ -54,6 +54,9 @@ public static class ApiVersioningExtensions
     {
         services.AddEndpointsApiExplorer();
 
+        // Register Swashbuckle.AspNetCore.Filters services
+        services.AddSwaggerExamplesFromAssemblies(Assembly.GetExecutingAssembly());
+
         // Configure Swagger for each API version
         services.AddSwaggerGen(options =>
         {

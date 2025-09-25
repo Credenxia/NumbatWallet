@@ -1,4 +1,5 @@
 using NumbatWallet.Application.Commands.Tenants;
+using NumbatWallet.Application.CQRS.Interfaces;
 using NumbatWallet.Application.DTOs;
 using NumbatWallet.Application.Queries.Tenants;
 
@@ -18,6 +19,7 @@ public class TenantController : ControllerBase
     private readonly ICommandHandler<DeleteTenantCommand> _deleteHandler;
     private readonly IQueryHandler<GetTenantByIdQuery, TenantDto?> _getByIdHandler;
     private readonly IQueryHandler<GetAllTenantsQuery, IEnumerable<TenantDto>> _getAllHandler;
+    private readonly IQueryHandler<GetTenantStatisticsQuery, Application.DTOs.TenantStatisticsDto> _getStatisticsHandler;
     private readonly ILogger<TenantController> _logger;
 
     public TenantController(
@@ -26,6 +28,7 @@ public class TenantController : ControllerBase
         ICommandHandler<DeleteTenantCommand> deleteHandler,
         IQueryHandler<GetTenantByIdQuery, TenantDto?> getByIdHandler,
         IQueryHandler<GetAllTenantsQuery, IEnumerable<TenantDto>> getAllHandler,
+        IQueryHandler<GetTenantStatisticsQuery, Application.DTOs.TenantStatisticsDto> getStatisticsHandler,
         ILogger<TenantController> logger)
     {
         _createHandler = createHandler;
@@ -33,6 +36,7 @@ public class TenantController : ControllerBase
         _deleteHandler = deleteHandler;
         _getByIdHandler = getByIdHandler;
         _getAllHandler = getAllHandler;
+        _getStatisticsHandler = getStatisticsHandler;
         _logger = logger;
     }
 
@@ -151,19 +155,30 @@ public class TenantController : ControllerBase
     {
         _logger.LogInformation("Getting statistics for tenant {TenantId}", id);
 
-        // TODO: Implement statistics query handler
-        var stats = new TenantStatistics
+        try
         {
-            TenantId = id,
-            UserCount = 0,
-            WalletCount = 0,
-            CredentialCount = 0,
-            ActiveSessions = 0,
-            StorageUsedMB = 0,
-            LastActivityDate = DateTime.UtcNow
-        };
+            var query = new GetTenantStatisticsQuery(id);
+            var stats = await _getStatisticsHandler.HandleAsync(query);
 
-        return Ok(stats);
+            // Map to response DTO
+            var response = new TenantStatistics
+            {
+                TenantId = stats.TenantId,
+                UserCount = stats.TotalUsers,
+                WalletCount = stats.TotalWallets,
+                CredentialCount = stats.TotalCredentials,
+                ActiveSessions = 0, // Not tracked in the DTO
+                StorageUsedMB = (decimal)(stats.StorageUsedGB * 1024), // Convert GB to MB
+                LastActivityDate = stats.PeriodEnd
+            };
+
+            return Ok(response);
+        }
+        catch (InvalidOperationException ex)
+        {
+            _logger.LogWarning(ex, "Tenant {TenantId} not found", id);
+            return NotFound($"Tenant {id} not found");
+        }
     }
 }
 

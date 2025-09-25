@@ -11,6 +11,10 @@ public static class SwaggerExtensions
     public static IServiceCollection AddSwaggerDocumentation(this IServiceCollection services)
     {
         services.AddEndpointsApiExplorer();
+
+        // Register Swashbuckle.AspNetCore.Filters services
+        services.AddSwaggerExamplesFromAssemblies(Assembly.GetExecutingAssembly());
+
         services.AddSwaggerGen(options =>
         {
             // Add API versions

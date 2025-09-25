@@ -23,6 +23,43 @@ public record WalletCreatedEvent(
     }
 }
 
+// Additional events for new Wallet entity
+public record CredentialAddedToWalletEvent(
+    Guid WalletId,
+    Guid CredentialId,
+    Guid TenantId) : IDomainEvent
+{
+    public Guid EventId { get; init; } = Guid.NewGuid();
+    public DateTimeOffset OccurredAt { get; init; } = DateTimeOffset.UtcNow;
+}
+
+public record CredentialRemovedFromWalletEvent(
+    Guid WalletId,
+    Guid CredentialId,
+    Guid TenantId,
+    string? Reason) : IDomainEvent
+{
+    public Guid EventId { get; init; } = Guid.NewGuid();
+    public DateTimeOffset OccurredAt { get; init; } = DateTimeOffset.UtcNow;
+}
+
+public record WalletReactivatedEvent(
+    Guid WalletId,
+    Guid TenantId) : IDomainEvent
+{
+    public Guid EventId { get; init; } = Guid.NewGuid();
+    public DateTimeOffset OccurredAt { get; init; } = DateTimeOffset.UtcNow;
+}
+
+public record WalletDeletedEvent(
+    Guid WalletId,
+    Guid TenantId,
+    string? Reason) : IDomainEvent
+{
+    public Guid EventId { get; init; } = Guid.NewGuid();
+    public DateTimeOffset OccurredAt { get; init; } = DateTimeOffset.UtcNow;
+}
+
 public record WalletActivatedEvent(
     Guid WalletId,
     string ActivatedBy,

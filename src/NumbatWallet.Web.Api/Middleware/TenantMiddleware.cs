@@ -101,6 +101,13 @@ public class TenantMiddleware
     {
         var path = context.Request.Path.Value?.ToLowerInvariant() ?? "";
 
+        // Development bypass - allow testing without tenant context
+        var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
+        if (environment == "Development" && context.Request.Headers.ContainsKey("X-Skip-Tenant"))
+        {
+            return false;
+        }
+
         // Endpoints that don't require tenant context
         var tenantFreeEndpoints = new[]
         {

@@ -10,7 +10,7 @@ namespace NumbatWallet.Application.Queries.Wallets;
 /// Handler for retrieving a wallet by ID
 /// POA: Real implementation with full wallet details
 /// </summary>
-public sealed class GetWalletByIdQueryHandler : IQueryHandler<GetWalletByIdQuery, WalletDto>
+public sealed class GetWalletByIdQueryHandler : IQueryHandler<GetWalletByIdQuery, WalletDto?>
 {
     private readonly IWalletRepository _walletRepository;
     private readonly IPersonRepository _personRepository;
@@ -29,7 +29,7 @@ public sealed class GetWalletByIdQueryHandler : IQueryHandler<GetWalletByIdQuery
         _logger = logger;
     }
 
-    public async Task<WalletDto> HandleAsync(
+    public async Task<WalletDto?> HandleAsync(
         GetWalletByIdQuery query,
         CancellationToken cancellationToken = default)
     {

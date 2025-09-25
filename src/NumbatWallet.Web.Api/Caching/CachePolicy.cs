@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.OutputCaching;
-using Microsoft.Extensions.Primitives;
 
 namespace NumbatWallet.Web.Api.Caching;
 

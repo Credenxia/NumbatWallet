@@ -1,6 +1,5 @@
 using NumbatWallet.Application.CQRS.Interfaces;
 using NumbatWallet.Application.DTOs;
-using NumbatWallet.Domain.Enums;
 
 namespace NumbatWallet.Application.Queries.Credentials;
 

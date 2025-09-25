@@ -1,5 +1,3 @@
-using Asp.Versioning;
-using Microsoft.AspNetCore.Mvc;
 using NumbatWallet.Web.Api.Security;
 using NumbatWallet.Web.Api.Webhooks;
 

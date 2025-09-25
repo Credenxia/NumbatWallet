@@ -1,9 +1,6 @@
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
-using NumbatWallet.Web.Api.HealthChecks;
-using StackExchange.Redis;
 using System.Text.Json;
-using System.Text;
 
 namespace NumbatWallet.Web.Api.HealthChecks;
 

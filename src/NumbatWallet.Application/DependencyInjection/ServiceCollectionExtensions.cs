@@ -71,6 +71,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<ICredentialService, CredentialService>();
         services.AddScoped<IOrganizationService, OrganizationService>();
         services.AddScoped<IStatisticsService, StatisticsService>();
+        services.AddScoped<IWalletTemplateService, WalletTemplateService>();
         // Note: IHealthCheckService is registered in Infrastructure layer
 
         // Register Bulk Operation Services

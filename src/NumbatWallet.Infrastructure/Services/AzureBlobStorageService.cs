@@ -1,6 +1,7 @@
 using Azure.Identity;
 using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
+using Azure.Storage.Sas;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using NumbatWallet.Application.Interfaces;
@@ -176,7 +177,7 @@ public class AzureBlobStorageService : IBlobStorageService
                 // Generate SAS URL for temporary access
                 if (blobClient.CanGenerateSasUri)
                 {
-                    var sasBuilder = new Azure.Storage.Sas.BlobSasBuilder
+                    var sasBuilder = new BlobSasBuilder
                     {
                         BlobContainerName = containerName,
                         BlobName = blobName,
@@ -184,7 +185,7 @@ public class AzureBlobStorageService : IBlobStorageService
                         ExpiresOn = DateTimeOffset.UtcNow.Add(expiry.Value)
                     };
 
-                    sasBuilder.SetPermissions(Azure.Storage.Sas.BlobSasPermissions.Read);
+                    sasBuilder.SetPermissions(BlobSasPermissions.Read);
 
                     return blobClient.GenerateSasUri(sasBuilder).ToString();
                 }

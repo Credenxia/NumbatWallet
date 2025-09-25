@@ -1,13 +1,10 @@
 using FluentAssertions;
 using Microsoft.Extensions.Caching.Distributed;
-using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using Moq;
 using NumbatWallet.Infrastructure.Services;
 using System.Text;
 using System.Text.Json;
-using Xunit;
 
 namespace NumbatWallet.Infrastructure.Tests.Services;
 

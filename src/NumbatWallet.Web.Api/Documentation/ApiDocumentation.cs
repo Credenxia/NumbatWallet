@@ -1,6 +1,5 @@
 using Swashbuckle.AspNetCore.Filters;
 using NumbatWallet.Application.DTOs;
-using NumbatWallet.SharedKernel.Enums;
 
 namespace NumbatWallet.Web.Api.Documentation;
 

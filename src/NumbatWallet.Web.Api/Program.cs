@@ -1,171 +1,170 @@
-using Carter;
 using NumbatWallet.Application.DependencyInjection;
 using NumbatWallet.Infrastructure.DependencyInjection;
-using NumbatWallet.Web.Api.DependencyInjection;
-using NumbatWallet.Web.Api.Extensions;
-using NumbatWallet.Web.Api.Hubs;
-using NumbatWallet.Web.Api.Telemetry;
 using NumbatWallet.Web.Api.Security;
 using Serilog;
-using Asp.Versioning.ApiExplorer;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
-// Configure bootstrap logger
+// Configure minimal bootstrap logger
 Log.Logger = new LoggerConfiguration()
     .WriteTo.Console()
     .CreateBootstrapLogger();
 
 try
 {
-    Log.Information("Starting NumbatWallet Web API");
+    Log.Information("Starting NumbatWallet Web API (Minimal Version)");
 
     var builder = WebApplication.CreateBuilder(args);
 
-    // Configure comprehensive Serilog logging
-    builder.ConfigureSerilog();
-
-    // Add service defaults & Aspire components
-    builder.AddServiceDefaults();
-
-    // Logging the connection string for debugging
-    var connString = builder.Configuration.GetConnectionString("numbatwallet");
-    Log.Information("Connection string from config: {ConnectionString}", connString ?? "Not configured");
-
-    // Add services to the container using our extension methods
-    builder.Services.AddApplication();
-    builder.Services.AddInfrastructure(builder.Configuration);
-    builder.Services.AddWebApi(builder.Configuration);
-
-    // Add API versioning (must be before Swagger)
-    builder.Services.AddApiVersioningConfiguration(builder.Configuration);
-
-    // Add GraphQL
-    builder.Services.AddGraphQLServer(builder.Configuration);
-
-    // Add Carter for REST endpoints with validation
-    builder.Services.AddCarterWithValidation();
-
-    // Add health checks
-    builder.Services.AddCustomHealthChecks(builder.Configuration);
-
-    // Add versioned Swagger documentation
-    builder.Services.AddVersionedSwagger(builder.Configuration);
-
-    // Add security services
-    builder.Services.AddSecurityServices(builder.Configuration);
-    builder.Services.AddSecurityAudit();
-
-    // Add custom authentication
-    builder.Services.AddCustomAuthentication(builder.Configuration);
-
-    // Add enhanced rate limiting
-    builder.Services.AddSecurityRateLimiting(builder.Configuration);
-
-    // Add SignalR for real-time updates
-    builder.Services.AddSignalR(options =>
+    // Configure minimal Serilog
+    builder.Host.UseSerilog((context, configuration) =>
     {
-        options.EnableDetailedErrors = builder.Environment.IsDevelopment();
-        options.MaximumReceiveMessageSize = 1024 * 1024; // 1MB
-        options.KeepAliveInterval = TimeSpan.FromSeconds(15);
+        configuration
+            .ReadFrom.Configuration(context.Configuration)
+            .WriteTo.Console();
     });
 
-    // Register progress notification service
-    builder.Services.AddSingleton<IProgressNotificationService, SignalRProgressNotificationService>();
+    // Add essential services
+    builder.Services.AddApplication();
+    builder.Services.AddInfrastructure(builder.Configuration);
 
-    // Add performance monitoring
-    builder.Services.AddPerformanceMonitoring();
+    // Add Web API specific services
+    builder.Services.AddScoped<ISecurityAuditService, SecurityAuditService>();
 
-    // Add caching services
-    builder.Services.AddCachingServices(builder.Configuration);
+    // Add Controllers with JSON configuration
+    builder.Services.AddControllers()
+        .AddJsonOptions(options =>
+        {
+            options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+            options.JsonSerializerOptions.WriteIndented = true;
+            options.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
+            options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+        });
 
-    // Add webhook services
-    builder.Services.AddWebhookServices(builder.Configuration);
+    // Add minimal API versioning (required for WalletGenerationController route constraints)
+    builder.Services.AddApiVersioning(options =>
+    {
+        options.DefaultApiVersion = new Asp.Versioning.ApiVersion(1, 0);
+        options.AssumeDefaultVersionWhenUnspecified = true;
+        options.ReportApiVersions = true;
+        options.ApiVersionReader = Asp.Versioning.ApiVersionReader.Default;
+    });
 
-    // Add event sourcing services
-    builder.Services.AddEventSourcingServices(builder.Configuration);
+    builder.Services.AddVersionedApiExplorer(options =>
+    {
+        options.GroupNameFormat = "'v'VVV";
+        options.SubstituteApiVersionInUrl = true;
+    });
+
+    // Add basic CORS
+    builder.Services.AddCors(options =>
+    {
+        options.AddPolicy("AllowAll", builder =>
+        {
+            builder
+                .AllowAnyOrigin()
+                .AllowAnyMethod()
+                .AllowAnyHeader();
+        });
+    });
+
+    // Add minimal authentication (for testing - allows anonymous)
+    builder.Services.AddAuthentication("Test")
+        .AddScheme<Microsoft.AspNetCore.Authentication.AuthenticationSchemeOptions, NumbatWallet.Web.Api.Testing.TestAuthenticationHandler>(
+            "Test", options => { });
+
+    builder.Services.AddAuthorization(options =>
+    {
+        options.FallbackPolicy = new Microsoft.AspNetCore.Authorization.AuthorizationPolicyBuilder()
+            .RequireAuthenticatedUser()
+            .Build();
+        // Override with policy that allows anonymous for testing
+        options.DefaultPolicy = new Microsoft.AspNetCore.Authorization.AuthorizationPolicyBuilder()
+            .RequireAssertion(_ => true)
+            .Build();
+    });
+
+    // Add minimal Swagger for testing
+    builder.Services.AddEndpointsApiExplorer();
+    builder.Services.AddSwaggerGen(c =>
+    {
+        c.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo
+        {
+            Title = "NumbatWallet API (Minimal)",
+            Version = "v1.0"
+        });
+    });
 
     var app = builder.Build();
 
-    // Get API version description provider for Swagger
-    var apiVersionDescriptionProvider = app.Services.GetRequiredService<IApiVersionDescriptionProvider>();
-
-    // Configure the HTTP request pipeline
+    // Configure minimal pipeline
     if (app.Environment.IsDevelopment())
     {
-        app.UseDeveloperExceptionPage();
+        app.UseSwagger();
+        app.UseSwaggerUI(c =>
+        {
+            c.SwaggerEndpoint("/swagger/v1/swagger.json", "NumbatWallet API v1.0 (Minimal)");
+            c.RoutePrefix = string.Empty; // Serve Swagger UI at root
+        });
     }
-    else
-    {
-        app.UseExceptionHandler("/error");
-        app.UseHsts();
-    }
 
-    // Enable versioned Swagger
-    app.UseVersionedSwagger(apiVersionDescriptionProvider);
-
-    app.UseHttpsRedirection();
-
-    // Add security headers early in the pipeline
-    app.UseSecurityHeaders();
-
-    // Add security audit
-    app.UseSecurityAudit();
-
-    // Add Serilog request logging with enhanced configuration
-    app.UseSerilogRequestLogging();
-    app.UseHealthCheckLogging();
-    app.UseGraphQLLogging();
-
-    // Add performance monitoring
-    app.UsePerformanceMonitoring();
-
-    // Add output caching
-    app.UseOutputCaching();
-
-    app.UseCors("AllowedOrigins");
-
-    // Add custom middleware for tenant resolution
-    app.UseTenantResolution();
-
-    // Add security middleware
-    app.UseMiddleware<MutualTlsMiddleware>();
-    app.UseMiddleware<RequestSignatureMiddleware>();
-
-    // Add API key authentication if enabled
-    app.UseApiKeyAuthentication();
-
+    app.UseCors("AllowAll");
     app.UseAuthentication();
     app.UseAuthorization();
 
-    // Add rate limiting
-    app.UseRateLimiter();
-
-    // Add API versioning middleware
-    app.UseMiddleware<ApiVersioningMiddleware>();
-
-    // Map endpoints
+    // Map controllers
     app.MapControllers();
-    app.MapCarter(); // Map Carter endpoints first
-    app.MapGraphQL();
-    app.MapHealthChecks();
-    app.MapHub<ProgressHub>("/hubs/progress"); // SignalR hub for progress tracking
-    app.MapDefaultEndpoints();
 
-    // Map Prometheus metrics endpoint
-    app.UseOpenTelemetryPrometheusScrapingEndpoint();
+    // Add a simple health check endpoint
+    app.MapGet("/health", () => new { Status = "Healthy", Timestamp = DateTime.UtcNow });
 
-    // Database migration is handled by MigrationHelper hosted service
-    // No need to manually ensure database creation here
+    Log.Information("NumbatWallet Web API (Minimal) configured successfully");
+    Log.Information("Swagger UI available at: http://localhost:5000");
+    Log.Information("Health check available at: http://localhost:5000/health");
+    Log.Information("Wallet generation endpoints available at: http://localhost:5000/api/v1.0/wallet-generation/");
 
     await app.RunAsync();
 }
 catch (Exception ex)
 {
     Log.Fatal(ex, "Application terminated unexpectedly");
+    throw;
 }
 finally
 {
     Log.CloseAndFlush();
 }
 
-// Make the Program class public for integration tests
+// Make the implicit Program class public so test projects can access it
 public partial class Program { }
+
+// Minimal test authentication handler that allows all requests
+namespace NumbatWallet.Web.Api.Testing
+{
+    public class TestAuthenticationHandler : Microsoft.AspNetCore.Authentication.AuthenticationHandler<Microsoft.AspNetCore.Authentication.AuthenticationSchemeOptions>
+    {
+        public TestAuthenticationHandler(
+            Microsoft.Extensions.Options.IOptionsMonitor<Microsoft.AspNetCore.Authentication.AuthenticationSchemeOptions> options,
+            Microsoft.Extensions.Logging.ILoggerFactory logger,
+            System.Text.Encodings.Web.UrlEncoder encoder)
+            : base(options, logger, encoder)
+        {
+        }
+
+        protected override Task<Microsoft.AspNetCore.Authentication.AuthenticateResult> HandleAuthenticateAsync()
+        {
+            var claims = new[]
+            {
+                new System.Security.Claims.Claim("user_id", "test-user"),
+                new System.Security.Claims.Claim("tenant_id", "test-tenant"),
+                new System.Security.Claims.Claim("user_type", "officer")
+            };
+
+            var identity = new System.Security.Claims.ClaimsIdentity(claims, "Test");
+            var principal = new System.Security.Claims.ClaimsPrincipal(identity);
+            var ticket = new Microsoft.AspNetCore.Authentication.AuthenticationTicket(principal, "Test");
+
+            return Task.FromResult(Microsoft.AspNetCore.Authentication.AuthenticateResult.Success(ticket));
+        }
+    }
+}

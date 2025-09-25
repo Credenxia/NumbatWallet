@@ -40,14 +40,26 @@ public static class ServiceCollectionExtensions
             // Use Aspire service discovery - connection name matches AddDatabase("numbatwallet") in AppHost
             var connectionString = configuration.GetConnectionString("numbatwallet")
                 ?? configuration.GetConnectionString("DefaultConnection");
-            options.UseNpgsql(connectionString, npgsqlOptions =>
+
+            // Use SQLite for development if connection string contains "Data Source"
+            if (connectionString?.Contains("Data Source") == true)
             {
-                npgsqlOptions.MigrationsAssembly(typeof(NumbatWalletDbContext).Assembly.FullName);
-                npgsqlOptions.EnableRetryOnFailure(
-                    maxRetryCount: 3,
-                    maxRetryDelay: TimeSpan.FromSeconds(5),
-                    errorCodesToAdd: null);
-            });
+                options.UseSqlite(connectionString, sqliteOptions =>
+                {
+                    sqliteOptions.MigrationsAssembly(typeof(NumbatWalletDbContext).Assembly.FullName);
+                });
+            }
+            else
+            {
+                options.UseNpgsql(connectionString, npgsqlOptions =>
+                {
+                    npgsqlOptions.MigrationsAssembly(typeof(NumbatWalletDbContext).Assembly.FullName);
+                    npgsqlOptions.EnableRetryOnFailure(
+                        maxRetryCount: 3,
+                        maxRetryDelay: TimeSpan.FromSeconds(5),
+                        errorCodesToAdd: null);
+                });
+            }
 
             // Add interceptors with DI
             options.AddInterceptors(
@@ -78,6 +90,8 @@ public static class ServiceCollectionExtensions
         services.AddScoped<ITenantCertificateRepository, TenantCertificateRepository>();
         services.AddScoped<ICertificateAuthorityRepository, CertificateAuthorityRepository>();
         services.AddScoped<ICertificateTrustStoreRepository, CertificateTrustStoreRepository>();
+        services.AddScoped<IWalletTemplateRepository, WalletTemplateRepository>();
+        services.AddScoped<IIssuanceRepository, IssuanceRepository>();
 
         // Register Domain Services
         services.AddHttpClient<ICertificateValidationService, CertificateValidationService>();
@@ -88,19 +102,130 @@ public static class ServiceCollectionExtensions
         services.AddScoped<ISessionService, DistributedSessionService>();
         services.AddSingleton<IHsmService, HsmService>();
         services.AddSingleton<IApiKeyService, ApiKeyService>();
+        services.AddScoped<Application.Interfaces.IJwtSigningService, JwtSigningService>();
+        services.AddSingleton<Application.Interfaces.IJsonLdContextService, JsonLdContextService>();
 
         // Register Infrastructure Services
         services.AddScoped<Application.Interfaces.ITenantService, TenantService>();
         // Register adapter for SharedKernel.Interfaces.ITenantService
         services.AddScoped<SharedKernel.Interfaces.ITenantService, TenantServiceAdapter>();
         services.AddScoped<IAuthenticationService, AuthenticationService>();
-        services.AddScoped<IWAIdXService, MockWAIdXService>();
-        // services.AddScoped<IDateTimeService, DateTimeService>();
+
+        // Register WA IdX Service - use real service if configured, otherwise mock
+        var serviceWAClientId = configuration["ServiceWA:ClientId"];
+        if (!string.IsNullOrEmpty(serviceWAClientId))
+        {
+            services.AddHttpClient<IWAIdXService, ServiceWAIdXService>("ServiceWAIdX", client =>
+            {
+                var apiBaseUrl = configuration["ServiceWA:ApiBaseUrl"] ?? "https://api.servicewa.wa.gov.au";
+                client.BaseAddress = new Uri(apiBaseUrl);
+                client.Timeout = TimeSpan.FromSeconds(30);
+                client.DefaultRequestHeaders.Add("Accept", "application/json");
+            });
+        }
+        else
+        {
+            services.AddScoped<IWAIdXService, MockWAIdXService>();
+        }
+
+        // Register CQRS Command Handlers
+        services.AddScoped<Application.CQRS.Interfaces.ICommandHandler<Application.Commands.Credentials.IssueCredentialCommand, Application.DTOs.CredentialDto>,
+            Application.Commands.Credentials.Handlers.IssueCredentialCommandHandler>();
+        services.AddScoped<Application.CQRS.Interfaces.ICommandHandler<Application.Commands.Credentials.VerifyCredentialCommand, Application.DTOs.VerificationResultDto>,
+            Application.Commands.Credentials.Handlers.VerifyCredentialCommandHandler>();
+        services.AddScoped<Application.CQRS.Interfaces.ICommandHandler<Application.Commands.Credentials.RevokeCredentialCommand, bool>,
+            Application.Commands.Credentials.Handlers.RevokeCredentialCommandHandler>();
+        services.AddScoped<Application.CQRS.Interfaces.ICommandHandler<Application.Commands.Credentials.ShareCredentialCommand, Application.Commands.Credentials.ShareCredentialResult>,
+            Application.Commands.Credentials.Handlers.ShareCredentialCommandHandler>();
+        services.AddScoped<Application.CQRS.Interfaces.ICommandHandler<Application.Commands.Credentials.RequestCredentialCommand, Application.Commands.Credentials.CredentialRequestDto>,
+            Application.Commands.Credentials.Handlers.RequestCredentialCommandHandler>();
+
+        // Register Batch Command Handlers
+        services.AddScoped<Application.CQRS.Interfaces.ICommandHandler<Application.Commands.Batch.BatchIssueCredentialsCommand, Application.Commands.Batch.BatchOperationResultDto<Application.DTOs.CredentialDto>>,
+            Application.Commands.Batch.Handlers.BatchIssueCredentialsCommandHandler>();
+        services.AddScoped<Application.CQRS.Interfaces.ICommandHandler<Application.Commands.Batch.BatchVerifyCredentialsCommand, Application.Commands.Batch.BatchOperationResultDto<Application.DTOs.VerificationResultDto>>,
+            Application.Commands.Batch.Handlers.BatchVerifyCredentialsCommandHandler>();
+        services.AddScoped<Application.CQRS.Interfaces.ICommandHandler<Application.Commands.Batch.BatchRevokeCredentialsCommand, Application.Commands.Batch.BatchOperationResultDto<bool>>,
+            Application.Commands.Batch.Handlers.BatchRevokeCredentialsCommandHandler>();
+        services.AddScoped<Application.CQRS.Interfaces.ICommandHandler<Application.Commands.Batch.BatchApproveIssuancesCommand, Application.Commands.Batch.BatchOperationResultDto<Application.DTOs.IssuanceDto>>,
+            Application.Commands.Batch.Handlers.BatchApproveIssuancesCommandHandler>();
+
+        // Register Issuance Command Handlers
+        services.AddScoped<Application.CQRS.Interfaces.ICommandHandler<Application.Commands.Issuances.CreateIssuanceCommand, Application.DTOs.IssuanceDto>,
+            Application.Commands.Issuances.Handlers.CreateIssuanceCommandHandler>();
+        services.AddScoped<Application.CQRS.Interfaces.ICommandHandler<Application.Commands.Issuances.ApproveIssuanceCommand, Application.DTOs.IssuanceDto>,
+            Application.Commands.Issuances.Handlers.ApproveIssuanceCommandHandler>();
+        services.AddScoped<Application.CQRS.Interfaces.ICommandHandler<Application.Commands.Issuances.RejectIssuanceCommand, Application.DTOs.IssuanceDto>,
+            Application.Commands.Issuances.Handlers.RejectIssuanceCommandHandler>();
+        services.AddScoped<Application.CQRS.Interfaces.ICommandHandler<Application.Commands.Issuances.CompleteIssuanceCommand, Application.DTOs.IssuanceDto>,
+            Application.Commands.Issuances.Handlers.CompleteIssuanceCommandHandler>();
+        services.AddScoped<Application.CQRS.Interfaces.ICommandHandler<Application.Commands.Issuances.CancelIssuanceCommand, bool>,
+            Application.Commands.Issuances.Handlers.CancelIssuanceCommandHandler>();
+
+        // Register CQRS Query Handlers
+        services.AddScoped<Application.CQRS.Interfaces.IQueryHandler<Application.Queries.Wallets.GetWalletByIdQuery, Application.DTOs.WalletDto?>,
+            Application.Queries.Wallets.GetWalletByIdQueryHandler>();
+        services.AddScoped<Application.CQRS.Interfaces.IQueryHandler<Application.Queries.Credentials.GetCredentialByIdQuery, Application.DTOs.CredentialDto?>,
+            Application.Queries.Credentials.GetCredentialByIdQueryHandler>();
+        services.AddScoped<Application.CQRS.Interfaces.IQueryHandler<Application.Queries.Credentials.GetCredentialsByWalletQuery, System.Collections.Generic.IEnumerable<Application.DTOs.CredentialDto>>,
+            Application.Handlers.Credentials.GetCredentialsByWalletHandler>();
+
+        // Register Issuance Query Handlers
+        services.AddScoped<Application.CQRS.Interfaces.IQueryHandler<Application.Queries.Issuances.GetIssuanceByIdQuery, Application.DTOs.IssuanceDto?>,
+            Application.Queries.Issuances.Handlers.GetIssuanceByIdHandler>();
+        services.AddScoped<Application.CQRS.Interfaces.IQueryHandler<Application.Queries.Issuances.GetIssuancesByStatusQuery, System.Collections.Generic.IEnumerable<Application.DTOs.IssuanceDto>>,
+            Application.Queries.Issuances.Handlers.GetIssuancesByStatusHandler>();
+
+        // Register Wallet Command Handlers
+        services.AddScoped<Application.CQRS.Interfaces.ICommandHandler<Application.Wallets.Commands.CreateWallet.CreateWalletCommand, Application.DTOs.WalletDto>,
+            Application.Wallets.Commands.CreateWallet.CreateWalletCommandHandler>();
+        services.AddScoped<Application.CQRS.Interfaces.ICommandHandler<Application.Commands.Wallets.UpdateWalletCommand, Application.DTOs.WalletDto>,
+            Application.Commands.Wallets.UpdateWalletCommandHandler>();
+        services.AddScoped<Application.CQRS.Interfaces.ICommandHandler<Application.Commands.Wallets.ActivateWalletCommand, Application.DTOs.WalletDto>,
+            Application.Commands.Wallets.Handlers.ActivateWalletCommandHandler>();
+        services.AddScoped<Application.CQRS.Interfaces.ICommandHandler<Application.Commands.Wallets.DeleteWalletCommand, bool>,
+            Application.Commands.Wallets.Handlers.DeleteWalletCommandHandler>();
+
+        // Register Wallet Query Handlers
+        services.AddScoped<Application.CQRS.Interfaces.IQueryHandler<Application.Queries.Wallets.GetWalletsByPersonQuery, System.Collections.Generic.IEnumerable<Application.DTOs.WalletDto>>,
+            Application.Queries.Wallets.GetWalletsByPersonQueryHandler>();
+
+        // Register Tenant Query Handlers
+        services.AddScoped<Application.CQRS.Interfaces.IQueryHandler<Application.Queries.Tenants.GetTenantByIdQuery, Application.DTOs.TenantDto?>,
+            Application.Queries.Tenants.GetTenantByIdQueryHandler>();
+        services.AddScoped<Application.CQRS.Interfaces.IQueryHandler<Application.Queries.Tenants.GetAllTenantsQuery, System.Collections.Generic.IEnumerable<Application.DTOs.TenantDto>>,
+            Application.Queries.Tenants.GetAllTenantsQueryHandler>();
+        services.AddScoped<Application.CQRS.Interfaces.IQueryHandler<Application.Queries.Tenants.GetTenantStatisticsQuery, Application.DTOs.TenantStatisticsDto>,
+            Application.Queries.Tenants.Handlers.GetTenantStatisticsQueryHandler>();
+
+        // Register Tenant Command Handlers
+        services.AddScoped<Application.CQRS.Interfaces.ICommandHandler<Application.Commands.Tenants.CreateTenantCommand, System.Guid>,
+            Application.Commands.Tenants.CreateTenantCommandHandler>();
+        services.AddScoped<Application.CQRS.Interfaces.ICommandHandler<Application.Commands.Tenants.UpdateTenantCommand>,
+            Application.Commands.Tenants.UpdateTenantCommandHandler>();
+        services.AddScoped<Application.CQRS.Interfaces.ICommandHandler<Application.Commands.Tenants.DeleteTenantCommand>,
+            Application.Commands.Tenants.DeleteTenantCommandHandler>();
+
+        // Register Authentication Command Handlers
+        services.AddScoped<Application.CQRS.Interfaces.ICommandHandler<Application.Commands.Authentication.LoginCommand, Application.DTOs.AuthenticationResultDto>,
+            Application.Commands.Authentication.Handlers.LoginCommandHandler>();
+        services.AddScoped<Application.CQRS.Interfaces.ICommandHandler<Application.Commands.Authentication.RefreshTokenCommand, Application.DTOs.AuthenticationResultDto>,
+            Application.Commands.Authentication.Handlers.RefreshTokenCommandHandler>();
+        services.AddScoped<Application.CQRS.Interfaces.ICommandHandler<Application.Commands.Authentication.LogoutCommand, bool>,
+            Application.Commands.Authentication.Handlers.LogoutCommandHandler>();
+        services.AddScoped<Application.CQRS.Interfaces.ICommandHandler<Application.Commands.Authentication.ChangePasswordCommand, bool>,
+            Application.Commands.Authentication.Handlers.ChangePasswordCommandHandler>();
+        services.AddScoped<Application.CQRS.Interfaces.ICommandHandler<Application.Commands.Authentication.ResetPasswordCommand, bool>,
+            Application.Commands.Authentication.Handlers.ResetPasswordCommandHandler>();
 
         // Protection and Security Services
         services.AddScoped<IAuditService, AuditService>();
         services.AddScoped<INotificationService, NotificationService>();
         services.AddScoped<IEmailService, EmailService>();
+
+        // Verifiable Credentials Services
+        services.AddScoped<Application.Services.IJsonLdService, Application.Services.JsonLdService>();
+        services.AddScoped<Application.Services.ICredentialManifestService, Application.Services.CredentialManifestService>();
         // TODO: Add after fixing background jobs
         // services.AddScoped<Application.BackgroundJobs.IDatabaseMaintenanceService, DatabaseMaintenanceService>();
         // TODO: Implement these services
@@ -159,6 +284,12 @@ public static class ServiceCollectionExtensions
 
         // System Metrics Service
         services.AddScoped<ISystemMetricsService, SystemMetricsService>();
+
+        // Platform-specific Wallet Builders
+        services.AddScoped<IAppleWalletBuilder, WalletBuilders.AppleWalletBuilder>();
+        services.AddScoped<IGoogleWalletBuilder, WalletBuilders.GoogleWalletBuilder>();
+        services.AddScoped<IWebWalletBuilder, WalletBuilders.WebWalletBuilder>();
+        services.AddScoped<IPlatformWalletBuilder, WalletBuilders.PlatformWalletBuilder>();
 
         // Blob Storage
         var storageConnectionString = configuration["Azure:Storage:ConnectionString"];

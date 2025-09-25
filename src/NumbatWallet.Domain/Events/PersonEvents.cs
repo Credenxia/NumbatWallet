@@ -222,3 +222,54 @@ public record PersonMfaDisabledEvent(
     {
     }
 }
+
+// Additional events for new Person entity
+public record PersonEmailChangedEvent(
+    Guid PersonId,
+    Guid TenantId,
+    string NewEmail,
+    string ChangedBy) : IDomainEvent
+{
+    public Guid EventId { get; init; } = Guid.NewGuid();
+    public DateTimeOffset OccurredAt { get; init; } = DateTimeOffset.UtcNow;
+}
+
+public record PersonAddressUpdatedEvent(
+    Guid PersonId,
+    Guid TenantId,
+    string AddressType,
+    string UpdatedBy) : IDomainEvent
+{
+    public Guid EventId { get; init; } = Guid.NewGuid();
+    public DateTimeOffset OccurredAt { get; init; } = DateTimeOffset.UtcNow;
+}
+
+public record PersonDeactivatedEvent(
+    Guid PersonId,
+    Guid TenantId,
+    string Reason,
+    string DeactivatedBy) : IDomainEvent
+{
+    public Guid EventId { get; init; } = Guid.NewGuid();
+    public DateTimeOffset OccurredAt { get; init; } = DateTimeOffset.UtcNow;
+}
+
+public record WalletAssignedToPersonEvent(
+    Guid PersonId,
+    Guid WalletId,
+    Guid TenantId,
+    string AssignedBy) : IDomainEvent
+{
+    public Guid EventId { get; init; } = Guid.NewGuid();
+    public DateTimeOffset OccurredAt { get; init; } = DateTimeOffset.UtcNow;
+}
+
+public record WalletRemovedFromPersonEvent(
+    Guid PersonId,
+    Guid WalletId,
+    Guid TenantId,
+    string RemovedBy) : IDomainEvent
+{
+    public Guid EventId { get; init; } = Guid.NewGuid();
+    public DateTimeOffset OccurredAt { get; init; } = DateTimeOffset.UtcNow;
+}

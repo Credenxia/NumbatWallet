@@ -1,8 +1,9 @@
-using Asp.Versioning;
-using Microsoft.AspNetCore.Mvc;
+using FluentValidation;
 using Microsoft.IdentityModel.Tokens;
+using NumbatWallet.Application.Commands.Authentication;
+using NumbatWallet.Application.Common.Exceptions;
+using NumbatWallet.Application.CQRS.Interfaces;
 using NumbatWallet.Application.DTOs;
-using NumbatWallet.Application.Interfaces;
 using NumbatWallet.Web.Api.Security;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -16,17 +17,32 @@ namespace NumbatWallet.Web.Api.Controllers;
 [Produces("application/json")]
 public class AuthenticationController : ControllerBase
 {
+    private readonly ICommandHandler<LoginCommand, AuthenticationResultDto> _loginHandler;
+    private readonly ICommandHandler<RefreshTokenCommand, AuthenticationResultDto> _refreshTokenHandler;
+    private readonly ICommandHandler<LogoutCommand, bool> _logoutHandler;
+    private readonly ICommandHandler<ChangePasswordCommand, bool> _changePasswordHandler;
+    private readonly ICommandHandler<ResetPasswordCommand, bool> _resetPasswordHandler;
     private readonly IConfiguration _configuration;
     private readonly ILogger<AuthenticationController> _logger;
     private readonly ISecurityAuditService _auditService;
     private readonly IInputSanitizationService _sanitizationService;
 
     public AuthenticationController(
+        ICommandHandler<LoginCommand, AuthenticationResultDto> loginHandler,
+        ICommandHandler<RefreshTokenCommand, AuthenticationResultDto> refreshTokenHandler,
+        ICommandHandler<LogoutCommand, bool> logoutHandler,
+        ICommandHandler<ChangePasswordCommand, bool> changePasswordHandler,
+        ICommandHandler<ResetPasswordCommand, bool> resetPasswordHandler,
         IConfiguration configuration,
         ILogger<AuthenticationController> logger,
         ISecurityAuditService auditService,
         IInputSanitizationService sanitizationService)
     {
+        _loginHandler = loginHandler;
+        _refreshTokenHandler = refreshTokenHandler;
+        _logoutHandler = logoutHandler;
+        _changePasswordHandler = changePasswordHandler;
+        _resetPasswordHandler = resetPasswordHandler;
         _configuration = configuration;
         _logger = logger;
         _auditService = auditService;
@@ -61,14 +77,11 @@ public class AuthenticationController : ControllerBase
             SecurityEventType.LoginAttempt,
             $"Login attempt for user: {request.Email}");
 
-        // TODO: Implement actual authentication logic with Azure AD / ServiceWA
-        // For now, this is a placeholder implementation
-
-        // Simulate authentication (replace with actual authentication)
-        if (request.Email == "admin@numbatwallet.wa.gov.au" && request.Password == "Admin123!")
+        try
         {
-            // Generate JWT token
-            var token = GenerateJwtToken(request.Email, "Admin", Guid.NewGuid().ToString());
+            // Use the login command handler
+            var command = new LoginCommand(request.Email, request.Password, request.TwoFactorCode);
+            var result = await _loginHandler.HandleAsync(command);
 
             // Log successful login
             await _auditService.LogSecurityEventAsync(
@@ -78,24 +91,31 @@ public class AuthenticationController : ControllerBase
 
             return Ok(new AuthenticationResponseDto
             {
-                Token = token,
-                RefreshToken = GenerateRefreshToken(),
-                ExpiresIn = 3600,
-                TokenType = "Bearer",
-                UserId = Guid.NewGuid().ToString(),
-                Email = request.Email,
-                Roles = new[] { "Admin" }
+                Token = result.AccessToken,
+                RefreshToken = result.RefreshToken,
+                ExpiresIn = result.ExpiresIn,
+                TokenType = result.TokenType,
+                UserId = result.UserId,
+                Email = result.Email,
+                Roles = result.Roles
             });
         }
+        catch (Application.Common.Exceptions.UnauthorizedException ex)
+        {
+            // Log failed login
+            await _auditService.LogSecurityEventAsync(
+                HttpContext,
+                SecurityEventType.LoginFailed,
+                $"Failed login attempt for user: {request.Email}",
+                false);
 
-        // Log failed login
-        await _auditService.LogSecurityEventAsync(
-            HttpContext,
-            SecurityEventType.LoginFailed,
-            $"Failed login attempt for user: {request.Email}",
-            false);
-
-        return Unauthorized("Invalid credentials");
+            return Unauthorized(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Login error for user: {Email}", request.Email);
+            return StatusCode(500, "An error occurred during login");
+        }
     }
 
     /// <summary>
@@ -113,18 +133,26 @@ public class AuthenticationController : ControllerBase
             SecurityEventType.TokenRefresh,
             "Token refresh requested");
 
-        // TODO: Implement actual token refresh logic
-        // Validate refresh token and issue new access token
-
-        var newToken = GenerateJwtToken("user@example.com", "User", Guid.NewGuid().ToString());
-
-        return Ok(new AuthenticationResponseDto
+        try
         {
-            Token = newToken,
-            RefreshToken = request.RefreshToken,
-            ExpiresIn = 3600,
-            TokenType = "Bearer"
-        });
+            var command = new RefreshTokenCommand(request.RefreshToken);
+            var result = await _refreshTokenHandler.HandleAsync(command);
+
+            return Ok(new AuthenticationResponseDto
+            {
+                Token = result.AccessToken,
+                RefreshToken = result.RefreshToken,
+                ExpiresIn = result.ExpiresIn,
+                TokenType = result.TokenType,
+                UserId = result.UserId,
+                Email = result.Email,
+                Roles = result.Roles
+            });
+        }
+        catch (Application.Common.Exceptions.UnauthorizedException ex)
+        {
+            return Unauthorized(ex.Message);
+        }
     }
 
     /// <summary>
@@ -143,7 +171,8 @@ public class AuthenticationController : ControllerBase
             SecurityEventType.LogoutSuccess,
             $"User logged out: {userId}");
 
-        // TODO: Implement token blacklisting or revocation
+        var command = new LogoutCommand(userId ?? string.Empty);
+        await _logoutHandler.HandleAsync(command);
 
         return NoContent();
     }
@@ -165,9 +194,25 @@ public class AuthenticationController : ControllerBase
             SecurityEventType.PasswordChange,
             $"Password change attempted for user: {userId}");
 
-        // TODO: Implement actual password change logic
+        try
+        {
+            var command = new ChangePasswordCommand(
+                userId ?? string.Empty,
+                request.CurrentPassword,
+                request.NewPassword);
 
-        return NoContent();
+            await _changePasswordHandler.HandleAsync(command);
+
+            return NoContent();
+        }
+        catch (ValidationException ex)
+        {
+            return BadRequest(new { error = ex.Message });
+        }
+        catch (EntityNotFoundException)
+        {
+            return NotFound("User not found");
+        }
     }
 
     /// <summary>
@@ -186,9 +231,10 @@ public class AuthenticationController : ControllerBase
 
         _logger.LogInformation("Password reset requested for: {Email}", request.Email);
 
-        // TODO: Implement password reset logic
-        // Send reset email with secure token
+        var command = new ResetPasswordCommand(request.Email);
+        await _resetPasswordHandler.HandleAsync(command);
 
+        // Always return success to avoid email enumeration
         return NoContent();
     }
 

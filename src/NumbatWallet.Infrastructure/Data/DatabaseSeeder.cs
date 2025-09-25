@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NumbatWallet.Domain.Aggregates;
+using NumbatWallet.Domain.Entities;
 
 namespace NumbatWallet.Infrastructure.Data;
 
@@ -36,6 +37,7 @@ public class DatabaseSeeder
             }
 
             // Seed data
+            await SeedTenantsAsync(context, cancellationToken);
             await SeedIssuersAsync(context, cancellationToken);
             await SeedTestPersonsAsync(context, cancellationToken);
 
@@ -47,6 +49,57 @@ public class DatabaseSeeder
             _logger.LogError(ex, "An error occurred while seeding the database");
             throw;
         }
+    }
+
+    private async Task SeedTenantsAsync(NumbatWalletDbContext context, CancellationToken cancellationToken)
+    {
+        if (await context.Tenants.AnyAsync(cancellationToken))
+        {
+            _logger.LogInformation("Tenants already seeded");
+            return;
+        }
+
+        var defaultTenant = new Tenant(Guid.NewGuid())
+        {
+            Name = "Default Development Tenant",
+            Identifier = "default",
+            IsActive = true,
+            SubscriptionTier = "Enterprise",
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow,
+            CreatedBy = "system",
+            UpdatedBy = "system",
+            Settings = new Dictionary<string, object>
+            {
+                ["features"] = new List<string> { "all" },
+                ["maxUsers"] = 1000,
+                ["maxWallets"] = 10000,
+                ["allowedPlatforms"] = new List<string> { "apple", "google", "web" }
+            }
+        };
+
+        var devTenant = new Tenant(Guid.NewGuid())
+        {
+            Name = "Development Test Tenant",
+            Identifier = "dev-tenant",
+            IsActive = true,
+            SubscriptionTier = "Professional",
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow,
+            CreatedBy = "system",
+            UpdatedBy = "system",
+            Settings = new Dictionary<string, object>
+            {
+                ["features"] = new List<string> { "wallet-generation", "credential-issuance", "verification" },
+                ["maxUsers"] = 100,
+                ["maxWallets"] = 1000,
+                ["allowedPlatforms"] = new List<string> { "apple", "google", "web" }
+            }
+        };
+
+        var tenants = new[] { defaultTenant, devTenant };
+        await context.Tenants.AddRangeAsync(tenants, cancellationToken);
+        _logger.LogInformation("Seeded {Count} tenants", tenants.Length);
     }
 
     private async Task SeedIssuersAsync(NumbatWalletDbContext context, CancellationToken cancellationToken)

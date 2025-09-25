@@ -18,17 +18,19 @@ var storage = builder.AddAzureStorage("storage")
 
 var blobs = storage.AddBlobs("blobs");
 
-// Add Application Insights (local development)
-// Note: In production, this would connect to actual Azure Application Insights
-var appInsights = builder.AddContainer("applicationinsights", "mcr.microsoft.com/dotnet/nightly/aspire-dashboard")
-    .WithHttpEndpoint(port: 18888, targetPort: 18888, name: "dashboard");
+// Configure Azure services via environment variables for development
+// In production, these would point to actual Azure resources
 
 // Add Web API project with references to infrastructure
 var api = builder.AddProject<Projects.NumbatWallet_Web_Api>("webapi")
     .WithReference(postgresDb)
     .WithReference(redis)
     .WithReference(blobs)
-    .WithEnvironment("ASPNETCORE_ENVIRONMENT", "Development");
+    .WithEnvironment("ASPNETCORE_ENVIRONMENT", "Development")
+    .WithEnvironment("Azure__KeyVault__VaultUri", "https://localhost:7001/") // Local Key Vault emulator
+    .WithEnvironment("Azure__ServiceBus__ConnectionString", "Endpoint=sb://localhost;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=fake-key") // Local Service Bus emulator
+    .WithEnvironment("ApplicationInsights__ConnectionString", "InstrumentationKey=00000000-0000-0000-0000-000000000000;IngestionEndpoint=https://localhost:4317/") // Local OTEL endpoint
+    .WithEnvironment("Azure__UseEmulators", "true"); // Flag for services to use local emulators
 
 // Add Admin Portal - only references API, not database directly (Clean Architecture)
 var admin = builder.AddProject<Projects.NumbatWallet_Web_Admin>("admin")

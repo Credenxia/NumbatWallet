@@ -35,13 +35,20 @@ public class AdminQuery
         var from = DateTime.UtcNow.Add(-timeRange.GetTimeSpan());
         var to = DateTime.UtcNow;
 
-        // TODO: Implement GetMetricsSnapshotAsync in StatisticsService
+        // Get metrics from the statistics service
+        var metrics = await statisticsService.GetMetricsSnapshotAsync(from, to, cancellationToken);
+
+        // Convert Application DTO to Web DTO
         return new MetricsSnapshotDto
         {
-            From = from,
-            To = to,
-            Metrics = new Dictionary<string, decimal>(),
-            TimeSeries = new List<TimeSeriesDataPoint>()
+            From = metrics.From,
+            To = metrics.To,
+            Metrics = metrics.Metrics,
+            TimeSeries = metrics.TimeSeries.Select(ts => new TimeSeriesDataPoint
+            {
+                Timestamp = ts.Timestamp,
+                Values = new Dictionary<string, decimal> { { ts.Label ?? "value", ts.Value } }
+            }).ToList()
         };
     }
 

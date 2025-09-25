@@ -489,14 +489,14 @@ public class KeyVaultHsmProvider : IHsmProvider
         {
             Id = key.Id.ToString(),
             Name = key.Name,
-            Type = (key.KeyType == Azure.Security.KeyVault.Keys.KeyType.Rsa || key.KeyType == Azure.Security.KeyVault.Keys.KeyType.RsaHsm)
+            Type = (key.KeyType == global::Azure.Security.KeyVault.Keys.KeyType.Rsa || key.KeyType == global::Azure.Security.KeyVault.Keys.KeyType.RsaHsm)
                 ? Domain.Interfaces.KeyType.RSA
-                : (key.KeyType == Azure.Security.KeyVault.Keys.KeyType.Ec || key.KeyType == Azure.Security.KeyVault.Keys.KeyType.EcHsm)
+                : (key.KeyType == global::Azure.Security.KeyVault.Keys.KeyType.Ec || key.KeyType == global::Azure.Security.KeyVault.Keys.KeyType.EcHsm)
                     ? Domain.Interfaces.KeyType.EC
                     : Domain.Interfaces.KeyType.RSA,
             KeySize = key.Key?.N?.Length * 8 ?? 2048,
             Usage = ConvertKeyOperationsToUsage(key.KeyOperations.ToList()),
-            IsHardwareBacked = key.KeyType == Azure.Security.KeyVault.Keys.KeyType.RsaHsm || key.KeyType == Azure.Security.KeyVault.Keys.KeyType.EcHsm || key.KeyType == Azure.Security.KeyVault.Keys.KeyType.OctHsm,
+            IsHardwareBacked = key.KeyType == global::Azure.Security.KeyVault.Keys.KeyType.RsaHsm || key.KeyType == global::Azure.Security.KeyVault.Keys.KeyType.EcHsm || key.KeyType == global::Azure.Security.KeyVault.Keys.KeyType.OctHsm,
             CreatedOn = key.Properties.CreatedOn?.UtcDateTime ?? DateTime.UtcNow,
             ExpiresOn = key.Properties.ExpiresOn?.UtcDateTime,
             LastUsedOn = key.Properties.UpdatedOn?.UtcDateTime,

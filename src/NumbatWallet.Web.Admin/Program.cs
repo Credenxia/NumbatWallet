@@ -111,6 +111,16 @@ try
     .AddPolicyHandler(GetRetryPolicy())
     .AddPolicyHandler(GetCircuitBreakerPolicy());
 
+    // Add API client for general API operations
+    builder.Services.AddHttpClient("ApiClient", client =>
+    {
+        // Use service discovery to find the API endpoint
+        client.BaseAddress = new Uri(builder.Configuration.GetConnectionString("api") ?? "http://api");
+        client.Timeout = TimeSpan.FromSeconds(30);
+    })
+    .AddPolicyHandler(GetRetryPolicy())
+    .AddPolicyHandler(GetCircuitBreakerPolicy());
+
     // Configure GraphQL client for primary data operations (uses service discovery)
     // Note: GraphQL client will be configured after Strawberry Shake code generation
 
@@ -130,6 +140,7 @@ try
     builder.Services.AddScoped<ITenantService, GraphQLTenantService>();  // GraphQL-based instead of direct DB
     builder.Services.AddScoped<IAuditLogService, GraphQLAuditLogService>();  // GraphQL-based instead of direct DB
     builder.Services.AddScoped<IRealtimeNotificationService, RealtimeNotificationService>();
+    builder.Services.AddScoped<NumbatWallet.Application.Interfaces.IWalletTemplateService, GraphQLWalletTemplateService>(); // GraphQL-based for Admin Portal
 
     // Add health checks - only for admin portal itself, not database
     builder.Services.AddHealthChecks();

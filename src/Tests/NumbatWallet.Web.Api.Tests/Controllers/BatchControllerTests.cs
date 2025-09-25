@@ -5,11 +5,11 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
+using NumbatWallet.Application.Commands.Batch;
 using NumbatWallet.Application.DTOs;
 using NumbatWallet.Application.Interfaces;
 using NumbatWallet.Web.Api.Controllers;
 using NumbatWallet.Web.Api.Security;
-using Xunit;
 
 namespace NumbatWallet.Web.Api.Tests.Controllers;
 
@@ -205,8 +205,8 @@ public class BatchControllerTests : IClassFixture<WebApplicationFactory<Program>
         {
             Credentials = new List<BatchRevokeCredentialItemDto>
             {
-                new BatchRevokeCredentialItemDto { CredentialId = "cred-123" },
-                new BatchRevokeCredentialItemDto { CredentialId = "cred-456" }
+                new BatchRevokeCredentialItemDto { CredentialId = "cred-123", Reason = "Security breach detected" },
+                new BatchRevokeCredentialItemDto { CredentialId = "cred-456", Reason = "Security breach detected" }
             },
             Reason = "Security breach detected"
         };

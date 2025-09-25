@@ -1,9 +1,8 @@
-using Asp.Versioning;
-using Microsoft.AspNetCore.Mvc;
-// using NumbatWallet.Application.Commands.Issuances; // TODO: Create these commands
+using NumbatWallet.Application.Commands.Issuances;
+using NumbatWallet.Application.CQRS.Interfaces;
 using NumbatWallet.Application.DTOs;
 using NumbatWallet.Application.Interfaces;
-// using NumbatWallet.Application.Queries.Issuances; // TODO: Create these queries
+using NumbatWallet.Application.Queries.Issuances;
 using NumbatWallet.Web.Api.Security;
 using System.Security.Claims;
 
@@ -16,23 +15,39 @@ namespace NumbatWallet.Web.Api.Controllers;
 [Produces("application/json")]
 public class IssuanceController : ControllerBase
 {
-    // TODO: Implement these handlers
-    // private readonly ICommandHandler<CreateIssuanceCommand, IssuanceDto> _createIssuanceHandler;
-    // private readonly ICommandHandler<ApproveIssuanceCommand, IssuanceDto> _approveIssuanceHandler;
-    // private readonly ICommandHandler<RejectIssuanceCommand, IssuanceDto> _rejectIssuanceHandler;
-    // private readonly ICommandHandler<CompleteIssuanceCommand, IssuanceDto> _completeIssuanceHandler;
-    // private readonly IQueryHandler<GetIssuanceByIdQuery, IssuanceDto> _getIssuanceByIdHandler;
-    // private readonly IQueryHandler<GetIssuancesByStatusQuery, IEnumerable<IssuanceDto>> _getIssuancesByStatusHandler;
+    private readonly ICommandHandler<CreateIssuanceCommand, IssuanceDto> _createIssuanceHandler;
+    private readonly ICommandHandler<ApproveIssuanceCommand, IssuanceDto> _approveIssuanceHandler;
+    private readonly ICommandHandler<RejectIssuanceCommand, IssuanceDto> _rejectIssuanceHandler;
+    private readonly ICommandHandler<CompleteIssuanceCommand, IssuanceDto> _completeIssuanceHandler;
+    private readonly ICommandHandler<CancelIssuanceCommand, bool> _cancelIssuanceHandler;
+    private readonly IQueryHandler<GetIssuanceByIdQuery, IssuanceDto?> _getIssuanceByIdHandler;
+    private readonly IQueryHandler<GetIssuancesByStatusQuery, IEnumerable<IssuanceDto>> _getIssuancesByStatusHandler;
+    private readonly ICredentialService _credentialService;
     private readonly ISecurityAuditService _auditService;
     private readonly ILogger<IssuanceController> _logger;
 
     public IssuanceController(
+        ICommandHandler<CreateIssuanceCommand, IssuanceDto> createIssuanceHandler,
+        ICommandHandler<ApproveIssuanceCommand, IssuanceDto> approveIssuanceHandler,
+        ICommandHandler<RejectIssuanceCommand, IssuanceDto> rejectIssuanceHandler,
+        ICommandHandler<CompleteIssuanceCommand, IssuanceDto> completeIssuanceHandler,
+        ICommandHandler<CancelIssuanceCommand, bool> cancelIssuanceHandler,
+        IQueryHandler<GetIssuanceByIdQuery, IssuanceDto?> getIssuanceByIdHandler,
+        IQueryHandler<GetIssuancesByStatusQuery, IEnumerable<IssuanceDto>> getIssuancesByStatusHandler,
+        ICredentialService credentialService,
         ISecurityAuditService auditService,
         ILogger<IssuanceController> logger)
     {
+        _createIssuanceHandler = createIssuanceHandler;
+        _approveIssuanceHandler = approveIssuanceHandler;
+        _rejectIssuanceHandler = rejectIssuanceHandler;
+        _completeIssuanceHandler = completeIssuanceHandler;
+        _cancelIssuanceHandler = cancelIssuanceHandler;
+        _getIssuanceByIdHandler = getIssuanceByIdHandler;
+        _getIssuancesByStatusHandler = getIssuancesByStatusHandler;
+        _credentialService = credentialService;
         _auditService = auditService;
         _logger = logger;
-        // TODO: Inject handlers when implemented
     }
 
     /// <summary>
@@ -53,17 +68,25 @@ public class IssuanceController : ControllerBase
             SecurityEventType.DataModification,
             $"Issuance request created for {request.CredentialType}");
 
-        // TODO: Implement when handlers are ready
-        // var command = new CreateIssuanceCommand
-        // {
-        //     CredentialType = request.CredentialType,
-        //     RequesterId = request.RequesterId ?? userId ?? "system",
-        //     WalletId = request.WalletId,
-        //     RequiredDocuments = request.RequiredDocuments,
-        //     AdditionalData = request.AdditionalData
-        // };
+        // Convert additional data to claims if present
+        var claims = request.AdditionalData?.ToDictionary(kvp => kvp.Key, kvp => kvp.Value) ?? new Dictionary<string, object>();
 
-        var result = new IssuanceDto { Id = Guid.NewGuid(), CredentialType = request.CredentialType, RequesterId = request.RequesterId ?? userId ?? "system", WalletId = request.WalletId, Status = "Pending", CreatedAt = DateTime.UtcNow }; // TODO: Use handler
+        // Add required documents to metadata if present
+        var metadata = new Dictionary<string, string>();
+        if (request.RequiredDocuments != null && request.RequiredDocuments.Any())
+        {
+            metadata["required_documents"] = string.Join(",", request.RequiredDocuments);
+        }
+
+        var command = new CreateIssuanceCommand(
+            request.CredentialType,
+            request.WalletId,
+            request.RequesterId ?? userId,
+            claims,
+            null, // ExpiryDate - not provided in request DTO
+            metadata);
+
+        var result = await _createIssuanceHandler.HandleAsync(command);
 
         return CreatedAtAction(
             nameof(GetIssuanceById),
@@ -84,16 +107,16 @@ public class IssuanceController : ControllerBase
             SecurityEventType.DataAccess,
             $"Issuance access: {id}");
 
-        // TODO: Implement when handlers are ready
-        // var query = new GetIssuanceByIdQuery { IssuanceId = id };
-        IssuanceDto? result = null; // TODO: Use handler
-
-        if (result == null)
+        try
         {
-            return NotFound($"Issuance {id} not found");
+            var query = new GetIssuanceByIdQuery(id);
+            var result = await _getIssuanceByIdHandler.HandleAsync(query);
+            return Ok(result);
         }
-
-        return Ok(result);
+        catch (InvalidOperationException ex)
+        {
+            return NotFound(ex.Message);
+        }
     }
 
     /// <summary>
@@ -108,9 +131,8 @@ public class IssuanceController : ControllerBase
             SecurityEventType.DataAccess,
             $"Issuance list access by status: {status}");
 
-        // TODO: Implement when handlers are ready
-        // var query = new GetIssuancesByStatusQuery { Status = status };
-        IEnumerable<IssuanceDto> result = new List<IssuanceDto>(); // TODO: Use handler
+        var query = new GetIssuancesByStatusQuery(status, null, null, null, null);
+        var result = await _getIssuancesByStatusHandler.HandleAsync(query);
 
         return Ok(result);
     }
@@ -133,17 +155,20 @@ public class IssuanceController : ControllerBase
             SecurityEventType.DataModification,
             $"Issuance approved: {id}");
 
-        // TODO: Implement when handlers are ready
-        // var command = new ApproveIssuanceCommand
-        // {
-        //     IssuanceId = id,
-        //     ApprovedBy = userId ?? "system",
-        //     Comments = request.Comments
-        // };
+        var command = new ApproveIssuanceCommand(
+            id,
+            userId ?? "system",
+            request.Comments);
 
-        var result = new IssuanceDto { Id = id, Status = "Approved", ApprovedAt = DateTime.UtcNow, ApprovedBy = userId ?? "system", CredentialType = "Unknown", RequesterId = userId ?? "system" }; // TODO: Use handler
-
-        return Ok(result);
+        try
+        {
+            var result = await _approveIssuanceHandler.HandleAsync(command);
+            return Ok(result);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return NotFound(ex.Message);
+        }
     }
 
     /// <summary>
@@ -164,17 +189,21 @@ public class IssuanceController : ControllerBase
             SecurityEventType.DataModification,
             $"Issuance rejected: {id}");
 
-        // TODO: Implement when handlers are ready
-        // var command = new RejectIssuanceCommand
-        // {
-        //     IssuanceId = id,
-        //     RejectedBy = userId ?? "system",
-        //     Reason = request.Reason
-        // };
+        var command = new RejectIssuanceCommand(
+            id,
+            userId ?? "system",
+            request.Reason,
+            null); // Comments - not in DTO
 
-        var result = new IssuanceDto { Id = id, Status = "Rejected", RejectedAt = DateTime.UtcNow, RejectedBy = userId ?? "system", RejectionReason = request.Reason, CredentialType = "Unknown", RequesterId = userId ?? "system" }; // TODO: Use handler
-
-        return Ok(result);
+        try
+        {
+            var result = await _rejectIssuanceHandler.HandleAsync(command);
+            return Ok(result);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return NotFound(ex.Message);
+        }
     }
 
     /// <summary>
@@ -195,27 +224,43 @@ public class IssuanceController : ControllerBase
             SecurityEventType.DataModification,
             $"Issuance completed: {id}");
 
-        // TODO: Implement when handlers are ready
-        // var command = new CompleteIssuanceCommand
-        // {
-        //     IssuanceId = id,
-        //     CompletedBy = userId ?? "system",
-        //     CredentialData = request.CredentialData,
-        //     ExpiryDate = request.ExpiryDate
-        // };
-
-        var result = new IssuanceDto { Id = id, Status = "Completed", CompletedAt = DateTime.UtcNow, CompletedBy = userId ?? "system", CredentialId = Guid.NewGuid(), CredentialType = "Unknown", RequesterId = userId ?? "system" }; // TODO: Use handler
-
-        var response = new IssuanceCompletionResponseDto
+        // Issue the credential based on the issuance request
+        var issueCredentialDto = new Application.DTOs.IssueCredentialDto
         {
-            IssuanceId = result.Id,
-            Status = result.Status,
-            CredentialId = result.CredentialId,
-            IssuedAt = result.CompletedAt ?? DateTime.UtcNow,
-            Message = "Credential has been successfully issued."
+            WalletId = request.WalletId ?? Guid.NewGuid(), // Wallet ID from request
+            IssuerId = userId ?? "system",
+            Type = request.CredentialType ?? "GenericCredential",
+            Data = request.CredentialData ?? new Dictionary<string, object>()
         };
 
-        return Ok(response);
+        var credential = await _credentialService.IssueCredentialAsync(issueCredentialDto);
+        var credentialId = Guid.Parse(credential.Id);
+
+        var command = new CompleteIssuanceCommand(
+            id,
+            userId ?? "system",
+            credentialId,
+            request.Comments);
+
+        try
+        {
+            var result = await _completeIssuanceHandler.HandleAsync(command);
+
+            var response = new IssuanceCompletionResponseDto
+            {
+                IssuanceId = result.Id,
+                Status = result.Status,
+                CredentialId = result.CredentialId,
+                IssuedAt = result.CompletedAt ?? DateTime.UtcNow,
+                Message = "Credential has been successfully issued."
+            };
+
+            return Ok(response);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return NotFound(ex.Message);
+        }
     }
 
     /// <summary>
@@ -229,23 +274,43 @@ public class IssuanceController : ControllerBase
         _logger.LogInformation("Uploading {Count} documents for issuance {IssuanceId}",
             files.Count, id);
 
-        // TODO: Implement document upload logic
-        // This would store documents securely and associate them with the issuance
+        // Verify issuance exists
+        var query = new GetIssuanceByIdQuery(id);
+        var issuance = await _getIssuanceByIdHandler.HandleAsync(query);
+        if (issuance == null)
+        {
+            return NotFound($"Issuance {id} not found");
+        }
 
         var uploadedDocuments = new List<UploadedDocumentDto>();
+        var documentsPath = System.IO.Path.Combine("uploads", "issuances", id.ToString());
+        System.IO.Directory.CreateDirectory(documentsPath);
 
         foreach (var file in files)
         {
             if (file.Length > 0)
             {
+                var documentId = Guid.NewGuid();
+                var fileName = $"{documentId}_{System.IO.Path.GetFileName(file.FileName)}";
+                var filePath = System.IO.Path.Combine(documentsPath, fileName);
+
+                // Save file to disk (in production, use blob storage)
+                using (var stream = new System.IO.FileStream(filePath, System.IO.FileMode.Create))
+                {
+                    await file.CopyToAsync(stream);
+                }
+
                 uploadedDocuments.Add(new UploadedDocumentDto
                 {
-                    DocumentId = Guid.NewGuid(),
+                    DocumentId = documentId,
                     FileName = file.FileName,
                     ContentType = file.ContentType,
                     Size = file.Length,
                     UploadedAt = DateTime.UtcNow
                 });
+
+                _logger.LogInformation("Document {DocumentId} uploaded for issuance {IssuanceId}",
+                    documentId, id);
             }
         }
 
@@ -267,9 +332,8 @@ public class IssuanceController : ControllerBase
     [ProducesResponseType(typeof(IEnumerable<IssuanceDto>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetPendingIssuances([FromQuery] int? limit = 50)
     {
-        // TODO: Implement when handlers are ready
-        // var query = new GetIssuancesByStatusQuery { Status = "Pending" };
-        IEnumerable<IssuanceDto> result = new List<IssuanceDto>(); // TODO: Use handler
+        var query = new GetIssuancesByStatusQuery("Pending", null, null, limit, null);
+        var result = await _getIssuancesByStatusHandler.HandleAsync(query);
 
         if (limit.HasValue)
         {
@@ -287,25 +351,48 @@ public class IssuanceController : ControllerBase
     [ProducesResponseType(typeof(IssuanceStatisticsDto), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetIssuanceStatistics([FromQuery] DateTime? from, [FromQuery] DateTime? to)
     {
-        // TODO: Implement statistics aggregation
+        var startDate = from ?? DateTime.UtcNow.AddMonths(-1);
+        var endDate = to ?? DateTime.UtcNow;
+
+        // Get all issuances in the date range
+        var allIssuancesQuery = new GetIssuancesByStatusQuery(null, startDate, endDate, null, null);
+        var allIssuances = (await _getIssuancesByStatusHandler.HandleAsync(allIssuancesQuery)).ToList();
+
+        // Get pending issuances
+        var pendingQuery = new GetIssuancesByStatusQuery("Pending", startDate, endDate, null, null);
+        var pendingIssuances = (await _getIssuancesByStatusHandler.HandleAsync(pendingQuery)).ToList();
+
+        // Get approved issuances
+        var approvedQuery = new GetIssuancesByStatusQuery("Approved", startDate, endDate, null, null);
+        var approvedIssuances = (await _getIssuancesByStatusHandler.HandleAsync(approvedQuery)).ToList();
+
+        // Get rejected issuances
+        var rejectedQuery = new GetIssuancesByStatusQuery("Rejected", startDate, endDate, null, null);
+        var rejectedIssuances = (await _getIssuancesByStatusHandler.HandleAsync(rejectedQuery)).ToList();
+
+        // Calculate average processing time
+        var completedIssuances = allIssuances.Where(i => i.CompletedAt.HasValue && i.CreatedAt != default);
+        var averageProcessingTime = completedIssuances.Any()
+            ? TimeSpan.FromMinutes(completedIssuances.Average(i => (i.CompletedAt!.Value - i.CreatedAt).TotalMinutes))
+            : TimeSpan.Zero;
+
+        // Group by credential type
+        var issuancesByType = allIssuances
+            .GroupBy(i => i.CredentialType ?? "Unknown")
+            .ToDictionary(g => g.Key, g => g.Count());
+
         var stats = new IssuanceStatisticsDto
         {
-            TotalIssuances = 150,
-            PendingIssuances = 12,
-            ApprovedIssuances = 125,
-            RejectedIssuances = 13,
-            AverageProcessingTime = TimeSpan.FromHours(2.5),
-            IssuancesByType = new Dictionary<string, int>
-            {
-                ["DriverLicense"] = 50,
-                ["ProofOfIdentity"] = 45,
-                ["ProofOfAge"] = 30,
-                ["WorkingWithChildren"] = 25
-            },
+            TotalIssuances = allIssuances.Count,
+            PendingIssuances = pendingIssuances.Count,
+            ApprovedIssuances = approvedIssuances.Count,
+            RejectedIssuances = rejectedIssuances.Count,
+            AverageProcessingTime = averageProcessingTime,
+            IssuancesByType = issuancesByType,
             Period = new DateRangeDto
             {
-                From = from ?? DateTime.UtcNow.AddMonths(-1),
-                To = to ?? DateTime.UtcNow
+                From = startDate,
+                To = endDate
             }
         };
 
@@ -335,7 +422,10 @@ public class RejectIssuanceRequestDto
 
 public class CompleteIssuanceRequestDto
 {
-    public Dictionary<string, object> CredentialData { get; set; } = new();
+    public Guid? WalletId { get; set; }
+    public string? CredentialType { get; set; }
+    public Dictionary<string, object>? CredentialData { get; set; }
+    public string? Comments { get; set; }
     public DateTime? ExpiryDate { get; set; }
 }
 

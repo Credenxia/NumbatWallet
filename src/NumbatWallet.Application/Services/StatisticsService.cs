@@ -124,6 +124,61 @@ public class StatisticsService : IStatisticsService
         return stats;
     }
 
+    public async Task<MetricsSnapshotDto> GetMetricsSnapshotAsync(DateTime from, DateTime until, CancellationToken cancellationToken = default)
+    {
+        // Fetch data for the time range
+        var allCredentials = await _credentialRepository.GetAllAsync(cancellationToken);
+        var allWallets = await _walletRepository.GetAllAsync(cancellationToken);
+
+        // Filter by date range
+        var credentialsInRange = allCredentials.Where(c =>
+            c.IssuedAt.DateTime >= from && c.IssuedAt.DateTime <= until).ToList();
+
+        var walletsInRange = allWallets.Where(w =>
+            w.CreatedAt.DateTime >= from && w.CreatedAt.DateTime <= until).ToList();
+
+        // Calculate metrics
+        var metrics = new Dictionary<string, decimal>
+        {
+            ["credentials_issued"] = credentialsInRange.Count,
+            ["credentials_active"] = credentialsInRange.Count(c => c.Status == CredentialStatus.Active),
+            ["credentials_revoked"] = credentialsInRange.Count(c => c.Status == CredentialStatus.Revoked),
+            ["credentials_expired"] = credentialsInRange.Count(c => c.Status == CredentialStatus.Expired),
+            ["wallets_created"] = walletsInRange.Count,
+            ["wallets_active"] = walletsInRange.Count(w => w.Status == WalletStatus.Active),
+            ["avg_credentials_per_wallet"] = allWallets.Any() ?
+                (decimal)allCredentials.Count() / allWallets.Count() : 0
+        };
+
+        // Generate time series data
+        var timeSeries = new List<TimeSeriesDataPoint>();
+        var current = from.Date;
+
+        while (current <= until.Date)
+        {
+            var dayEnd = current.AddDays(1);
+            var dayCredentials = credentialsInRange.Count(c =>
+                c.IssuedAt.DateTime >= current && c.IssuedAt.DateTime < dayEnd);
+
+            timeSeries.Add(new TimeSeriesDataPoint
+            {
+                Timestamp = current,
+                Value = dayCredentials,
+                Label = "Credentials Issued"
+            });
+
+            current = dayEnd;
+        }
+
+        return new MetricsSnapshotDto
+        {
+            From = from,
+            To = until,
+            Metrics = metrics,
+            TimeSeries = timeSeries
+        };
+    }
+
     public async Task<SystemMetricsDto> GetSystemMetricsAsync(CancellationToken cancellationToken = default)
     {
         // Mock system metrics for POA

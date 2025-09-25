@@ -1,5 +1,3 @@
-using NumbatWallet.Application.DTOs;
-
 namespace NumbatWallet.Application.Interfaces;
 
 public interface IKeyRotationService

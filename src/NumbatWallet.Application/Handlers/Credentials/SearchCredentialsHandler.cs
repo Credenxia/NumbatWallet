@@ -2,13 +2,11 @@ using NumbatWallet.Application.CQRS.Interfaces;
 using NumbatWallet.Application.DTOs;
 using NumbatWallet.Application.Queries.Credentials;
 using NumbatWallet.Domain.Interfaces;
-using NumbatWallet.SharedKernel.Interfaces;
 using Microsoft.Extensions.Logging;
 using System.Linq.Expressions;
 using NumbatWallet.Domain.Aggregates;
 using NumbatWallet.Application.Specifications;
 using NumbatWallet.SharedKernel.Enums;
-using NumbatWallet.SharedKernel.Specifications;
 
 namespace NumbatWallet.Application.Handlers.Credentials;
 

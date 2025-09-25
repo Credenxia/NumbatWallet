@@ -392,8 +392,59 @@ public class CredentialService : ICredentialService
 
     public async Task<bool> ValidateJwtVcAsync(string jwt, CancellationToken cancellationToken = default)
     {
-        // TODO: Implement JWT VC validation
-        // For now, return true if the JWT is not empty
-        return await Task.FromResult(!string.IsNullOrWhiteSpace(jwt));
+        // Basic JWT-VC validation implementation
+        if (string.IsNullOrWhiteSpace(jwt))
+        {
+            return false;
+        }
+
+        try
+        {
+            // JWT format: header.payload.signature
+            var parts = jwt.Split('.');
+            if (parts.Length != 3)
+            {
+                return false;
+            }
+
+            // Decode the payload (base64url)
+            var payload = parts[1];
+            payload = payload.Replace('-', '+').Replace('_', '/');
+            switch (payload.Length % 4)
+            {
+                case 2: payload += "=="; break;
+                case 3: payload += "="; break;
+            }
+
+            var payloadBytes = Convert.FromBase64String(payload);
+            var payloadJson = System.Text.Encoding.UTF8.GetString(payloadBytes);
+
+            // Parse as JSON to check if it's valid
+            var jsonDoc = System.Text.Json.JsonDocument.Parse(payloadJson);
+
+            // Check for required VC fields
+            if (!jsonDoc.RootElement.TryGetProperty("vc", out var vcElement))
+            {
+                return false;
+            }
+
+            // Check for credential subject
+            if (!vcElement.TryGetProperty("credentialSubject", out _))
+            {
+                return false;
+            }
+
+            // Additional checks would include:
+            // - Signature verification
+            // - Issuer validation
+            // - Expiration checking
+            // For POA phase, basic structure validation is sufficient
+
+            return await Task.FromResult(true);
+        }
+        catch
+        {
+            return false;
+        }
     }
 }

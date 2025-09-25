@@ -3,7 +3,7 @@ using NumbatWallet.Application.DTOs;
 
 namespace NumbatWallet.Application.Queries.Wallets;
 
-public sealed class GetWalletByIdQuery : IQuery<WalletDto>
+public sealed class GetWalletByIdQuery : IQuery<WalletDto?>
 {
     public Guid WalletId { get; }
 

@@ -1,7 +1,6 @@
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using NumbatWallet.Application.Interfaces;
 using NumbatWallet.Infrastructure.Data;
 using NumbatWallet.SharedKernel.Interfaces;
 

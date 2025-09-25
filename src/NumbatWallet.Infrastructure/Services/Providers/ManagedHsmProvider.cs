@@ -1,5 +1,6 @@
 using System.Security.Cryptography;
 using System.Text;
+using Azure.Core;
 using Azure.Identity;
 using AzureKeys = Azure.Security.KeyVault.Keys;
 using AzureCrypto = Azure.Security.KeyVault.Keys.Cryptography;
@@ -49,7 +50,7 @@ public class ManagedHsmProvider : IHsmProvider, IDisposable
         _logger.LogInformation("Managed HSM Provider initialized with URI: {Uri}", hsmUri);
     }
 
-    private Azure.Core.TokenCredential GetManagedHsmCredential()
+    private TokenCredential GetManagedHsmCredential()
     {
         // Check for certificate authentication (preferred for HSM)
         var certThumbprint = _configuration["ManagedHsm:CertificateThumbprint"];
@@ -481,8 +482,8 @@ public class ManagedHsmProvider : IHsmProvider, IDisposable
             // Test cryptographic operations
             var cryptoClient = new AzureCrypto.CryptographyClient(testKey.Value.Id, GetManagedHsmCredential());
             var testData = Encoding.UTF8.GetBytes("HSM Health Check");
-            var signResult = await cryptoClient.SignDataAsync(Azure.Security.KeyVault.Keys.Cryptography.SignatureAlgorithm.RS256, testData, cancellationToken);
-            var verifyResult = await cryptoClient.VerifyDataAsync(Azure.Security.KeyVault.Keys.Cryptography.SignatureAlgorithm.RS256, testData, signResult.Signature, cancellationToken);
+            var signResult = await cryptoClient.SignDataAsync(AzureCrypto.SignatureAlgorithm.RS256, testData, cancellationToken);
+            var verifyResult = await cryptoClient.VerifyDataAsync(AzureCrypto.SignatureAlgorithm.RS256, testData, signResult.Signature, cancellationToken);
 
             // Cleanup
             await _keyClient.StartDeleteKeyAsync(testKeyName, cancellationToken);
@@ -674,19 +675,19 @@ public class ManagedHsmProvider : IHsmProvider, IDisposable
         return usage;
     }
 
-    private Azure.Security.KeyVault.Keys.Cryptography.SignatureAlgorithm ConvertSigningAlgorithm(SigningAlgorithm algorithm)
+    private AzureCrypto.SignatureAlgorithm ConvertSigningAlgorithm(SigningAlgorithm algorithm)
     {
         return algorithm switch
         {
-            SigningAlgorithm.RS256 => Azure.Security.KeyVault.Keys.Cryptography.SignatureAlgorithm.RS256,
-            SigningAlgorithm.RS384 => Azure.Security.KeyVault.Keys.Cryptography.SignatureAlgorithm.RS384,
-            SigningAlgorithm.RS512 => Azure.Security.KeyVault.Keys.Cryptography.SignatureAlgorithm.RS512,
-            SigningAlgorithm.PS256 => Azure.Security.KeyVault.Keys.Cryptography.SignatureAlgorithm.PS256,
-            SigningAlgorithm.PS384 => Azure.Security.KeyVault.Keys.Cryptography.SignatureAlgorithm.PS384,
-            SigningAlgorithm.PS512 => Azure.Security.KeyVault.Keys.Cryptography.SignatureAlgorithm.PS512,
-            SigningAlgorithm.ES256 => Azure.Security.KeyVault.Keys.Cryptography.SignatureAlgorithm.ES256,
-            SigningAlgorithm.ES384 => Azure.Security.KeyVault.Keys.Cryptography.SignatureAlgorithm.ES384,
-            SigningAlgorithm.ES512 => Azure.Security.KeyVault.Keys.Cryptography.SignatureAlgorithm.ES512,
+            SigningAlgorithm.RS256 => AzureCrypto.SignatureAlgorithm.RS256,
+            SigningAlgorithm.RS384 => AzureCrypto.SignatureAlgorithm.RS384,
+            SigningAlgorithm.RS512 => AzureCrypto.SignatureAlgorithm.RS512,
+            SigningAlgorithm.PS256 => AzureCrypto.SignatureAlgorithm.PS256,
+            SigningAlgorithm.PS384 => AzureCrypto.SignatureAlgorithm.PS384,
+            SigningAlgorithm.PS512 => AzureCrypto.SignatureAlgorithm.PS512,
+            SigningAlgorithm.ES256 => AzureCrypto.SignatureAlgorithm.ES256,
+            SigningAlgorithm.ES384 => AzureCrypto.SignatureAlgorithm.ES384,
+            SigningAlgorithm.ES512 => AzureCrypto.SignatureAlgorithm.ES512,
             _ => throw new NotSupportedException($"Signing algorithm {algorithm} not supported")
         };
     }

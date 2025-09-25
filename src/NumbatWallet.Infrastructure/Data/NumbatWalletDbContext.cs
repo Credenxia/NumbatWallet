@@ -31,6 +31,7 @@ public class NumbatWalletDbContext : DbContext, IUnitOfWork
         _eventDispatcher = eventDispatcher;
     }
 
+    public DbSet<Tenant> Tenants => Set<Tenant>();
     public DbSet<Wallet> Wallets => Set<Wallet>();
     public DbSet<Credential> Credentials => Set<Credential>();
     public DbSet<Person> Persons => Set<Person>();
@@ -39,6 +40,8 @@ public class NumbatWalletDbContext : DbContext, IUnitOfWork
     public DbSet<CertificateAuthority> CertificateAuthorities => Set<CertificateAuthority>();
     public DbSet<CertificateTrustStore> CertificateTrustStores => Set<CertificateTrustStore>();
     public DbSet<CertificateRevocation> CertificateRevocations => Set<CertificateRevocation>();
+    public DbSet<WalletTemplate> WalletTemplates => Set<WalletTemplate>();
+    public DbSet<Issuance> Issuances => Set<Issuance>();
 
     // Event sourcing entities
     public DbSet<StoredEvent> StoredEvents => Set<StoredEvent>();
@@ -68,9 +71,94 @@ public class NumbatWalletDbContext : DbContext, IUnitOfWork
         modelBuilder.Entity<Credential>().HasQueryFilter(c => c.TenantId == _tenantService.TenantId.ToString());
         modelBuilder.Entity<Person>().HasQueryFilter(p => p.TenantId == _tenantService.TenantId.ToString());
         modelBuilder.Entity<Issuer>().HasQueryFilter(i => i.TenantId == _tenantService.TenantId.ToString());
+        modelBuilder.Entity<WalletTemplate>().HasQueryFilter(wt => wt.TenantId == _tenantService.TenantId);
+        modelBuilder.Entity<Issuance>().HasQueryFilter(i => i.TenantId == _tenantService.TenantId);
 
-        // Configure JSONB for PostgreSQL
-        modelBuilder.HasPostgresExtension("pgcrypto"); // For encryption functions if needed
+        // Configure Tenant entity
+        modelBuilder.Entity<Tenant>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Name).IsRequired().HasMaxLength(200);
+            entity.Property(e => e.Identifier).IsRequired().HasMaxLength(100);
+            entity.HasIndex(e => e.Identifier).IsUnique();
+
+            // Configure Settings as JSON column (SQLite: text, PostgreSQL: jsonb)
+            if (Database.IsSqlite())
+            {
+                entity.Property(e => e.Settings)
+                    .HasConversion(
+                        v => System.Text.Json.JsonSerializer.Serialize(v, (System.Text.Json.JsonSerializerOptions?)null),
+                        v => System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, object>>(v, (System.Text.Json.JsonSerializerOptions?)null) ?? new Dictionary<string, object>());
+            }
+            else
+            {
+                entity.Property(e => e.Settings)
+                    .HasColumnType("jsonb")
+                    .HasConversion(
+                        v => System.Text.Json.JsonSerializer.Serialize(v, (System.Text.Json.JsonSerializerOptions?)null),
+                        v => System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, object>>(v, (System.Text.Json.JsonSerializerOptions?)null) ?? new Dictionary<string, object>());
+            }
+        });
+
+        // Configure WalletTemplate entity
+        modelBuilder.Entity<WalletTemplate>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.TenantId).IsRequired();
+            entity.Property(e => e.Name).IsRequired().HasMaxLength(200);
+            entity.Property(e => e.Description).IsRequired().HasMaxLength(1000);
+            entity.Property(e => e.Version).IsRequired().HasMaxLength(20);
+
+            // Configure complex properties as JSON
+            if (Database.IsSqlite())
+            {
+                entity.Property(e => e.Fields)
+                    .HasConversion(
+                        v => System.Text.Json.JsonSerializer.Serialize(v, (System.Text.Json.JsonSerializerOptions?)null),
+                        v => System.Text.Json.JsonSerializer.Deserialize<List<WalletField>>(v, (System.Text.Json.JsonSerializerOptions?)null) ?? new List<WalletField>());
+
+                entity.Property(e => e.Metadata)
+                    .HasConversion(
+                        v => System.Text.Json.JsonSerializer.Serialize(v, (System.Text.Json.JsonSerializerOptions?)null),
+                        v => System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, object>>(v, (System.Text.Json.JsonSerializerOptions?)null) ?? new Dictionary<string, object>());
+
+                entity.Property(e => e.SupportedCredentialTypes)
+                    .HasConversion(
+                        v => System.Text.Json.JsonSerializer.Serialize(v, (System.Text.Json.JsonSerializerOptions?)null),
+                        v => System.Text.Json.JsonSerializer.Deserialize<List<string>>(v, (System.Text.Json.JsonSerializerOptions?)null) ?? new List<string>());
+            }
+            else
+            {
+                entity.Property(e => e.Fields)
+                    .HasColumnType("jsonb")
+                    .HasConversion(
+                        v => System.Text.Json.JsonSerializer.Serialize(v, (System.Text.Json.JsonSerializerOptions?)null),
+                        v => System.Text.Json.JsonSerializer.Deserialize<List<WalletField>>(v, (System.Text.Json.JsonSerializerOptions?)null) ?? new List<WalletField>());
+
+                entity.Property(e => e.Metadata)
+                    .HasColumnType("jsonb")
+                    .HasConversion(
+                        v => System.Text.Json.JsonSerializer.Serialize(v, (System.Text.Json.JsonSerializerOptions?)null),
+                        v => System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, object>>(v, (System.Text.Json.JsonSerializerOptions?)null) ?? new Dictionary<string, object>());
+
+                entity.Property(e => e.SupportedCredentialTypes)
+                    .HasColumnType("jsonb")
+                    .HasConversion(
+                        v => System.Text.Json.JsonSerializer.Serialize(v, (System.Text.Json.JsonSerializerOptions?)null),
+                        v => System.Text.Json.JsonSerializer.Deserialize<List<string>>(v, (System.Text.Json.JsonSerializerOptions?)null) ?? new List<string>());
+            }
+
+            // Indexes for performance
+            entity.HasIndex(e => e.TenantId);
+            entity.HasIndex(e => new { e.TenantId, e.Name }).IsUnique();
+            entity.HasIndex(e => new { e.TenantId, e.IsActive });
+        });
+
+        // Configure JSONB for PostgreSQL only
+        if (!Database.IsSqlite())
+        {
+            modelBuilder.HasPostgresExtension("pgcrypto"); // For encryption functions if needed
+        }
 
         // Configure event sourcing entities
         EventSourcingConfiguration.ConfigureEventSourcing(modelBuilder);

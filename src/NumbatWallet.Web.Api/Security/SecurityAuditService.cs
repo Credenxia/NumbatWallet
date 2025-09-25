@@ -1,6 +1,5 @@
 using System.Collections.Concurrent;
 using System.Security.Claims;
-using System.Text.Json;
 using Microsoft.AspNetCore.Http.Extensions;
 
 namespace NumbatWallet.Web.Api.Security;
@@ -125,7 +124,7 @@ public class SecurityAuditService : ISecurityAuditService
             Details = details,
             IsSuccessful = isSuccessful,
             TenantId = context.Request.Headers["X-Tenant-Id"].FirstOrDefault(),
-            SessionId = context.Session?.Id
+            SessionId = GetSessionId(context)
         };
 
         await LogSecurityEventAsync(auditEvent);
@@ -231,6 +230,20 @@ public class SecurityAuditService : ISecurityAuditService
             {
                 _logger.LogWarning("Possible privilege escalation attempt by user: {UserId}", auditEvent.UserId);
             }
+        }
+    }
+
+    private static string? GetSessionId(HttpContext context)
+    {
+        try
+        {
+            // Try to access session - this will throw if sessions aren't configured
+            return context.Session?.Id;
+        }
+        catch (InvalidOperationException)
+        {
+            // Session not configured, return null
+            return null;
         }
     }
 }

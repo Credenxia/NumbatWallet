@@ -1,7 +1,6 @@
-using Asp.Versioning;
-using Microsoft.AspNetCore.Mvc;
+using NumbatWallet.Application.Commands.Batch;
 using NumbatWallet.Application.DTOs;
-using NumbatWallet.Application.Interfaces;
+using NumbatWallet.Application.CQRS.Interfaces;
 using NumbatWallet.Web.Api.Security;
 using System.Collections.Concurrent;
 using System.Security.Claims;
@@ -15,15 +14,27 @@ namespace NumbatWallet.Web.Api.Controllers;
 [Produces("application/json")]
 public class BatchController : ControllerBase
 {
+    private readonly ICommandHandler<BatchIssueCredentialsCommand, BatchOperationResultDto<CredentialDto>> _batchIssueHandler;
+    private readonly ICommandHandler<BatchVerifyCredentialsCommand, BatchOperationResultDto<VerificationResultDto>> _batchVerifyHandler;
+    private readonly ICommandHandler<BatchRevokeCredentialsCommand, BatchOperationResultDto<bool>> _batchRevokeHandler;
+    private readonly ICommandHandler<BatchApproveIssuancesCommand, BatchOperationResultDto<IssuanceDto>> _batchApproveHandler;
     private readonly ISecurityAuditService _auditService;
     private readonly ILogger<BatchController> _logger;
     private readonly ICacheService _cacheService;
 
     public BatchController(
+        ICommandHandler<BatchIssueCredentialsCommand, BatchOperationResultDto<CredentialDto>> batchIssueHandler,
+        ICommandHandler<BatchVerifyCredentialsCommand, BatchOperationResultDto<VerificationResultDto>> batchVerifyHandler,
+        ICommandHandler<BatchRevokeCredentialsCommand, BatchOperationResultDto<bool>> batchRevokeHandler,
+        ICommandHandler<BatchApproveIssuancesCommand, BatchOperationResultDto<IssuanceDto>> batchApproveHandler,
         ISecurityAuditService auditService,
         ILogger<BatchController> logger,
         ICacheService cacheService)
     {
+        _batchIssueHandler = batchIssueHandler;
+        _batchVerifyHandler = batchVerifyHandler;
+        _batchRevokeHandler = batchRevokeHandler;
+        _batchApproveHandler = batchApproveHandler;
         _auditService = auditService;
         _logger = logger;
         _cacheService = cacheService;
@@ -53,59 +64,22 @@ public class BatchController : ControllerBase
             SecurityEventType.DataModification,
             $"Batch credential issuance: {request.Credentials.Count} items");
 
-        var results = new ConcurrentBag<BatchOperationItemResult<CredentialDto>>();
-        var tasks = new List<Task>();
-
-        foreach (var credRequest in request.Credentials)
+        // Convert request to batch command
+        var batchItems = request.Credentials.Select(c => new BatchIssueCredentialItem
         {
-            tasks.Add(Task.Run(async () =>
-            {
-                try
-                {
-                    // TODO: Use actual credential issuance logic
-                    var credential = new CredentialDto
-                    {
-                        Id = Guid.NewGuid().ToString(),
-                        HolderId = credRequest.HolderId,
-                        IssuerId = userId ?? "system",
-                        Type = credRequest.Type,
-                        CredentialSubject = credRequest.Claims,
-                        IssuanceDate = DateTime.UtcNow,
-                        ExpirationDate = credRequest.ExpiryDate,
-                        Status = "Active",
-                        IsRevoked = false
-                    };
+            BatchItemId = c.BatchItemId ?? Guid.NewGuid().ToString(),
+            HolderId = c.HolderId,
+            Type = c.Type,
+            Claims = c.Claims,
+            ExpiryDate = c.ExpiryDate
+        }).ToList();
 
-                    results.Add(new BatchOperationItemResult<CredentialDto>
-                    {
-                        Success = true,
-                        Data = credential,
-                        ItemId = credRequest.BatchItemId
-                    });
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Failed to issue credential in batch");
-                    results.Add(new BatchOperationItemResult<CredentialDto>
-                    {
-                        Success = false,
-                        Error = ex.Message,
-                        ItemId = credRequest.BatchItemId
-                    });
-                }
-            }));
-        }
+        var command = new BatchIssueCredentialsCommand(
+            Credentials: batchItems,
+            IssuerId: userId ?? "system");
 
-        await Task.WhenAll(tasks);
-
-        var response = new BatchOperationResultDto<CredentialDto>
-        {
-            TotalItems = request.Credentials.Count,
-            SuccessCount = results.Count(r => r.Success),
-            FailureCount = results.Count(r => !r.Success),
-            Results = results.ToList(),
-            ProcessedAt = DateTime.UtcNow
-        };
+        // Execute batch issuance
+        var response = await _batchIssueHandler.HandleAsync(command);
 
         return Ok(response);
     }
@@ -126,60 +100,18 @@ public class BatchController : ControllerBase
 
         _logger.LogInformation("Batch verifying {Count} credentials", request.Credentials.Count);
 
-        var results = new ConcurrentBag<BatchOperationItemResult<VerificationResultDto>>();
-        var tasks = new List<Task>();
-
-        foreach (var credRequest in request.Credentials)
+        // Convert request to batch command
+        var batchItems = request.Credentials.Select(c => new BatchVerifyCredentialItem
         {
-            tasks.Add(Task.Run(async () =>
-            {
-                try
-                {
-                    // TODO: Use actual verification logic
-                    var result = new VerificationResultDto
-                    {
-                        IsValid = true,
-                        VerifiedAt = DateTime.UtcNow,
-                        Checks = new VerificationChecksDto
-                        {
-                            Signature = true,
-                            Expiry = true,
-                            Revocation = true,
-                            Schema = true,
-                            Issuer = true
-                        }
-                    };
+            BatchItemId = c.BatchItemId ?? Guid.NewGuid().ToString(),
+            CredentialId = c.CredentialId,
+            CredentialData = c.CredentialData
+        }).ToList();
 
-                    results.Add(new BatchOperationItemResult<VerificationResultDto>
-                    {
-                        Success = true,
-                        Data = result,
-                        ItemId = credRequest.BatchItemId
-                    });
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Failed to verify credential in batch");
-                    results.Add(new BatchOperationItemResult<VerificationResultDto>
-                    {
-                        Success = false,
-                        Error = ex.Message,
-                        ItemId = credRequest.BatchItemId
-                    });
-                }
-            }));
-        }
+        var command = new BatchVerifyCredentialsCommand(batchItems);
 
-        await Task.WhenAll(tasks);
-
-        var response = new BatchOperationResultDto<VerificationResultDto>
-        {
-            TotalItems = request.Credentials.Count,
-            SuccessCount = results.Count(r => r.Success),
-            FailureCount = results.Count(r => !r.Success),
-            Results = results.ToList(),
-            ProcessedAt = DateTime.UtcNow
-        };
+        // Execute batch verification
+        var response = await _batchVerifyHandler.HandleAsync(command);
 
         return Ok(response);
     }
@@ -208,48 +140,20 @@ public class BatchController : ControllerBase
             SecurityEventType.DataDeletion,
             $"Batch credential revocation: {request.Credentials.Count} items");
 
-        var results = new ConcurrentBag<BatchOperationItemResult<bool>>();
-        var tasks = new List<Task>();
-
-        foreach (var revokeRequest in request.Credentials)
+        // Convert request to batch command
+        var batchItems = request.Credentials.Select(c => new BatchRevokeCredentialItem
         {
-            tasks.Add(Task.Run(async () =>
-            {
-                try
-                {
-                    // TODO: Use actual revocation logic
-                    await Task.Delay(10); // Simulate work
+            BatchItemId = c.CredentialId, // Use credential ID as batch item ID
+            CredentialId = c.CredentialId,
+            Reason = c.Reason
+        }).ToList();
 
-                    results.Add(new BatchOperationItemResult<bool>
-                    {
-                        Success = true,
-                        Data = true,
-                        ItemId = revokeRequest.CredentialId
-                    });
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Failed to revoke credential in batch");
-                    results.Add(new BatchOperationItemResult<bool>
-                    {
-                        Success = false,
-                        Error = ex.Message,
-                        ItemId = revokeRequest.CredentialId
-                    });
-                }
-            }));
-        }
+        var command = new BatchRevokeCredentialsCommand(
+            Credentials: batchItems,
+            RevokerId: userId ?? "system");
 
-        await Task.WhenAll(tasks);
-
-        var response = new BatchOperationResultDto<bool>
-        {
-            TotalItems = request.Credentials.Count,
-            SuccessCount = results.Count(r => r.Success),
-            FailureCount = results.Count(r => !r.Success),
-            Results = results.ToList(),
-            ProcessedAt = DateTime.UtcNow
-        };
+        // Execute batch revocation
+        var response = await _batchRevokeHandler.HandleAsync(command);
 
         return Ok(response);
     }
@@ -278,58 +182,15 @@ public class BatchController : ControllerBase
             SecurityEventType.DataModification,
             $"Batch issuance approval: {request.Issuances.Count} items");
 
-        var results = new ConcurrentBag<BatchOperationItemResult<IssuanceDto>>();
-        var tasks = new List<Task>();
+        // Convert request to batch command
+        var issuanceIds = request.Issuances.Select(i => i.IssuanceId).ToList();
 
-        foreach (var approvalRequest in request.Issuances)
-        {
-            tasks.Add(Task.Run(async () =>
-            {
-                try
-                {
-                    // TODO: Use actual approval logic
-                    var issuance = new IssuanceDto
-                    {
-                        Id = approvalRequest.IssuanceId,
-                        Status = "Approved",
-                        ApprovedAt = DateTime.UtcNow,
-                        ApprovedBy = userId ?? "system",
-                        Comments = approvalRequest.Comments,
-                        CredentialType = "Unknown",
-                        RequesterId = "system",
-                        CreatedAt = DateTime.UtcNow
-                    };
+        var command = new BatchApproveIssuancesCommand(
+            IssuanceIds: issuanceIds,
+            ApproverId: userId ?? "system");
 
-                    results.Add(new BatchOperationItemResult<IssuanceDto>
-                    {
-                        Success = true,
-                        Data = issuance,
-                        ItemId = approvalRequest.IssuanceId.ToString()
-                    });
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Failed to approve issuance in batch");
-                    results.Add(new BatchOperationItemResult<IssuanceDto>
-                    {
-                        Success = false,
-                        Error = ex.Message,
-                        ItemId = approvalRequest.IssuanceId.ToString()
-                    });
-                }
-            }));
-        }
-
-        await Task.WhenAll(tasks);
-
-        var response = new BatchOperationResultDto<IssuanceDto>
-        {
-            TotalItems = request.Issuances.Count,
-            SuccessCount = results.Count(r => r.Success),
-            FailureCount = results.Count(r => !r.Success),
-            Results = results.ToList(),
-            ProcessedAt = DateTime.UtcNow
-        };
+        // Execute batch approval
+        var response = await _batchApproveHandler.HandleAsync(command);
 
         return Ok(response);
     }
@@ -353,24 +214,6 @@ public class BatchController : ControllerBase
 
         return Ok(status);
     }
-}
-
-// Batch operation DTOs
-public class BatchOperationResultDto<T>
-{
-    public int TotalItems { get; set; }
-    public int SuccessCount { get; set; }
-    public int FailureCount { get; set; }
-    public List<BatchOperationItemResult<T>> Results { get; set; } = new();
-    public DateTime ProcessedAt { get; set; }
-}
-
-public class BatchOperationItemResult<T>
-{
-    public bool Success { get; set; }
-    public T? Data { get; set; }
-    public string? Error { get; set; }
-    public string? ItemId { get; set; }
 }
 
 public class BatchOperationStatusDto
@@ -423,6 +266,7 @@ public class BatchRevokeCredentialsRequestDto
 public class BatchRevokeCredentialItemDto
 {
     public required string CredentialId { get; set; }
+    public required string Reason { get; set; }
 }
 
 public class BatchApproveIssuancesRequestDto

@@ -1,9 +1,6 @@
 using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.DataProtection;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
-using Microsoft.AspNetCore.RateLimiting;
-using Microsoft.Extensions.Primitives;
 using System.Threading.RateLimiting;
 
 namespace NumbatWallet.Web.Api.Security;

@@ -1,8 +1,4 @@
-using Asp.Versioning;
-using Microsoft.AspNetCore.Diagnostics.HealthChecks;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
-using System.Text.Json;
 
 namespace NumbatWallet.Web.Api.Controllers;
 

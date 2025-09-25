@@ -3,8 +3,6 @@ using HealthCheckResult = Microsoft.Extensions.Diagnostics.HealthChecks.HealthCh
 using Path = System.IO.Path;
 using Microsoft.EntityFrameworkCore;
 using NumbatWallet.Infrastructure.Data;
-using NumbatWallet.Application.Interfaces;
-using System.Net.Http;
 using StackExchange.Redis;
 
 namespace NumbatWallet.Web.Api.HealthChecks;

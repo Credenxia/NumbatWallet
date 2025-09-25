@@ -1,7 +1,7 @@
-using HotChocolate;
-using HotChocolate.Types;
+using NumbatWallet.Application.Commands.Credentials;
+using NumbatWallet.Application.Commands.Issuances;
+using NumbatWallet.Application.CQRS.Interfaces;
 using NumbatWallet.Application.DTOs;
-using NumbatWallet.Application.Interfaces;
 using NumbatWallet.Web.Api.GraphQL.Types;
 using NumbatWallet.Web.Api.Security;
 using System.Security.Claims;
@@ -14,13 +14,31 @@ namespace NumbatWallet.Web.Api.GraphQL.Mutations;
 [ExtendObjectType("Mutation")]
 public class CredentialMutation
 {
+    private readonly ICommandHandler<IssueCredentialCommand, CredentialDto> _issueCredentialHandler;
+    private readonly ICommandHandler<VerifyCredentialCommand, VerificationResultDto> _verifyCredentialHandler;
+    private readonly ICommandHandler<RevokeCredentialCommand, bool> _revokeCredentialHandler;
+    private readonly ICommandHandler<CreateIssuanceCommand, IssuanceDto> _createIssuanceHandler;
+    private readonly ICommandHandler<ApproveIssuanceCommand, IssuanceDto> _approveIssuanceHandler;
+    private readonly ICommandHandler<RejectIssuanceCommand, IssuanceDto> _rejectIssuanceHandler;
     private readonly ISecurityAuditService _auditService;
     private readonly ILogger<CredentialMutation> _logger;
 
     public CredentialMutation(
+        ICommandHandler<IssueCredentialCommand, CredentialDto> issueCredentialHandler,
+        ICommandHandler<VerifyCredentialCommand, VerificationResultDto> verifyCredentialHandler,
+        ICommandHandler<RevokeCredentialCommand, bool> revokeCredentialHandler,
+        ICommandHandler<CreateIssuanceCommand, IssuanceDto> createIssuanceHandler,
+        ICommandHandler<ApproveIssuanceCommand, IssuanceDto> approveIssuanceHandler,
+        ICommandHandler<RejectIssuanceCommand, IssuanceDto> rejectIssuanceHandler,
         ISecurityAuditService auditService,
         ILogger<CredentialMutation> logger)
     {
+        _issueCredentialHandler = issueCredentialHandler;
+        _verifyCredentialHandler = verifyCredentialHandler;
+        _revokeCredentialHandler = revokeCredentialHandler;
+        _createIssuanceHandler = createIssuanceHandler;
+        _approveIssuanceHandler = approveIssuanceHandler;
+        _rejectIssuanceHandler = rejectIssuanceHandler;
         _auditService = auditService;
         _logger = logger;
     }
@@ -48,27 +66,21 @@ public class CredentialMutation
                 $"Credential issuance: {input.Type}");
         }
 
-        // TODO: Implement actual issuance logic with command handler
-        var credential = new CredentialDto
-        {
-            Id = Guid.NewGuid().ToString(),
-            HolderId = input.HolderId,
-            IssuerId = userId ?? "system",
-            Type = input.Type,
-            CredentialSubject = input.CredentialSubject,
-            IssuanceDate = DateTime.UtcNow,
-            ExpirationDate = input.ExpirationDate,
-            Status = "Active",
-            IsRevoked = false,
-            Proof = new Dictionary<string, object>
-            {
-                ["type"] = "Ed25519Signature2020",
-                ["created"] = DateTime.UtcNow.ToString("O"),
-                ["verificationMethod"] = $"did:web:numbatwallet.wa.gov.au#{Guid.NewGuid()}"
-            },
-            Metadata = input.Metadata ?? new Dictionary<string, string>()
-        };
+        // Map credential type string to enum
+        var credentialType = Enum.TryParse<Domain.Enums.CredentialType>(input.Type, true, out var ct)
+            ? ct : Domain.Enums.CredentialType.VerifiableCredential;
 
+        var command = new IssueCredentialCommand(
+            WalletId: Guid.Parse(input.HolderId), // Assuming HolderId is actually a wallet ID
+            CredentialType: credentialType,
+            Subject: input.Type,
+            Claims: input.CredentialSubject,
+            ValidFrom: DateTime.UtcNow,
+            ValidUntil: input.ExpirationDate,
+            IssuerId: userId ?? "system",
+            IssuerOrganizationId: Guid.Empty); // Would need to get from context
+
+        var credential = await _issueCredentialHandler.HandleAsync(command);
         return credential;
     }
 
@@ -83,36 +95,23 @@ public class CredentialMutation
     {
         _logger.LogInformation("Verifying credential {CredentialId}", input.CredentialId);
 
-        // TODO: Implement actual verification logic
-        var result = new VerificationResultDto
+        var verificationOptions = new Dictionary<string, object>
         {
-            IsValid = true,
-            VerifiedAt = DateTime.UtcNow,
-            Checks = new VerificationChecksDto
-            {
-                Signature = true,
-                Expiry = true,
-                Revocation = true,
-                Schema = true,
-                Issuer = true
-            }
+            ["CheckExpiry"] = input.CheckExpiry,
+            ["CheckRevocation"] = input.CheckRevocation,
+            ["CheckSignature"] = input.CheckSignature,
+            ["CheckSchema"] = input.CheckSchema ?? true,
+            ["RequireTrustChain"] = input.RequireTrustChain ?? false
         };
 
-        if (input.CheckExpiry)
+        var command = new VerifyCredentialCommand
         {
-            // TODO: Check expiration
-        }
+            CredentialId = input.CredentialId,
+            CredentialData = input.CredentialData,
+            VerificationOptions = verificationOptions
+        };
 
-        if (input.CheckRevocation)
-        {
-            // TODO: Check revocation status
-        }
-
-        if (input.CheckSignature)
-        {
-            // TODO: Verify cryptographic signature
-        }
-
+        var result = await _verifyCredentialHandler.HandleAsync(command);
         return result;
     }
 
@@ -139,8 +138,13 @@ public class CredentialMutation
                 $"Credential revoked: {input.CredentialId}");
         }
 
-        // TODO: Implement actual revocation logic
-        return true;
+        var command = new RevokeCredentialCommand(
+            CredentialId: Guid.Parse(input.CredentialId),
+            Reason: input.Reason,
+            RevokerId: userId ?? "system");
+
+        var result = await _revokeCredentialHandler.HandleAsync(command);
+        return result;
     }
 
     /// <summary>
@@ -166,19 +170,17 @@ public class CredentialMutation
                 $"Issuance request created: {input.CredentialType}");
         }
 
-        // TODO: Implement actual issuance request logic
-        var issuance = new IssuanceDto
-        {
-            Id = Guid.NewGuid(),
-            CredentialType = input.CredentialType,
-            RequesterId = userId ?? "system",
-            WalletId = input.WalletId,
-            Status = "Pending",
-            RequiredDocuments = input.RequiredDocuments ?? new List<string>(),
-            AdditionalData = input.AdditionalData ?? new Dictionary<string, object>(),
-            CreatedAt = DateTime.UtcNow
-        };
+        var command = new CreateIssuanceCommand(
+            CredentialType: input.CredentialType,
+            WalletId: input.WalletId,
+            RequesterId: userId ?? "system",
+            Claims: input.AdditionalData ?? new Dictionary<string, object>(),
+            ExpiryDate: null,
+            Metadata: input.RequiredDocuments != null
+                ? new Dictionary<string, string> { ["required_documents"] = string.Join(",", input.RequiredDocuments) }
+                : new Dictionary<string, string>());
 
+        var issuance = await _createIssuanceHandler.HandleAsync(command);
         return issuance;
     }
 
@@ -204,19 +206,12 @@ public class CredentialMutation
                 $"Issuance approved: {input.IssuanceId}");
         }
 
-        // TODO: Implement actual approval logic
-        var issuance = new IssuanceDto
-        {
-            Id = input.IssuanceId,
-            CredentialType = "Unknown", // TODO: Fetch from database
-            RequesterId = "system",
-            Status = "Approved",
-            ApprovedAt = DateTime.UtcNow,
-            ApprovedBy = userId ?? "system",
-            Comments = input.Comments,
-            CreatedAt = DateTime.UtcNow
-        };
+        var command = new ApproveIssuanceCommand(
+            IssuanceId: input.IssuanceId,
+            ApprovedBy: userId ?? "system",
+            Comments: input.Comments);
 
+        var issuance = await _approveIssuanceHandler.HandleAsync(command);
         return issuance;
     }
 
@@ -243,19 +238,13 @@ public class CredentialMutation
                 $"Issuance rejected: {input.IssuanceId}");
         }
 
-        // TODO: Implement actual rejection logic
-        var issuance = new IssuanceDto
-        {
-            Id = input.IssuanceId,
-            CredentialType = "Unknown", // TODO: Fetch from database
-            RequesterId = "system",
-            Status = "Rejected",
-            RejectedAt = DateTime.UtcNow,
-            RejectedBy = userId ?? "system",
-            RejectionReason = input.Reason,
-            CreatedAt = DateTime.UtcNow
-        };
+        var command = new RejectIssuanceCommand(
+            IssuanceId: input.IssuanceId,
+            RejectedBy: userId ?? "system",
+            Reason: input.Reason,
+            Comments: null);
 
+        var issuance = await _rejectIssuanceHandler.HandleAsync(command);
         return issuance;
     }
 }

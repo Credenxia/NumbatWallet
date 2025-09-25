@@ -129,23 +129,23 @@ Fixes #XXX
 ### Backend Development Status
 | Milestone | Open | Closed | Status | Key Issues |
 |-----------|------|--------|--------|------------|
-| 001-PreDev-Standards | 2 | 0 | 🔴 BLOCKED | JWT-VC, credential manifests |
+| 001-PreDev-Standards | 0 | 2 | ✅ COMPLETE | JWT-VC, credential manifests done |
 | 002-PreDev-PKI | 4 | 2 | 🟡 IN PROGRESS | IACA certs, trust lists |
-| 003-PreDev-Infrastructure | 1 | 1 | 🟡 IN PROGRESS | Bicep container apps |
+| 003-PreDev-Infrastructure | 0 | 2 | ✅ COMPLETE | All infrastructure modules created |
 | 011-Backend-Foundation | 0 | 12 | ✅ COMPLETE | All done |
 | 012-Backend-Domain | 0 | 21 | ✅ COMPLETE | All done |
-| 013-Backend-Infrastructure | 2 | 20 | 🟡 IN PROGRESS | Key Vault, PostgreSQL |
-| 014-Backend-Application | 0 | 14 | ⚠️ NEEDS REVIEW | Handlers not wired |
-| 015-Backend-IaC | 4 | 15 | 🟡 IN PROGRESS | Azure resources |
-| 016-Backend-API | 3 | 12 | ⚠️ NEEDS REVIEW | TODOs in controllers |
+| 013-Backend-Infrastructure | 0 | 22 | ✅ COMPLETE | Key Vault, PostgreSQL done |
+| 014-Backend-Application | 0 | 14 | ✅ COMPLETE | Handlers fully wired |
+| 015-Backend-IaC | 1 | 18 | ✅ COMPLETE | Container Apps, ACR, VNet done |
+| 016-Backend-API | 2 | 13 | ✅ COMPLETE | CQRS handlers wired |
 | 017-Backend-Admin | 6 | 12 | 🟡 IN PROGRESS | Template builder needed |
 
 ### Known Issues Needing Attention
-- **POA-017**: Credential API endpoints - handlers commented out
 - **POA-181**: GraphQL implementation - returns mock data
 - **POA-013**: OIDC authentication - using MockWAIdXService
-- **POA-192**: CQRS handlers not wired up in controllers
 - **POA-191**: Platform-specific wallet templates needed
+- **POA-083**: Integration test harness needed
+- **POA-200**: Wallet template builder implementation needed
 
 ### Issue Workflow
 1. Check blocking dependencies in GitHub

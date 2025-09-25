@@ -2,15 +2,9 @@ using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Moq;
-using NumbatWallet.Application.Interfaces;
 using NumbatWallet.Infrastructure.Data;
 using NumbatWallet.Infrastructure.EventSourcing;
 using NumbatWallet.SharedKernel.Interfaces;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Xunit;
 
 namespace NumbatWallet.Infrastructure.Tests.EventSourcing;
 

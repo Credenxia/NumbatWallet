@@ -1,4 +1,3 @@
-using Microsoft.AspNetCore.OutputCaching;
 using Microsoft.EntityFrameworkCore;
 using NumbatWallet.Infrastructure.Data;
 using NumbatWallet.Infrastructure.EventSourcing;
@@ -41,10 +40,10 @@ public static class ServiceExtensions
             options.AddPolicy("NoCache", builder => builder.NoCache());
         });
 
-        // Register cache policies
-        services.AddSingleton<ApiCachePolicy>();
-        services.AddSingleton<CredentialCachePolicy>();
-        services.AddSingleton<NoCachePolicy>();
+        // Register cache policies using static instances
+        services.AddSingleton(ApiCachePolicy.Instance);
+        services.AddSingleton(CredentialCachePolicy.Instance);
+        services.AddSingleton(NoCachePolicy.Instance);
 
         // Register cache services
         services.AddScoped<ICacheInvalidationService, CacheInvalidationService>();

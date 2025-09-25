@@ -1,5 +1,6 @@
 using Swashbuckle.AspNetCore.Filters;
 using NumbatWallet.Application.DTOs;
+using NumbatWallet.Application.Commands.Batch;
 using NumbatWallet.Web.Api.Controllers;
 using NumbatWallet.Web.Api.Webhooks;
 
@@ -100,11 +101,13 @@ public class BatchRevokeCredentialsRequestExample : IExamplesProvider<BatchRevok
             {
                 new BatchRevokeCredentialItemDto
                 {
-                    CredentialId = "cred-123-456"
+                    CredentialId = "cred-123-456",
+                    Reason = "Suspected fraudulent activity"
                 },
                 new BatchRevokeCredentialItemDto
                 {
-                    CredentialId = "cred-789-012"
+                    CredentialId = "cred-789-012",
+                    Reason = "Expired identity verification"
                 }
             },
             Reason = "Suspected fraudulent activity detected"

@@ -1,4 +1,9 @@
+using FluentValidation;
+using NumbatWallet.Application.Commands.Wallets;
+using NumbatWallet.Application.Common.Exceptions;
+using NumbatWallet.Application.CQRS.Interfaces;
 using NumbatWallet.Application.DTOs;
+using NumbatWallet.Application.Queries.Wallets;
 using NumbatWallet.Application.Wallets.Commands.CreateWallet;
 using NumbatWallet.SharedKernel.Enums;
 
@@ -14,13 +19,25 @@ namespace NumbatWallet.Web.Api.Controllers;
 public class WalletController : ControllerBase
 {
     private readonly ICommandHandler<CreateWalletCommand, WalletDto> _createHandler;
+    private readonly IQueryHandler<GetWalletByIdQuery, WalletDto?> _getWalletHandler;
+    private readonly IQueryHandler<GetWalletsByPersonQuery, IEnumerable<WalletDto>> _getWalletsByPersonHandler;
+    private readonly ICommandHandler<ActivateWalletCommand, WalletDto> _activateHandler;
+    private readonly ICommandHandler<DeleteWalletCommand, bool> _deleteHandler;
     private readonly ILogger<WalletController> _logger;
 
     public WalletController(
         ICommandHandler<CreateWalletCommand, WalletDto> createHandler,
+        IQueryHandler<GetWalletByIdQuery, WalletDto?> getWalletHandler,
+        IQueryHandler<GetWalletsByPersonQuery, IEnumerable<WalletDto>> getWalletsByPersonHandler,
+        ICommandHandler<ActivateWalletCommand, WalletDto> activateHandler,
+        ICommandHandler<DeleteWalletCommand, bool> deleteHandler,
         ILogger<WalletController> logger)
     {
         _createHandler = createHandler;
+        _getWalletHandler = getWalletHandler;
+        _getWalletsByPersonHandler = getWalletsByPersonHandler;
+        _activateHandler = activateHandler;
+        _deleteHandler = deleteHandler;
         _logger = logger;
     }
 
@@ -81,9 +98,17 @@ public class WalletController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetWallet(Guid id, CancellationToken cancellationToken)
     {
-        // TODO: Implement GetWalletByIdQuery handler
         _logger.LogInformation("Getting wallet {WalletId}", id);
-        return NotFound(new { error = $"Wallet {id} not found" });
+
+        var query = new GetWalletByIdQuery(id);
+        var wallet = await _getWalletHandler.HandleAsync(query, cancellationToken);
+
+        if (wallet == null)
+        {
+            return NotFound(new { error = $"Wallet {id} not found" });
+        }
+
+        return Ok(wallet);
     }
 
     /// <summary>
@@ -93,11 +118,15 @@ public class WalletController : ControllerBase
     [ProducesResponseType(typeof(List<WalletDto>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetPersonWallets(
         Guid personId,
+        [FromQuery] bool includeInactive,
         CancellationToken cancellationToken)
     {
-        // TODO: Implement GetWalletsByPersonQuery
         _logger.LogInformation("Getting wallets for person {PersonId}", personId);
-        return Ok(new List<WalletDto>());
+
+        var query = new GetWalletsByPersonQuery(personId, includeInactive);
+        var wallets = await _getWalletsByPersonHandler.HandleAsync(query, cancellationToken);
+
+        return Ok(wallets);
     }
 
     /// <summary>
@@ -108,11 +137,26 @@ public class WalletController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> ActivateWallet(
         Guid id,
+        [FromBody] ActivateWalletRequest? request,
         CancellationToken cancellationToken)
     {
-        // TODO: Implement ActivateWalletCommand
         _logger.LogInformation("Activating wallet {WalletId}", id);
-        return NoContent();
+
+        try
+        {
+            var command = new ActivateWalletCommand(id, request?.Pin);
+            var wallet = await _activateHandler.HandleAsync(command, cancellationToken);
+
+            return Ok(wallet);
+        }
+        catch (Application.Common.Exceptions.EntityNotFoundException)
+        {
+            return NotFound(new { error = $"Wallet {id} not found" });
+        }
+        catch (ValidationException ex)
+        {
+            return BadRequest(new { error = ex.Message });
+        }
     }
 
     /// <summary>
@@ -126,15 +170,30 @@ public class WalletController : ControllerBase
         Guid id,
         CancellationToken cancellationToken)
     {
-        // TODO: Implement DeleteWalletCommand
         _logger.LogInformation("Deleting wallet {WalletId}", id);
-        return NoContent();
+
+        try
+        {
+            var command = new DeleteWalletCommand(id);
+            await _deleteHandler.HandleAsync(command, cancellationToken);
+
+            return NoContent();
+        }
+        catch (Application.Common.Exceptions.EntityNotFoundException)
+        {
+            return NotFound(new { error = $"Wallet {id} not found" });
+        }
+        catch (SharedKernel.Exceptions.BusinessRuleException ex)
+        {
+            return BadRequest(new { error = ex.Message });
+        }
     }
 
     private Guid GetTenantId()
     {
-        // TODO: Get from claims/context
-        var tenantClaim = User.FindFirst("TenantId")?.Value;
+        var tenantClaim = User.FindFirst("TenantId")?.Value
+            ?? User.FindFirst("tenant_id")?.Value
+            ?? User.FindFirst("tid")?.Value;
         if (Guid.TryParse(tenantClaim, out var tenantId))
         {
             return tenantId;
@@ -162,4 +221,12 @@ public class CreateWalletRequest
 public class CreateWalletResponse
 {
     public Guid WalletId { get; set; }
+}
+
+/// <summary>
+/// Request to activate a wallet
+/// </summary>
+public class ActivateWalletRequest
+{
+    public string? Pin { get; set; }
 }

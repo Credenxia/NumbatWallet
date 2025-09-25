@@ -1,8 +1,10 @@
-using HotChocolate;
-using HotChocolate.Types;
+using NumbatWallet.Application.Commands.Wallets;
+using NumbatWallet.Application.CQRS.Interfaces;
 using NumbatWallet.Application.DTOs;
 using NumbatWallet.Application.Interfaces;
-using NumbatWallet.Web.Api.GraphQL.Types;
+using NumbatWallet.Application.Queries.Wallets;
+using NumbatWallet.Application.Wallets.Commands.CreateWallet;
+using NumbatWallet.SharedKernel.Enums;
 using NumbatWallet.Web.Api.Security;
 using System.Security.Claims;
 
@@ -14,15 +16,30 @@ namespace NumbatWallet.Web.Api.GraphQL.Mutations;
 [ExtendObjectType("Mutation")]
 public class WalletMutation
 {
+    private readonly ICommandHandler<CreateWalletCommand, WalletDto> _createWalletHandler;
+    private readonly ICommandHandler<UpdateWalletCommand, WalletDto> _updateWalletHandler;
+    private readonly ICommandHandler<ActivateWalletCommand, WalletDto> _activateWalletHandler;
+    private readonly ICommandHandler<DeleteWalletCommand, bool> _deleteWalletHandler;
+    private readonly IQueryHandler<GetWalletByIdQuery, WalletDto?> _getWalletHandler;
     private readonly ISecurityAuditService _auditService;
     private readonly ILogger<WalletMutation> _logger;
     private readonly ICacheService _cacheService;
 
     public WalletMutation(
+        ICommandHandler<CreateWalletCommand, WalletDto> createWalletHandler,
+        ICommandHandler<UpdateWalletCommand, WalletDto> updateWalletHandler,
+        ICommandHandler<ActivateWalletCommand, WalletDto> activateWalletHandler,
+        ICommandHandler<DeleteWalletCommand, bool> deleteWalletHandler,
+        IQueryHandler<GetWalletByIdQuery, WalletDto?> getWalletHandler,
         ISecurityAuditService auditService,
         ILogger<WalletMutation> logger,
         ICacheService cacheService)
     {
+        _createWalletHandler = createWalletHandler;
+        _updateWalletHandler = updateWalletHandler;
+        _activateWalletHandler = activateWalletHandler;
+        _deleteWalletHandler = deleteWalletHandler;
+        _getWalletHandler = getWalletHandler;
         _auditService = auditService;
         _logger = logger;
         _cacheService = cacheService;
@@ -50,20 +67,16 @@ public class WalletMutation
                 $"Wallet created for user: {userId}");
         }
 
-        // TODO: Implement actual wallet creation logic
-        var wallet = new WalletDto
+        var command = new CreateWalletCommand
         {
-            Id = Guid.NewGuid(),
-            UserId = userId ?? input.UserId ?? "system",
-            DisplayName = input.DisplayName,
-            WalletType = input.WalletType ?? "Personal",
-            Did = $"did:web:numbatwallet.wa.gov.au:wallet:{Guid.NewGuid()}",
-            PublicKey = GeneratePublicKey(),
-            Status = "Active",
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow,
-            Metadata = input.Metadata ?? new Dictionary<string, string>()
+            PersonId = Guid.Parse(userId ?? input.UserId ?? throw new InvalidOperationException("User ID is required")),
+            Name = input.DisplayName,
+            Description = null,
+            Type = string.Equals(input.WalletType, "issuer", StringComparison.OrdinalIgnoreCase) ? WalletType.Issuer : WalletType.Holder,
+            TenantId = null
         };
+
+        var wallet = await _createWalletHandler.HandleAsync(command);
 
         // Cache the wallet
         await _cacheService.SetAsync($"wallet:{wallet.Id}", wallet, TimeSpan.FromHours(1));
@@ -93,32 +106,16 @@ public class WalletMutation
                 $"Wallet updated: {input.WalletId}");
         }
 
-        // TODO: Implement actual wallet update logic
-        var wallet = await _cacheService.GetAsync<WalletDto>($"wallet:{input.WalletId}");
-
-        if (wallet == null)
+        var command = new UpdateWalletCommand
         {
-            wallet = new WalletDto
-            {
-                Id = input.WalletId,
-                UserId = userId ?? "system",
-                DisplayName = input.DisplayName ?? "My Wallet",
-                Status = "Active"
-            };
-        }
+            WalletId = input.WalletId.ToString(),
+            Name = input.DisplayName,
+            Metadata = input.Metadata
+        };
 
-        if (input.DisplayName != null)
-        {
-            wallet.DisplayName = input.DisplayName;
-        }
+        var wallet = await _updateWalletHandler.HandleAsync(command);
 
-        if (input.Metadata != null)
-        {
-            wallet.Metadata = input.Metadata;
-        }
-
-        wallet.UpdatedAt = DateTime.UtcNow;
-
+        // Update cache
         await _cacheService.SetAsync($"wallet:{wallet.Id}", wallet, TimeSpan.FromHours(1));
 
         return wallet;
@@ -147,10 +144,14 @@ public class WalletMutation
                 $"Wallet deactivated: {input.WalletId}");
         }
 
-        // TODO: Implement actual deactivation logic
+        var command = new DeleteWalletCommand(Guid.Parse(input.WalletId));
+
+        var result = await _deleteWalletHandler.HandleAsync(command);
+
+        // Remove from cache
         await _cacheService.RemoveAsync($"wallet:{input.WalletId}");
 
-        return true;
+        return result;
     }
 
     /// <summary>
@@ -176,17 +177,23 @@ public class WalletMutation
                 $"Wallet exported: {input.WalletId}");
         }
 
-        // TODO: Implement actual export logic
+        // Get wallet data
+        var query = new GetWalletByIdQuery(Guid.Parse(input.WalletId));
+        var wallet = await _getWalletHandler.HandleAsync(query);
+
+        if (wallet == null)
+        {
+            throw new InvalidOperationException($"Wallet {input.WalletId} not found");
+        }
+
+        // For now, return basic export data
+        // Full export logic would involve gathering credentials and history
         var exportData = new WalletExportDto
         {
             WalletId = input.WalletId,
             Format = input.Format ?? "JSON",
             ExportedAt = DateTime.UtcNow,
-            Data = new
-            {
-                wallet = new { id = input.WalletId, status = "Active" },
-                credentials = new[] { new { id = Guid.NewGuid(), type = "ProofOfAge" } }
-            },
+            Data = wallet,
             IncludeCredentials = input.IncludeCredentials ?? true,
             IncludeHistory = input.IncludeHistory ?? false
         };
@@ -216,14 +223,28 @@ public class WalletMutation
                 $"Wallet import initiated by: {userId}");
         }
 
-        // TODO: Implement actual import logic
+        // Import logic would deserialize the data and create a new wallet
+        // For now, create a new wallet with imported data
+        var walletData = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, object>>(input.Data);
+
+        var createCommand = new CreateWalletCommand
+        {
+            PersonId = Guid.Parse(userId ?? throw new InvalidOperationException("User ID is required")),
+            Name = "Imported Wallet",
+            Description = $"Imported on {DateTime.UtcNow.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture)}",
+            Type = WalletType.Holder,
+            TenantId = null
+        };
+
+        var wallet = await _createWalletHandler.HandleAsync(createCommand);
+
         var result = new WalletImportResultDto
         {
             Success = true,
-            WalletId = Guid.NewGuid(),
+            WalletId = wallet.Id.ToString(),
             ImportedAt = DateTime.UtcNow,
-            CredentialsImported = 5,
-            CredentialsSkipped = 1,
+            CredentialsImported = 0, // Would be populated from actual import
+            CredentialsSkipped = 0,
             Errors = new List<string>()
         };
 
@@ -251,20 +272,20 @@ public class CreateWalletInput
 
 public class UpdateWalletInput
 {
-    public required Guid WalletId { get; set; }
+    public required string WalletId { get; set; }
     public string? DisplayName { get; set; }
     public Dictionary<string, string>? Metadata { get; set; }
 }
 
 public class DeactivateWalletInput
 {
-    public required Guid WalletId { get; set; }
+    public required string WalletId { get; set; }
     public required string Reason { get; set; }
 }
 
 public class ExportWalletInput
 {
-    public required Guid WalletId { get; set; }
+    public required string WalletId { get; set; }
     public string? Format { get; set; }
     public bool? IncludeCredentials { get; set; }
     public bool? IncludeHistory { get; set; }
@@ -278,23 +299,9 @@ public class ImportWalletInput
 }
 
 // DTOs for wallet operations
-public class WalletDto
-{
-    public Guid Id { get; set; }
-    public required string UserId { get; set; }
-    public required string DisplayName { get; set; }
-    public string WalletType { get; set; } = "Personal";
-    public string? Did { get; set; }
-    public string? PublicKey { get; set; }
-    public string Status { get; set; } = "Active";
-    public DateTime CreatedAt { get; set; }
-    public DateTime UpdatedAt { get; set; }
-    public Dictionary<string, string> Metadata { get; set; } = new();
-}
-
 public class WalletExportDto
 {
-    public Guid WalletId { get; set; }
+    public string WalletId { get; set; }
     public required string Format { get; set; }
     public DateTime ExportedAt { get; set; }
     public object? Data { get; set; }
@@ -305,7 +312,7 @@ public class WalletExportDto
 public class WalletImportResultDto
 {
     public bool Success { get; set; }
-    public Guid WalletId { get; set; }
+    public string WalletId { get; set; }
     public DateTime ImportedAt { get; set; }
     public int CredentialsImported { get; set; }
     public int CredentialsSkipped { get; set; }
