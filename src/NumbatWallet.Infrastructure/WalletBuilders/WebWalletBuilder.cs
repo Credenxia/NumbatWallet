@@ -12,7 +12,7 @@ namespace NumbatWallet.Infrastructure.WalletBuilders;
 /// <summary>
 /// Implementation of Web/PWA wallet builder
 /// </summary>
-public class WebWalletBuilder : IWebWalletBuilder, IPlatformWalletBuilder
+public class WebWalletBuilder : IWebWalletBuilder
 {
     private readonly ILogger<WebWalletBuilder> _logger;
     private readonly IConfiguration _configuration;
@@ -29,58 +29,6 @@ public class WebWalletBuilder : IWebWalletBuilder, IPlatformWalletBuilder
         };
     }
 
-    public async Task<WalletPackageDto> BuildWalletPackageAsync(
-        WalletTemplate walletTemplate,
-        Dictionary<string, object> data,
-        WalletPlatform platform,
-        CancellationToken cancellationToken = default)
-    {
-        if (platform != WalletPlatform.Web && platform != WalletPlatform.PWA && platform != WalletPlatform.All)
-        {
-            return new WalletPackageDto
-            {
-                IsSuccess = false,
-                ErrorMessage = "Platform not supported by Web wallet builder"
-            };
-        }
-
-        try
-        {
-            var options = CreateDefaultOptions(walletTemplate);
-            var webWallet = await GenerateWebWalletAsync(walletTemplate, data, options, cancellationToken);
-
-            var html = GenerateHtmlContent(webWallet);
-            var packageData = Encoding.UTF8.GetBytes(html);
-
-            return new WalletPackageDto
-            {
-                Id = webWallet.Id,
-                Platform = platform == WalletPlatform.PWA ? "PWA" : "Web",
-                PackageData = packageData,
-                PackageUrl = webWallet.ShareUrl,
-                ContentType = "text/html",
-                FileName = $"{walletTemplate.Name.Replace(" ", "_")}.html",
-                GeneratedAt = DateTime.UtcNow,
-                IsSuccess = true,
-                Metadata = new Dictionary<string, object>
-                {
-                    ["templateId"] = walletTemplate.Id,
-                    ["templateVersion"] = walletTemplate.Version,
-                    ["qrCodeUrl"] = webWallet.QrCodeDataUrl,
-                    ["isPwa"] = platform == WalletPlatform.PWA
-                }
-            };
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to build Web wallet package");
-            return new WalletPackageDto
-            {
-                IsSuccess = false,
-                ErrorMessage = ex.Message
-            };
-        }
-    }
 
     public async Task<WebWalletDto> GenerateWebWalletAsync(
         WalletTemplate walletTemplate,

@@ -1,5 +1,6 @@
 using NumbatWallet.Application.DTOs;
 using NumbatWallet.Application.Interfaces;
+using NumbatWallet.Domain.Aggregates;
 using NumbatWallet.Domain.Entities;
 using Microsoft.Extensions.Logging;
 
@@ -321,6 +322,70 @@ public class PlatformWalletBuilder : IPlatformWalletBuilder
             EnablePrinting = true,
             EnableOfflineMode = true,
             Metadata = data.ToDictionary(kvp => kvp.Key, kvp => kvp.Value?.ToString() ?? string.Empty)
+        };
+    }
+
+    public async Task<object> BuildAppleWalletAsync(
+        Wallet wallet,
+        WalletTemplate walletTemplate,
+        CancellationToken cancellationToken = default)
+    {
+        var data = new Dictionary<string, object>
+        {
+            ["walletId"] = wallet.Id.ToString(),
+            ["walletName"] = wallet.WalletName
+        };
+
+        var options = CreateAppleWalletOptions(walletTemplate, data);
+        return await _appleWalletBuilder.GeneratePkpassAsync(
+            walletTemplate, data, options, cancellationToken);
+    }
+
+    public async Task<object> BuildGoogleWalletAsync(
+        Wallet wallet,
+        WalletTemplate walletTemplate,
+        CancellationToken cancellationToken = default)
+    {
+        var data = new Dictionary<string, object>
+        {
+            ["walletId"] = wallet.Id.ToString(),
+            ["walletName"] = wallet.WalletName
+        };
+
+        var options = CreateGoogleWalletOptions(walletTemplate, data);
+        var googlePass = await _googleWalletBuilder.GenerateGooglePassAsync(
+            walletTemplate, data, options, cancellationToken);
+
+        var jwt = await _googleWalletBuilder.CreateJwtAsync(googlePass);
+        return new
+        {
+            jwt,
+            saveUrl = _googleWalletBuilder.GetAddToWalletLink(jwt),
+            passId = googlePass.Id
+        };
+    }
+
+    public async Task<object> BuildWebWalletAsync(
+        Wallet wallet,
+        WalletTemplate walletTemplate,
+        CancellationToken cancellationToken = default)
+    {
+        var data = new Dictionary<string, object>
+        {
+            ["walletId"] = wallet.Id.ToString(),
+            ["walletName"] = wallet.WalletName
+        };
+
+        var options = CreateWebWalletOptions(walletTemplate, data);
+        var webWallet = await _webWalletBuilder.GenerateWebWalletAsync(
+            walletTemplate, data, options, cancellationToken);
+
+        return new
+        {
+            webWallet.Id,
+            webWallet.HtmlContent,
+            webWallet.ShareUrl,
+            webWallet.QrCodeDataUrl
         };
     }
 }

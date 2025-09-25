@@ -12,7 +12,7 @@ namespace NumbatWallet.Infrastructure.WalletBuilders;
 /// <summary>
 /// Implementation of Apple Wallet (.pkpass) builder
 /// </summary>
-public class AppleWalletBuilder : IAppleWalletBuilder, IPlatformWalletBuilder
+public class AppleWalletBuilder : IAppleWalletBuilder
 {
     private readonly ILogger<AppleWalletBuilder> _logger;
     private readonly JsonSerializerOptions _jsonOptions;
@@ -27,52 +27,6 @@ public class AppleWalletBuilder : IAppleWalletBuilder, IPlatformWalletBuilder
         };
     }
 
-    public async Task<WalletPackageDto> BuildWalletPackageAsync(
-        WalletTemplate walletTemplate,
-        Dictionary<string, object> data,
-        WalletPlatform platform,
-        CancellationToken cancellationToken = default)
-    {
-        if (platform != WalletPlatform.AppleWallet && platform != WalletPlatform.All)
-        {
-            return new WalletPackageDto
-            {
-                IsSuccess = false,
-                ErrorMessage = "Platform not supported by Apple Wallet builder"
-            };
-        }
-
-        try
-        {
-            var options = CreateDefaultOptions(walletTemplate);
-            var pkpassData = await GeneratePkpassAsync(walletTemplate, data, options, cancellationToken);
-
-            return new WalletPackageDto
-            {
-                Id = Guid.NewGuid(),
-                Platform = "AppleWallet",
-                PackageData = pkpassData,
-                ContentType = "application/vnd.apple.pkpass",
-                FileName = $"{walletTemplate.Name.Replace(" ", "_")}.pkpass",
-                GeneratedAt = DateTime.UtcNow,
-                IsSuccess = true,
-                Metadata = new Dictionary<string, object>
-                {
-                    ["templateId"] = walletTemplate.Id,
-                    ["templateVersion"] = walletTemplate.Version
-                }
-            };
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to build Apple Wallet package");
-            return new WalletPackageDto
-            {
-                IsSuccess = false,
-                ErrorMessage = ex.Message
-            };
-        }
-    }
 
     public async Task<byte[]> GeneratePkpassAsync(
         WalletTemplate walletTemplate,

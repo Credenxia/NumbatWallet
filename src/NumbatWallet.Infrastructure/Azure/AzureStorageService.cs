@@ -222,7 +222,7 @@ public class MockAzureStorageService : IAzureStorageService
 
             if (!string.IsNullOrEmpty(prefix))
             {
-                blobs = blobs.Where(b => b.StartsWith(prefix));
+                blobs = blobs.Where(b => b.StartsWith(prefix, StringComparison.Ordinal));
             }
 
             return Task.FromResult(blobs);

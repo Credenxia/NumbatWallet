@@ -225,16 +225,14 @@ public class MockAzureKeyVaultService : IAzureKeyVaultService
     public Task<byte[]> SignDataAsync(string keyName, byte[] data, CancellationToken cancellationToken = default)
     {
         // Mock signature
-        using var sha256 = System.Security.Cryptography.SHA256.Create();
-        var hash = sha256.ComputeHash(data);
+        var hash = System.Security.Cryptography.SHA256.HashData(data);
         return Task.FromResult(hash);
     }
 
     public Task<bool> VerifySignatureAsync(string keyName, byte[] data, byte[] signature, CancellationToken cancellationToken = default)
     {
         // Mock verification
-        using var sha256 = System.Security.Cryptography.SHA256.Create();
-        var hash = sha256.ComputeHash(data);
+        var hash = System.Security.Cryptography.SHA256.HashData(data);
         return Task.FromResult(hash.SequenceEqual(signature));
     }
 

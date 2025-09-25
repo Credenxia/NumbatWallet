@@ -49,12 +49,13 @@ public interface ICertificateAuthority
     Task<X509Certificate2> IssueCredentialCertificateAsync(string subjectName, CancellationToken cancellationToken = default);
 }
 
-public class CertificateAuthority : ICertificateAuthority
+public class CertificateAuthority : ICertificateAuthority, IDisposable
 {
     private readonly IConfiguration _configuration;
     private readonly ILogger<CertificateAuthority> _logger;
     private X509Certificate2? _rootCert;
     private X509Certificate2? _intermediateCert;
+    private bool _disposed;
 
     public CertificateAuthority(
         IConfiguration configuration,
@@ -214,6 +215,25 @@ public class CertificateAuthority : ICertificateAuthority
 
         var certWithKey = cert.CopyWithPrivateKey(rsa);
         return new X509Certificate2(certWithKey.Export(X509ContentType.Pfx));
+    }
+
+    public void Dispose()
+    {
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
+    protected virtual void Dispose(bool disposing)
+    {
+        if (!_disposed)
+        {
+            if (disposing)
+            {
+                _rootCert?.Dispose();
+                _intermediateCert?.Dispose();
+            }
+            _disposed = true;
+        }
     }
 }
 

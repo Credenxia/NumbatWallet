@@ -14,7 +14,7 @@ namespace NumbatWallet.Infrastructure.WalletBuilders;
 /// <summary>
 /// Implementation of Google Wallet pass builder
 /// </summary>
-public class GoogleWalletBuilder : IGoogleWalletBuilder, IPlatformWalletBuilder
+public class GoogleWalletBuilder : IGoogleWalletBuilder
 {
     private readonly ILogger<GoogleWalletBuilder> _logger;
     private readonly IConfiguration _configuration;
@@ -33,56 +33,6 @@ public class GoogleWalletBuilder : IGoogleWalletBuilder, IPlatformWalletBuilder
         };
     }
 
-    public async Task<WalletPackageDto> BuildWalletPackageAsync(
-        WalletTemplate walletTemplate,
-        Dictionary<string, object> data,
-        WalletPlatform platform,
-        CancellationToken cancellationToken = default)
-    {
-        if (platform != WalletPlatform.GoogleWallet && platform != WalletPlatform.All)
-        {
-            return new WalletPackageDto
-            {
-                IsSuccess = false,
-                ErrorMessage = "Platform not supported by Google Wallet builder"
-            };
-        }
-
-        try
-        {
-            var options = CreateDefaultOptions(walletTemplate);
-            var googlePass = await GenerateGooglePassAsync(walletTemplate, data, options, cancellationToken);
-            var jwt = await CreateJwtAsync(googlePass);
-
-            return new WalletPackageDto
-            {
-                Id = Guid.NewGuid(),
-                Platform = "GoogleWallet",
-                PackageUrl = GetAddToWalletLink(jwt),
-                ContentType = "application/jwt",
-                FileName = $"{walletTemplate.Name.Replace(" ", "_")}.jwt",
-                GeneratedAt = DateTime.UtcNow,
-                IsSuccess = true,
-                Metadata = new Dictionary<string, object>
-                {
-                    ["templateId"] = walletTemplate.Id,
-                    ["templateVersion"] = walletTemplate.Version,
-                    ["jwt"] = jwt,
-                    ["classId"] = googlePass.ClassId,
-                    ["objectId"] = googlePass.Id
-                }
-            };
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to build Google Wallet package");
-            return new WalletPackageDto
-            {
-                IsSuccess = false,
-                ErrorMessage = ex.Message
-            };
-        }
-    }
 
     public async Task<GoogleWalletPassDto> GenerateGooglePassAsync(
         WalletTemplate walletTemplate,

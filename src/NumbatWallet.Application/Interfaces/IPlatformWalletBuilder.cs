@@ -1,4 +1,5 @@
 using NumbatWallet.Application.DTOs;
+using NumbatWallet.Domain.Aggregates;
 using NumbatWallet.Domain.Entities;
 
 namespace NumbatWallet.Application.Interfaces;
@@ -15,6 +16,30 @@ public interface IPlatformWalletBuilder
         WalletTemplate walletTemplate,
         Dictionary<string, object> data,
         WalletPlatform platform,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Build Apple Wallet package
+    /// </summary>
+    Task<object> BuildAppleWalletAsync(
+        Wallet wallet,
+        WalletTemplate walletTemplate,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Build Google Wallet package
+    /// </summary>
+    Task<object> BuildGoogleWalletAsync(
+        Wallet wallet,
+        WalletTemplate walletTemplate,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Build Web Wallet package
+    /// </summary>
+    Task<object> BuildWebWalletAsync(
+        Wallet wallet,
+        WalletTemplate walletTemplate,
         CancellationToken cancellationToken = default);
 
     /// <summary>

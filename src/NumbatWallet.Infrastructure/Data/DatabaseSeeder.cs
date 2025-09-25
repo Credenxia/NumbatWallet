@@ -6,7 +6,7 @@ using NumbatWallet.Domain.Entities;
 
 namespace NumbatWallet.Infrastructure.Data;
 
-public class DatabaseSeeder
+public class DatabaseSeeder : IDatabaseSeeder
 {
     private readonly IServiceProvider _serviceProvider;
     private readonly ILogger<DatabaseSeeder> _logger;
@@ -203,6 +203,59 @@ public class DatabaseSeeder
 
         await context.Persons.AddRangeAsync(testPersons, cancellationToken);
         _logger.LogInformation("Seeded {Count} test persons", testPersons.Length);
+    }
+
+    public async Task SeedTestDataAsync(CancellationToken cancellationToken = default)
+    {
+        _logger.LogInformation("Seeding test data...");
+        await SeedAsync(cancellationToken);
+    }
+
+    public async Task ClearAllDataAsync(CancellationToken cancellationToken = default)
+    {
+        _logger.LogWarning("Clearing all data from database...");
+        using var scope = _serviceProvider.CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<NumbatWalletDbContext>();
+
+        // Delete all data in reverse dependency order
+        context.RemoveRange(context.Credentials);
+        context.RemoveRange(context.Wallets);
+        context.RemoveRange(context.Persons);
+        context.RemoveRange(context.Issuers);
+        context.RemoveRange(context.WalletTemplates);
+
+        await context.SaveChangesAsync(cancellationToken);
+        _logger.LogInformation("All data cleared from database");
+    }
+
+    public async Task SeedProductionDataAsync(CancellationToken cancellationToken = default)
+    {
+        _logger.LogInformation("Seeding production data...");
+        using var scope = _serviceProvider.CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<NumbatWalletDbContext>();
+
+        // Check if already seeded
+        if (await context.Issuers.AnyAsync(cancellationToken))
+        {
+            _logger.LogInformation("Production data already exists, skipping seed");
+            return;
+        }
+
+        // Create default issuer for Western Australia Government
+        var waGovIssuer = new Issuer(
+            name: "Government of Western Australia",
+            code: "WAGOV",
+            issuerDid: "did:web:wa.gov.au",
+            publicKey: "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA...\n-----END PUBLIC KEY-----",
+            endpoint: "https://api.wa.gov.au/credentials",
+            tenantId: "wa.gov.au"
+        );
+        waGovIssuer.SetTenantId("wa.gov.au");
+
+        await context.Issuers.AddAsync(waGovIssuer, cancellationToken);
+        await context.SaveChangesAsync(cancellationToken);
+
+        _logger.LogInformation("Production data seeded successfully");
     }
 }
 

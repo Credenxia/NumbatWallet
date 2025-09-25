@@ -41,11 +41,9 @@ public static class AzurePostgreSQLConfiguration
                     // Enable Azure AD authentication if configured
                     if (azureConfig.GetValue<bool>("UseAzureADAuthentication", false))
                     {
-                        npgsqlOptions.ProvidePasswordCallback((host, port, database, username) =>
-                        {
-                            var token = GetAzureADTokenAsync(configuration).GetAwaiter().GetResult();
-                            return token;
-                        });
+                        // For Azure AD authentication, configure the data source with password callback
+                        // This is handled in the connection string builder for now
+                        // TODO: Migrate to NpgsqlDataSourceBuilder when upgrading to newer Npgsql
                     }
 
                     // Performance optimizations
@@ -60,7 +58,7 @@ public static class AzurePostgreSQLConfiguration
                 }
 
                 options.LogTo(
-                    message => logger.LogDebug(message),
+                    message => logger.LogDebug("{Message}", message),
                     LogLevel.Information);
             });
 
