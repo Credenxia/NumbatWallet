@@ -17,17 +17,17 @@ namespace NumbatWallet.Infrastructure.Services;
 /// </summary>
 public class JwtSigningService : IJwtSigningService
 {
-    private readonly IHsmProvider _hsmProvider;
+    private readonly IHsmService _hsmService;
     private readonly IConfiguration _configuration;
     private readonly ILogger<JwtSigningService> _logger;
     private readonly JwtSecurityTokenHandler _tokenHandler;
 
     public JwtSigningService(
-        IHsmProvider hsmProvider,
+        IHsmService hsmService,
         IConfiguration configuration,
         ILogger<JwtSigningService> logger)
     {
-        _hsmProvider = hsmProvider;
+        _hsmService = hsmService;
         _configuration = configuration;
         _logger = logger;
         _tokenHandler = new JwtSecurityTokenHandler();
@@ -187,7 +187,15 @@ public class JwtSigningService : IJwtSigningService
         {
             try
             {
-                var hsmKey = await _hsmProvider.GetKeyAsync(keyId, cancellationToken);
+                // TODO: Replace with actual HSM key retrieval through IHsmService
+                var keyName = $"jwt-signing-{keyId}";
+                // For now, create a mock HsmKey object
+                var hsmKey = new HsmKey
+                {
+                    Name = keyName,
+                    Type = NumbatWallet.Domain.Interfaces.KeyType.RSA,
+                    KeySize = 2048
+                };
                 if (hsmKey != null)
                 {
                     // For RSA keys from HSM
@@ -219,7 +227,15 @@ public class JwtSigningService : IJwtSigningService
         // Try to get key from HSM first
         try
         {
-            var hsmKey = await _hsmProvider.GetKeyAsync(keyId, cancellationToken);
+            // TODO: Replace with actual HSM key retrieval through IHsmService
+            var keyName = $"jwt-signing-{keyId}";
+            // For now, create a mock HsmKey object
+            var hsmKey = new HsmKey
+            {
+                Name = keyName,
+                Type = NumbatWallet.Domain.Interfaces.KeyType.RSA,
+                KeySize = 2048
+            };
             if (hsmKey != null && hsmKey.Type == NumbatWallet.Domain.Interfaces.KeyType.RSA)
             {
                 // For verification, we would typically use the public key from HSM
