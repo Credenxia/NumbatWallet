@@ -74,9 +74,10 @@ public class CredentialController : ControllerBase
             return BadRequest($"Invalid credential type: {request.CredentialType}");
         }
 
-        // Get organization from tenant context or use default
-        var tenantId = _tenantService.TenantId ?? "00000000-0000-0000-0000-000000000000";
-        var organizationId = Guid.Parse(tenantId); // In multi-tenant, each tenant has an organization
+        // Get organization from tenant context - use a well-known GUID
+        // In multi-tenant scenarios, this would map tenant to organization
+        // For now, use Guid.Empty as a placeholder (not currently used by handler)
+        var organizationId = Guid.Empty;
 
         var command = new IssueCredentialCommand(
             WalletId: request.WalletId,

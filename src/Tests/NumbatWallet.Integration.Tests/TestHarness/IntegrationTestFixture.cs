@@ -22,7 +22,7 @@ public class IntegrationTestFixture : WebApplicationFactory<Program>, IAsyncLife
 {
     private readonly PostgreSqlContainer _postgresContainer;
     private readonly Dictionary<string, string> _testConfiguration;
-    private readonly string _testTenantId = Guid.NewGuid().ToString();
+    private readonly string _testTenantId = "default"; // Must match DatabaseSeeder tenant ID
     private bool _initialized = false;
 
     public IntegrationTestFixture()
@@ -135,6 +135,11 @@ public class IntegrationTestFixture : WebApplicationFactory<Program>, IAsyncLife
 
             // Add mock current user service for audit fields
             services.AddSingleton<NumbatWallet.SharedKernel.Interfaces.ICurrentUserService, MockCurrentUserService>();
+
+            // Replace current tenant service with mock to return consistent tenant ID for tests
+            services.RemoveAll<NumbatWallet.SharedKernel.Interfaces.ICurrentTenantService>();
+            services.AddSingleton<NumbatWallet.SharedKernel.Interfaces.ICurrentTenantService>(
+                sp => new MockCurrentTenantService(_testTenantId));
 
             // Don't initialize database here - let it be done on first use
             // This avoids conflicts with service registration
@@ -448,4 +453,27 @@ public class MockCurrentUserService : NumbatWallet.SharedKernel.Interfaces.ICurr
     public string UserName => "Test User";
     public string UserEmail => "test@example.com";
     public IEnumerable<string> Roles => new[] { "Admin", "User" };
+}
+
+/// <summary>
+/// Mock Current Tenant service for testing
+/// </summary>
+public class MockCurrentTenantService : NumbatWallet.SharedKernel.Interfaces.ICurrentTenantService
+{
+    private readonly string _tenantId;
+
+    public MockCurrentTenantService(string tenantId)
+    {
+        _tenantId = tenantId;
+    }
+
+    public string? TenantId => _tenantId;
+    public string? TenantName => "Test Tenant";
+    public bool IsMultiTenantContext => true;
+
+    public Task<bool> SetTenantAsync(string tenantId)
+    {
+        // Not needed for tests
+        return Task.FromResult(true);
+    }
 }

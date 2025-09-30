@@ -4,21 +4,25 @@ using NumbatWallet.Application.Exceptions;
 using NumbatWallet.Application.Interfaces;
 using NumbatWallet.Domain.Events;
 using NumbatWallet.Domain.Interfaces;
+using NumbatWallet.SharedKernel.Interfaces;
 
 namespace NumbatWallet.Application.Commands.Credentials.Handlers;
 
 public class RevokeCredentialCommandHandler : ICommandHandler<RevokeCredentialCommand, bool>
 {
     private readonly ICredentialRepository _credentialRepository;
-    private readonly IEventDispatcher _eventDispatcher;
+    private readonly IUnitOfWork _unitOfWork;
+    private readonly Application.Interfaces.IEventDispatcher _eventDispatcher;
     private readonly ILogger<RevokeCredentialCommandHandler> _logger;
 
     public RevokeCredentialCommandHandler(
         ICredentialRepository credentialRepository,
-        IEventDispatcher eventDispatcher,
+        IUnitOfWork unitOfWork,
+        Application.Interfaces.IEventDispatcher eventDispatcher,
         ILogger<RevokeCredentialCommandHandler> logger)
     {
         _credentialRepository = credentialRepository;
+        _unitOfWork = unitOfWork;
         _eventDispatcher = eventDispatcher;
         _logger = logger;
     }
@@ -43,6 +47,9 @@ public class RevokeCredentialCommandHandler : ICommandHandler<RevokeCredentialCo
 
         // Update credential in repository
         await _credentialRepository.UpdateAsync(credential, cancellationToken);
+
+        // Save changes to database
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         // Dispatch domain event
         var credentialRevokedEvent = new CredentialRevokedEvent(

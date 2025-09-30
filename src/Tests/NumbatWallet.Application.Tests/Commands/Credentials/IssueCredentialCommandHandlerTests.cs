@@ -10,6 +10,7 @@ using NumbatWallet.Domain.Enums;
 using NumbatWallet.Domain.Events;
 using NumbatWallet.Domain.Interfaces;
 using NumbatWallet.SharedKernel.Enums;
+using NumbatWallet.SharedKernel.Interfaces;
 
 namespace NumbatWallet.Application.Tests.Commands.Credentials;
 
@@ -18,7 +19,8 @@ public class IssueCredentialCommandHandlerTests
     private readonly Mock<ICredentialRepository> _credentialRepositoryMock;
     private readonly Mock<IWalletRepository> _walletRepositoryMock;
     private readonly Mock<IIssuerRepository> _issuerRepositoryMock;
-    private readonly Mock<IEventDispatcher> _eventDispatcherMock;
+    private readonly Mock<IUnitOfWork> _unitOfWorkMock;
+    private readonly Mock<Application.Interfaces.IEventDispatcher> _eventDispatcherMock;
     private readonly Mock<ILogger<IssueCredentialCommandHandler>> _loggerMock;
     private readonly IssueCredentialCommandHandler _handler;
 
@@ -27,13 +29,15 @@ public class IssueCredentialCommandHandlerTests
         _credentialRepositoryMock = new Mock<ICredentialRepository>();
         _walletRepositoryMock = new Mock<IWalletRepository>();
         _issuerRepositoryMock = new Mock<IIssuerRepository>();
-        _eventDispatcherMock = new Mock<IEventDispatcher>();
+        _unitOfWorkMock = new Mock<IUnitOfWork>();
+        _eventDispatcherMock = new Mock<Application.Interfaces.IEventDispatcher>();
         _loggerMock = new Mock<ILogger<IssueCredentialCommandHandler>>();
 
         _handler = new IssueCredentialCommandHandler(
             _credentialRepositoryMock.Object,
             _walletRepositoryMock.Object,
             _issuerRepositoryMock.Object,
+            _unitOfWorkMock.Object,
             _eventDispatcherMock.Object,
             _loggerMock.Object);
     }

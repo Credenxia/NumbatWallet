@@ -182,14 +182,16 @@ public class NumbatWalletDbContext : DbContext, IUnitOfWork
                 entry.Entity.CreatedAt = _dateTimeService.UtcNow;
                 entry.Entity.CreatedBy = _currentUserService.UserId;
 
-                if (entry.Entity is ITenantAware tenantEntity)
-                {
-                    var tenantIdString = _tenantService.TenantId == Guid.Empty ? null : _tenantService.TenantId.ToString();
-                    if (!string.IsNullOrEmpty(tenantIdString))
-                    {
-                        tenantEntity.SetTenantId(tenantIdString);
-                    }
-                }
+                // NOTE: Tenant ID setting is handled by TenantInterceptor using ICurrentTenantService
+                // Removed duplicate logic here to avoid conflicts with string-based tenant IDs
+                // if (entry.Entity is ITenantAware tenantEntity)
+                // {
+                //     var tenantIdString = _tenantService.TenantId == Guid.Empty ? null : _tenantService.TenantId.ToString();
+                //     if (!string.IsNullOrEmpty(tenantIdString))
+                //     {
+                //         tenantEntity.SetTenantId(tenantIdString);
+                //     }
+                // }
             }
             else if (entry.State == EntityState.Modified)
             {
