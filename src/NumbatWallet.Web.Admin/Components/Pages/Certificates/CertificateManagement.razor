@@ -1,0 +1,518 @@
+@page "/certificates"
+@using Microsoft.AspNetCore.Authorization
+@using NumbatWallet.Domain.Entities
+@using NumbatWallet.Application.Interfaces
+@inject ITenantService TenantService
+@inject ILogger<CertificateManagement> Logger
+@inject IJSRuntime JSRuntime
+@attribute [Authorize(Policy = "AdminOnly")]
+
+<PageTitle>Certificate Management</PageTitle>
+
+<div class="container-fluid">
+    <div class="row mb-3">
+        <div class="col">
+            <h1>Certificate Management</h1>
+            <p class="text-muted">Manage X.509 certificates for mTLS authentication and secure communication</p>
+        </div>
+        <div class="col-auto">
+            <button class="btn btn-primary" @onclick="ShowUploadModal">
+                <i class="bi bi-upload"></i> Upload Certificate
+            </button>
+        </div>
+    </div>
+
+    @if (!string.IsNullOrEmpty(AlertMessage))
+    {
+        <div class="alert @AlertClass alert-dismissible fade show" role="alert">
+            @AlertMessage
+            <button type="button" class="btn-close" @onclick="() => AlertMessage = string.Empty"></button>
+        </div>
+    }
+
+    <!-- Certificate Statistics -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title">Active Certificates</h5>
+                    <h2 class="text-success">@ActiveCertificateCount</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title">Expiring Soon</h5>
+                    <h2 class="text-warning">@ExpiringCertificateCount</h2>
+                    <small class="text-muted">Within 30 days</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title">Revoked</h5>
+                    <h2 class="text-danger">@RevokedCertificateCount</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title">Trusted CAs</h5>
+                    <h2 class="text-info">@TrustedCACount</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabs for different certificate types -->
+    <ul class="nav nav-tabs mb-3" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link @(ActiveTab == "tenant" ? "active" : "")" @onclick="@(() => ActiveTab = "tenant")">
+                Tenant Certificates
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link @(ActiveTab == "ca" ? "active" : "")" @onclick="@(() => ActiveTab = "ca")">
+                Certificate Authorities
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link @(ActiveTab == "truststore" ? "active" : "")" @onclick="@(() => ActiveTab = "truststore")">
+                Trust Stores
+            </button>
+        </li>
+    </ul>
+
+    <!-- Tab Content -->
+    <div class="tab-content">
+        @if (ActiveTab == "tenant")
+        {
+            <div class="card">
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <input type="text" class="form-control" placeholder="Search by thumbprint or subject..."
+                                   @bind="SearchTerm" @bind:event="oninput" @onkeyup="SearchCertificates" />
+                        </div>
+                        <div class="col-md-2">
+                            <select class="form-select" @bind="PurposeFilter">
+                                <option value="">All Purposes</option>
+                                <option value="Authentication">Authentication</option>
+                                <option value="Signing">Signing</option>
+                                <option value="Encryption">Encryption</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <select class="form-select" @bind="StatusFilter">
+                                <option value="">All Status</option>
+                                <option value="Active">Active</option>
+                                <option value="Expired">Expired</option>
+                                <option value="Revoked">Revoked</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    @if (TenantCertificates == null)
+                    {
+                        <div class="text-center">
+                            <div class="spinner-border" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                        </div>
+                    }
+                    else if (!TenantCertificates.Any())
+                    {
+                        <div class="text-center text-muted">
+                            <i class="bi bi-shield-x" style="font-size: 3rem;"></i>
+                            <p>No certificates found</p>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Thumbprint</th>
+                                        <th>Subject</th>
+                                        <th>Issuer</th>
+                                        <th>Purpose</th>
+                                        <th>Valid Until</th>
+                                        <th>Status</th>
+                                        <th>Trust Level</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var cert in TenantCertificates)
+                                    {
+                                        <tr>
+                                            <td>
+                                                <code>@cert.Thumbprint.Substring(0, 16)...</code>
+                                                <button class="btn btn-sm btn-link" @onclick="() => CopyToClipboard(cert.Thumbprint)">
+                                                    <i class="bi bi-clipboard"></i>
+                                                </button>
+                                            </td>
+                                            <td>@GetCNFromDN(cert.SubjectDn)</td>
+                                            <td>@GetCNFromDN(cert.IssuerDn)</td>
+                                            <td>
+                                                <span class="badge bg-secondary">@cert.Purpose</span>
+                                            </td>
+                                            <td>
+                                                @if (IsExpiringSoon(cert.ValidTo))
+                                                {
+                                                    <span class="text-warning">
+                                                        <i class="bi bi-exclamation-triangle"></i>
+                                                        @cert.ValidTo.ToString("yyyy-MM-dd")
+                                                    </span>
+                                                }
+                                                else
+                                                {
+                                                    @cert.ValidTo.ToString("yyyy-MM-dd")
+                                                }
+                                            </td>
+                                            <td>
+                                                @if (cert.RevokedAt.HasValue)
+                                                {
+                                                    <span class="badge bg-danger">Revoked</span>
+                                                }
+                                                else if (cert.ValidTo < DateTimeOffset.UtcNow)
+                                                {
+                                                    <span class="badge bg-warning">Expired</span>
+                                                }
+                                                else if (cert.IsActive)
+                                                {
+                                                    <span class="badge bg-success">Active</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge bg-secondary">Inactive</span>
+                                                }
+                                            </td>
+                                            <td>
+                                                <span class="badge @GetTrustLevelBadgeClass(cert.TrustLevel)">
+                                                    @cert.TrustLevel
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <div class="btn-group btn-group-sm">
+                                                    <button class="btn btn-outline-primary" @onclick="() => ViewCertificateDetails(cert)"
+                                                            title="View Details">
+                                                        <i class="bi bi-eye"></i>
+                                                    </button>
+                                                    @if (!cert.RevokedAt.HasValue && cert.IsActive)
+                                                    {
+                                                        <button class="btn btn-outline-warning" @onclick="() => RevokeCertificate(cert)"
+                                                                title="Revoke">
+                                                            <i class="bi bi-x-circle"></i>
+                                                        </button>
+                                                    }
+                                                    <button class="btn btn-outline-info" @onclick="() => ValidateCertificate(cert)"
+                                                            title="Validate">
+                                                        <i class="bi bi-shield-check"></i>
+                                                    </button>
+                                                    <button class="btn btn-outline-danger" @onclick="() => DeleteCertificate(cert)"
+                                                            title="Delete">
+                                                        <i class="bi bi-trash"></i>
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+        else if (ActiveTab == "ca")
+        {
+            <div class="card">
+                <div class="card-body">
+                    <h5>Certificate Authorities</h5>
+                    <!-- CA management UI -->
+                    <p class="text-muted">Manage trusted certificate authorities for chain validation</p>
+                </div>
+            </div>
+        }
+        else if (ActiveTab == "truststore")
+        {
+            <div class="card">
+                <div class="card-body">
+                    <h5>Trust Stores</h5>
+                    <!-- Trust store management UI -->
+                    <p class="text-muted">Configure trust relationships and revocation lists</p>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+<!-- Upload Certificate Modal -->
+<div class="modal fade @(ShowUpload ? "show d-block" : "")" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Upload Certificate</h5>
+                <button type="button" class="btn-close" @onclick="() => ShowUpload = false"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label">Certificate Type</label>
+                    <select class="form-select" @bind="UploadType">
+                        <option value="tenant">Tenant Certificate</option>
+                        <option value="ca">Certificate Authority</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Certificate File (.cer, .crt, .pem)</label>
+                    <InputFile class="form-control" OnChange="@HandleFileSelected" accept=".cer,.crt,.pem,.pfx,.p12" />
+                </div>
+                @if (UploadType == "tenant")
+                {
+                    <div class="mb-3">
+                        <label class="form-label">Certificate Purpose</label>
+                        <select class="form-select" @bind="SelectedPurpose">
+                            <option value="@CertificatePurpose.Authentication">Authentication</option>
+                            <option value="@CertificatePurpose.Signing">Signing</option>
+                            <option value="@CertificatePurpose.Encryption">Encryption</option>
+                            <option value="@CertificatePurpose.All">All Purposes</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Trust Level</label>
+                        <select class="form-select" @bind="SelectedTrustLevel">
+                            <option value="@CertificateTrustLevel.Low">Low</option>
+                            <option value="@CertificateTrustLevel.Medium">Medium</option>
+                            <option value="@CertificateTrustLevel.High">High</option>
+                            <option value="@CertificateTrustLevel.Full">Full</option>
+                        </select>
+                    </div>
+                }
+                @if (CertificatePreview != null)
+                {
+                    <div class="alert alert-info">
+                        <h6>Certificate Preview</h6>
+                        <dl class="row">
+                            <dt class="col-sm-3">Subject:</dt>
+                            <dd class="col-sm-9">@CertificatePreview.Subject</dd>
+                            <dt class="col-sm-3">Issuer:</dt>
+                            <dd class="col-sm-9">@CertificatePreview.Issuer</dd>
+                            <dt class="col-sm-3">Thumbprint:</dt>
+                            <dd class="col-sm-9"><code>@CertificatePreview.Thumbprint</code></dd>
+                            <dt class="col-sm-3">Valid From:</dt>
+                            <dd class="col-sm-9">@CertificatePreview.NotBefore</dd>
+                            <dt class="col-sm-3">Valid To:</dt>
+                            <dd class="col-sm-9">@CertificatePreview.NotAfter</dd>
+                        </dl>
+                    </div>
+                }
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" @onclick="() => ShowUpload = false">Cancel</button>
+                <button type="button" class="btn btn-primary" @onclick="UploadCertificate"
+                        disabled="@(CertificatePreview == null || IsUploading)">
+                    @if (IsUploading)
+                    {
+                        <span class="spinner-border spinner-border-sm me-2"></span>
+                    }
+                    Upload Certificate
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private string ActiveTab = "tenant";
+    private string SearchTerm = "";
+    private string PurposeFilter = "";
+    private string StatusFilter = "";
+    private string AlertMessage = "";
+    private string AlertClass = "alert-info";
+
+    private bool ShowUpload = false;
+    private bool IsUploading = false;
+    private string UploadType = "tenant";
+    private CertificatePurpose SelectedPurpose = CertificatePurpose.Authentication;
+    private CertificateTrustLevel SelectedTrustLevel = CertificateTrustLevel.Low;
+
+    private List<TenantCertificate>? TenantCertificates;
+    private CertificatePreviewDto? CertificatePreview;
+    private IBrowserFile? SelectedFile;
+
+    private int ActiveCertificateCount = 0;
+    private int ExpiringCertificateCount = 0;
+    private int RevokedCertificateCount = 0;
+    private int TrustedCACount = 0;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadCertificates();
+        await LoadStatistics();
+    }
+
+    private async Task LoadCertificates()
+    {
+        try
+        {
+            // TODO: Load certificates from service
+            TenantCertificates = new List<TenantCertificate>();
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Failed to load certificates");
+            ShowAlert("Failed to load certificates", "alert-danger");
+        }
+    }
+
+    private async Task LoadStatistics()
+    {
+        // TODO: Load statistics from service
+        ActiveCertificateCount = 5;
+        ExpiringCertificateCount = 2;
+        RevokedCertificateCount = 1;
+        TrustedCACount = 3;
+    }
+
+    private void ShowUploadModal()
+    {
+        ShowUpload = true;
+        CertificatePreview = null;
+        SelectedFile = null;
+    }
+
+    private async Task HandleFileSelected(InputFileChangeEventArgs e)
+    {
+        try
+        {
+            SelectedFile = e.File;
+
+            // Read certificate file
+            using var stream = SelectedFile.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024); // 10MB max
+            using var ms = new MemoryStream();
+            await stream.CopyToAsync(ms);
+            var certBytes = ms.ToArray();
+
+            // Parse certificate for preview
+            var certData = Convert.ToBase64String(certBytes);
+            // TODO: Parse X.509 certificate and create preview
+
+            CertificatePreview = new CertificatePreviewDto
+            {
+                Subject = "CN=Example Certificate",
+                Issuer = "CN=Example CA",
+                Thumbprint = "1234567890ABCDEF",
+                NotBefore = DateTimeOffset.UtcNow.AddDays(-30).ToString("yyyy-MM-dd"),
+                NotAfter = DateTimeOffset.UtcNow.AddDays(365).ToString("yyyy-MM-dd")
+            };
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Failed to read certificate file");
+            ShowAlert("Failed to read certificate file", "alert-danger");
+        }
+    }
+
+    private async Task UploadCertificate()
+    {
+        if (SelectedFile == null || CertificatePreview == null)
+            return;
+
+        IsUploading = true;
+        try
+        {
+            // TODO: Upload certificate to service
+            await Task.Delay(1000); // Simulate upload
+
+            ShowAlert("Certificate uploaded successfully", "alert-success");
+            ShowUpload = false;
+            await LoadCertificates();
+            await LoadStatistics();
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Failed to upload certificate");
+            ShowAlert("Failed to upload certificate", "alert-danger");
+        }
+        finally
+        {
+            IsUploading = false;
+        }
+    }
+
+    private async Task SearchCertificates()
+    {
+        await LoadCertificates();
+        // TODO: Apply filters
+    }
+
+    private async Task ViewCertificateDetails(TenantCertificate cert)
+    {
+        // TODO: Show certificate details modal
+    }
+
+    private async Task RevokeCertificate(TenantCertificate cert)
+    {
+        // TODO: Revoke certificate
+    }
+
+    private async Task ValidateCertificate(TenantCertificate cert)
+    {
+        // TODO: Validate certificate chain and revocation status
+    }
+
+    private async Task DeleteCertificate(TenantCertificate cert)
+    {
+        // TODO: Delete certificate
+    }
+
+    private async Task CopyToClipboard(string text)
+    {
+        await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", text);
+        ShowAlert("Copied to clipboard", "alert-info");
+    }
+
+    private string GetCNFromDN(string dn)
+    {
+        // Extract CN from DN string
+        var parts = dn.Split(',');
+        var cn = parts.FirstOrDefault(p => p.Trim().StartsWith("CN="));
+        return cn?.Replace("CN=", "").Trim() ?? dn;
+    }
+
+    private bool IsExpiringSoon(DateTimeOffset validTo)
+    {
+        return validTo < DateTimeOffset.UtcNow.AddDays(30);
+    }
+
+    private string GetTrustLevelBadgeClass(CertificateTrustLevel level)
+    {
+        return level switch
+        {
+            CertificateTrustLevel.Full => "bg-success",
+            CertificateTrustLevel.High => "bg-info",
+            CertificateTrustLevel.Medium => "bg-warning",
+            _ => "bg-secondary"
+        };
+    }
+
+    private void ShowAlert(string message, string cssClass)
+    {
+        AlertMessage = message;
+        AlertClass = cssClass;
+    }
+
+    private class CertificatePreviewDto
+    {
+        public string Subject { get; set; } = "";
+        public string Issuer { get; set; } = "";
+        public string Thumbprint { get; set; } = "";
+        public string NotBefore { get; set; } = "";
+        public string NotAfter { get; set; } = "";
+    }
+}

@@ -1,0 +1,77 @@
+name: PR Validation
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths:
+      - 'infrastructure/**'
+      - '.github/workflows/**'
+
+jobs:
+  validate-pr:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check file changes
+        id: changes
+        run: |
+          echo "### Changed Files" >> $GITHUB_STEP_SUMMARY
+          git diff --name-only origin/main...HEAD | while read file; do
+            echo "- $file" >> $GITHUB_STEP_SUMMARY
+          done
+
+      - name: Setup Azure CLI
+        uses: azure/setup-azd@v1
+
+      - name: Install Bicep
+        run: |
+          az bicep install
+          az bicep version
+
+      - name: Validate Bicep formatting
+        run: |
+          # Check all Bicep files are properly formatted
+          find infrastructure/bicep -name "*.bicep" -type f | while read file; do
+            echo "Checking format: $file"
+            az bicep format --file "$file" --insert-final-newline
+          done
+
+          if ! git diff --exit-code; then
+            echo "::error::Bicep files need formatting. Please run 'az bicep format'"
+            exit 1
+          fi
+
+      - name: Lint Bicep files
+        run: |
+          # Lint all Bicep files
+          find infrastructure/bicep -name "*.bicep" -type f | while read file; do
+            echo "Linting: $file"
+            az bicep build --file "$file"
+          done
+
+      - name: Validate parameter files
+        run: |
+          # Validate all parameter JSON files
+          find infrastructure/bicep/parameters -name "*.json" -type f | while read file; do
+            echo "Validating JSON: $file"
+            python -m json.tool "$file" > /dev/null || exit 1
+          done
+
+      - name: Security pre-check
+        uses: bridgecrewio/checkov-action@master
+        with:
+          directory: infrastructure/bicep/
+          quiet: true
+          soft_fail: true
+          output_format: github_failed_only
+        continue-on-error: true
+
+      - name: Add PR labels
+        uses: actions/labeler@v4
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+        continue-on-error: true

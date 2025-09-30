@@ -1,0 +1,32 @@
+@if (IsLoading)
+{
+    <div class="spinner-container">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">@LoadingText</span>
+        </div>
+        @if (!string.IsNullOrEmpty(LoadingText))
+        {
+            <p class="loading-text mt-2">@LoadingText</p>
+        }
+    </div>
+}
+
+@code {
+    [Parameter] public bool IsLoading { get; set; }
+    [Parameter] public string LoadingText { get; set; } = "Loading...";
+}
+
+<style>
+    .spinner-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem;
+    }
+
+    .loading-text {
+        color: #6c757d;
+        font-size: 0.9rem;
+    }
+</style>

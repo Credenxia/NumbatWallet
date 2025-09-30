@@ -1,0 +1,43 @@
+# Labeler configuration for automatic PR labeling
+
+infrastructure:
+  - infrastructure/**/*
+  - '**/*.bicep'
+  - '**/*.bicepparam'
+
+ci-cd:
+  - .github/workflows/**/*
+  - .github/actions/**/*
+
+iac:
+  - infrastructure/bicep/**/*
+  - infrastructure/terraform/**/*
+  - infrastructure/scripts/**/*
+
+documentation:
+  - '**/*.md'
+  - docs/**/*
+  - README.md
+
+backend:
+  - src/NumbatWallet.Domain/**/*
+  - src/NumbatWallet.Application/**/*
+  - src/NumbatWallet.Infrastructure/**/*
+  - src/NumbatWallet.Web.Api/**/*
+
+admin:
+  - src/NumbatWallet.Web.Admin/**/*
+
+tests:
+  - src/Tests/**/*
+  - '**/*.Tests/**/*
+
+security:
+  - '**/security/**/*'
+  - '**/*security*'
+  - '**/*auth*'
+
+database:
+  - '**/*postgres*'
+  - '**/*sql*'
+  - '**/Migrations/**/*'

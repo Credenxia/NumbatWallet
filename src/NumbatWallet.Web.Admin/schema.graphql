@@ -1,0 +1,231 @@
+# Placeholder schema - will be updated when API is accessible
+# This matches the HotChocolate GraphQL schema from our API
+
+type Query {
+  # Credential queries
+  credentials: [Credential!]!
+  credential(id: ID!): Credential
+
+  # Wallet queries
+  wallets: [Wallet!]!
+  wallet(id: ID!): Wallet
+
+  # User queries
+  users: [User!]!
+  user(id: ID!): User
+
+  # Dashboard stats
+  dashboardStats: DashboardStats!
+
+  # Audit logs
+  auditLogs(first: Int, after: String): AuditLogConnection!
+}
+
+type Mutation {
+  # Credential mutations
+  createCredential(input: CreateCredentialInput!): CreateCredentialPayload!
+  updateCredential(input: UpdateCredentialInput!): UpdateCredentialPayload!
+  deleteCredential(input: DeleteCredentialInput!): DeleteCredentialPayload!
+
+  # Wallet mutations
+  createWallet(input: CreateWalletInput!): CreateWalletPayload!
+  updateWallet(input: UpdateWalletInput!): UpdateWalletPayload!
+  deleteWallet(input: DeleteWalletInput!): DeleteWalletPayload!
+
+  # User mutations
+  createUser(input: CreateUserInput!): CreateUserPayload!
+  updateUser(input: UpdateUserInput!): UpdateUserPayload!
+  deleteUser(input: DeleteUserInput!): DeleteUserPayload!
+}
+
+type Subscription {
+  # Real-time notifications
+  onNotification: Notification!
+
+  # Dashboard updates
+  onDashboardUpdate: DashboardStats!
+}
+
+# Core types
+type Credential {
+  id: ID!
+  type: String!
+  status: String!
+  issuedAt: DateTime!
+  expiresAt: DateTime
+  holder: User!
+}
+
+type Wallet {
+  id: ID!
+  name: String!
+  type: String!
+  status: String!
+  createdAt: DateTime!
+  owner: User!
+  credentials: [Credential!]!
+}
+
+type User {
+  id: ID!
+  email: String!
+  firstName: String!
+  lastName: String!
+  role: String!
+  status: String!
+  createdAt: DateTime!
+  wallets: [Wallet!]!
+}
+
+type DashboardStats {
+  totalUsers: Int!
+  totalWallets: Int!
+  totalCredentials: Int!
+  activeUsers: Int!
+  recentActivity: [Activity!]!
+}
+
+type Activity {
+  id: ID!
+  type: String!
+  description: String!
+  timestamp: DateTime!
+  user: User
+}
+
+type Notification {
+  id: ID!
+  type: String!
+  message: String!
+  timestamp: DateTime!
+  severity: String!
+}
+
+type AuditLog {
+  id: ID!
+  action: String!
+  entity: String!
+  entityId: String!
+  userId: String!
+  timestamp: DateTime!
+  details: String
+}
+
+type AuditLogConnection {
+  nodes: [AuditLog!]!
+  pageInfo: PageInfo!
+  totalCount: Int!
+}
+
+type PageInfo {
+  hasNextPage: Boolean!
+  hasPreviousPage: Boolean!
+  startCursor: String
+  endCursor: String
+}
+
+# Input types
+input CreateCredentialInput {
+  type: String!
+  walletId: ID!
+  data: String!
+}
+
+input UpdateCredentialInput {
+  id: ID!
+  status: String
+  data: String
+}
+
+input DeleteCredentialInput {
+  id: ID!
+}
+
+input CreateWalletInput {
+  name: String!
+  type: String!
+  userId: ID!
+}
+
+input UpdateWalletInput {
+  id: ID!
+  name: String
+  status: String
+}
+
+input DeleteWalletInput {
+  id: ID!
+}
+
+input CreateUserInput {
+  email: String!
+  firstName: String!
+  lastName: String!
+  role: String!
+}
+
+input UpdateUserInput {
+  id: ID!
+  email: String
+  firstName: String
+  lastName: String
+  role: String
+  status: String
+}
+
+input DeleteUserInput {
+  id: ID!
+}
+
+# Payload types
+type CreateCredentialPayload {
+  credential: Credential
+  errors: [Error!]
+}
+
+type UpdateCredentialPayload {
+  credential: Credential
+  errors: [Error!]
+}
+
+type DeleteCredentialPayload {
+  success: Boolean!
+  errors: [Error!]
+}
+
+type CreateWalletPayload {
+  wallet: Wallet
+  errors: [Error!]
+}
+
+type UpdateWalletPayload {
+  wallet: Wallet
+  errors: [Error!]
+}
+
+type DeleteWalletPayload {
+  success: Boolean!
+  errors: [Error!]
+}
+
+type CreateUserPayload {
+  user: User
+  errors: [Error!]
+}
+
+type UpdateUserPayload {
+  user: User
+  errors: [Error!]
+}
+
+type DeleteUserPayload {
+  success: Boolean!
+  errors: [Error!]
+}
+
+type Error {
+  message: String!
+  code: String!
+}
+
+scalar DateTime

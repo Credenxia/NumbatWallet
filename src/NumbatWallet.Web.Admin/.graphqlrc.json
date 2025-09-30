@@ -1,0 +1,22 @@
+{
+  "schema": "schema.graphql",
+  "documents": "**/*.graphql",
+  "extensions": {
+    "strawberryShake": {
+      "name": "NumbatWalletClient",
+      "namespace": "NumbatWallet.Web.Admin.GraphQL",
+      "url": "http://api/graphql",
+      "dependencyInjection": true,
+      "records": {
+        "inputs": false,
+        "entities": false
+      },
+      "transportProfiles": [
+        {
+          "default": "Http",
+          "subscription": "WebSocket"
+        }
+      ]
+    }
+  }
+}

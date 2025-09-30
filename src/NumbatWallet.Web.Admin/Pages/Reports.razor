@@ -1,0 +1,661 @@
+@page "/reports"
+@page "/reports/generate"
+@using Microsoft.JSInterop
+@inject NavigationManager Navigation
+@inject IJSRuntime JSRuntime
+
+<h3>Reporting & Analytics</h3>
+
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col">
+            <h1 class="h2">System Reports & Analytics</h1>
+            <p class="text-muted">Generate comprehensive reports and analyze system metrics</p>
+        </div>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <i class="bi bi-wallet2 display-4 text-primary"></i>
+                    <h3 class="mt-2">@totalWallets.ToString("N0")</h3>
+                    <p class="text-muted mb-0">Total Wallets</p>
+                    <small class="text-success">+@newWalletsThisMonth% this month</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <i class="bi bi-award display-4 text-info"></i>
+                    <h3 class="mt-2">@totalCredentials.ToString("N0")</h3>
+                    <p class="text-muted mb-0">Credentials Issued</p>
+                    <small class="text-success">+@credentialsGrowth.ToString("N0") today</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <i class="bi bi-shield-check display-4 text-success"></i>
+                    <h3 class="mt-2">@totalVerifications.ToString("N0")</h3>
+                    <p class="text-muted mb-0">Verifications</p>
+                    <small class="text-info">@verificationSuccessRate% success rate</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <i class="bi bi-people display-4 text-warning"></i>
+                    <h3 class="mt-2">@activeUsers.ToString("N0")</h3>
+                    <p class="text-muted mb-0">Active Users</p>
+                    <small class="text-muted">Last 30 days</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Report Generation -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Generate Report</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Report Type</label>
+                            <select class="form-select" @bind="selectedReportType">
+                                <option value="">Select a report type...</option>
+                                <option value="usage">Usage Statistics</option>
+                                <option value="credentials">Credential Analytics</option>
+                                <option value="security">Security Audit</option>
+                                <option value="performance">Performance Metrics</option>
+                                <option value="compliance">Compliance Report</option>
+                                <option value="financial">Financial Summary</option>
+                                <option value="tenant">Tenant Activity</option>
+                                <option value="custom">Custom Report</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Date Range</label>
+                            <select class="form-select" @bind="dateRange">
+                                <option value="today">Today</option>
+                                <option value="yesterday">Yesterday</option>
+                                <option value="week">Last 7 Days</option>
+                                <option value="month">Last 30 Days</option>
+                                <option value="quarter">Last Quarter</option>
+                                <option value="year">Last Year</option>
+                                <option value="custom">Custom Range</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    @if (dateRange == "custom")
+                    {
+                        <div class="row g-3 mt-2">
+                            <div class="col-md-6">
+                                <label class="form-label">Start Date</label>
+                                <input type="date" class="form-control" @bind="startDate" />
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">End Date</label>
+                                <input type="date" class="form-control" @bind="endDate" />
+                            </div>
+                        </div>
+                    }
+
+                    <div class="row g-3 mt-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Format</label>
+                            <select class="form-select" @bind="exportFormat">
+                                <option value="pdf">PDF</option>
+                                <option value="excel">Excel</option>
+                                <option value="csv">CSV</option>
+                                <option value="json">JSON</option>
+                                <option value="html">HTML</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Delivery Method</label>
+                            <select class="form-select" @bind="deliveryMethod">
+                                <option value="download">Direct Download</option>
+                                <option value="email">Email</option>
+                                <option value="storage">Save to Storage</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    @if (deliveryMethod == "email")
+                    {
+                        <div class="mt-3">
+                            <label class="form-label">Email Recipients</label>
+                            <input type="email" class="form-control" @bind="emailRecipients"
+                                   placeholder="email1@example.com, email2@example.com" />
+                        </div>
+                    }
+
+                    <div class="mt-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" @bind="includeCharts" id="includeChartsCheck">
+                            <label class="form-check-label" for="includeChartsCheck">
+                                Include charts and visualizations
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" @bind="includeRawData" id="includeRawDataCheck">
+                            <label class="form-check-label" for="includeRawDataCheck">
+                                Include raw data export
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="mt-4 d-flex gap-2">
+                        <button class="btn btn-primary" @onclick="GenerateReport"
+                                disabled="@(isGenerating || string.IsNullOrEmpty(selectedReportType))">
+                            @if (isGenerating)
+                            {
+                                <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                                <span>Generating...</span>
+                            }
+                            else
+                            {
+                                <i class="bi bi-file-earmark-text me-2"></i>
+                                <span>Generate Report</span>
+                            }
+                        </button>
+                        <button class="btn btn-outline-secondary" @onclick="ScheduleReport">
+                            <i class="bi bi-calendar-plus me-2"></i>
+                            Schedule
+                        </button>
+                        <button class="btn btn-outline-info" @onclick="PreviewReport">
+                            <i class="bi bi-eye me-2"></i>
+                            Preview
+                        </button>
+                    </div>
+
+                    @if (!string.IsNullOrEmpty(reportMessage))
+                    {
+                        <div class="alert @(reportSuccess ? "alert-success" : "alert-danger") mt-3" role="alert">
+                            @reportMessage
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Reports -->
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Recent Reports</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush">
+                        @foreach (var report in recentReports.Take(5))
+                        {
+                            <a href="javascript:void(0)" @onclick="() => DownloadReport(report.Id)"
+                               class="list-group-item list-group-item-action">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <div>
+                                        <h6 class="mb-1">@report.Name</h6>
+                                        <small class="text-muted">@report.Type</small>
+                                    </div>
+                                    <small class="text-muted">@report.GeneratedAt.ToString("MMM dd")</small>
+                                </div>
+                                <small class="text-muted">@report.Size • @report.Format.ToUpper()</small>
+                            </a>
+                        }
+                    </div>
+                </div>
+                <div class="card-footer text-center">
+                    <a href="javascript:void(0)" @onclick="ViewAllReports" class="text-decoration-none">
+                        View All Reports <i class="bi bi-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Analytics Dashboard -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Credential Issuance Trend</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="credentialTrendChart" height="200"></canvas>
+                    <div class="mt-3 d-flex justify-content-around">
+                        <div class="text-center">
+                            <h5 class="mb-0">@avgDailyIssuance</h5>
+                            <small class="text-muted">Avg Daily</small>
+                        </div>
+                        <div class="text-center">
+                            <h5 class="mb-0">@peakIssuanceDay</h5>
+                            <small class="text-muted">Peak Day</small>
+                        </div>
+                        <div class="text-center">
+                            <h5 class="mb-0">@issuanceGrowth%</h5>
+                            <small class="text-muted">Growth</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">System Performance</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="performanceChart" height="200"></canvas>
+                    <div class="mt-3">
+                        <div class="row g-2">
+                            <div class="col-6">
+                                <small class="text-muted">Avg Response Time</small>
+                                <h6>@avgResponseTime ms</h6>
+                            </div>
+                            <div class="col-6">
+                                <small class="text-muted">Error Rate</small>
+                                <h6 class="@(errorRate < 1 ? "text-success" : "text-danger")">@errorRate%</h6>
+                            </div>
+                            <div class="col-6">
+                                <small class="text-muted">Uptime</small>
+                                <h6 class="text-success">@uptime%</h6>
+                            </div>
+                            <div class="col-6">
+                                <small class="text-muted">API Calls</small>
+                                <h6>@FormatNumber(totalApiCalls)</h6>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Credential Types Distribution -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Credential Types</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="credentialTypesChart" height="250"></canvas>
+                    <div class="mt-3">
+                        @foreach (var type in topCredentialTypes)
+                        {
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="text-muted">@type.Name</span>
+                                <span class="badge bg-primary">@type.Count</span>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Top Tenants</h5>
+                </div>
+                <div class="card-body">
+                    <div class="list-group list-group-flush">
+                        @foreach (var tenant in topTenants)
+                        {
+                            <div class="list-group-item px-0">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="mb-0">@tenant.Name</h6>
+                                        <small class="text-muted">@tenant.CredentialCount credentials</small>
+                                    </div>
+                                    <span class="badge bg-info">@tenant.UserCount users</span>
+                                </div>
+                                <div class="progress mt-2" style="height: 5px;">
+                                    <div class="progress-bar" style="width: @(tenant.ActivityPercent)%"></div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Security Metrics</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between mb-1">
+                            <span>Failed Authentications</span>
+                            <span class="text-danger">@failedAuthCount</span>
+                        </div>
+                        <div class="progress" style="height: 10px;">
+                            <div class="progress-bar bg-danger" style="width: @(failedAuthPercent)%"></div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between mb-1">
+                            <span>Revoked Credentials</span>
+                            <span class="text-warning">@revokedCredentials</span>
+                        </div>
+                        <div class="progress" style="height: 10px;">
+                            <div class="progress-bar bg-warning" style="width: @(revokedPercent)%"></div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between mb-1">
+                            <span>Expired Credentials</span>
+                            <span class="text-info">@expiredCredentials</span>
+                        </div>
+                        <div class="progress" style="height: 10px;">
+                            <div class="progress-bar bg-info" style="width: @(expiredPercent)%"></div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between mb-1">
+                            <span>Suspicious Activities</span>
+                            <span class="text-danger">@suspiciousActivities</span>
+                        </div>
+                    </div>
+                    <button class="btn btn-sm btn-outline-danger w-100" @onclick="GenerateSecurityReport">
+                        <i class="bi bi-shield-exclamation me-2"></i>
+                        Generate Security Report
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scheduled Reports -->
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Scheduled Reports</h5>
+            <button class="btn btn-sm btn-primary" @onclick="CreateSchedule">
+                <i class="bi bi-plus-circle me-1"></i> New Schedule
+            </button>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Report Name</th>
+                            <th>Type</th>
+                            <th>Schedule</th>
+                            <th>Next Run</th>
+                            <th>Recipients</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var schedule in scheduledReports)
+                        {
+                            <tr>
+                                <td>@schedule.Name</td>
+                                <td><span class="badge bg-info">@schedule.Type</span></td>
+                                <td>@schedule.Frequency</td>
+                                <td>@schedule.NextRun.ToString("MMM dd, HH:mm")</td>
+                                <td>@schedule.RecipientCount recipients</td>
+                                <td>
+                                    @if (schedule.IsActive)
+                                    {
+                                        <span class="badge bg-success">Active</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary">Paused</span>
+                                    }
+                                </td>
+                                <td>
+                                    <div class="btn-group btn-group-sm" role="group">
+                                        <button class="btn btn-outline-primary" @onclick="() => EditSchedule(schedule.Id)"
+                                                title="Edit">
+                                            <i class="bi bi-pencil"></i>
+                                        </button>
+                                        <button class="btn btn-outline-warning" @onclick="() => ToggleSchedule(schedule.Id)"
+                                                title="@(schedule.IsActive ? "Pause" : "Resume")">
+                                            <i class="bi @(schedule.IsActive ? "bi-pause" : "bi-play")"></i>
+                                        </button>
+                                        <button class="btn btn-outline-danger" @onclick="() => DeleteSchedule(schedule.Id)"
+                                                title="Delete">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+#pragma warning disable CS0414 // Fields are used by Razor bindings
+    // Stats
+    private int totalWallets = 15432;
+    private int newWalletsThisMonth = 12;
+    private int totalCredentials = 48765;
+    private int credentialsGrowth = 234;
+    private int totalVerifications = 125890;
+    private int verificationSuccessRate = 98;
+    private int activeUsers = 8923;
+
+    // Report generation
+    private string selectedReportType = "";
+    private string dateRange = "month";
+    private DateTime startDate = DateTime.Now.AddMonths(-1);
+    private DateTime endDate = DateTime.Now;
+    private string exportFormat = "pdf";
+    private string deliveryMethod = "download";
+    private string emailRecipients = "";
+    private bool includeCharts = true;
+    private bool includeRawData = false;
+    private bool isGenerating = false;
+    private string reportMessage = "";
+    private bool reportSuccess = false;
+
+    // Analytics
+    private int avgDailyIssuance = 1625;
+    private string peakIssuanceDay = "Monday";
+    private int issuanceGrowth = 15;
+    private int avgResponseTime = 125;
+    private decimal errorRate = 0.3m;
+    private decimal uptime = 99.97m;
+    private long totalApiCalls = 5678901;
+
+    // Security metrics
+    private int failedAuthCount = 234;
+    private int failedAuthPercent = 5;
+    private int revokedCredentials = 89;
+    private int revokedPercent = 2;
+    private int expiredCredentials = 456;
+    private int expiredPercent = 10;
+    private int suspiciousActivities = 12;
+
+    private List<RecentReport> recentReports = new();
+    private List<CredentialType> topCredentialTypes = new();
+    private List<TenantActivity> topTenants = new();
+    private List<ScheduledReport> scheduledReports = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        LoadMockData();
+        await Task.CompletedTask;
+    }
+
+    private void LoadMockData()
+    {
+        recentReports = new List<RecentReport>
+        {
+            new() { Id = "1", Name = "Monthly Usage Report", Type = "Usage", GeneratedAt = DateTime.Now.AddDays(-1), Size = "2.5 MB", Format = "pdf" },
+            new() { Id = "2", Name = "Security Audit Q4", Type = "Security", GeneratedAt = DateTime.Now.AddDays(-3), Size = "1.8 MB", Format = "excel" },
+            new() { Id = "3", Name = "Credential Analytics", Type = "Analytics", GeneratedAt = DateTime.Now.AddDays(-5), Size = "3.2 MB", Format = "pdf" },
+            new() { Id = "4", Name = "Compliance Report", Type = "Compliance", GeneratedAt = DateTime.Now.AddDays(-7), Size = "4.1 MB", Format = "pdf" },
+            new() { Id = "5", Name = "Performance Metrics", Type = "Performance", GeneratedAt = DateTime.Now.AddDays(-10), Size = "890 KB", Format = "csv" }
+        };
+
+        topCredentialTypes = new List<CredentialType>
+        {
+            new() { Name = "Driver License", Count = 12456 },
+            new() { Name = "Proof of Age", Count = 8923 },
+            new() { Name = "Student ID", Count = 6234 },
+            new() { Name = "Work Permit", Count = 3456 }
+        };
+
+        topTenants = new List<TenantActivity>
+        {
+            new() { Name = "ServiceWA", CredentialCount = 15234, UserCount = 4567, ActivityPercent = 95 },
+            new() { Name = "Department of Transport", CredentialCount = 12890, UserCount = 3456, ActivityPercent = 85 },
+            new() { Name = "Education Department", CredentialCount = 8765, UserCount = 2345, ActivityPercent = 75 },
+            new() { Name = "Health Services", CredentialCount = 5432, UserCount = 1234, ActivityPercent = 65 }
+        };
+
+        scheduledReports = new List<ScheduledReport>
+        {
+            new() { Id = "1", Name = "Weekly Usage Summary", Type = "Usage", Frequency = "Weekly", NextRun = DateTime.Now.AddDays(3), RecipientCount = 5, IsActive = true },
+            new() { Id = "2", Name = "Monthly Security Audit", Type = "Security", Frequency = "Monthly", NextRun = DateTime.Now.AddDays(15), RecipientCount = 3, IsActive = true },
+            new() { Id = "3", Name = "Daily Performance", Type = "Performance", Frequency = "Daily", NextRun = DateTime.Now.AddHours(12), RecipientCount = 8, IsActive = false }
+        };
+    }
+
+    private async Task GenerateReport()
+    {
+        isGenerating = true;
+        reportMessage = "";
+        StateHasChanged();
+
+        await Task.Delay(2000); // Simulate generation
+
+        reportSuccess = true;
+        reportMessage = $"Report generated successfully! Report ID: RPT-{DateTime.Now.Ticks}";
+        isGenerating = false;
+
+        // Add to recent reports
+        recentReports.Insert(0, new RecentReport
+        {
+            Id = Guid.NewGuid().ToString(),
+            Name = $"{selectedReportType} Report",
+            Type = selectedReportType,
+            GeneratedAt = DateTime.Now,
+            Size = "1.5 MB",
+            Format = exportFormat
+        });
+
+        StateHasChanged();
+    }
+
+    private async Task ScheduleReport()
+    {
+        await JSRuntime.InvokeVoidAsync("alert", "Report scheduling dialog would open here");
+    }
+
+    private async Task PreviewReport()
+    {
+        await JSRuntime.InvokeVoidAsync("alert", "Report preview would open here");
+    }
+
+    private async Task DownloadReport(string reportId)
+    {
+        await JSRuntime.InvokeVoidAsync("alert", $"Downloading report {reportId}...");
+    }
+
+    private async Task ViewAllReports()
+    {
+        Navigation.NavigateTo("/reports/history");
+        await Task.CompletedTask;
+    }
+
+    private async Task GenerateSecurityReport()
+    {
+        selectedReportType = "security";
+        await GenerateReport();
+    }
+
+    private async Task CreateSchedule()
+    {
+        await JSRuntime.InvokeVoidAsync("alert", "Create schedule dialog would open here");
+    }
+
+    private async Task EditSchedule(string scheduleId)
+    {
+        await JSRuntime.InvokeVoidAsync("alert", $"Edit schedule {scheduleId}");
+    }
+
+    private void ToggleSchedule(string scheduleId)
+    {
+        var schedule = scheduledReports.FirstOrDefault(s => s.Id == scheduleId);
+        if (schedule != null)
+        {
+            schedule.IsActive = !schedule.IsActive;
+            StateHasChanged();
+        }
+    }
+
+    private async Task DeleteSchedule(string scheduleId)
+    {
+        if (await JSRuntime.InvokeAsync<bool>("confirm", "Are you sure you want to delete this schedule?"))
+        {
+            scheduledReports.RemoveAll(s => s.Id == scheduleId);
+            StateHasChanged();
+        }
+    }
+
+    private string FormatNumber(long number)
+    {
+        if (number >= 1_000_000)
+            return $"{number / 1_000_000.0:F1}M";
+        if (number >= 1_000)
+            return $"{number / 1_000.0:F1}K";
+        return number.ToString("N0");
+    }
+
+    public class RecentReport
+    {
+        public string Id { get; set; } = "";
+        public string Name { get; set; } = "";
+        public string Type { get; set; } = "";
+        public DateTime GeneratedAt { get; set; }
+        public string Size { get; set; } = "";
+        public string Format { get; set; } = "";
+    }
+
+    public class CredentialType
+    {
+        public string Name { get; set; } = "";
+        public int Count { get; set; }
+    }
+
+    public class TenantActivity
+    {
+        public string Name { get; set; } = "";
+        public int CredentialCount { get; set; }
+        public int UserCount { get; set; }
+        public int ActivityPercent { get; set; }
+    }
+
+    public class ScheduledReport
+    {
+        public string Id { get; set; } = "";
+        public string Name { get; set; } = "";
+        public string Type { get; set; } = "";
+        public string Frequency { get; set; } = "";
+        public DateTime NextRun { get; set; }
+        public int RecipientCount { get; set; }
+        public bool IsActive { get; set; }
+    }
+#pragma warning restore CS0414
+}

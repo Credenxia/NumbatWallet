@@ -1,0 +1,570 @@
+@page "/tenants"
+@using Microsoft.AspNetCore.Components.Authorization
+@using NumbatWallet.Web.Admin.Components.Common
+@using NumbatWallet.Web.Admin.Services
+@inject IApiClient ApiClient
+@inject IAuthService AuthService
+@inject IJSRuntime JS
+@inject ILogger<Tenants> Logger
+
+<PageTitle>Tenants - NumbatWallet Admin</PageTitle>
+
+<div class="page-header">
+    <h1>Tenant Management</h1>
+    <div class="page-actions">
+        <button class="btn btn-secondary" @onclick="ExportTenants">
+            <i class="bi bi-download"></i> Export
+        </button>
+        <button class="btn btn-primary" @onclick="OpenCreateModal">
+            <i class="bi bi-plus-circle"></i> New Tenant
+        </button>
+    </div>
+</div>
+
+<AuthorizeView>
+    <Authorized>
+        @if (IsLoading)
+        {
+            <div class="loading-container">
+                <LoadingSpinner IsLoading="true" LoadingText="Loading tenants..." />
+            </div>
+        }
+        else if (ErrorMessage != null)
+        {
+            <div class="alert alert-danger">
+                <i class="bi bi-exclamation-triangle"></i>
+                <strong>Error:</strong> @ErrorMessage
+            </div>
+        }
+        else
+        {
+            <!-- Filter Bar -->
+            <div class="filter-bar">
+                <div class="search-box">
+                    <i class="bi bi-search"></i>
+                    <input type="text" @bind="SearchTerm" @oninput="@(async (e) => await OnSearchChanged(e))"
+                           placeholder="Search tenants..." class="form-control" />
+                </div>
+                <div class="filter-group">
+                    <select @bind="StatusFilter" @bind:event="onchange" @bind:after="OnFilterChanged" class="form-control">
+                        <option value="">All Status</option>
+                        <option value="Active">Active</option>
+                        <option value="Suspended">Suspended</option>
+                        <option value="Inactive">Inactive</option>
+                    </select>
+                    <select @bind="TypeFilter" @bind:event="onchange" @bind:after="OnFilterChanged" class="form-control">
+                        <option value="">All Types</option>
+                        <option value="Government">Government</option>
+                        <option value="Healthcare">Healthcare</option>
+                        <option value="Education">Education</option>
+                        <option value="Enterprise">Enterprise</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Tenants Table -->
+            <div class="data-table">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Organization</th>
+                            <th>Type</th>
+                            <th>Status</th>
+                            <th>Users</th>
+                            <th>Wallets</th>
+                            <th>Created</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var tenant in FilteredTenants)
+                        {
+                            <tr>
+                                <td>
+                                    <div class="tenant-info">
+                                        <strong>@tenant.Name</strong>
+                                        <small class="text-muted d-block">@tenant.TenantId</small>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="badge badge-info">@tenant.Type</span>
+                                </td>
+                                <td>
+                                    @if (tenant.Status == "Active")
+                                    {
+                                        <span class="badge badge-success">Active</span>
+                                    }
+                                    else if (tenant.Status == "Suspended")
+                                    {
+                                        <span class="badge badge-warning">Suspended</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge badge-secondary">Inactive</span>
+                                    }
+                                </td>
+                                <td>@tenant.UserCount</td>
+                                <td>@tenant.WalletCount</td>
+                                <td>@tenant.CreatedAt.ToString("MMM d, yyyy")</td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button class="btn-icon" title="View Details" @onclick="() => ViewTenant(tenant)">
+                                            <i class="bi bi-eye"></i>
+                                        </button>
+                                        <button class="btn-icon" title="Edit" @onclick="() => EditTenant(tenant)">
+                                            <i class="bi bi-pencil"></i>
+                                        </button>
+                                        <button class="btn-icon" title="Settings" @onclick="() => ConfigureTenant(tenant)">
+                                            <i class="bi bi-gear"></i>
+                                        </button>
+                                        @if (tenant.Status == "Active")
+                                        {
+                                            <button class="btn-icon text-warning" title="Suspend" @onclick="() => SuspendTenant(tenant)">
+                                                <i class="bi bi-pause-circle"></i>
+                                            </button>
+                                        }
+                                        else
+                                        {
+                                            <button class="btn-icon text-success" title="Activate" @onclick="() => ActivateTenant(tenant)">
+                                                <i class="bi bi-play-circle"></i>
+                                            </button>
+                                        }
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            <div class="pagination-container">
+                <div class="pagination-info">
+                    Showing @((CurrentPage - 1) * PageSize + 1) to @Math.Min(CurrentPage * PageSize, TotalCount) of @TotalCount tenants
+                </div>
+                <nav aria-label="Tenants pagination">
+                    <ul class="pagination">
+                        <li class="page-item @(CurrentPage == 1 ? "disabled" : "")">
+                            <button class="page-link" @onclick="() => ChangePage(CurrentPage - 1)" disabled="@(CurrentPage == 1)">
+                                Previous
+                            </button>
+                        </li>
+                        @for (int i = 1; i <= TotalPages; i++)
+                        {
+                            var pageNum = i;
+                            <li class="page-item @(CurrentPage == pageNum ? "active" : "")">
+                                <button class="page-link" @onclick="() => ChangePage(pageNum)">
+                                    @pageNum
+                                </button>
+                            </li>
+                        }
+                        <li class="page-item @(CurrentPage == TotalPages ? "disabled" : "")">
+                            <button class="page-link" @onclick="() => ChangePage(CurrentPage + 1)" disabled="@(CurrentPage == TotalPages)">
+                                Next
+                            </button>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        }
+    </Authorized>
+    <NotAuthorized>
+        <div class="alert alert-warning">
+            <h4 class="alert-heading">Authentication Required</h4>
+            <p>You must be logged in to manage tenants.</p>
+            <hr>
+            <p class="mb-0">Please <a href="/login" class="alert-link">sign in</a> to continue.</p>
+        </div>
+    </NotAuthorized>
+</AuthorizeView>
+
+<!-- Create/Edit Modal -->
+@if (ShowModal)
+{
+    <div class="modal-backdrop" @onclick="CloseModal"></div>
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">@(IsEditMode ? "Edit Tenant" : "Create New Tenant")</h5>
+                <button type="button" class="btn-close" @onclick="CloseModal"></button>
+            </div>
+            <div class="modal-body">
+                <EditForm Model="CurrentTenant" OnValidSubmit="SaveTenant">
+                    <DataAnnotationsValidator />
+                    <ValidationSummary />
+
+                    <div class="form-group">
+                        <label class="form-label">Organization Name</label>
+                        <InputText @bind-Value="CurrentTenant.Name" class="form-control" />
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Type</label>
+                        <InputSelect @bind-Value="CurrentTenant.Type" class="form-control">
+                            <option value="">Select Type</option>
+                            <option value="Government">Government</option>
+                            <option value="Healthcare">Healthcare</option>
+                            <option value="Education">Education</option>
+                            <option value="Enterprise">Enterprise</option>
+                        </InputSelect>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Contact Email</label>
+                        <InputText @bind-Value="CurrentTenant.ContactEmail" class="form-control" type="email" />
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Contact Phone</label>
+                        <InputText @bind-Value="CurrentTenant.ContactPhone" class="form-control" type="tel" />
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Address</label>
+                        <InputTextArea @bind-Value="CurrentTenant.Address" class="form-control" rows="3" />
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" @onclick="CloseModal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">@(IsEditMode ? "Save Changes" : "Create Tenant")</button>
+                    </div>
+                </EditForm>
+            </div>
+        </div>
+    </div>
+}
+
+<style>
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+    }
+
+    .page-actions {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .filter-bar {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 1rem;
+        margin-bottom: 1.5rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .search-box {
+        position: relative;
+        flex: 1;
+        max-width: 400px;
+    }
+
+    .search-box i {
+        position: absolute;
+        left: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--text-muted);
+    }
+
+    .search-box input {
+        padding-left: 2.5rem;
+    }
+
+    .filter-group {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .tenant-info {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .btn-icon {
+        background: transparent;
+        border: none;
+        color: var(--text-secondary);
+        cursor: pointer;
+        padding: 0.25rem;
+        transition: color 0.3s;
+    }
+
+    .btn-icon:hover {
+        color: var(--accent);
+    }
+
+    .pagination-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 2rem;
+    }
+
+    .modal-backdrop {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 1040;
+    }
+
+    .modal-dialog {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 1050;
+        width: 90%;
+        max-width: 600px;
+    }
+
+    .modal-content {
+        background: var(--bg-card);
+        border-radius: 12px;
+        box-shadow: var(--shadow-xl);
+    }
+
+    .modal-header {
+        padding: 1.5rem;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .modal-body {
+        padding: 1.5rem;
+    }
+
+    .modal-footer {
+        padding: 1rem 1.5rem;
+        border-top: 1px solid var(--border);
+        display: flex;
+        justify-content: flex-end;
+        gap: 0.5rem;
+    }
+
+    .btn-close {
+        background: transparent;
+        border: none;
+        font-size: 1.5rem;
+        color: var(--text-muted);
+        cursor: pointer;
+    }
+</style>
+
+@code {
+    private bool IsLoading = true;
+    private string? ErrorMessage;
+    private List<TenantDto> TenantsList = new();
+    private List<TenantDto> FilteredTenants = new();
+
+    private string SearchTerm = "";
+    private string StatusFilter = "";
+    private string TypeFilter = "";
+
+    private int CurrentPage = 1;
+    private int PageSize = 10;
+    private int TotalCount = 0;
+    private int TotalPages => (int)Math.Ceiling((double)TotalCount / PageSize);
+
+    private bool ShowModal = false;
+    private bool IsEditMode = false;
+    private TenantDto CurrentTenant = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadTenants();
+    }
+
+    private async Task LoadTenants()
+    {
+        try
+        {
+            IsLoading = true;
+            ErrorMessage = null;
+
+            // Simulate API call - replace with actual API
+            await Task.Delay(500);
+
+            TenantsList = GenerateSampleTenants();
+            ApplyFilters();
+            TotalCount = FilteredTenants.Count;
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Failed to load tenants");
+            ErrorMessage = "Failed to load tenants. Please try again.";
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    private void ApplyFilters()
+    {
+        var filtered = TenantsList.AsEnumerable();
+
+        if (!string.IsNullOrWhiteSpace(SearchTerm))
+        {
+            filtered = filtered.Where(t =>
+                t.Name.Contains(SearchTerm, StringComparison.OrdinalIgnoreCase) ||
+                t.TenantId.Contains(SearchTerm, StringComparison.OrdinalIgnoreCase));
+        }
+
+        if (!string.IsNullOrWhiteSpace(StatusFilter))
+        {
+            filtered = filtered.Where(t => t.Status == StatusFilter);
+        }
+
+        if (!string.IsNullOrWhiteSpace(TypeFilter))
+        {
+            filtered = filtered.Where(t => t.Type == TypeFilter);
+        }
+
+        FilteredTenants = filtered
+            .Skip((CurrentPage - 1) * PageSize)
+            .Take(PageSize)
+            .ToList();
+    }
+
+    private async Task OnSearchChanged(ChangeEventArgs e)
+    {
+        SearchTerm = e.Value?.ToString() ?? "";
+        CurrentPage = 1;
+        ApplyFilters();
+    }
+
+    private async Task OnFilterChanged()
+    {
+        CurrentPage = 1;
+        ApplyFilters();
+        await Task.CompletedTask;
+    }
+
+    private void ChangePage(int page)
+    {
+        if (page >= 1 && page <= TotalPages)
+        {
+            CurrentPage = page;
+            ApplyFilters();
+        }
+    }
+
+    private void OpenCreateModal()
+    {
+        CurrentTenant = new TenantDto();
+        IsEditMode = false;
+        ShowModal = true;
+    }
+
+    private void EditTenant(TenantDto tenant)
+    {
+        CurrentTenant = new TenantDto
+        {
+            TenantId = tenant.TenantId,
+            Name = tenant.Name,
+            Type = tenant.Type,
+            Status = tenant.Status,
+            ContactEmail = tenant.ContactEmail,
+            ContactPhone = tenant.ContactPhone,
+            Address = tenant.Address
+        };
+        IsEditMode = true;
+        ShowModal = true;
+    }
+
+    private void CloseModal()
+    {
+        ShowModal = false;
+        CurrentTenant = new();
+    }
+
+    private async Task SaveTenant()
+    {
+        try
+        {
+            // Save tenant via API
+            await Task.Delay(500);
+
+            CloseModal();
+            await LoadTenants();
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Failed to save tenant");
+            ErrorMessage = "Failed to save tenant. Please try again.";
+        }
+    }
+
+    private async Task ViewTenant(TenantDto tenant)
+    {
+        // Navigate to tenant details
+        await JS.InvokeVoidAsync("console.log", "View tenant:", tenant.TenantId);
+    }
+
+    private async Task ConfigureTenant(TenantDto tenant)
+    {
+        // Open configuration modal
+        await JS.InvokeVoidAsync("console.log", "Configure tenant:", tenant.TenantId);
+    }
+
+    private async Task SuspendTenant(TenantDto tenant)
+    {
+        tenant.Status = "Suspended";
+        ApplyFilters();
+    }
+
+    private async Task ActivateTenant(TenantDto tenant)
+    {
+        tenant.Status = "Active";
+        ApplyFilters();
+    }
+
+    private async Task ExportTenants()
+    {
+        await JS.InvokeVoidAsync("console.log", "Exporting tenants...");
+    }
+
+    private List<TenantDto> GenerateSampleTenants()
+    {
+        return new List<TenantDto>
+        {
+            new() { TenantId = "wa-health", Name = "WA Department of Health", Type = "Government", Status = "Active", UserCount = 250, WalletCount = 180, CreatedAt = DateTime.Now.AddMonths(-6) },
+            new() { TenantId = "wa-transport", Name = "WA Department of Transport", Type = "Government", Status = "Active", UserCount = 450, WalletCount = 320, CreatedAt = DateTime.Now.AddMonths(-5) },
+            new() { TenantId = "curtin-uni", Name = "Curtin University", Type = "Education", Status = "Active", UserCount = 12000, WalletCount = 8500, CreatedAt = DateTime.Now.AddMonths(-4) },
+            new() { TenantId = "royal-perth", Name = "Royal Perth Hospital", Type = "Healthcare", Status = "Active", UserCount = 3200, WalletCount = 2800, CreatedAt = DateTime.Now.AddMonths(-3) },
+            new() { TenantId = "wa-police", Name = "WA Police Force", Type = "Government", Status = "Active", UserCount = 6500, WalletCount = 5200, CreatedAt = DateTime.Now.AddMonths(-2) },
+            new() { TenantId = "uwa", Name = "University of Western Australia", Type = "Education", Status = "Suspended", UserCount = 15000, WalletCount = 11000, CreatedAt = DateTime.Now.AddMonths(-1) }
+        };
+    }
+
+    private class TenantDto
+    {
+        public string TenantId { get; set; } = "";
+        public string Name { get; set; } = "";
+        public string Type { get; set; } = "";
+        public string Status { get; set; } = "Active";
+        public int UserCount { get; set; }
+        public int WalletCount { get; set; }
+        public DateTime CreatedAt { get; set; } = DateTime.Now;
+        public string ContactEmail { get; set; } = "";
+        public string ContactPhone { get; set; } = "";
+        public string Address { get; set; } = "";
+    }
+}

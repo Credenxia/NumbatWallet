@@ -1,0 +1,568 @@
+@page "/backup"
+@page "/system/backup"
+@using Microsoft.JSInterop
+@inject NavigationManager Navigation
+@inject IJSRuntime JSRuntime
+
+<h3>Backup & Restore</h3>
+
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col">
+            <h1 class="h2">System Backup & Restore</h1>
+            <p class="text-muted">Manage system backups and restore operations</p>
+        </div>
+    </div>
+
+    <!-- Backup Status Overview -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="card border-success">
+                <div class="card-body">
+                    <h6 class="card-title text-muted">Last Backup</h6>
+                    <h4 class="text-success">@lastBackupTime</h4>
+                    <small class="text-muted">@lastBackupSize</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-info">
+                <div class="card-body">
+                    <h6 class="card-title text-muted">Backup Schedule</h6>
+                    <h4 class="text-info">@backupSchedule</h4>
+                    <small class="text-muted">Next: @nextBackupTime</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-primary">
+                <div class="card-body">
+                    <h6 class="card-title text-muted">Total Backups</h6>
+                    <h4 class="text-primary">@totalBackups</h4>
+                    <small class="text-muted">@totalBackupSize total</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-warning">
+                <div class="card-body">
+                    <h6 class="card-title text-muted">Retention Period</h6>
+                    <h4 class="text-warning">@retentionDays days</h4>
+                    <small class="text-muted">@backupsToExpire expiring soon</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Quick Backup</h5>
+                </div>
+                <div class="card-body">
+                    <p>Create an immediate backup of the entire system.</p>
+
+                    <div class="mb-3">
+                        <label class="form-label">Backup Type</label>
+                        <select class="form-select" @bind="backupType">
+                            <option value="full">Full System Backup</option>
+                            <option value="database">Database Only</option>
+                            <option value="files">Files Only</option>
+                            <option value="config">Configuration Only</option>
+                            <option value="selective">Selective Backup</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Description (optional)</label>
+                        <input type="text" class="form-control" @bind="backupDescription"
+                               placeholder="e.g., Pre-upgrade backup" />
+                    </div>
+
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" @bind="encryptBackup" id="encryptCheck">
+                        <label class="form-check-label" for="encryptCheck">
+                            Encrypt backup
+                        </label>
+                    </div>
+
+                    <button class="btn btn-primary w-100" @onclick="CreateBackup" disabled="@isBackupRunning">
+                        @if (isBackupRunning)
+                        {
+                            <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                            <span>Creating backup... (@backupProgress%)</span>
+                        }
+                        else
+                        {
+                            <i class="bi bi-download me-2"></i>
+                            <span>Create Backup Now</span>
+                        }
+                    </button>
+
+                    @if (!string.IsNullOrEmpty(backupMessage))
+                    {
+                        <div class="alert @(backupSuccess ? "alert-success" : "alert-danger") mt-3" role="alert">
+                            @backupMessage
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Quick Restore</h5>
+                </div>
+                <div class="card-body">
+                    <p>Restore system from a previous backup.</p>
+
+                    <div class="mb-3">
+                        <label class="form-label">Select Backup</label>
+                        <select class="form-select" @bind="selectedBackupId">
+                            <option value="">Choose a backup...</option>
+                            @foreach (var backup in availableBackups)
+                            {
+                                <option value="@backup.Id">
+                                    @backup.Timestamp.ToString("yyyy-MM-dd HH:mm") - @backup.Type - @backup.Size
+                                </option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Restore Options</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" @bind="stopServicesBeforeRestore" id="stopServices">
+                            <label class="form-check-label" for="stopServices">
+                                Stop services before restore
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" @bind="createRestorePoint" id="restorePoint">
+                            <label class="form-check-label" for="restorePoint">
+                                Create restore point before proceeding
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" @bind="validateBackupIntegrity" id="validateBackup">
+                            <label class="form-check-label" for="validateBackup">
+                                Validate backup integrity first
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-warning" role="alert">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                        <strong>Warning:</strong> Restore will overwrite current data. Ensure you have a current backup.
+                    </div>
+
+                    <button class="btn btn-danger w-100" @onclick="RestoreBackup"
+                            disabled="@(isRestoreRunning || string.IsNullOrEmpty(selectedBackupId))">
+                        @if (isRestoreRunning)
+                        {
+                            <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                            <span>Restoring... (@restoreProgress%)</span>
+                        }
+                        else
+                        {
+                            <i class="bi bi-arrow-clockwise me-2"></i>
+                            <span>Restore System</span>
+                        }
+                    </button>
+
+                    @if (!string.IsNullOrEmpty(restoreMessage))
+                    {
+                        <div class="alert @(restoreSuccess ? "alert-success" : "alert-danger") mt-3" role="alert">
+                            @restoreMessage
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Backup History -->
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Backup History</h5>
+            <div>
+                <button class="btn btn-sm btn-outline-secondary" @onclick="RefreshBackupList">
+                    <i class="bi bi-arrow-clockwise"></i> Refresh
+                </button>
+                <button class="btn btn-sm btn-outline-primary ms-2" @onclick="ExportBackupHistory">
+                    <i class="bi bi-download"></i> Export
+                </button>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>
+                                <input class="form-check-input" type="checkbox" @bind="selectAllBackups" />
+                            </th>
+                            <th>Timestamp</th>
+                            <th>Type</th>
+                            <th>Size</th>
+                            <th>Status</th>
+                            <th>Description</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var backup in backupHistory)
+                        {
+                            <tr>
+                                <td>
+                                    <input class="form-check-input" type="checkbox"
+                                           checked="@backup.IsSelected"
+                                           @onchange="@(() => ToggleBackupSelection(backup.Id))" />
+                                </td>
+                                <td>@backup.Timestamp.ToString("yyyy-MM-dd HH:mm:ss")</td>
+                                <td>
+                                    <span class="badge bg-info">@backup.Type</span>
+                                </td>
+                                <td>@backup.Size</td>
+                                <td>
+                                    @if (backup.Status == "Completed")
+                                    {
+                                        <span class="badge bg-success">@backup.Status</span>
+                                    }
+                                    else if (backup.Status == "Failed")
+                                    {
+                                        <span class="badge bg-danger">@backup.Status</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-warning">@backup.Status</span>
+                                    }
+                                </td>
+                                <td>@backup.Description</td>
+                                <td>
+                                    <div class="btn-group btn-group-sm" role="group">
+                                        <button class="btn btn-outline-primary"
+                                                @onclick="@(() => DownloadBackup(backup.Id))"
+                                                title="Download">
+                                            <i class="bi bi-download"></i>
+                                        </button>
+                                        <button class="btn btn-outline-info"
+                                                @onclick="@(() => VerifyBackup(backup.Id))"
+                                                title="Verify">
+                                            <i class="bi bi-check-circle"></i>
+                                        </button>
+                                        <button class="btn btn-outline-danger"
+                                                @onclick="@(() => DeleteBackup(backup.Id))"
+                                                title="Delete">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            @if (selectedBackupCount > 0)
+            {
+                <div class="mt-3">
+                    <span class="text-muted">@selectedBackupCount backup(s) selected</span>
+                    <button class="btn btn-sm btn-danger ms-3" @onclick="DeleteSelectedBackups">
+                        Delete Selected
+                    </button>
+                    <button class="btn btn-sm btn-primary ms-2" @onclick="DownloadSelectedBackups">
+                        Download Selected
+                    </button>
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- Scheduled Backups -->
+    <div class="row g-3 mt-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Backup Schedule</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label">Frequency</label>
+                        <select class="form-select" @bind="scheduleFrequency">
+                            <option value="hourly">Hourly</option>
+                            <option value="daily">Daily</option>
+                            <option value="weekly">Weekly</option>
+                            <option value="monthly">Monthly</option>
+                            <option value="custom">Custom</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Time</label>
+                        <input type="time" class="form-control" @bind="scheduleTime" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Retention (days)</label>
+                        <input type="number" class="form-control" @bind="scheduleRetention" min="1" max="365" />
+                    </div>
+
+                    <button class="btn btn-primary" @onclick="UpdateSchedule">
+                        <i class="bi bi-save me-2"></i> Update Schedule
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Storage Settings</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label">Storage Location</label>
+                        <select class="form-select" @bind="storageLocation">
+                            <option value="local">Local Storage</option>
+                            <option value="azure-blob">Azure Blob Storage</option>
+                            <option value="aws-s3">AWS S3</option>
+                            <option value="network">Network Share</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Path/Container</label>
+                        <input type="text" class="form-control" @bind="storagePath"
+                               placeholder="e.g., /backups or container-name" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Max Storage Size (GB)</label>
+                        <input type="number" class="form-control" @bind="maxStorageSize" min="1" />
+                    </div>
+
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" @bind="enableCompression" id="compressionCheck">
+                        <label class="form-check-label" for="compressionCheck">
+                            Enable compression
+                        </label>
+                    </div>
+
+                    <button class="btn btn-primary" @onclick="UpdateStorageSettings">
+                        <i class="bi bi-save me-2"></i> Update Settings
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+#pragma warning disable CS0414 // Fields are used by Razor bindings
+    // Mock data
+    private string lastBackupTime = "2 hours ago";
+    private string lastBackupSize = "1.2 GB";
+    private string backupSchedule = "Daily";
+    private string nextBackupTime = "Tonight 2:00 AM";
+    private int totalBackups = 42;
+    private string totalBackupSize = "48.5 GB";
+    private int retentionDays = 30;
+    private int backupsToExpire = 3;
+
+    // Backup creation
+    private string backupType = "full";
+    private string backupDescription = "";
+    private bool encryptBackup = true;
+    private bool isBackupRunning = false;
+    private int backupProgress = 0;
+    private string backupMessage = "";
+    private bool backupSuccess = false;
+
+    // Restore
+    private string selectedBackupId = "";
+    private bool stopServicesBeforeRestore = true;
+    private bool createRestorePoint = true;
+    private bool validateBackupIntegrity = true;
+    private bool isRestoreRunning = false;
+    private int restoreProgress = 0;
+    private string restoreMessage = "";
+    private bool restoreSuccess = false;
+
+    // Schedule settings
+    private string scheduleFrequency = "daily";
+    private string scheduleTime = "02:00";
+    private int scheduleRetention = 30;
+
+    // Storage settings
+    private string storageLocation = "azure-blob";
+    private string storagePath = "numbatwallet-backups";
+    private int maxStorageSize = 100;
+    private bool enableCompression = true;
+
+    // Selection
+    private bool selectAllBackups = false;
+    private int selectedBackupCount = 0;
+
+    private List<BackupInfo> availableBackups = new();
+    private List<BackupHistoryItem> backupHistory = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        LoadMockData();
+        await Task.CompletedTask;
+    }
+
+    private void LoadMockData()
+    {
+        // Available backups for restore
+        availableBackups = new List<BackupInfo>
+        {
+            new BackupInfo { Id = "1", Timestamp = DateTime.Now.AddDays(-1), Type = "Full", Size = "1.2 GB" },
+            new BackupInfo { Id = "2", Timestamp = DateTime.Now.AddDays(-2), Type = "Database", Size = "800 MB" },
+            new BackupInfo { Id = "3", Timestamp = DateTime.Now.AddDays(-7), Type = "Full", Size = "1.1 GB" }
+        };
+
+        // Backup history
+        var random = new Random();
+        backupHistory = Enumerable.Range(1, 10).Select(i => new BackupHistoryItem
+        {
+            Id = i.ToString(),
+            Timestamp = DateTime.Now.AddDays(-i),
+            Type = i % 3 == 0 ? "Full" : i % 2 == 0 ? "Database" : "Config",
+            Size = $"{random.Next(100, 1500)} MB",
+            Status = i == 3 ? "Failed" : i == 5 ? "In Progress" : "Completed",
+            Description = i % 2 == 0 ? $"Scheduled backup" : i == 1 ? "Pre-deployment backup" : "",
+            IsSelected = false
+        }).ToList();
+    }
+
+    private async Task CreateBackup()
+    {
+        isBackupRunning = true;
+        backupProgress = 0;
+        backupMessage = "";
+
+        // Simulate backup progress
+        for (int i = 0; i <= 100; i += 20)
+        {
+            backupProgress = i;
+            StateHasChanged();
+            await Task.Delay(500);
+        }
+
+        backupSuccess = true;
+        backupMessage = $"Backup created successfully! Backup ID: BKP-{DateTime.Now.Ticks}";
+        isBackupRunning = false;
+
+        // Reload data
+        LoadMockData();
+    }
+
+    private async Task RestoreBackup()
+    {
+        if (string.IsNullOrEmpty(selectedBackupId))
+            return;
+
+        isRestoreRunning = true;
+        restoreProgress = 0;
+        restoreMessage = "";
+
+        // Simulate restore progress
+        for (int i = 0; i <= 100; i += 10)
+        {
+            restoreProgress = i;
+            StateHasChanged();
+            await Task.Delay(300);
+        }
+
+        restoreSuccess = true;
+        restoreMessage = "System restored successfully! Services are restarting...";
+        isRestoreRunning = false;
+    }
+
+    private void ToggleBackupSelection(string backupId)
+    {
+        var backup = backupHistory.FirstOrDefault(b => b.Id == backupId);
+        if (backup != null)
+        {
+            backup.IsSelected = !backup.IsSelected;
+            selectedBackupCount = backupHistory.Count(b => b.IsSelected);
+        }
+    }
+
+    private async Task DownloadBackup(string backupId)
+    {
+        // Simulate download
+        await JSRuntime.InvokeVoidAsync("alert", $"Downloading backup {backupId}...");
+    }
+
+    private async Task VerifyBackup(string backupId)
+    {
+        // Simulate verification
+        await JSRuntime.InvokeVoidAsync("alert", $"Verifying backup {backupId}...\nBackup is valid and complete.");
+    }
+
+    private async Task DeleteBackup(string backupId)
+    {
+        if (await JSRuntime.InvokeAsync<bool>("confirm", $"Are you sure you want to delete backup {backupId}?"))
+        {
+            backupHistory.RemoveAll(b => b.Id == backupId);
+            StateHasChanged();
+        }
+    }
+
+    private async Task DeleteSelectedBackups()
+    {
+        if (await JSRuntime.InvokeAsync<bool>("confirm", $"Are you sure you want to delete {selectedBackupCount} backups?"))
+        {
+            backupHistory.RemoveAll(b => b.IsSelected);
+            selectedBackupCount = 0;
+            StateHasChanged();
+        }
+    }
+
+    private async Task DownloadSelectedBackups()
+    {
+        await JSRuntime.InvokeVoidAsync("alert", $"Preparing {selectedBackupCount} backups for download...");
+    }
+
+    private async Task RefreshBackupList()
+    {
+        LoadMockData();
+        await Task.CompletedTask;
+    }
+
+    private async Task ExportBackupHistory()
+    {
+        await JSRuntime.InvokeVoidAsync("alert", "Exporting backup history to CSV...");
+    }
+
+    private async Task UpdateSchedule()
+    {
+        await JSRuntime.InvokeVoidAsync("alert", "Backup schedule updated successfully!");
+    }
+
+    private async Task UpdateStorageSettings()
+    {
+        await JSRuntime.InvokeVoidAsync("alert", "Storage settings updated successfully!");
+    }
+
+    public class BackupInfo
+    {
+        public string Id { get; set; } = "";
+        public DateTime Timestamp { get; set; }
+        public string Type { get; set; } = "";
+        public string Size { get; set; } = "";
+    }
+
+    public class BackupHistoryItem : BackupInfo
+    {
+        public string Status { get; set; } = "";
+        public string Description { get; set; } = "";
+        public bool IsSelected { get; set; }
+    }
+}

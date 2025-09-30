@@ -1,0 +1,36 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <ItemGroup>
+    <ProjectReference Include="..\NumbatWallet.Infrastructure\NumbatWallet.Infrastructure.csproj" />
+    <ProjectReference Include="..\NumbatWallet.Application\NumbatWallet.Application.csproj" />
+    <ProjectReference Include="..\NumbatWallet.Domain\NumbatWallet.Domain.csproj" />
+    <ProjectReference Include="..\NumbatWallet.SharedKernel\NumbatWallet.SharedKernel.csproj" />
+    <ProjectReference Include="..\NumbatWallet.ServiceDefaults\NumbatWallet.ServiceDefaults.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.Authorization" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" />
+    <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" />
+    <PackageReference Include="Microsoft.Extensions.Http.Polly" />
+    <PackageReference Include="Microsoft.Identity.Web" />
+    <PackageReference Include="Microsoft.Identity.Web.UI" />
+    <PackageReference Include="Blazored.SessionStorage" />
+    <PackageReference Include="Serilog.AspNetCore" />
+    <PackageReference Include="Serilog.Enrichers.Environment" />
+    <PackageReference Include="StrawberryShake.Blazor" />
+    <!-- Temporarily disabled due to permission issues
+    <PackageReference Include="StrawberryShake.CodeGeneration.CSharp.Analyzers" />
+    -->
+  </ItemGroup>
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+</Project>

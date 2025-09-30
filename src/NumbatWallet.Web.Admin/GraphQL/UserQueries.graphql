@@ -1,0 +1,89 @@
+# User management queries and mutations
+
+query GetUsers {
+  users {
+    id
+    email
+    firstName
+    lastName
+    role
+    status
+    createdAt
+    wallets {
+      id
+      name
+      type
+      status
+    }
+  }
+}
+
+query GetUser($id: ID!) {
+  user(id: $id) {
+    id
+    email
+    firstName
+    lastName
+    role
+    status
+    createdAt
+    wallets {
+      id
+      name
+      type
+      status
+      createdAt
+      credentials {
+        id
+        type
+        status
+        issuedAt
+        expiresAt
+      }
+    }
+  }
+}
+
+mutation CreateUser($input: CreateUserInput!) {
+  createUser(input: $input) {
+    user {
+      id
+      email
+      firstName
+      lastName
+      role
+      status
+    }
+    errors {
+      message
+      code
+    }
+  }
+}
+
+mutation UpdateUser($input: UpdateUserInput!) {
+  updateUser(input: $input) {
+    user {
+      id
+      email
+      firstName
+      lastName
+      role
+      status
+    }
+    errors {
+      message
+      code
+    }
+  }
+}
+
+mutation DeleteUser($input: DeleteUserInput!) {
+  deleteUser(input: $input) {
+    success
+    errors {
+      message
+      code
+    }
+  }
+}

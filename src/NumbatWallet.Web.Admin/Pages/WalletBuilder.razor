@@ -1,0 +1,380 @@
+@page "/admin/wallet-builder"
+@using NumbatWallet.Domain.Entities
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.AspNetCore.Components.Web
+@attribute [Authorize(Policy = "AdminOnly")]
+
+<h3>Wallet Template Builder</h3>
+
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col">
+            <h1>Wallet Template Builder</h1>
+            <p class="text-muted">Create and manage dynamic wallet templates with custom fields and credential mappings</p>
+        </div>
+        <div class="col-auto">
+            <button class="btn btn-primary" @onclick="ShowCreateTemplate">
+                <i class="bi bi-plus-circle"></i> New Template
+            </button>
+        </div>
+    </div>
+
+    @if (showCreateForm)
+    {
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5>Create New Wallet Template</h5>
+            </div>
+            <div class="card-body">
+                <EditForm Model="newTemplate" OnValidSubmit="CreateTemplate">
+                    <DataAnnotationsValidator />
+                    <ValidationSummary />
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Template Name</label>
+                            <InputText @bind-Value="newTemplate.Name" class="form-control" />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Template Type</label>
+                            <InputSelect @bind-Value="newTemplate.Type" class="form-select">
+                                @foreach (var type in Enum.GetValues<WalletTemplateType>())
+                                {
+                                    <option value="@type">@type</option>
+                                }
+                            </InputSelect>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Description</label>
+                        <InputTextArea @bind-Value="newTemplate.Description" class="form-control" rows="3" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Supported Credential Types</label>
+                        <div class="input-group">
+                            <input type="text" @bind="newCredentialType" class="form-control"
+                                   placeholder="e.g., org.iso.18013.5.1.mDL" />
+                            <button type="button" class="btn btn-outline-secondary" @onclick="AddCredentialType">
+                                Add
+                            </button>
+                        </div>
+                        @if (newTemplate.SupportedCredentialTypes.Any())
+                        {
+                            <div class="mt-2">
+                                @foreach (var type in newTemplate.SupportedCredentialTypes)
+                                {
+                                    <span class="badge bg-secondary me-2">
+                                        @type
+                                        <i class="bi bi-x-circle ms-1" style="cursor: pointer;"
+                                           @onclick="() => RemoveCredentialType(type)"></i>
+                                    </span>
+                                }
+                            </div>
+                        }
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-success">Create Template</button>
+                        <button type="button" class="btn btn-secondary" @onclick="CancelCreate">Cancel</button>
+                    </div>
+                </EditForm>
+            </div>
+        </div>
+    }
+
+    @if (selectedTemplate != null)
+    {
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5>Field Designer - @selectedTemplate.Name</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-8">
+                        <h6>Template Fields</h6>
+                        <div class="field-list">
+                            @if (selectedTemplate.Fields.Any())
+                            {
+                                <div class="list-group">
+                                    @foreach (var field in selectedTemplate.Fields.OrderBy(f => f.DisplayOrder))
+                                    {
+                                        <div class="list-group-item">
+                                            <div class="d-flex justify-content-between align-items-start">
+                                                <div class="flex-grow-1">
+                                                    <div class="fw-bold">@field.Label</div>
+                                                    <small class="text-muted">
+                                                        Type: @field.FieldType |
+                                                        Name: @field.Name |
+                                                        @(field.IsRequired ? "Required" : "Optional")
+                                                    </small>
+                                                    @if (!string.IsNullOrEmpty(field.MappedCredentialField))
+                                                    {
+                                                        <div class="text-success small">
+                                                            <i class="bi bi-link-45deg"></i> Mapped to: @field.MappedCredentialField
+                                                        </div>
+                                                    }
+                                                </div>
+                                                <div class="btn-group btn-group-sm">
+                                                    <button class="btn btn-outline-primary" @onclick="() => EditField(field)">
+                                                        <i class="bi bi-pencil"></i>
+                                                    </button>
+                                                    <button class="btn btn-outline-danger" @onclick="() => RemoveField(field)">
+                                                        <i class="bi bi-trash"></i>
+                                                    </button>
+                                                    <button class="btn btn-outline-secondary" @onclick="() => MoveFieldUp(field)">
+                                                        <i class="bi bi-arrow-up"></i>
+                                                    </button>
+                                                    <button class="btn btn-outline-secondary" @onclick="() => MoveFieldDown(field)">
+                                                        <i class="bi bi-arrow-down"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="alert alert-info">No fields defined yet. Add fields using the form on the right.</div>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <h6>Add/Edit Field</h6>
+                        <div class="card">
+                            <div class="card-body">
+                                <EditForm Model="currentField" OnValidSubmit="SaveField">
+                                    <div class="mb-3">
+                                        <label class="form-label">Field Name</label>
+                                        <InputText @bind-Value="currentField.Name" class="form-control form-control-sm" />
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Display Label</label>
+                                        <InputText @bind-Value="currentField.Label" class="form-control form-control-sm" />
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Field Type</label>
+                                        <InputSelect @bind-Value="currentField.FieldType" class="form-select form-select-sm">
+                                            <option value="text">Text</option>
+                                            <option value="number">Number</option>
+                                            <option value="date">Date</option>
+                                            <option value="datetime">DateTime</option>
+                                            <option value="boolean">Boolean</option>
+                                            <option value="email">Email</option>
+                                            <option value="phone">Phone</option>
+                                            <option value="url">URL</option>
+                                            <option value="image">Image</option>
+                                            <option value="select">Select List</option>
+                                            <option value="multiselect">Multi-Select</option>
+                                        </InputSelect>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Credential Field Mapping</label>
+                                        <InputText @bind-Value="currentField.MappedCredentialField"
+                                                   class="form-control form-control-sm"
+                                                   placeholder="e.g., person.givenName" />
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Validation Rule</label>
+                                        <InputText @bind-Value="currentField.ValidationRule"
+                                                   class="form-control form-control-sm"
+                                                   placeholder="e.g., ^[A-Z][a-z]+$" />
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Default Value</label>
+                                        <InputText @bind-Value="currentField.DefaultValue" class="form-control form-control-sm" />
+                                    </div>
+                                    <div class="form-check mb-3">
+                                        <InputCheckbox @bind-Value="currentField.IsRequired" class="form-check-input" />
+                                        <label class="form-check-label">Required Field</label>
+                                    </div>
+                                    <div class="form-check mb-3">
+                                        <InputCheckbox @bind-Value="currentField.IsEditable" class="form-check-input" />
+                                        <label class="form-check-label">Editable</label>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary btn-sm w-100">
+                                        @(isEditingField ? "Update Field" : "Add Field")
+                                    </button>
+                                    @if (isEditingField)
+                                    {
+                                        <button type="button" class="btn btn-secondary btn-sm w-100 mt-2" @onclick="CancelFieldEdit">
+                                            Cancel
+                                        </button>
+                                    }
+                                </EditForm>
+                            </div>
+                        </div>
+
+                        <div class="card mt-3">
+                            <div class="card-body">
+                                <h6>Quick Templates</h6>
+                                <div class="d-grid gap-2">
+                                    <button class="btn btn-outline-primary btn-sm" @onclick="@(() => ApplyQuickTemplate("driverLicense"))">
+                                        Driver License Fields
+                                    </button>
+                                    <button class="btn btn-outline-primary btn-sm" @onclick="@(() => ApplyQuickTemplate("passport"))">
+                                        Passport Fields
+                                    </button>
+                                    <button class="btn btn-outline-primary btn-sm" @onclick="@(() => ApplyQuickTemplate("healthCard"))">
+                                        Health Card Fields
+                                    </button>
+                                    <button class="btn btn-outline-primary btn-sm" @onclick="@(() => ApplyQuickTemplate("studentId"))">
+                                        Student ID Fields
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-4">
+                    <button class="btn btn-success" @onclick="SaveTemplate">Save Template</button>
+                    <button class="btn btn-secondary ms-2" @onclick="PreviewTemplate">Preview</button>
+                    <button class="btn btn-info ms-2" @onclick="ExportTemplate">Export JSON</button>
+                </div>
+            </div>
+        </div>
+    }
+
+    <div class="card">
+        <div class="card-header">
+            <h5>Existing Templates</h5>
+        </div>
+        <div class="card-body">
+            @if (templates.Any())
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Type</th>
+                                <th>Fields</th>
+                                <th>Status</th>
+                                <th>Version</th>
+                                <th>Created</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var template in templates)
+                            {
+                                <tr>
+                                    <td>@template.Name</td>
+                                    <td>
+                                        <span class="badge bg-info">@template.Type</span>
+                                    </td>
+                                    <td>@template.Fields.Count fields</td>
+                                    <td>
+                                        @if (template.IsActive)
+                                        {
+                                            <span class="badge bg-success">Active</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-secondary">Inactive</span>
+                                        }
+                                    </td>
+                                    <td>@template.Version</td>
+                                    <td>@template.CreatedAt.ToString("yyyy-MM-dd")</td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <button class="btn btn-outline-primary" @onclick="() => SelectTemplate(template)">
+                                                Edit
+                                            </button>
+                                            <button class="btn btn-outline-info" @onclick="() => CloneTemplate(template)">
+                                                Clone
+                                            </button>
+                                            <button class="btn btn-outline-warning" @onclick="() => ToggleTemplateStatus(template)">
+                                                @(template.IsActive ? "Deactivate" : "Activate")
+                                            </button>
+                                            <button class="btn btn-outline-danger" @onclick="() => DeleteTemplate(template)">
+                                                Delete
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div class="alert alert-info">No wallet templates found. Create your first template to get started.</div>
+            }
+        </div>
+    </div>
+</div>
+
+@if (showPreview)
+{
+    <div class="modal fade show" style="display: block;" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Template Preview</h5>
+                    <button type="button" class="btn-close" @onclick="() => showPreview = false"></button>
+                </div>
+                <div class="modal-body">
+                    @if (selectedTemplate != null)
+                    {
+                        <div class="wallet-preview">
+                            <h6>@selectedTemplate.Name</h6>
+                            <p class="text-muted">@selectedTemplate.Description</p>
+                            @foreach (var field in selectedTemplate.Fields.OrderBy(f => f.DisplayOrder))
+                            {
+                                <div class="mb-3">
+                                    <label class="form-label">
+                                        @field.Label
+                                        @if (field.IsRequired)
+                                        {
+                                            <span class="text-danger">*</span>
+                                        }
+                                    </label>
+                                    @switch (field.FieldType)
+                                    {
+                                        case "text":
+                                        case "email":
+                                        case "phone":
+                                        case "url":
+                                            <input type="@field.FieldType" class="form-control"
+                                                   placeholder="@field.DefaultValue"
+                                                   disabled="@(!field.IsEditable)" />
+                                            break;
+                                        case "date":
+                                            <input type="date" class="form-control" disabled="@(!field.IsEditable)" />
+                                            break;
+                                        case "boolean":
+                                            <div class="form-check">
+                                                <input type="checkbox" class="form-check-input" disabled="@(!field.IsEditable)" />
+                                                <label class="form-check-label">@field.Label</label>
+                                            </div>
+                                            break;
+                                        case "image":
+                                            <div class="border rounded p-3 text-center">
+                                                <i class="bi bi-image" style="font-size: 3rem;"></i>
+                                                <p class="mb-0">Image placeholder</p>
+                                            </div>
+                                            break;
+                                    }
+                                    @if (!string.IsNullOrEmpty(field.MappedCredentialField))
+                                    {
+                                        <small class="form-text text-muted">
+                                            Maps to: @field.MappedCredentialField
+                                        </small>
+                                    }
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal-backdrop fade show"></div>
+}

@@ -1,0 +1,600 @@
+@page "/batch-operations"
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.JSInterop
+@using NumbatWallet.Application.DTOs
+@using System.Net.Http.Headers
+@attribute [Authorize(Roles = "Admin")]
+@inject HttpClient Http
+@inject ILogger<BatchOperations> Logger
+@inject NavigationManager Navigation
+@inject IJSRuntime JS
+
+<Microsoft.AspNetCore.Components.Web.PageTitle>Batch Operations - NumbatWallet Admin</Microsoft.AspNetCore.Components.Web.PageTitle>
+
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1>Batch Operations</h1>
+            <p class="text-muted">Manage bulk credential operations and monitor progress</p>
+        </div>
+    </div>
+
+    <!-- Operation Type Selection -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5>New Batch Operation</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <label class="form-label">Operation Type</label>
+                            <select class="form-select" @bind="selectedOperationType">
+                                <option value="">Select operation type...</option>
+                                <option value="issue">Bulk Issue Credentials</option>
+                                <option value="revoke">Bulk Revoke Credentials</option>
+                                <option value="renew">Bulk Renew Credentials</option>
+                                <option value="verify">Bulk Verify Credentials</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Input Format</label>
+                            <select class="form-select" @bind="inputFormat">
+                                <option value="csv">CSV</option>
+                                <option value="json">JSON</option>
+                                <option value="excel">Excel</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Processing Mode</label>
+                            <select class="form-select" @bind="processingMode">
+                                <option value="async">Asynchronous</option>
+                                <option value="sync">Synchronous</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    @if (!string.IsNullOrEmpty(selectedOperationType))
+                    {
+                        <div class="row mt-4">
+                            <div class="col-md-12">
+                                <label class="form-label">Upload Data File</label>
+                                <InputFile class="form-control" OnChange="@OnFileSelected" accept=".csv,.json,.xlsx" />
+                                @if (selectedFile != null)
+                                {
+                                    <div class="mt-2">
+                                        <span class="badge bg-info">@selectedFile.Name (@(selectedFile.Size / 1024) KB)</span>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+
+                        <div class="row mt-4">
+                            <div class="col-md-12">
+                                <label class="form-label">Options</label>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" @bind="validateBeforeProcessing">
+                                    <label class="form-check-label">
+                                        Validate all records before processing
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" @bind="continueOnError">
+                                    <label class="form-check-label">
+                                        Continue on error (skip failed records)
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" @bind="generateReport">
+                                    <label class="form-check-label">
+                                        Generate completion report
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mt-4">
+                            <div class="col-md-12">
+                                <button class="btn btn-primary" @onclick="StartBatchOperation" disabled="@(isProcessing || selectedFile == null)">
+                                    @if (isProcessing)
+                                    {
+                                        <span class="spinner-border spinner-border-sm me-2"></span>
+                                    }
+                                    Start Batch Operation
+                                </button>
+                                <button class="btn btn-secondary ms-2" @onclick="Reset">Reset</button>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Active Operations -->
+    @if (activeOperations.Any())
+    {
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Active Operations</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Operation ID</th>
+                                        <th>Type</th>
+                                        <th>Status</th>
+                                        <th>Progress</th>
+                                        <th>Started</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var operation in activeOperations)
+                                    {
+                                        <tr>
+                                            <td>
+                                                <code>@operation.OperationId</code>
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-@GetOperationTypeBadgeColor(operation.OperationType)">
+                                                    @operation.OperationType
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-@GetStatusBadgeColor(operation.Status)">
+                                                    @operation.Status
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <div class="progress" style="min-width: 150px;">
+                                                    <div class="progress-bar @GetProgressBarClass(operation.Status)"
+                                                         role="progressbar"
+                                                         style="width: @operation.PercentComplete%"
+                                                         aria-valuenow="@operation.PercentComplete"
+                                                         aria-valuemin="0"
+                                                         aria-valuemax="100">
+                                                        @operation.PercentComplete%
+                                                    </div>
+                                                </div>
+                                                <small class="text-muted">
+                                                    @operation.ProcessedCount / @operation.TotalCount records
+                                                </small>
+                                            </td>
+                                            <td>
+                                                <small>@operation.StartedAt.ToString("g")</small>
+                                            </td>
+                                            <td>
+                                                <button class="btn btn-sm btn-info" @onclick="() => ViewOperationDetails(operation.OperationId)">
+                                                    <i class="bi bi-eye"></i>
+                                                </button>
+                                                @if (operation.Status == "InProgress")
+                                                {
+                                                    <button class="btn btn-sm btn-warning" @onclick="() => PauseOperation(operation.OperationId)">
+                                                        <i class="bi bi-pause"></i>
+                                                    </button>
+                                                    <button class="btn btn-sm btn-danger" @onclick="() => CancelOperation(operation.OperationId)">
+                                                        <i class="bi bi-x-circle"></i>
+                                                    </button>
+                                                }
+                                                @if (operation.Status == "Paused")
+                                                {
+                                                    <button class="btn btn-sm btn-success" @onclick="() => ResumeOperation(operation.OperationId)">
+                                                        <i class="bi bi-play"></i>
+                                                    </button>
+                                                }
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- Operation History -->
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Operation History</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Operation ID</th>
+                                    <th>Type</th>
+                                    <th>Status</th>
+                                    <th>Records</th>
+                                    <th>Success Rate</th>
+                                    <th>Duration</th>
+                                    <th>Completed</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var history in operationHistory)
+                                {
+                                    <tr>
+                                        <td>
+                                            <code>@history.OperationId</code>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-@GetOperationTypeBadgeColor(history.OperationType)">
+                                                @history.OperationType
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-@GetStatusBadgeColor(history.Status)">
+                                                @history.Status
+                                            </span>
+                                        </td>
+                                        <td>
+                                            @history.ProcessedCount / @history.TotalCount
+                                        </td>
+                                        <td>
+                                            @if (history.ProcessedCount > 0)
+                                            {
+                                                var successRate = (double)history.SuccessCount / history.ProcessedCount * 100;
+                                                <span class="@(successRate >= 95 ? "text-success" : successRate >= 80 ? "text-warning" : "text-danger")">
+                                                    @successRate.ToString("F1")%
+                                                </span>
+                                            }
+                                            else
+                                            {
+                                                <span>N/A</span>
+                                            }
+                                        </td>
+                                        <td>
+                                            @if (history.CompletedAt.HasValue)
+                                            {
+                                                var duration = history.CompletedAt.Value - history.StartedAt;
+                                                <span>@FormatDuration(duration)</span>
+                                            }
+                                            else
+                                            {
+                                                <span>-</span>
+                                            }
+                                        </td>
+                                        <td>
+                                            @if (history.CompletedAt.HasValue)
+                                            {
+                                                <small>@history.CompletedAt.Value.ToString("g")</small>
+                                            }
+                                            else
+                                            {
+                                                <span>-</span>
+                                            }
+                                        </td>
+                                        <td>
+                                            <button class="btn btn-sm btn-info" @onclick="() => ViewOperationDetails(history.OperationId)">
+                                                <i class="bi bi-eye"></i>
+                                            </button>
+                                            @if (history.Status == "Completed" && history.FailureCount > 0)
+                                            {
+                                                <button class="btn btn-sm btn-warning" @onclick="() => RetryFailedRecords(history.OperationId)">
+                                                    <i class="bi bi-arrow-clockwise"></i>
+                                                </button>
+                                            }
+                                            <button class="btn btn-sm btn-secondary" @onclick="() => DownloadReport(history.OperationId)">
+                                                <i class="bi bi-download"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Operation Details Modal -->
+@if (selectedOperation != null)
+{
+    <div class="modal fade show" style="display: block;" @onclick="CloseModal">
+        <div class="modal-dialog modal-lg" @onclick:stopPropagation="true">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Operation Details - @selectedOperation.OperationId</h5>
+                    <button type="button" class="btn-close" @onclick="CloseModal"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Operation details content here -->
+                    <div class="row">
+                        <div class="col-md-6">
+                            <strong>Type:</strong> @selectedOperation.OperationType<br />
+                            <strong>Status:</strong> @selectedOperation.Status<br />
+                            <strong>Progress:</strong> @selectedOperation.ProcessedCount / @selectedOperation.TotalCount (@selectedOperation.PercentComplete%)<br />
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Success:</strong> @selectedOperation.SuccessCount<br />
+                            <strong>Failed:</strong> @selectedOperation.FailureCount<br />
+                            <strong>Duration:</strong> @FormatDuration(DateTime.UtcNow - selectedOperation.StartedAt)<br />
+                        </div>
+                    </div>
+
+                    @if (selectedOperation.Errors != null && selectedOperation.Errors.Any())
+                    {
+                        <h6 class="mt-3">Recent Errors</h6>
+                        <div class="list-group">
+                            @foreach (var error in selectedOperation.Errors.Take(10))
+                            {
+                                <div class="list-group-item">
+                                    <small class="text-danger">@error</small>
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="CloseModal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal-backdrop fade show"></div>
+}
+
+@code {
+    private string selectedOperationType = "";
+    private string inputFormat = "csv";
+    private IBrowserFile? selectedFile;
+    private bool isProcessing = false;
+    private bool validateBeforeProcessing = true;
+    private bool continueOnError = true;
+    private bool generateReport = true; // Used in BatchOptions binding
+
+    private List<OperationStatusDto> activeOperations = new();
+    private List<OperationStatusDto> operationHistory = new();
+    private OperationStatusDto? selectedOperation;
+    private Timer? refreshTimer;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadOperations();
+        StartAutoRefresh();
+    }
+
+    private async Task LoadOperations()
+    {
+        try
+        {
+            // Load active operations
+            var response = await Http.GetAsync("/api/v1/bulk/operations/active");
+            if (response.IsSuccessStatusCode)
+            {
+                activeOperations = await response.Content.ReadFromJsonAsync<List<OperationStatusDto>>() ?? new();
+            }
+
+            // Load operation history
+            var historyResponse = await Http.GetAsync("/api/v1/bulk/operations/history");
+            if (historyResponse.IsSuccessStatusCode)
+            {
+                operationHistory = await historyResponse.Content.ReadFromJsonAsync<List<OperationStatusDto>>() ?? new();
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Failed to load operations");
+        }
+    }
+
+    private async Task OnFileSelected(InputFileChangeEventArgs e)
+    {
+        selectedFile = e.File;
+    }
+
+    private async Task StartBatchOperation()
+    {
+        if (selectedFile == null) return;
+
+        isProcessing = true;
+        try
+        {
+            using var content = new MultipartFormDataContent();
+            var fileContent = new StreamContent(selectedFile.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024)); // 10MB max
+            fileContent.Headers.ContentType = new MediaTypeHeaderValue(selectedFile.ContentType ?? "application/octet-stream");
+
+            content.Add(fileContent, "file", selectedFile.Name);
+            content.Add(new StringContent(selectedOperationType), "operationType");
+            content.Add(new StringContent(inputFormat), "format");
+            content.Add(new StringContent(validateBeforeProcessing.ToString()), "validate");
+            content.Add(new StringContent(continueOnError.ToString()), "continueOnError");
+            content.Add(new StringContent(generateReport.ToString()), "generateReport");
+
+            var response = await Http.PostAsync($"/api/v1/bulk/{selectedOperationType}", content);
+
+            if (response.IsSuccessStatusCode)
+            {
+                var result = await response.Content.ReadFromJsonAsync<StartOperationResponse>();
+                if (result != null)
+                {
+                    await JS.InvokeVoidAsync("alert", $"Batch operation started successfully. Operation ID: {result.OperationId}");
+                    Reset();
+                    await LoadOperations();
+                }
+            }
+            else
+            {
+                var error = await response.Content.ReadAsStringAsync();
+                await JS.InvokeVoidAsync("alert", $"Failed to start batch operation: {error}");
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Failed to start batch operation");
+            await JS.InvokeVoidAsync("alert", $"Error: {ex.Message}");
+        }
+        finally
+        {
+            isProcessing = false;
+        }
+    }
+
+    private void Reset()
+    {
+        selectedOperationType = "";
+        selectedFile = null;
+        validateBeforeProcessing = true;
+        continueOnError = true;
+        generateReport = true;
+    }
+
+    private async Task ViewOperationDetails(string operationId)
+    {
+        try
+        {
+            var response = await Http.GetAsync($"/api/v1/bulk/operations/{operationId}");
+            if (response.IsSuccessStatusCode)
+            {
+                selectedOperation = await response.Content.ReadFromJsonAsync<OperationStatusDto>();
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Failed to load operation details");
+        }
+    }
+
+    private void CloseModal()
+    {
+        selectedOperation = null;
+    }
+
+    private async Task PauseOperation(string operationId)
+    {
+        // Implement pause operation
+    }
+
+    private async Task ResumeOperation(string operationId)
+    {
+        // Implement resume operation
+    }
+
+    private async Task CancelOperation(string operationId)
+    {
+        try
+        {
+            var response = await Http.DeleteAsync($"/api/v1/bulk/operations/{operationId}");
+            if (response.IsSuccessStatusCode)
+            {
+                await LoadOperations();
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Failed to cancel operation");
+        }
+    }
+
+    private async Task RetryFailedRecords(string operationId)
+    {
+        // Implement retry failed records
+    }
+
+    private async Task DownloadReport(string operationId)
+    {
+        try
+        {
+            var response = await Http.GetAsync($"/api/v1/bulk/operations/{operationId}/report");
+            if (response.IsSuccessStatusCode)
+            {
+                var bytes = await response.Content.ReadAsByteArrayAsync();
+                var fileName = $"operation-{operationId}-report.csv";
+                await JS.InvokeVoidAsync("downloadFile", fileName, bytes);
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Failed to download report");
+        }
+    }
+
+    private string GetOperationTypeBadgeColor(string type)
+    {
+        return type switch
+        {
+            "issue" => "success",
+            "revoke" => "danger",
+            "renew" => "info",
+            "verify" => "primary",
+            _ => "secondary"
+        };
+    }
+
+    private string GetStatusBadgeColor(string status)
+    {
+        return status switch
+        {
+            "Pending" => "secondary",
+            "InProgress" => "primary",
+            "Paused" => "warning",
+            "Completed" => "success",
+            "Failed" => "danger",
+            "Cancelled" => "dark",
+            _ => "secondary"
+        };
+    }
+
+    private string GetProgressBarClass(string status)
+    {
+        return status switch
+        {
+            "InProgress" => "progress-bar-animated progress-bar-striped",
+            "Completed" => "bg-success",
+            "Failed" => "bg-danger",
+            _ => ""
+        };
+    }
+
+    private string FormatDuration(TimeSpan duration)
+    {
+        if (duration.TotalDays >= 1)
+            return $"{(int)duration.TotalDays}d {duration.Hours}h {duration.Minutes}m";
+        if (duration.TotalHours >= 1)
+            return $"{(int)duration.TotalHours}h {duration.Minutes}m {duration.Seconds}s";
+        if (duration.TotalMinutes >= 1)
+            return $"{(int)duration.TotalMinutes}m {duration.Seconds}s";
+        return $"{(int)duration.TotalSeconds}s";
+    }
+
+    private void StartAutoRefresh()
+    {
+        refreshTimer = new Timer(async _ =>
+        {
+            await InvokeAsync(async () =>
+            {
+                if (activeOperations.Any())
+                {
+                    await LoadOperations();
+                    StateHasChanged();
+                }
+            });
+        }, null, TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(5));
+    }
+
+    public void Dispose()
+    {
+        refreshTimer?.Dispose();
+    }
+
+    private class StartOperationResponse
+    {
+        public string OperationId { get; set; } = string.Empty;
+        public string Status { get; set; } = string.Empty;
+    }
+}

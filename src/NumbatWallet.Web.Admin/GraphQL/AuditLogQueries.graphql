@@ -1,0 +1,22 @@
+# Audit log queries
+
+query GetAuditLogs($first: Int, $after: String) {
+  auditLogs(first: $first, after: $after) {
+    nodes {
+      id
+      action
+      entity
+      entityId
+      userId
+      timestamp
+      details
+    }
+    pageInfo {
+      hasNextPage
+      hasPreviousPage
+      startCursor
+      endCursor
+    }
+    totalCount
+  }
+}

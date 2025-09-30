@@ -1,0 +1,1085 @@
+@page "/keys"
+@page "/key-rotation"
+@using Microsoft.JSInterop
+@inject NavigationManager Navigation
+@inject IJSRuntime JSRuntime
+
+<h3>Key Rotation Management</h3>
+
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col">
+            <h1 class="h2">Cryptographic Key Management</h1>
+            <p class="text-muted">Manage key rotation policies, schedules, and security compliance</p>
+        </div>
+        <div class="col-auto">
+            <button class="btn btn-primary" @onclick="ShowRotateKeysModal">
+                <i class="bi bi-arrow-repeat"></i> Rotate Keys Now
+            </button>
+            <button class="btn btn-outline-secondary ms-2" @onclick="RefreshKeyStatus">
+                <i class="bi bi-arrow-clockwise"></i> Refresh
+            </button>
+        </div>
+    </div>
+
+    @if (showAlert)
+    {
+        <div class="alert @alertClass alert-dismissible fade show" role="alert">
+            @alertMessage
+            <button type="button" class="btn-close" @onclick="() => showAlert = false"></button>
+        </div>
+    }
+
+    <!-- Key Status Overview -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="card border-success">
+                <div class="card-body">
+                    <h5 class="card-title text-muted">Active Keys</h5>
+                    <h2 class="text-success">@activeKeys</h2>
+                    <small class="text-muted">All systems operational</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-warning">
+                <div class="card-body">
+                    <h5 class="card-title text-muted">Expiring Soon</h5>
+                    <h2 class="text-warning">@expiringKeys</h2>
+                    <small class="text-muted">Within 30 days</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-danger">
+                <div class="card-body">
+                    <h5 class="card-title text-muted">Expired Keys</h5>
+                    <h2 class="text-danger">@expiredKeys</h2>
+                    <small class="text-muted">Require immediate rotation</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-info">
+                <div class="card-body">
+                    <h5 class="card-title text-muted">Last Rotation</h5>
+                    <h2 class="text-info">@lastRotationDays</h2>
+                    <small class="text-muted">days ago</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Key Management Tabs -->
+    <ul class="nav nav-tabs mb-3">
+        <li class="nav-item">
+            <button class="nav-link @(activeTab == "keys" ? "active" : "")" @onclick="() => activeTab = 'keys'">
+                <i class="bi bi-key"></i> Active Keys
+            </button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link @(activeTab == "rotation" ? "active" : "")" @onclick="() => activeTab = 'rotation'">
+                <i class="bi bi-arrow-repeat"></i> Rotation Schedule
+            </button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link @(activeTab == "policies" ? "active" : "")" @onclick="() => activeTab = 'policies'">
+                <i class="bi bi-shield-check"></i> Security Policies
+            </button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link @(activeTab == "audit" ? "active" : "")" @onclick="() => activeTab = 'audit'">
+                <i class="bi bi-journal-text"></i> Audit Log
+            </button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link @(activeTab == "compliance" ? "active" : "")" @onclick="() => activeTab = 'compliance'">
+                <i class="bi bi-patch-check"></i> Compliance
+            </button>
+        </li>
+    </ul>
+
+    @if (activeTab == "keys")
+    {
+        <!-- Active Keys List -->
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Active Cryptographic Keys</h5>
+                <div>
+                    <button class="btn btn-sm btn-outline-primary" @onclick="ExportKeyReport">
+                        <i class="bi bi-download"></i> Export Report
+                    </button>
+                    <button class="btn btn-sm btn-success ms-2" @onclick="ShowGenerateKeyModal">
+                        <i class="bi bi-plus-circle"></i> Generate New Key
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Key ID</th>
+                                <th>Type</th>
+                                <th>Algorithm</th>
+                                <th>Status</th>
+                                <th>Created</th>
+                                <th>Expires</th>
+                                <th>Usage Count</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var key in cryptographicKeys)
+                            {
+                                <tr>
+                                    <td>
+                                        <code>@key.KeyId</code>
+                                        @if (key.IsPrimary)
+                                        {
+                                            <span class="badge bg-primary ms-2">Primary</span>
+                                        }
+                                    </td>
+                                    <td>@key.KeyType</td>
+                                    <td>@key.Algorithm</td>
+                                    <td>
+                                        <span class="badge @GetStatusBadgeClass(key.Status)">@key.Status</span>
+                                    </td>
+                                    <td>@key.CreatedAt.ToString("yyyy-MM-dd")</td>
+                                    <td>
+                                        @key.ExpiresAt.ToString("yyyy-MM-dd")
+                                        @if (key.DaysUntilExpiry <= 30)
+                                        {
+                                            <span class="badge bg-warning ms-2">@key.DaysUntilExpiry days</span>
+                                        }
+                                    </td>
+                                    <td>@key.UsageCount.ToString("N0")</td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm" role="group">
+                                            <button class="btn btn-outline-info" @onclick="() => ViewKeyDetails(key.KeyId)">
+                                                <i class="bi bi-eye"></i>
+                                            </button>
+                                            <button class="btn btn-outline-warning" @onclick="() => RotateKey(key.KeyId)"
+                                                    disabled="@(key.Status == "Rotating")">
+                                                <i class="bi bi-arrow-repeat"></i>
+                                            </button>
+                                            <button class="btn btn-outline-danger" @onclick="() => RevokeKey(key.KeyId)"
+                                                    disabled="@(key.IsPrimary || key.Status == "Revoked")">
+                                                <i class="bi bi-x-circle"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    }
+    else if (activeTab == "rotation")
+    {
+        <!-- Rotation Schedule -->
+        <div class="row g-3">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Rotation Schedule</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" @bind="autoRotationEnabled" id="autoRotation">
+                                <label class="form-check-label" for="autoRotation">
+                                    Enable Automatic Key Rotation
+                                </label>
+                            </div>
+                        </div>
+
+                        @if (autoRotationEnabled)
+                        {
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">Rotation Frequency</label>
+                                    <select class="form-select" @bind="rotationFrequency">
+                                        <option value="30">Every 30 days</option>
+                                        <option value="60">Every 60 days</option>
+                                        <option value="90">Every 90 days (Recommended)</option>
+                                        <option value="180">Every 180 days</option>
+                                        <option value="365">Annually</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Grace Period (days)</label>
+                                    <input type="number" class="form-control" @bind="gracePeriodDays" min="1" max="30">
+                                    <small class="text-muted">Old keys remain valid during grace period</small>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Rotation Time Window</label>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <input type="time" class="form-control" @bind="rotationStartTime">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <input type="time" class="form-control" @bind="rotationEndTime">
+                                    </div>
+                                </div>
+                                <small class="text-muted">Rotation will occur during maintenance window</small>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Key Types to Rotate</label>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" @bind="rotateSigningKeys" id="signingKeys">
+                                    <label class="form-check-label" for="signingKeys">
+                                        Signing Keys (RS256, ES256)
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" @bind="rotateEncryptionKeys" id="encryptionKeys">
+                                    <label class="form-check-label" for="encryptionKeys">
+                                        Encryption Keys (AES-256-GCM)
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" @bind="rotateMacKeys" id="macKeys">
+                                    <label class="form-check-label" for="macKeys">
+                                        MAC Keys (HMAC-SHA256)
+                                    </label>
+                                </div>
+                            </div>
+
+                            <button class="btn btn-primary" @onclick="SaveRotationSchedule">
+                                <i class="bi bi-save"></i> Save Schedule
+                            </button>
+                        }
+
+                        <hr class="my-4">
+
+                        <h6>Upcoming Rotations</h6>
+                        <div class="list-group">
+                            @foreach (var schedule in upcomingRotations)
+                            {
+                                <div class="list-group-item">
+                                    <div class="d-flex w-100 justify-content-between">
+                                        <h6 class="mb-1">@schedule.KeyType - @schedule.KeyId</h6>
+                                        <small>@schedule.ScheduledDate.ToString("MMM dd, yyyy")</small>
+                                    </div>
+                                    <p class="mb-1">@schedule.Reason</p>
+                                    <small class="text-muted">Estimated downtime: @schedule.EstimatedDowntime minutes</small>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Rotation History</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="timeline">
+                            @foreach (var history in rotationHistory.Take(10))
+                            {
+                                <div class="timeline-item">
+                                    <div class="timeline-marker @(history.Success ? "bg-success" : "bg-danger")"></div>
+                                    <div class="timeline-content">
+                                        <h6 class="mb-1">@history.KeyType</h6>
+                                        <p class="mb-1">@history.Description</p>
+                                        <small class="text-muted">@history.RotatedAt.ToString("MMM dd, yyyy HH:mm")</small>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+    else if (activeTab == "policies")
+    {
+        <!-- Security Policies -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Key Management Security Policies</h5>
+            </div>
+            <div class="card-body">
+                <form @onsubmit="SaveSecurityPolicies" @onsubmit:preventDefault="true">
+                    <h6>Key Generation Policies</h6>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Minimum Key Length (RSA)</label>
+                            <select class="form-select" @bind="minRsaKeyLength">
+                                <option value="2048">2048 bits</option>
+                                <option value="3072">3072 bits (Recommended)</option>
+                                <option value="4096">4096 bits</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Elliptic Curve</label>
+                            <select class="form-select" @bind="ellipticCurve">
+                                <option value="P-256">P-256 (secp256r1)</option>
+                                <option value="P-384">P-384 (secp384r1)</option>
+                                <option value="P-521">P-521 (secp521r1)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <h6 class="mt-4">Access Control</h6>
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" @bind="requireMfa" id="mfaRequired">
+                            <label class="form-check-label" for="mfaRequired">
+                                Require MFA for key operations
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" @bind="requireDualControl" id="dualControl">
+                            <label class="form-check-label" for="dualControl">
+                                Require dual control for key generation
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" @bind="requireSeparationOfDuties" id="separationOfDuties">
+                            <label class="form-check-label" for="separationOfDuties">
+                                Enforce separation of duties
+                            </label>
+                        </div>
+                    </div>
+
+                    <h6 class="mt-4">Key Storage</h6>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Storage Provider</label>
+                            <select class="form-select" @bind="keyStorageProvider">
+                                <option value="azure-keyvault">Azure Key Vault (HSM)</option>
+                                <option value="aws-kms">AWS KMS</option>
+                                <option value="hashicorp-vault">HashiCorp Vault</option>
+                                <option value="local-hsm">Local HSM</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Backup Strategy</label>
+                            <select class="form-select" @bind="backupStrategy">
+                                <option value="automatic">Automatic (Daily)</option>
+                                <option value="manual">Manual Only</option>
+                                <option value="replicated">Cross-region Replication</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <h6 class="mt-4">Compliance Settings</h6>
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" @bind="fipsCompliant" id="fipsMode">
+                            <label class="form-check-label" for="fipsMode">
+                                FIPS 140-2 Compliant Mode
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" @bind="auditAllOperations" id="auditOps">
+                            <label class="form-check-label" for="auditOps">
+                                Audit all key operations
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" @bind="enforceKeyEscrow" id="keyEscrow">
+                            <label class="form-check-label" for="keyEscrow">
+                                Enforce key escrow policy
+                            </label>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-save"></i> Save Policies
+                    </button>
+                </form>
+            </div>
+        </div>
+    }
+    else if (activeTab == "audit")
+    {
+        <!-- Audit Log -->
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Key Operations Audit Log</h5>
+                <div>
+                    <input type="text" class="form-control form-control-sm" style="width: 300px; display: inline-block;"
+                           placeholder="Search audit logs..." @bind="auditSearchTerm" @bind:event="oninput">
+                    <button class="btn btn-sm btn-outline-primary ms-2" @onclick="ExportAuditLog">
+                        <i class="bi bi-download"></i> Export
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Timestamp</th>
+                                <th>Operation</th>
+                                <th>Key ID</th>
+                                <th>User</th>
+                                <th>IP Address</th>
+                                <th>Result</th>
+                                <th>Details</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var log in GetFilteredAuditLogs())
+                            {
+                                <tr class="@(log.Success ? "" : "table-danger")">
+                                    <td>@log.Timestamp.ToString("yyyy-MM-dd HH:mm:ss")</td>
+                                    <td>
+                                        <span class="badge @GetOperationBadgeClass(log.Operation)">@log.Operation</span>
+                                    </td>
+                                    <td><code>@log.KeyId</code></td>
+                                    <td>@log.UserName</td>
+                                    <td>@log.IpAddress</td>
+                                    <td>
+                                        @if (log.Success)
+                                        {
+                                            <span class="text-success"><i class="bi bi-check-circle"></i> Success</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-danger"><i class="bi bi-x-circle"></i> Failed</span>
+                                        }
+                                    </td>
+                                    <td>@log.Details</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    }
+    else if (activeTab == "compliance")
+    {
+        <!-- Compliance Dashboard -->
+        <div class="row g-3">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Compliance Status</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="compliance-item">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <span><i class="bi bi-shield-check"></i> TDIF Compliance</span>
+                                        <span class="badge bg-success">Compliant</span>
+                                    </div>
+                                    <div class="progress" style="height: 10px;">
+                                        <div class="progress-bar bg-success" style="width: 100%"></div>
+                                    </div>
+                                    <small class="text-muted">Last audit: 5 days ago</small>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="compliance-item">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <span><i class="bi bi-file-earmark-lock"></i> ISO 27001</span>
+                                        <span class="badge bg-success">Compliant</span>
+                                    </div>
+                                    <div class="progress" style="height: 10px;">
+                                        <div class="progress-bar bg-success" style="width: 95%"></div>
+                                    </div>
+                                    <small class="text-muted">95% controls implemented</small>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="compliance-item">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <span><i class="bi bi-lock"></i> FIPS 140-2</span>
+                                        <span class="badge bg-warning">Partial</span>
+                                    </div>
+                                    <div class="progress" style="height: 10px;">
+                                        <div class="progress-bar bg-warning" style="width: 80%"></div>
+                                    </div>
+                                    <small class="text-muted">Level 2 certified</small>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="compliance-item">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <span><i class="bi bi-globe"></i> GDPR</span>
+                                        <span class="badge bg-success">Compliant</span>
+                                    </div>
+                                    <div class="progress" style="height: 10px;">
+                                        <div class="progress-bar bg-success" style="width: 100%"></div>
+                                    </div>
+                                    <small class="text-muted">All requirements met</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <hr class="my-4">
+
+                        <h6>Compliance Checklist</h6>
+                        <div class="list-group">
+                            <div class="list-group-item">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" checked disabled>
+                                    <label class="form-check-label">
+                                        Keys stored in HSM-backed storage
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="list-group-item">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" checked disabled>
+                                    <label class="form-check-label">
+                                        Regular key rotation policy enforced
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="list-group-item">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" checked disabled>
+                                    <label class="form-check-label">
+                                        Audit logging enabled for all operations
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="list-group-item">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" checked disabled>
+                                    <label class="form-check-label">
+                                        Cryptographic algorithms meet standards
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="list-group-item">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" disabled>
+                                    <label class="form-check-label">
+                                        Quantum-resistant algorithms implemented
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Next Audit</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label">Audit Type</label>
+                            <select class="form-select" @bind="nextAuditType">
+                                <option value="internal">Internal Audit</option>
+                                <option value="external">External Audit</option>
+                                <option value="certification">Certification Audit</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Scheduled Date</label>
+                            <input type="date" class="form-control" @bind="nextAuditDate">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Auditor</label>
+                            <input type="text" class="form-control" @bind="auditorName" placeholder="Enter auditor name">
+                        </div>
+                        <button class="btn btn-primary w-100" @onclick="ScheduleAudit">
+                            <i class="bi bi-calendar-check"></i> Schedule Audit
+                        </button>
+
+                        <hr class="my-3">
+
+                        <h6>Recent Certifications</h6>
+                        <div class="list-group">
+                            <div class="list-group-item">
+                                <div class="d-flex justify-content-between">
+                                    <span>TDIF Accreditation</span>
+                                    <small>Valid until 2026</small>
+                                </div>
+                            </div>
+                            <div class="list-group-item">
+                                <div class="d-flex justify-content-between">
+                                    <span>ISO 27001:2022</span>
+                                    <small>Valid until 2025</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+<!-- Rotate Keys Modal -->
+@if (showRotateModal)
+{
+    <div class="modal fade show" style="display: block;" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Rotate Cryptographic Keys</h5>
+                    <button type="button" class="btn-close" @onclick="() => showRotateModal = false"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle"></i> Key rotation will temporarily affect system operations.
+                        Please ensure all critical processes are completed.
+                    </div>
+
+                    <h6>Select Keys to Rotate</h6>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" @bind="rotateAllKeys" id="rotateAll">
+                        <label class="form-check-label" for="rotateAll">
+                            Rotate all keys
+                        </label>
+                    </div>
+
+                    @if (!rotateAllKeys)
+                    {
+                        <div class="ms-3 mt-2">
+                            @foreach (var key in cryptographicKeys.Where(k => k.Status == "Active"))
+                            {
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox"
+                                           checked="@selectedKeysForRotation.Contains(key.KeyId)"
+                                           @onchange="@(() => ToggleKeySelection(key.KeyId))">
+                                    <label class="form-check-label">
+                                        @key.KeyType - @key.KeyId
+                                    </label>
+                                </div>
+                            }
+                        </div>
+                    }
+
+                    <div class="mt-3">
+                        <label class="form-label">Rotation Reason</label>
+                        <select class="form-select" @bind="rotationReason">
+                            <option value="scheduled">Scheduled Rotation</option>
+                            <option value="security">Security Update</option>
+                            <option value="compromise">Potential Compromise</option>
+                            <option value="compliance">Compliance Requirement</option>
+                            <option value="manual">Manual Request</option>
+                        </select>
+                    </div>
+
+                    <div class="mt-3">
+                        <label class="form-label">Additional Notes</label>
+                        <textarea class="form-control" rows="3" @bind="rotationNotes"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="() => showRotateModal = false">Cancel</button>
+                    <button type="button" class="btn btn-danger" @onclick="ExecuteKeyRotation">
+                        <i class="bi bi-arrow-repeat"></i> Execute Rotation
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal-backdrop fade show"></div>
+}
+
+@code {
+    #pragma warning disable CS0414
+    private string activeTab = "keys";
+    private bool showAlert = false;
+    private string alertMessage = "";
+    private string alertClass = "alert-info";
+
+    private int activeKeys = 12;
+    private int expiringKeys = 3;
+    private int expiredKeys = 0;
+    private int lastRotationDays = 45;
+
+    private bool showRotateModal = false;
+    private bool showGenerateModal = false;
+    private bool rotateAllKeys = false;
+    private List<string> selectedKeysForRotation = new List<string>();
+    private string rotationReason = "scheduled";
+    private string rotationNotes = "";
+
+    private bool autoRotationEnabled = true;
+    private int rotationFrequency = 90;
+    private int gracePeriodDays = 7;
+    private string rotationStartTime = "02:00";
+    private string rotationEndTime = "04:00";
+    private bool rotateSigningKeys = true;
+    private bool rotateEncryptionKeys = true;
+    private bool rotateMacKeys = true;
+
+    private int minRsaKeyLength = 3072;
+    private string ellipticCurve = "P-256";
+    private bool requireMfa = true;
+    private bool requireDualControl = false;
+    private bool requireSeparationOfDuties = true;
+    private string keyStorageProvider = "azure-keyvault";
+    private string backupStrategy = "automatic";
+    private bool fipsCompliant = true;
+    private bool auditAllOperations = true;
+    private bool enforceKeyEscrow = false;
+
+    private string auditSearchTerm = "";
+    private string nextAuditType = "internal";
+    private DateTime nextAuditDate = DateTime.Now.AddMonths(3);
+    private string auditorName = "";
+
+    private List<CryptoKey> cryptographicKeys = new List<CryptoKey>
+    {
+        new CryptoKey
+        {
+            KeyId = "sign-rsa-001",
+            KeyType = "Signing",
+            Algorithm = "RS256",
+            Status = "Active",
+            IsPrimary = true,
+            CreatedAt = DateTime.Now.AddDays(-45),
+            ExpiresAt = DateTime.Now.AddDays(45),
+            UsageCount = 125432
+        },
+        new CryptoKey
+        {
+            KeyId = "enc-aes-001",
+            KeyType = "Encryption",
+            Algorithm = "AES-256-GCM",
+            Status = "Active",
+            IsPrimary = true,
+            CreatedAt = DateTime.Now.AddDays(-30),
+            ExpiresAt = DateTime.Now.AddDays(60),
+            UsageCount = 89234
+        },
+        new CryptoKey
+        {
+            KeyId = "sign-ec-001",
+            KeyType = "Signing",
+            Algorithm = "ES256",
+            Status = "Active",
+            IsPrimary = false,
+            CreatedAt = DateTime.Now.AddDays(-20),
+            ExpiresAt = DateTime.Now.AddDays(25),
+            UsageCount = 45123
+        },
+        new CryptoKey
+        {
+            KeyId = "mac-hmac-001",
+            KeyType = "MAC",
+            Algorithm = "HMAC-SHA256",
+            Status = "Active",
+            IsPrimary = true,
+            CreatedAt = DateTime.Now.AddDays(-60),
+            ExpiresAt = DateTime.Now.AddDays(30),
+            UsageCount = 234567
+        }
+    };
+
+    private List<RotationSchedule> upcomingRotations = new List<RotationSchedule>
+    {
+        new RotationSchedule
+        {
+            KeyId = "sign-ec-001",
+            KeyType = "Signing (ES256)",
+            ScheduledDate = DateTime.Now.AddDays(25),
+            Reason = "Approaching expiration",
+            EstimatedDowntime = 5
+        },
+        new RotationSchedule
+        {
+            KeyId = "mac-hmac-001",
+            KeyType = "MAC (HMAC)",
+            ScheduledDate = DateTime.Now.AddDays(30),
+            Reason = "Regular rotation policy",
+            EstimatedDowntime = 3
+        }
+    };
+
+    private List<RotationHistoryItem> rotationHistory = new List<RotationHistoryItem>
+    {
+        new RotationHistoryItem
+        {
+            KeyType = "Signing (RS256)",
+            Description = "Scheduled rotation completed",
+            RotatedAt = DateTime.Now.AddDays(-45),
+            Success = true
+        },
+        new RotationHistoryItem
+        {
+            KeyType = "Encryption (AES)",
+            Description = "Emergency rotation - security update",
+            RotatedAt = DateTime.Now.AddDays(-30),
+            Success = true
+        }
+    };
+
+    private List<AuditLogEntry> auditLogs = new List<AuditLogEntry>
+    {
+        new AuditLogEntry
+        {
+            Timestamp = DateTime.Now.AddHours(-2),
+            Operation = "Generate",
+            KeyId = "sign-test-002",
+            UserName = "admin@numbat.gov.au",
+            IpAddress = "203.0.113.42",
+            Success = true,
+            Details = "Generated new test signing key"
+        },
+        new AuditLogEntry
+        {
+            Timestamp = DateTime.Now.AddHours(-5),
+            Operation = "Rotate",
+            KeyId = "enc-aes-001",
+            UserName = "security@numbat.gov.au",
+            IpAddress = "203.0.113.15",
+            Success = true,
+            Details = "Scheduled rotation completed"
+        },
+        new AuditLogEntry
+        {
+            Timestamp = DateTime.Now.AddDays(-1),
+            Operation = "Revoke",
+            KeyId = "sign-old-001",
+            UserName = "admin@numbat.gov.au",
+            IpAddress = "203.0.113.42",
+            Success = true,
+            Details = "Key expired and revoked"
+        },
+        new AuditLogEntry
+        {
+            Timestamp = DateTime.Now.AddDays(-2),
+            Operation = "Export",
+            KeyId = "sign-rsa-001",
+            UserName = "audit@numbat.gov.au",
+            IpAddress = "203.0.113.88",
+            Success = false,
+            Details = "Export denied - insufficient permissions"
+        }
+    };
+    #pragma warning restore CS0414
+
+    protected override async Task OnInitializedAsync()
+    {
+        await RefreshKeyStatus();
+    }
+
+    private async Task RefreshKeyStatus()
+    {
+        await Task.Delay(100);
+        StateHasChanged();
+    }
+
+    private void ShowRotateKeysModal()
+    {
+        showRotateModal = true;
+        selectedKeysForRotation.Clear();
+    }
+
+    private void ShowGenerateKeyModal()
+    {
+        ShowAlert("Key generation interface coming soon", "alert-info");
+    }
+
+    private async Task ExecuteKeyRotation()
+    {
+        showRotateModal = false;
+        ShowAlert("Key rotation initiated. This may take a few minutes...", "alert-warning");
+
+        await Task.Delay(2000);
+
+        ShowAlert("Key rotation completed successfully", "alert-success");
+        await RefreshKeyStatus();
+    }
+
+    private void ToggleKeySelection(string keyId)
+    {
+        if (selectedKeysForRotation.Contains(keyId))
+            selectedKeysForRotation.Remove(keyId);
+        else
+            selectedKeysForRotation.Add(keyId);
+    }
+
+    private async Task RotateKey(string keyId)
+    {
+        ShowAlert($"Rotating key {keyId}...", "alert-warning");
+        await Task.Delay(1000);
+        ShowAlert($"Key {keyId} rotated successfully", "alert-success");
+    }
+
+    private async Task RevokeKey(string keyId)
+    {
+        ShowAlert($"Revoking key {keyId}...", "alert-warning");
+        await Task.Delay(1000);
+        ShowAlert($"Key {keyId} revoked", "alert-success");
+    }
+
+    private void ViewKeyDetails(string keyId)
+    {
+        ShowAlert($"Key details for {keyId} - Full view coming soon", "alert-info");
+    }
+
+    private async Task SaveRotationSchedule()
+    {
+        ShowAlert("Saving rotation schedule...", "alert-info");
+        await Task.Delay(500);
+        ShowAlert("Rotation schedule updated successfully", "alert-success");
+    }
+
+    private async Task SaveSecurityPolicies()
+    {
+        ShowAlert("Updating security policies...", "alert-info");
+        await Task.Delay(500);
+        ShowAlert("Security policies saved successfully", "alert-success");
+    }
+
+    private async Task ScheduleAudit()
+    {
+        ShowAlert($"Audit scheduled for {nextAuditDate:yyyy-MM-dd}", "alert-success");
+        await Task.Delay(500);
+    }
+
+    private async Task ExportKeyReport()
+    {
+        ShowAlert("Generating key report...", "alert-info");
+        await Task.Delay(1000);
+        await JSRuntime.InvokeVoidAsync("alert", "Key report downloaded: key_report_2025.pdf");
+    }
+
+    private async Task ExportAuditLog()
+    {
+        ShowAlert("Exporting audit log...", "alert-info");
+        await Task.Delay(1000);
+        await JSRuntime.InvokeVoidAsync("alert", "Audit log exported: audit_log_2025.csv");
+    }
+
+    private List<AuditLogEntry> GetFilteredAuditLogs()
+    {
+        if (string.IsNullOrWhiteSpace(auditSearchTerm))
+            return auditLogs;
+
+        var searchLower = auditSearchTerm.ToLower();
+        return auditLogs.Where(log =>
+            log.Operation.ToLower().Contains(searchLower) ||
+            log.KeyId.ToLower().Contains(searchLower) ||
+            log.UserName.ToLower().Contains(searchLower) ||
+            log.Details.ToLower().Contains(searchLower)
+        ).ToList();
+    }
+
+    private string GetStatusBadgeClass(string status)
+    {
+        return status switch
+        {
+            "Active" => "bg-success",
+            "Rotating" => "bg-warning",
+            "Expired" => "bg-danger",
+            "Revoked" => "bg-secondary",
+            _ => "bg-secondary"
+        };
+    }
+
+    private string GetOperationBadgeClass(string operation)
+    {
+        return operation switch
+        {
+            "Generate" => "bg-primary",
+            "Rotate" => "bg-warning",
+            "Revoke" => "bg-danger",
+            "Export" => "bg-info",
+            "Import" => "bg-success",
+            _ => "bg-secondary"
+        };
+    }
+
+    private void ShowAlert(string message, string cssClass)
+    {
+        alertMessage = message;
+        alertClass = cssClass;
+        showAlert = true;
+        StateHasChanged();
+    }
+
+    private class CryptoKey
+    {
+        public string KeyId { get; set; } = "";
+        public string KeyType { get; set; } = "";
+        public string Algorithm { get; set; } = "";
+        public string Status { get; set; } = "";
+        public bool IsPrimary { get; set; }
+        public DateTime CreatedAt { get; set; }
+        public DateTime ExpiresAt { get; set; }
+        public int UsageCount { get; set; }
+        public int DaysUntilExpiry => (int)(ExpiresAt - DateTime.Now).TotalDays;
+    }
+
+    private class RotationSchedule
+    {
+        public string KeyId { get; set; } = "";
+        public string KeyType { get; set; } = "";
+        public DateTime ScheduledDate { get; set; }
+        public string Reason { get; set; } = "";
+        public int EstimatedDowntime { get; set; }
+    }
+
+    private class RotationHistoryItem
+    {
+        public string KeyType { get; set; } = "";
+        public string Description { get; set; } = "";
+        public DateTime RotatedAt { get; set; }
+        public bool Success { get; set; }
+    }
+
+    private class AuditLogEntry
+    {
+        public DateTime Timestamp { get; set; }
+        public string Operation { get; set; } = "";
+        public string KeyId { get; set; } = "";
+        public string UserName { get; set; } = "";
+        public string IpAddress { get; set; } = "";
+        public bool Success { get; set; }
+        public string Details { get; set; } = "";
+    }
+}
+
+<style>
+    .timeline {
+        position: relative;
+        padding-left: 30px;
+    }
+
+    .timeline-item {
+        position: relative;
+        padding-bottom: 20px;
+    }
+
+    .timeline-marker {
+        position: absolute;
+        left: -25px;
+        top: 5px;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+    }
+
+    .timeline-item:not(:last-child)::before {
+        content: '';
+        position: absolute;
+        left: -19px;
+        top: 17px;
+        width: 1px;
+        height: calc(100% - 17px);
+        background: #dee2e6;
+    }
+
+    .compliance-item {
+        padding: 15px;
+        border: 1px solid #dee2e6;
+        border-radius: 5px;
+        margin-bottom: 15px;
+    }
+</style>

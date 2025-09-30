@@ -1,0 +1,47 @@
+# Dashboard queries for the Admin portal
+
+query GetDashboardStats {
+  dashboardStats {
+    totalUsers
+    totalWallets
+    totalCredentials
+    activeUsers
+    recentActivity {
+      id
+      type
+      description
+      timestamp
+      user {
+        id
+        email
+        firstName
+        lastName
+      }
+    }
+  }
+}
+
+subscription OnDashboardUpdate {
+  onDashboardUpdate {
+    totalUsers
+    totalWallets
+    totalCredentials
+    activeUsers
+    recentActivity {
+      id
+      type
+      description
+      timestamp
+    }
+  }
+}
+
+subscription OnNotification {
+  onNotification {
+    id
+    type
+    message
+    timestamp
+    severity
+  }
+}

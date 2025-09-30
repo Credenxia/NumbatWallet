@@ -1,0 +1,264 @@
+name: CI - Build and Test
+
+on:
+  push:
+    branches: [ main, develop, 'feature/**' ]
+  pull_request:
+    branches: [ main, develop ]
+  workflow_dispatch:
+
+env:
+  DOTNET_VERSION: '9.0.x'
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+  NUGET_PACKAGES: ${{ github.workspace }}/.nuget/packages
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    name: Build and Test
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # Full history for SonarCloud
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+
+    - name: Cache NuGet packages
+      uses: actions/cache@v4
+      with:
+        path: ${{ env.NUGET_PACKAGES }}
+        key: ${{ runner.os }}-nuget-${{ hashFiles('**/packages.lock.json', '**/Directory.Packages.props') }}
+        restore-keys: |
+          ${{ runner.os }}-nuget-
+
+    - name: Restore dependencies
+      run: dotnet restore
+
+    - name: Build with warnings as errors
+      run: dotnet build --no-restore --configuration Release -warnaserror
+
+    - name: Check for vulnerable packages
+      run: dotnet list package --vulnerable --include-transitive
+      continue-on-error: false
+
+    - name: Run tests with coverage
+      run: |
+        dotnet test --no-build --configuration Release \
+          --verbosity normal \
+          --collect:"XPlat Code Coverage" \
+          --results-directory ./TestResults \
+          --logger "trx;LogFileName=test-results.trx" \
+          -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=opencover
+
+    - name: Generate coverage report
+      uses: danielpalme/ReportGenerator-GitHub-Action@5
+      with:
+        reports: './TestResults/**/coverage.opencover.xml'
+        targetdir: './CoverageReport'
+        reporttypes: 'HtmlInline_AzurePipelines;Cobertura;MarkdownSummary'
+        verbosity: 'Info'
+        title: 'Code Coverage Report'
+        tag: '${{ github.run_number }}_${{ github.run_id }}'
+      continue-on-error: true
+
+    - name: Check coverage thresholds
+      run: |
+        # Extract coverage percentage from Cobertura report
+        if [ -f "./CoverageReport/Cobertura.xml" ]; then
+          COVERAGE=$(python3 -c "
+import xml.etree.ElementTree as ET
+tree = ET.parse('./CoverageReport/Cobertura.xml')
+root = tree.getroot()
+line_rate = float(root.attrib.get('line-rate', 0))
+print(f'{line_rate * 100:.2f}')
+          ")
+
+          echo "### Test Coverage: ${COVERAGE}%" >> $GITHUB_STEP_SUMMARY
+
+          # Check against minimum threshold (85%)
+          if (( $(echo "$COVERAGE < 85" | bc -l) )); then
+            echo "::error::Code coverage ${COVERAGE}% is below the required 85% threshold"
+            exit 1
+          fi
+        else
+          echo "::warning::Coverage report not found"
+        fi
+
+    - name: Upload test results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: test-results
+        path: |
+          ./TestResults/**/*.trx
+          ./TestResults/**/*.xml
+
+    - name: Upload coverage report
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: coverage-report
+        path: ./CoverageReport/
+
+    - name: Publish test results
+      uses: dorny/test-reporter@v1
+      if: always()
+      with:
+        name: Test Results
+        path: './TestResults/**/*.trx'
+        reporter: dotnet-trx
+        fail-on-error: true
+
+    - name: Add coverage PR comment
+      uses: 5monkeys/cobertura-action@v14
+      if: github.event_name == 'pull_request'
+      with:
+        path: './CoverageReport/Cobertura.xml'
+        minimum_coverage: 85
+        fail_below_threshold: true
+        show_class_names: true
+        show_missing: true
+        show_line: true
+        show_branch: true
+      continue-on-error: true
+
+  code-quality:
+    runs-on: ubuntu-latest
+    name: Code Quality Analysis
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+
+    - name: Install .NET tools
+      run: |
+        dotnet tool install --global dotnet-format
+        dotnet tool install --global dotnet-outdated-tool
+        dotnet tool install --global snitch
+
+    - name: Check formatting
+      run: dotnet format --verify-no-changes --verbosity diagnostic
+
+    - name: Check outdated packages
+      run: dotnet-outdated --fail-on-updates
+      continue-on-error: true
+
+    - name: Run security scan
+      uses: security-devops/action-psscriptanalyzer@v1
+      with:
+        path: ./
+        recurse: true
+        output: security-scan-results.sarif
+        excludeRule: '"PSAvoidUsingPlainTextForPassword"'
+      continue-on-error: true
+
+    - name: Upload security results
+      uses: github/codeql-action/upload-sarif@v3
+      if: always()
+      with:
+        sarif_file: security-scan-results.sarif
+      continue-on-error: true
+
+  docker-build:
+    runs-on: ubuntu-latest
+    name: Docker Build Validation
+    if: github.event_name == 'pull_request' || github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop'
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Build Web API Docker image
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        file: ./src/NumbatWallet.Web.Api/Dockerfile
+        push: false
+        tags: numbatwallet/web-api:${{ github.sha }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+
+    - name: Build Admin Portal Docker image
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        file: ./src/NumbatWallet.Web.Admin/Dockerfile
+        push: false
+        tags: numbatwallet/web-admin:${{ github.sha }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+
+    - name: Scan Docker images for vulnerabilities
+      uses: aquasecurity/trivy-action@master
+      with:
+        image-ref: 'numbatwallet/web-api:${{ github.sha }}'
+        format: 'sarif'
+        output: 'trivy-results.sarif'
+      continue-on-error: true
+
+    - name: Upload Trivy results
+      uses: github/codeql-action/upload-sarif@v3
+      if: always()
+      with:
+        sarif_file: 'trivy-results.sarif'
+      continue-on-error: true
+
+  summary:
+    runs-on: ubuntu-latest
+    needs: [build, code-quality]
+    if: always()
+    name: CI Summary
+
+    steps:
+    - name: Download test results
+      uses: actions/download-artifact@v4
+      with:
+        name: test-results
+        path: ./test-results
+      continue-on-error: true
+
+    - name: Download coverage report
+      uses: actions/download-artifact@v4
+      with:
+        name: coverage-report
+        path: ./coverage-report
+      continue-on-error: true
+
+    - name: Create summary
+      run: |
+        echo "## CI Build Summary" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+
+        echo "### Build Status" >> $GITHUB_STEP_SUMMARY
+        echo "- Build: ${{ needs.build.result }}" >> $GITHUB_STEP_SUMMARY
+        echo "- Code Quality: ${{ needs.code-quality.result }}" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+
+        if [ -f "./coverage-report/Summary.md" ]; then
+          echo "### Coverage Report" >> $GITHUB_STEP_SUMMARY
+          cat ./coverage-report/Summary.md >> $GITHUB_STEP_SUMMARY
+        fi
+
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### Workflow Information" >> $GITHUB_STEP_SUMMARY
+        echo "- Run ID: ${{ github.run_id }}" >> $GITHUB_STEP_SUMMARY
+        echo "- Run Number: ${{ github.run_number }}" >> $GITHUB_STEP_SUMMARY
+        echo "- Actor: ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
+        echo "- Branch: ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+        echo "- Commit: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY

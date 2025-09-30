@@ -1,0 +1,174 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "environment": {
+      "value": "test"
+    },
+    "location": {
+      "value": "australiaeast"
+    },
+    "locationCode": {
+      "value": "aue"
+    },
+    "applicationName": {
+      "value": "numbatwallet"
+    },
+    "administratorObjectId": {
+      "value": "" // To be filled with actual Azure AD admin object ID
+    },
+    "managedIdentityObjectId": {
+      "value": "" // To be filled after managed identity creation
+    },
+
+    // Network Configuration
+    "vnetAddressSpace": {
+      "value": "10.1.0.0/16"
+    },
+    "subnets": {
+      "value": [
+        {
+          "name": "snet-webapp",
+          "addressPrefix": "10.1.1.0/24"
+        },
+        {
+          "name": "snet-api",
+          "addressPrefix": "10.1.2.0/24"
+        },
+        {
+          "name": "snet-database",
+          "addressPrefix": "10.1.3.0/24"
+        },
+        {
+          "name": "snet-privateendpoints",
+          "addressPrefix": "10.1.4.0/24"
+        }
+      ]
+    },
+
+    // SKU Configuration - Moderate for testing
+    "appServicePlanSku": {
+      "value": {
+        "name": "S2",
+        "tier": "Standard",
+        "capacity": 2
+      }
+    },
+    "sqlServerSku": {
+      "value": {
+        "name": "S1",
+        "tier": "Standard",
+        "capacity": 20
+      }
+    },
+    "redisCacheSku": {
+      "value": {
+        "name": "C1",
+        "family": "C",
+        "capacity": 1
+      }
+    },
+    "containerAppEnvironmentSku": {
+      "value": {
+        "name": "Consumption",
+        "tier": "Consumption"
+      }
+    },
+
+    // PostgreSQL Configuration
+    "postgresAdminUsername": {
+      "value": "nwadmin"
+    },
+    "postgresAdminPassword": {
+      "reference": {
+        "keyVault": {
+          "id": "" // To be filled with Key Vault resource ID
+        },
+        "secretName": "PostgresAdminPassword"
+      }
+    },
+    "postgresDatabaseName": {
+      "value": "numbatwallet-test"
+    },
+    "postgresBackupRetentionDays": {
+      "value": 7
+    },
+    "postgresGeoRedundantBackup": {
+      "value": false
+    },
+
+    // Security Configuration
+    "enablePrivateEndpoints": {
+      "value": true
+    },
+    "requireMfa": {
+      "value": false
+    },
+    "sessionTimeoutMinutes": {
+      "value": 120
+    },
+    "enableWaf": {
+      "value": false
+    },
+    "tlsVersion": {
+      "value": "1.2"
+    },
+    "allowedIpAddresses": {
+      "value": [
+        // Add test environment IP addresses here
+      ]
+    },
+
+    // Application Settings
+    "applicationSettings": {
+      "value": {
+        "ASPNETCORE_ENVIRONMENT": "Test",
+        "Logging__LogLevel__Default": "Information",
+        "Logging__LogLevel__Microsoft": "Warning",
+        "Logging__LogLevel__System": "Warning",
+        "DetailedErrors": "true",
+        "EnableSensitiveDataLogging": "false",
+        "GraphQL__EnableIntrospection": "true",
+        "GraphQL__EnablePlayground": "true",
+        "RateLimiting__Enabled": "true",
+        "RateLimiting__PermitLimit": "100",
+        "RateLimiting__Window": "60",
+        "Cache__SlidingExpiration": "300",
+        "HealthCheck__Enabled": "true",
+        "TestData__EnableSeedData": "true",
+        "TestData__UserCount": "100"
+      }
+    },
+
+    // Feature Flags
+    "enableDebugLogging": {
+      "value": true
+    },
+    "enableSwagger": {
+      "value": true
+    },
+    "enableDeveloperExceptionPage": {
+      "value": false
+    },
+    "enableDetailedErrors": {
+      "value": true
+    },
+    "enableAutomatedBackups": {
+      "value": true
+    },
+
+    // Tags
+    "tags": {
+      "value": {
+        "Application": "NumbatWallet",
+        "Environment": "Test",
+        "ManagedBy": "Bicep",
+        "CostCenter": "QA",
+        "Owner": "QA-Team",
+        "Purpose": "Integration Testing",
+        "AutoShutdown": "true",
+        "ShutdownTime": "19:00"
+      }
+    }
+  }
+}

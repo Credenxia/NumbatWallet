@@ -1,0 +1,152 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: numbatwallet-postgres
+    environment:
+      POSTGRES_DB: numbatwallet
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - numbatwallet-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: numbatwallet-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - numbatwallet-network
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Azurite (Azure Storage Emulator)
+  azurite:
+    image: mcr.microsoft.com/azure-storage/azurite
+    container_name: numbatwallet-azurite
+    ports:
+      - "10000:10000" # Blob
+      - "10001:10001" # Queue
+      - "10002:10002" # Table
+    volumes:
+      - azurite_data:/data
+    networks:
+      - numbatwallet-network
+    command: "azurite --blobHost 0.0.0.0 --queueHost 0.0.0.0 --tableHost 0.0.0.0"
+
+  # Seq for Structured Logging
+  seq:
+    image: datalust/seq:latest
+    container_name: numbatwallet-seq
+    environment:
+      ACCEPT_EULA: Y
+    ports:
+      - "5341:5341" # API
+      - "5342:80"   # UI
+    volumes:
+      - seq_data:/data
+    networks:
+      - numbatwallet-network
+
+  # pgAdmin for Database Management
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: numbatwallet-pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@numbatwallet.local
+      PGADMIN_DEFAULT_PASSWORD: admin123
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+    ports:
+      - "5050:80"
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    networks:
+      - numbatwallet-network
+    depends_on:
+      - postgres
+
+  # Web API
+  webapi:
+    build:
+      context: .
+      dockerfile: src/NumbatWallet.Web.Api/Dockerfile
+    container_name: numbatwallet-api
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__DefaultConnection: "Host=postgres;Port=5432;Database=numbatwallet;Username=postgres;Password=postgres"
+      ConnectionStrings__Redis: "redis:6379"
+      ConnectionStrings__BlobStorage: "DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://azurite:10000/devstoreaccount1;"
+      Serilog__WriteTo__1__Args__serverUrl: "http://seq:5341"
+    ports:
+      - "5000:8080"
+      - "5001:8081"
+    networks:
+      - numbatwallet-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Admin Portal
+  admin:
+    build:
+      context: .
+      dockerfile: src/NumbatWallet.Web.Admin/Dockerfile
+    container_name: numbatwallet-admin
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__DefaultConnection: "Host=postgres;Port=5432;Database=numbatwallet;Username=postgres;Password=postgres"
+      ConnectionStrings__Redis: "redis:6379"
+      Serilog__WriteTo__1__Args__serverUrl: "http://seq:5341"
+    ports:
+      - "5002:8080"
+      - "5003:8081"
+    networks:
+      - numbatwallet-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+volumes:
+  postgres_data:
+  redis_data:
+  azurite_data:
+  seq_data:
+  pgadmin_data:
+
+networks:
+  numbatwallet-network:
+    driver: bridge

@@ -1,0 +1,203 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "environment": {
+      "value": "staging"
+    },
+    "location": {
+      "value": "australiaeast"
+    },
+    "geoRedundantLocation": {
+      "value": "australiasoutheast"
+    },
+    "locationCode": {
+      "value": "aue"
+    },
+    "applicationName": {
+      "value": "numbatwallet"
+    },
+    "administratorObjectId": {
+      "value": "" // To be filled with actual Azure AD admin object ID
+    },
+    "managedIdentityObjectId": {
+      "value": "" // To be filled after managed identity creation
+    },
+
+    // Network Configuration
+    "vnetAddressSpace": {
+      "value": "10.2.0.0/16"
+    },
+    "subnets": {
+      "value": [
+        {
+          "name": "snet-webapp",
+          "addressPrefix": "10.2.1.0/24"
+        },
+        {
+          "name": "snet-api",
+          "addressPrefix": "10.2.2.0/24"
+        },
+        {
+          "name": "snet-database",
+          "addressPrefix": "10.2.3.0/24"
+        },
+        {
+          "name": "snet-privateendpoints",
+          "addressPrefix": "10.2.4.0/24"
+        },
+        {
+          "name": "snet-management",
+          "addressPrefix": "10.2.5.0/24"
+        }
+      ]
+    },
+
+    // SKU Configuration - Production-like
+    "appServicePlanSku": {
+      "value": {
+        "name": "P1V3",
+        "tier": "PremiumV3",
+        "capacity": 2
+      }
+    },
+    "sqlServerSku": {
+      "value": {
+        "name": "S3",
+        "tier": "Standard",
+        "capacity": 100
+      }
+    },
+    "redisCacheSku": {
+      "value": {
+        "name": "C3",
+        "family": "C",
+        "capacity": 6
+      }
+    },
+    "containerAppEnvironmentSku": {
+      "value": {
+        "name": "WorkloadProfiles",
+        "tier": "WorkloadProfiles"
+      }
+    },
+
+    // PostgreSQL Configuration
+    "postgresAdminUsername": {
+      "value": "nwadmin"
+    },
+    "postgresAdminPassword": {
+      "reference": {
+        "keyVault": {
+          "id": "/subscriptions/{subscriptionId}/resourceGroups/rg-numbatwallet-staging-aue/providers/Microsoft.KeyVault/vaults/kv-nw-staging-aue"
+        },
+        "secretName": "PostgresAdminPassword"
+      }
+    },
+    "postgresDatabaseName": {
+      "value": "numbatwallet-staging"
+    },
+    "postgresBackupRetentionDays": {
+      "value": 14
+    },
+    "postgresGeoRedundantBackup": {
+      "value": true
+    },
+    "postgresEnableHa": {
+      "value": true
+    },
+
+    // Security Configuration
+    "enablePrivateEndpoints": {
+      "value": true
+    },
+    "requireMfa": {
+      "value": true
+    },
+    "sessionTimeoutMinutes": {
+      "value": 60
+    },
+    "enableWaf": {
+      "value": true
+    },
+    "tlsVersion": {
+      "value": "1.2"
+    },
+    "allowedIpAddresses": {
+      "value": []
+    },
+
+    // Application Settings
+    "applicationSettings": {
+      "value": {
+        "ASPNETCORE_ENVIRONMENT": "Staging",
+        "Logging__LogLevel__Default": "Warning",
+        "Logging__LogLevel__Microsoft": "Warning",
+        "Logging__LogLevel__System": "Error",
+        "DetailedErrors": "false",
+        "EnableSensitiveDataLogging": "false",
+        "GraphQL__EnableIntrospection": "true",
+        "GraphQL__EnablePlayground": "false",
+        "RateLimiting__Enabled": "true",
+        "RateLimiting__PermitLimit": "60",
+        "RateLimiting__Window": "60",
+        "Cache__SlidingExpiration": "600",
+        "HealthCheck__Enabled": "true",
+        "Monitoring__EnableAPM": "true",
+        "Monitoring__EnableMetrics": "true",
+        "Monitoring__SamplingRate": "0.5"
+      }
+    },
+
+    // High Availability Configuration
+    "enableZoneRedundancy": {
+      "value": false
+    },
+    "replicaCount": {
+      "value": 2
+    },
+    "enableAutoScaling": {
+      "value": true
+    },
+    "minInstances": {
+      "value": 2
+    },
+    "maxInstances": {
+      "value": 5
+    },
+
+    // Feature Flags
+    "enableDebugLogging": {
+      "value": false
+    },
+    "enableSwagger": {
+      "value": true
+    },
+    "enableDeveloperExceptionPage": {
+      "value": false
+    },
+    "enableDetailedErrors": {
+      "value": false
+    },
+    "enableAutomatedBackups": {
+      "value": true
+    },
+    "enableGeoReplication": {
+      "value": true
+    },
+
+    // Tags
+    "tags": {
+      "value": {
+        "Application": "NumbatWallet",
+        "Environment": "Staging",
+        "ManagedBy": "Bicep",
+        "CostCenter": "Pre-Production",
+        "Owner": "Operations",
+        "Purpose": "UAT and Pre-Production Testing",
+        "Compliance": "TDIF",
+        "DataClassification": "Sensitive"
+      }
+    }
+  }
+}
