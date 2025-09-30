@@ -85,7 +85,7 @@ public class CredentialService : ICredentialService
             Guid.Parse(dto.IssuerId ?? Guid.NewGuid().ToString()),
             dto.Type, // credentialType as string
             dataJson,
-            "default-schema" // TODO: Add schema to DTO
+            dto.Schema
         );
 
         if (!credentialResult.IsSuccess)

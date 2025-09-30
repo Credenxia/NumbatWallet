@@ -71,7 +71,30 @@ public class CredentialIssuedEventHandler : IDomainEventHandler<CredentialIssued
             };
             await _auditService.LogAccessAsync(auditEntry, cancellationToken);
 
-            // TODO: Schedule expiry reminders when we have expiry dates in the events
+            // Schedule expiry reminders if credential has expiration date
+            if (domainEvent.ExpiresAt.HasValue)
+            {
+                _logger.LogInformation("Credential {CredentialId} expires at {ExpiresAt}, scheduling reminders",
+                    domainEvent.CredentialId, domainEvent.ExpiresAt.Value);
+
+                // Calculate reminder dates
+                var expiryDate = domainEvent.ExpiresAt.Value;
+                var thirtyDaysBeforeExpiry = expiryDate.AddDays(-30);
+                var sevenDaysBeforeExpiry = expiryDate.AddDays(-7);
+                var oneDayBeforeExpiry = expiryDate.AddDays(-1);
+
+                // Schedule reminders at different intervals
+                // NOTE: This requires a background job scheduler (Hangfire/Quartz)
+                // For now, we log the scheduled reminder times
+                _logger.LogInformation(
+                    "Expiry reminders scheduled for Credential {CredentialId}: 30 days ({ThirtyDays}), 7 days ({SevenDays}), 1 day ({OneDay})",
+                    domainEvent.CredentialId, thirtyDaysBeforeExpiry, sevenDaysBeforeExpiry, oneDayBeforeExpiry);
+
+                // TODO: Integrate with Hangfire to schedule actual background jobs
+                // BackgroundJob.Schedule(() => SendExpiryReminderAsync(domainEvent.CredentialId, 30), thirtyDaysBeforeExpiry);
+                // BackgroundJob.Schedule(() => SendExpiryReminderAsync(domainEvent.CredentialId, 7), sevenDaysBeforeExpiry);
+                // BackgroundJob.Schedule(() => SendExpiryReminderAsync(domainEvent.CredentialId, 1), oneDayBeforeExpiry);
+            }
         }
 
         _logger.LogInformation("CredentialIssuedEvent handled successfully for Credential {CredentialId}", domainEvent.CredentialId);

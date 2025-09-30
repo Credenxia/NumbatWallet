@@ -135,7 +135,8 @@ public class BulkIssueCredentialsCommandHandler : ICommandHandler<BulkIssueCrede
                     credential.IssuerId,
                     credential.CredentialType,
                     credential.CredentialId,
-                    credential.IssuedAt);
+                    credential.IssuedAt,
+                    credential.ExpiresAt);
 
                 await _eventDispatcher.DispatchAsync(credentialIssuedEvent, cancellationToken);
 

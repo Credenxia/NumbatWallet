@@ -58,6 +58,7 @@ public class RevocationRegistryServiceTests : IDisposable
         _service = new RevocationRegistryService(
             _context,
             _cacheMock.Object,
+            _currentUserServiceMock.Object,
             _httpClientFactoryMock.Object,
             _configurationMock.Object,
             _loggerMock.Object,

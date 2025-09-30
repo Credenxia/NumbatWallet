@@ -115,7 +115,8 @@ public class IssueCredentialCommandHandler : ICommandHandler<IssueCredentialComm
             credential.IssuerId,
             credential.CredentialType,
             credential.CredentialId,
-            credential.IssuedAt);
+            credential.IssuedAt,
+            credential.ExpiresAt);
 
         await _eventDispatcher.DispatchAsync(credentialIssuedEvent, cancellationToken);
 

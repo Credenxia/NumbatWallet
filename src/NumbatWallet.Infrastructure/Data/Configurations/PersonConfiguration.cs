@@ -75,7 +75,7 @@ public class PersonConfiguration : IEntityTypeConfiguration<Person>
             phone.Property(ph => ph.Value)
                 .HasColumnName("PhoneNumberValue")
                 .IsRequired()
-                .HasMaxLength(20)
+                .HasMaxLength(500) // Increased to accommodate encrypted data
                 .HasConversion(new ProtectedFieldConverter());
 
             phone.Property(ph => ph.CountryCode)

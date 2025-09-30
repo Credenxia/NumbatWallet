@@ -23,15 +23,20 @@ public class IntegrationTestFixture : WebApplicationFactory<Program>, IAsyncLife
     private readonly PostgreSqlContainer _postgresContainer;
     private readonly Dictionary<string, string> _testConfiguration;
     private readonly string _testTenantId = Guid.NewGuid().ToString();
+    private bool _initialized = false;
 
     public IntegrationTestFixture()
     {
+        // Use random available port to avoid conflicts
+        var random = new Random();
+        var port = random.Next(15432, 25432);
+
         _postgresContainer = new PostgreSqlBuilder()
             .WithImage("postgres:16-alpine")
             .WithDatabase("numbatwallet_test")
             .WithUsername("testuser")
             .WithPassword("Test123!@#")
-            .WithPortBinding(5433, 5432)
+            .WithPortBinding(port, 5432) // Map random host port to container port 5432
             .WithCleanUp(true)
             .Build();
 
@@ -54,10 +59,29 @@ public class IntegrationTestFixture : WebApplicationFactory<Program>, IAsyncLife
 
     public async Task InitializeAsync()
     {
+        if (_initialized)
+        {
+            return;
+        }
+
         await _postgresContainer.StartAsync();
 
         // Update connection string after container starts
         _testConfiguration["ConnectionStrings:DefaultConnection"] = ConnectionString;
+
+        // Initialize the database after the application starts
+        using var scope = Services.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<NumbatWalletDbContext>();
+
+        // Ensure clean database for tests
+        await dbContext.Database.EnsureDeletedAsync();
+        await dbContext.Database.EnsureCreatedAsync();
+
+        // Seed test data
+        var seeder = scope.ServiceProvider.GetRequiredService<NumbatWallet.Infrastructure.Data.IDatabaseSeeder>();
+        await seeder.SeedTestDataAsync();
+
+        _initialized = true;
     }
 
     public new async Task DisposeAsync()
@@ -72,8 +96,12 @@ public class IntegrationTestFixture : WebApplicationFactory<Program>, IAsyncLife
 
         builder.ConfigureAppConfiguration((context, config) =>
         {
-            config.AddInMemoryCollection(_testConfiguration);
+            config.AddInMemoryCollection(_testConfiguration.Select(kvp => new KeyValuePair<string, string?>(kvp.Key, kvp.Value)));
         });
+
+        // Set environment variables for testing
+        Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", "Testing");
+        Environment.SetEnvironmentVariable("SKIP_DB_MIGRATION", "true");
 
         builder.ConfigureTestServices(services =>
         {
@@ -89,6 +117,8 @@ public class IntegrationTestFixture : WebApplicationFactory<Program>, IAsyncLife
                     npgsqlOptions.CommandTimeout(60);
                 });
                 options.EnableSensitiveDataLogging();
+                // Suppress pending model changes warning for tests
+                options.ConfigureWarnings(w => w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
             });
 
             // Replace external services with mocks
@@ -97,19 +127,14 @@ public class IntegrationTestFixture : WebApplicationFactory<Program>, IAsyncLife
             services.AddSingleton<NumbatWallet.Application.Interfaces.IEmailService, MockEmailService>();
             services.AddSingleton<NumbatWallet.Application.Interfaces.INotificationService, MockNotificationService>();
 
-            // Build service provider for initialization
-            var sp = services.BuildServiceProvider();
+            // Register DatabaseSeeder for tests
+            services.AddScoped<NumbatWallet.Infrastructure.Data.IDatabaseSeeder, NumbatWallet.Infrastructure.Data.DatabaseSeeder>();
 
-            // Create and migrate database
-            using (var scope = sp.CreateScope())
-            {
-                var dbContext = scope.ServiceProvider.GetRequiredService<NumbatWalletDbContext>();
-                dbContext.Database.Migrate();
+            // Add mock current user service for audit fields
+            services.AddSingleton<NumbatWallet.SharedKernel.Interfaces.ICurrentUserService, MockCurrentUserService>();
 
-                // Seed test data
-                var seeder = scope.ServiceProvider.GetRequiredService<IDatabaseSeeder>();
-                seeder.SeedTestDataAsync().GetAwaiter().GetResult();
-            }
+            // Don't initialize database here - let it be done on first use
+            // This avoids conflicts with service registration
         });
 
         builder.ConfigureLogging(logging =>
@@ -126,7 +151,9 @@ public class IntegrationTestFixture : WebApplicationFactory<Program>, IAsyncLife
 /// Ensures tests in same collection run sequentially
 /// </summary>
 [CollectionDefinition("Integration")]
+#pragma warning disable CA1711 // Identifiers should not have incorrect suffix - xUnit requires 'Collection' suffix
 public class IntegrationTestCollection : ICollectionFixture<IntegrationTestFixture>
+#pragma warning restore CA1711
 {
 }
 
@@ -276,10 +303,10 @@ public class MockEmailService : NumbatWallet.Application.Interfaces.IEmailServic
 
     public IReadOnlyList<(string To, string Subject, string Body)> SentEmails => _sentEmails.AsReadOnly();
 
-    public Task SendEmailAsync(string to, string subject, string body, bool isHtml = false,
+    public Task SendEmailAsync(string recipient, string subject, string body, bool isHtml = true,
         CancellationToken cancellationToken = default)
     {
-        _sentEmails.Add((to, subject, body));
+        _sentEmails.Add((recipient, subject, body));
         return Task.CompletedTask;
     }
 
@@ -291,25 +318,28 @@ public class MockEmailService : NumbatWallet.Application.Interfaces.IEmailServic
         return Task.CompletedTask;
     }
 
-    public Task SendWelcomeEmailAsync(string email, string name, CancellationToken cancellationToken = default)
+    public Task SendWelcomeEmailAsync(string recipient, string firstName, CancellationToken cancellationToken = default)
     {
-        _sentEmails.Add((email, "Welcome", $"Welcome {name}"));
+        _sentEmails.Add((recipient, "Welcome", $"Welcome {firstName}"));
         return Task.CompletedTask;
     }
 
-    public Task SendCredentialIssuedEmailAsync(string email, string credentialType, DateTime? expiryDate,
+    public Task SendCredentialIssuedEmailAsync(string recipient, string credentialType, DateTime? expiryDate,
         CancellationToken cancellationToken = default)
     {
         var body = $"Credential issued: {credentialType}";
         if (expiryDate.HasValue)
-            body += $" (expires: {expiryDate.Value}";
-        _sentEmails.Add((email, "Credential Issued", body));
+        {
+            body += $" (expires: {expiryDate.Value})";
+        }
+
+        _sentEmails.Add((recipient, "Credential Issued", body));
         return Task.CompletedTask;
     }
 
-    public Task SendPasswordResetEmailAsync(string email, string resetLink, CancellationToken cancellationToken = default)
+    public Task SendPasswordResetEmailAsync(string recipient, string resetToken, CancellationToken cancellationToken = default)
     {
-        _sentEmails.Add((email, "Password Reset", $"Reset link: {resetLink}"));
+        _sentEmails.Add((recipient, "Password Reset", $"Reset token: {resetToken}"));
         return Task.CompletedTask;
     }
 
@@ -376,17 +406,17 @@ public class MockNotificationService : NumbatWallet.Application.Interfaces.INoti
         return Task.CompletedTask;
     }
 
-    public Task NotifyOrganizationAsync(Guid organizationId, string title, string message,
+    public Task NotifyOrganizationAsync(Guid organizationId, string subject, string message,
         CancellationToken cancellationToken = default)
     {
-        _notifications.Add(($"org:{organizationId}", title, message));
+        _notifications.Add(($"org:{organizationId}", subject, message));
         return Task.CompletedTask;
     }
 
-    public Task ScheduleReminderAsync(Guid userId, string title, string message, DateTime scheduledAt,
+    public Task ScheduleReminderAsync(Guid userId, string title, string message, DateTime scheduledTime,
         CancellationToken cancellationToken = default)
     {
-        _notifications.Add((userId.ToString(), $"Reminder: {title}", $"{message} (scheduled: {scheduledAt})"));
+        _notifications.Add((userId.ToString(), $"Reminder: {title}", $"{message} (scheduled: {scheduledTime})"));
         return Task.CompletedTask;
     }
 
@@ -404,4 +434,15 @@ public class MockNotificationService : NumbatWallet.Application.Interfaces.INoti
     {
         _notifications.Clear();
     }
+}
+
+/// <summary>
+/// Mock Current User service for testing
+/// </summary>
+public class MockCurrentUserService : NumbatWallet.SharedKernel.Interfaces.ICurrentUserService
+{
+    public string UserId => "integration-test-user";
+    public string UserName => "Test User";
+    public string UserEmail => "test@example.com";
+    public IEnumerable<string> Roles => new[] { "Admin", "User" };
 }

@@ -1,8 +1,12 @@
 using HotChocolate.AspNetCore;
+using HotChocolate.Execution;
+using HotChocolate.Execution.Configuration;
+using HotChocolate.Utilities;
 using NumbatWallet.Web.Api.GraphQL.Schema;
 using NumbatWallet.Web.Api.GraphQL.Types;
 using NumbatWallet.Web.Api.GraphQL.Queries;
 using NumbatWallet.Web.Api.GraphQL.Mutations;
+using System.Diagnostics.CodeAnalysis;
 
 namespace NumbatWallet.Web.Api.Extensions;
 
@@ -32,8 +36,8 @@ public static class GraphQLExtensions
                 opt.IncludeExceptionDetails = configuration.GetValue<bool>("GraphQL:IncludeExceptionDetails");
                 opt.ExecutionTimeout = TimeSpan.FromSeconds(configuration.GetValue<int>("GraphQL:ExecutionTimeoutSeconds", 30));
             })
-            // .AddDiagnosticEventListener<GraphQLDiagnosticEventListener>() // TODO: Re-enable when API is stable
-            // .AddHttpRequestInterceptor<GraphQLRequestInterceptor>() // TODO: Re-enable when API is stable
+            // .AddDiagnosticEventListener<GraphQLDiagnosticEventListener>() // Re-enable when HotChocolate supports this
+            // .AddHttpRequestInterceptor<GraphQLRequestInterceptor>() // Re-enable when HotChocolate supports this
             .AddErrorFilter<GraphQLErrorFilter>()
             .AddMaxExecutionDepthRule(configuration.GetValue<int>("GraphQL:MaxExecutionDepth", 15))
             .UseExceptions()
@@ -68,7 +72,11 @@ public static class GraphQLExtensions
         app.MapGraphQL("/graphql")
             .RequireAuthorization();
 
-        // TODO: Add GraphQL development tools when available
+        // TODO: Enable GraphQL Voyager when package is available
+        // if (environment != "Production")
+        // {
+        //     app.UseGraphQLVoyager("/graphql-voyager");
+        // }
 
         // Map WebSocket for subscriptions
         app.MapGraphQLWebSocket("/graphql");
@@ -77,9 +85,78 @@ public static class GraphQLExtensions
     }
 }
 
-// TODO: Implement custom diagnostic event listener when HotChocolate.Diagnostics API is stable
+// Custom diagnostic event listener for performance monitoring
+// TODO: Re-enable when HotChocolate provides stable DiagnosticEventListener API
+/*
+public class GraphQLDiagnosticEventListener : DiagnosticEventListener
+{
+    private readonly ILogger<GraphQLDiagnosticEventListener> _logger;
 
-// TODO: Implement request interceptor when HotChocolate API is stable
+    public GraphQLDiagnosticEventListener(ILogger<GraphQLDiagnosticEventListener> logger)
+    {
+        _logger = logger;
+    }
+
+    public override void RequestError(IRequestContext context, Exception exception)
+    {
+        _logger.LogError(exception, "GraphQL request error occurred");
+    }
+
+    public override void TaskError(IExecutionTask task, IError error)
+    {
+        _logger.LogError("Task error: {ErrorMessage}", error.Message);
+    }
+
+    public override void SyntaxError(IRequestContext context, IError error)
+    {
+        _logger.LogWarning("GraphQL syntax error: {ErrorMessage}", error.Message);
+    }
+
+    public override void ValidationErrors(IRequestContext context, IReadOnlyList<IError> errors)
+    {
+        foreach (var error in errors)
+        {
+            _logger.LogWarning("GraphQL validation error: {ErrorMessage}", error.Message);
+        }
+    }
+}
+*/
+
+// Request interceptor for authentication and request modification
+// TODO: Re-enable when HotChocolate provides stable interceptor API
+/*
+public class GraphQLRequestInterceptor : DefaultHttpRequestInterceptor
+{
+    private readonly ILogger<GraphQLRequestInterceptor> _logger;
+
+    public GraphQLRequestInterceptor(ILogger<GraphQLRequestInterceptor> logger)
+    {
+        _logger = logger;
+    }
+
+    public override ValueTask OnCreateAsync(
+        HttpContext context,
+        IRequestExecutor requestExecutor,
+        IQueryRequestBuilder requestBuilder,
+        CancellationToken cancellationToken)
+    {
+        // Add correlation ID to GraphQL request
+        var correlationId = context.TraceIdentifier;
+        requestBuilder.SetProperty("CorrelationId", correlationId);
+
+        // Add tenant context from HTTP context
+        if (context.Items.TryGetValue("TenantId", out var tenantId))
+        {
+            requestBuilder.SetProperty("TenantId", tenantId);
+        }
+
+        // Log request details
+        _logger.LogDebug("GraphQL request initiated with CorrelationId: {CorrelationId}", correlationId);
+
+        return base.OnCreateAsync(context, requestExecutor, requestBuilder, cancellationToken);
+    }
+}
+*/
 
 // Error filter for consistent error handling
 public class GraphQLErrorFilter : IErrorFilter
@@ -120,4 +197,31 @@ public class GraphQLErrorFilter : IErrorFilter
     }
 }
 
-// TODO: Implement type converters when HotChocolate API is stable
+// Type converters for custom scalar types
+// TODO: Implement when HotChocolate provides stable type converter API
+/*
+public class DateOnlyTypeConverter : IChangeTypeProvider
+{
+    public bool TryCreateConverter(
+        Type source,
+        Type target,
+        ChangeTypeProvider root,
+        [NotNullWhen(true)] out ChangeType? converter)
+    {
+        if (source == typeof(DateOnly) && target == typeof(string))
+        {
+            converter = (input) => ((DateOnly)input).ToString("yyyy-MM-dd");
+            return true;
+        }
+
+        if (source == typeof(string) && target == typeof(DateOnly))
+        {
+            converter = (input) => DateOnly.Parse((string)input);
+            return true;
+        }
+
+        converter = null;
+        return false;
+    }
+}
+*/

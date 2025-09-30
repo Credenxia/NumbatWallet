@@ -48,7 +48,7 @@ public class WalletCreatedEventHandler : IDomainEventHandler<WalletCreatedEvent>
                 EntityId = domainEvent.WalletId.ToString(),
                 Action = "Created",
                 UserId = "System",
-                TenantId = Guid.Parse(domainEvent.TenantId),
+                TenantId = Guid.TryParse(domainEvent.TenantId, out var tenantGuid) ? tenantGuid : Guid.Empty,
                 Timestamp = domainEvent.OccurredAt,
                 MaxClassification = SharedKernel.Enums.DataClassification.Protected,
                 ChangedFields = new Dictionary<string, object>

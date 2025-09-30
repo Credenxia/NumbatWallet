@@ -10,6 +10,7 @@ public record CredentialIssuedEvent(
     string CredentialType,
     string CredentialDid,
     DateTimeOffset IssuedAt,
+    DateTimeOffset? ExpiresAt,
     Guid EventId,
     DateTimeOffset OccurredAt) : IDomainEvent
 {
@@ -19,8 +20,9 @@ public record CredentialIssuedEvent(
         Guid issuerId,
         string credentialType,
         string credentialDid,
-        DateTimeOffset issuedAt)
-        : this(credentialId, walletId, issuerId, credentialType, credentialDid, issuedAt, Guid.NewGuid(), DateTimeOffset.UtcNow)
+        DateTimeOffset issuedAt,
+        DateTimeOffset? expiresAt = null)
+        : this(credentialId, walletId, issuerId, credentialType, credentialDid, issuedAt, expiresAt, Guid.NewGuid(), DateTimeOffset.UtcNow)
     {
     }
 }

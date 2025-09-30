@@ -15,6 +15,8 @@ public class CredentialQuery
 {
     private readonly IQueryHandler<GetCredentialByIdQuery, CredentialDto?> _getCredentialByIdHandler;
     private readonly IQueryHandler<GetCredentialsByWalletQuery, IEnumerable<CredentialDto>> _getCredentialsByWalletHandler;
+    private readonly IQueryHandler<GetCredentialsByIssuerQuery, IEnumerable<CredentialDto>> _getCredentialsByIssuerHandler;
+    private readonly IQueryHandler<SearchCredentialsQuery, PagedResultDto<CredentialDto>> _searchCredentialsHandler;
     private readonly IQueryHandler<GetIssuanceByIdQuery, IssuanceDto?> _getIssuanceByIdHandler;
     private readonly IQueryHandler<GetIssuancesByStatusQuery, IEnumerable<IssuanceDto>> _getIssuancesByStatusHandler;
     private readonly ICredentialRepository? _credentialRepository;
@@ -25,6 +27,8 @@ public class CredentialQuery
     public CredentialQuery(
         IQueryHandler<GetCredentialByIdQuery, CredentialDto?> getCredentialByIdHandler,
         IQueryHandler<GetCredentialsByWalletQuery, IEnumerable<CredentialDto>> getCredentialsByWalletHandler,
+        IQueryHandler<GetCredentialsByIssuerQuery, IEnumerable<CredentialDto>> getCredentialsByIssuerHandler,
+        IQueryHandler<SearchCredentialsQuery, PagedResultDto<CredentialDto>> searchCredentialsHandler,
         IQueryHandler<GetIssuanceByIdQuery, IssuanceDto?> getIssuanceByIdHandler,
         IQueryHandler<GetIssuancesByStatusQuery, IEnumerable<IssuanceDto>> getIssuancesByStatusHandler,
         ISecurityAuditService auditService,
@@ -34,6 +38,8 @@ public class CredentialQuery
     {
         _getCredentialByIdHandler = getCredentialByIdHandler;
         _getCredentialsByWalletHandler = getCredentialsByWalletHandler;
+        _getCredentialsByIssuerHandler = getCredentialsByIssuerHandler;
+        _searchCredentialsHandler = searchCredentialsHandler;
         _getIssuanceByIdHandler = getIssuanceByIdHandler;
         _getIssuancesByStatusHandler = getIssuancesByStatusHandler;
         _credentialRepository = credentialRepository;
@@ -121,8 +127,9 @@ public class CredentialQuery
                 $"Issuer credentials access: {issuerId}");
         }
 
-        // For now, return empty until proper search handler is available
-        return new List<CredentialDto>().AsQueryable();
+        var query = new GetCredentialsByIssuerQuery { IssuerId = Guid.Parse(issuerId) };
+        var credentials = await _getCredentialsByIssuerHandler.HandleAsync(query);
+        return credentials.AsQueryable();
     }
 
     /// <summary>
@@ -137,8 +144,18 @@ public class CredentialQuery
     {
         _logger.LogInformation("Fetching credentials of type {Type}", type);
 
-        // For now, return empty until proper search handler is available
-        return new List<CredentialDto>().AsQueryable();
+        var query = new SearchCredentialsQuery(
+            TenantId: Guid.Empty, // TenantId would come from context
+            SearchTerm: null,
+            CredentialType: type,
+            Status: null,
+            PageNumber: 1,
+            PageSize: 100, // Default page size
+            SortBy: null,
+            SortDescending: false);
+
+        var result = await _searchCredentialsHandler.HandleAsync(query);
+        return result.Items.AsQueryable();
     }
 
     /// <summary>

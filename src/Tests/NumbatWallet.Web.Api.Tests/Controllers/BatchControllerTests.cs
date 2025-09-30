@@ -1,5 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -10,46 +12,52 @@ using NumbatWallet.Application.DTOs;
 using NumbatWallet.Application.Interfaces;
 using NumbatWallet.Web.Api.Controllers;
 using NumbatWallet.Web.Api.Security;
+using NumbatWallet.Web.Api.Tests.TestHelpers;
+using Xunit;
 
 namespace NumbatWallet.Web.Api.Tests.Controllers;
 
-public class BatchControllerTests : IClassFixture<WebApplicationFactory<Program>>
+[Collection("Sequential")]
+public class BatchControllerTests : ApiTestBase
 {
-    private readonly WebApplicationFactory<Program> _factory;
     private readonly Mock<ICacheService> _mockCacheService;
     private readonly Mock<ISecurityAuditService> _mockAuditService;
+    private readonly JsonSerializerOptions _jsonOptions;
 
-    public BatchControllerTests(WebApplicationFactory<Program> factory)
+    public BatchControllerTests(WebApplicationFactory<Program> factory) : base(factory)
     {
-        _factory = factory;
         _mockCacheService = new Mock<ICacheService>();
         _mockAuditService = new Mock<ISecurityAuditService>();
+
+        // Configure JSON options with StringEnumConverter to match the API
+        _jsonOptions = new JsonSerializerOptions
+        {
+            PropertyNameCaseInsensitive = true,
+            Converters = { new JsonStringEnumConverter() }
+        };
     }
 
     private HttpClient CreateClient()
     {
-        return _factory.WithWebHostBuilder(builder =>
+        return CreateAuthenticatedClient(services =>
         {
-            builder.ConfigureServices(services =>
+            // Remove existing registrations
+            var cacheDescriptor = services.SingleOrDefault(d => d.ServiceType == typeof(ICacheService));
+            if (cacheDescriptor != null)
             {
-                // Remove existing registrations
-                var cacheDescriptor = services.SingleOrDefault(d => d.ServiceType == typeof(ICacheService));
-                if (cacheDescriptor != null)
-                {
-                    services.Remove(cacheDescriptor);
-                }
+                services.Remove(cacheDescriptor);
+            }
 
-                var auditDescriptor = services.SingleOrDefault(d => d.ServiceType == typeof(ISecurityAuditService));
-                if (auditDescriptor != null)
-                {
-                    services.Remove(auditDescriptor);
-                }
+            var auditDescriptor = services.SingleOrDefault(d => d.ServiceType == typeof(ISecurityAuditService));
+            if (auditDescriptor != null)
+            {
+                services.Remove(auditDescriptor);
+            }
 
-                // Add mocks
-                services.AddSingleton(_mockCacheService.Object);
-                services.AddSingleton(_mockAuditService.Object);
-            });
-        }).CreateClient();
+            // Add mocks
+            services.AddSingleton(_mockCacheService.Object);
+            services.AddSingleton(_mockAuditService.Object);
+        });
     }
 
     [Fact]
@@ -57,7 +65,6 @@ public class BatchControllerTests : IClassFixture<WebApplicationFactory<Program>
     {
         // Arrange
         var client = CreateClient();
-        client.DefaultRequestHeaders.Add("Authorization", "Bearer test-token");
 
         var request = new BatchIssueCredentialsRequestDto
         {
@@ -82,7 +89,7 @@ public class BatchControllerTests : IClassFixture<WebApplicationFactory<Program>
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
-        var result = await response.Content.ReadFromJsonAsync<BatchOperationResultDto<CredentialDto>>();
+        var result = await response.Content.ReadFromJsonAsync<BatchOperationResultDto<CredentialDto>>(_jsonOptions);
         result.Should().NotBeNull();
         result!.TotalItems.Should().Be(1);
     }
@@ -92,7 +99,6 @@ public class BatchControllerTests : IClassFixture<WebApplicationFactory<Program>
     {
         // Arrange
         var client = CreateClient();
-        client.DefaultRequestHeaders.Add("Authorization", "Bearer test-token");
 
         var request = new BatchIssueCredentialsRequestDto
         {
@@ -143,7 +149,7 @@ public class BatchControllerTests : IClassFixture<WebApplicationFactory<Program>
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
-        var result = await response.Content.ReadFromJsonAsync<BatchOperationResultDto<VerificationResultDto>>();
+        var result = await response.Content.ReadFromJsonAsync<BatchOperationResultDto<VerificationResultDto>>(_jsonOptions);
         result.Should().NotBeNull();
         result!.TotalItems.Should().Be(1);
         result.Results.Should().HaveCount(1);
@@ -185,7 +191,7 @@ public class BatchControllerTests : IClassFixture<WebApplicationFactory<Program>
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
-        var result = await response.Content.ReadFromJsonAsync<BatchOperationResultDto<VerificationResultDto>>();
+        var result = await response.Content.ReadFromJsonAsync<BatchOperationResultDto<VerificationResultDto>>(_jsonOptions);
         result.Should().NotBeNull();
         result!.TotalItems.Should().Be(3);
         result.Results.Should().HaveCount(3);
@@ -199,7 +205,6 @@ public class BatchControllerTests : IClassFixture<WebApplicationFactory<Program>
     {
         // Arrange
         var client = CreateClient();
-        client.DefaultRequestHeaders.Add("Authorization", "Bearer test-token");
 
         var request = new BatchRevokeCredentialsRequestDto
         {
@@ -216,7 +221,7 @@ public class BatchControllerTests : IClassFixture<WebApplicationFactory<Program>
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
-        var result = await response.Content.ReadFromJsonAsync<BatchOperationResultDto<bool>>();
+        var result = await response.Content.ReadFromJsonAsync<BatchOperationResultDto<bool>>(_jsonOptions);
         result.Should().NotBeNull();
         result!.TotalItems.Should().Be(2);
         result.Results.Should().HaveCount(2);
@@ -227,7 +232,6 @@ public class BatchControllerTests : IClassFixture<WebApplicationFactory<Program>
     {
         // Arrange
         var client = CreateClient();
-        client.DefaultRequestHeaders.Add("Authorization", "Bearer test-token");
 
         var request = new BatchApproveIssuancesRequestDto
         {
@@ -246,7 +250,7 @@ public class BatchControllerTests : IClassFixture<WebApplicationFactory<Program>
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
-        var result = await response.Content.ReadFromJsonAsync<BatchOperationResultDto<IssuanceDto>>();
+        var result = await response.Content.ReadFromJsonAsync<BatchOperationResultDto<IssuanceDto>>(_jsonOptions);
         result.Should().NotBeNull();
         result!.TotalItems.Should().Be(1);
     }
@@ -256,7 +260,6 @@ public class BatchControllerTests : IClassFixture<WebApplicationFactory<Program>
     {
         // Arrange
         var client = CreateClient();
-        client.DefaultRequestHeaders.Add("Authorization", "Bearer test-token");
 
         var request = new BatchApproveIssuancesRequestDto
         {
@@ -309,7 +312,7 @@ public class BatchControllerTests : IClassFixture<WebApplicationFactory<Program>
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
-        var result = await response.Content.ReadFromJsonAsync<BatchOperationStatusDto>();
+        var result = await response.Content.ReadFromJsonAsync<BatchOperationStatusDto>(_jsonOptions);
         result.Should().NotBeNull();
         result!.BatchId.Should().Be(batchId);
         result.Status.Should().Be("Processing");
@@ -341,7 +344,6 @@ public class BatchControllerTests : IClassFixture<WebApplicationFactory<Program>
     {
         // Arrange
         var client = CreateClient();
-        client.DefaultRequestHeaders.Add("Authorization", "Bearer test-token");
 
         var request = new BatchIssueCredentialsRequestDto
         {
@@ -405,8 +407,8 @@ public class BatchControllerTests : IClassFixture<WebApplicationFactory<Program>
         // Assert
         responses.Should().AllSatisfy(r => r.StatusCode.Should().Be(HttpStatusCode.OK));
 
-        var result1 = await responses[0].Content.ReadFromJsonAsync<BatchOperationResultDto<VerificationResultDto>>();
-        var result2 = await responses[1].Content.ReadFromJsonAsync<BatchOperationResultDto<VerificationResultDto>>();
+        var result1 = await responses[0].Content.ReadFromJsonAsync<BatchOperationResultDto<VerificationResultDto>>(_jsonOptions);
+        var result2 = await responses[1].Content.ReadFromJsonAsync<BatchOperationResultDto<VerificationResultDto>>(_jsonOptions);
 
         result1!.TotalItems.Should().Be(10);
         result2!.TotalItems.Should().Be(10);

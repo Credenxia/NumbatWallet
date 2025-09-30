@@ -72,7 +72,7 @@ public class CertificateAuthority : ICertificateAuthority, IDisposable
             var certPath = _configuration["PKI:RootCertPath"];
             if (!string.IsNullOrEmpty(certPath) && File.Exists(certPath))
             {
-                _rootCert = new X509Certificate2(certPath);
+                _rootCert = X509CertificateLoader.LoadCertificateFromFile(certPath);
             }
             else
             {
@@ -91,7 +91,7 @@ public class CertificateAuthority : ICertificateAuthority, IDisposable
             var certPath = _configuration["PKI:IntermediateCertPath"];
             if (!string.IsNullOrEmpty(certPath) && File.Exists(certPath))
             {
-                _intermediateCert = new X509Certificate2(certPath);
+                _intermediateCert = X509CertificateLoader.LoadCertificateFromFile(certPath);
             }
             else
             {
@@ -137,7 +137,8 @@ public class CertificateAuthority : ICertificateAuthority, IDisposable
             DateTimeOffset.UtcNow.AddYears(10));
 
         _logger.LogInformation("Generated self-signed root certificate");
-        return new X509Certificate2(cert.Export(X509ContentType.Pfx));
+        var certBytes = cert.Export(X509ContentType.Pfx);
+        return X509CertificateLoader.LoadPkcs12(certBytes, null);
     }
 
     private X509Certificate2 GenerateIntermediateCertificate(X509Certificate2 rootCert)
@@ -171,7 +172,8 @@ public class CertificateAuthority : ICertificateAuthority, IDisposable
         var certWithKey = cert.CopyWithPrivateKey(rsa);
 
         _logger.LogInformation("Generated intermediate certificate");
-        return new X509Certificate2(certWithKey.Export(X509ContentType.Pfx));
+        var certBytes = certWithKey.Export(X509ContentType.Pfx);
+        return X509CertificateLoader.LoadPkcs12(certBytes, null);
     }
 
     private X509Certificate2 GenerateCredentialCertificate(
@@ -214,7 +216,8 @@ public class CertificateAuthority : ICertificateAuthority, IDisposable
             serialNumber);
 
         var certWithKey = cert.CopyWithPrivateKey(rsa);
-        return new X509Certificate2(certWithKey.Export(X509ContentType.Pfx));
+        var certBytes = certWithKey.Export(X509ContentType.Pfx);
+        return X509CertificateLoader.LoadPkcs12(certBytes, null);
     }
 
     public void Dispose()

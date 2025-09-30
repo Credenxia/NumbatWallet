@@ -6,6 +6,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using NumbatWallet.Domain.Interfaces;
 using NumbatWallet.Infrastructure.Data;
+using NumbatWallet.SharedKernel.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using System.Formats.Asn1;
 
@@ -18,6 +19,7 @@ public class RevocationRegistryService : IRevocationRegistryService
 {
     private readonly NumbatWalletDbContext _context;
     private readonly IDistributedCache _cache;
+    private readonly ICurrentUserService _currentUserService;
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly IConfiguration _configuration;
     private readonly ILogger<RevocationRegistryService> _logger;
@@ -26,6 +28,7 @@ public class RevocationRegistryService : IRevocationRegistryService
     public RevocationRegistryService(
         NumbatWalletDbContext context,
         IDistributedCache cache,
+        ICurrentUserService currentUserService,
         IHttpClientFactory httpClientFactory,
         IConfiguration configuration,
         ILogger<RevocationRegistryService> logger,
@@ -33,6 +36,7 @@ public class RevocationRegistryService : IRevocationRegistryService
     {
         _context = context;
         _cache = cache;
+        _currentUserService = currentUserService;
         _httpClientFactory = httpClientFactory;
         _configuration = configuration;
         _logger = logger;
@@ -62,7 +66,7 @@ public class RevocationRegistryService : IRevocationRegistryService
                 serialNumber,
                 (int)reason,
                 comment,
-                null // revokedBy - TODO: get from current user context
+                _currentUserService.UserId?.ToString()
             );
 
             _context.Set<Domain.Entities.CertificateRevocation>().Add(revocation);

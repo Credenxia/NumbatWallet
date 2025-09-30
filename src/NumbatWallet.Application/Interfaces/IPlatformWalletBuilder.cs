@@ -164,6 +164,8 @@ public class AppleWalletOptions
     public List<AppleWalletField> SecondaryFields { get; set; } = new();
     public List<AppleWalletField> AuxiliaryFields { get; set; } = new();
     public List<AppleWalletField> BackFields { get; set; } = new();
+    public string? SigningCertificatePath { get; set; }
+    public string? SigningCertificatePassword { get; set; }
 }
 
 public class AppleWalletField

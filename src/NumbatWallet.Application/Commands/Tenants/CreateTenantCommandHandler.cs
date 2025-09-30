@@ -2,6 +2,7 @@ using FluentValidation;
 using Microsoft.Extensions.Logging;
 using NumbatWallet.Application.CQRS.Interfaces;
 using NumbatWallet.Domain.Entities;
+using NumbatWallet.Domain.Events;
 using NumbatWallet.Domain.Interfaces;
 using NumbatWallet.SharedKernel.Interfaces;
 
@@ -16,17 +17,20 @@ public class CreateTenantCommandHandler : ICommandHandler<CreateTenantCommand, G
     private readonly ITenantRepository _tenantRepository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IValidator<CreateTenantCommand> _validator;
+    private readonly ICurrentUserService _currentUserService;
     private readonly ILogger<CreateTenantCommandHandler> _logger;
 
     public CreateTenantCommandHandler(
         ITenantRepository tenantRepository,
         IUnitOfWork unitOfWork,
         IValidator<CreateTenantCommand> validator,
+        ICurrentUserService currentUserService,
         ILogger<CreateTenantCommandHandler> logger)
     {
         _tenantRepository = tenantRepository;
         _unitOfWork = unitOfWork;
         _validator = validator;
+        _currentUserService = currentUserService;
         _logger = logger;
     }
 
@@ -88,8 +92,14 @@ public class CreateTenantCommandHandler : ICommandHandler<CreateTenantCommand, G
 
         _logger.LogInformation("Tenant created successfully with ID: {TenantId}", tenant.Id);
 
-        // TODO: Raise domain event for tenant created
-        // await _eventBus.PublishAsync(new TenantCreatedEvent(tenant.Id, tenant.Name));
+        // Raise domain event for tenant created
+        var tenantCreatedEvent = new TenantCreatedEvent(
+            tenant.Identifier,
+            tenant.Name,
+            string.Empty,
+            _currentUserService.UserId?.ToString() ?? "system",
+            tenant.CreatedAt);
+        tenant.AddDomainEvent(tenantCreatedEvent);
 
         return tenant.Id;
     }

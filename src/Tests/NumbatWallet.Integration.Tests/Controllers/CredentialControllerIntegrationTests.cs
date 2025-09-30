@@ -11,6 +11,7 @@ namespace NumbatWallet.Integration.Tests.Controllers;
 /// <summary>
 /// Integration tests for Credential Controller
 /// </summary>
+[Collection("Integration")]
 public class CredentialControllerIntegrationTests : IntegrationTestBase
 {
     public CredentialControllerIntegrationTests(IntegrationTestFixture fixture) : base(fixture)
@@ -22,8 +23,10 @@ public class CredentialControllerIntegrationTests : IntegrationTestBase
     [Fact]
     public async Task IssueCredential_WithValidRequest_ReturnsCreatedCredential()
     {
-        // Arrange
-        var walletId = Guid.NewGuid();
+        // Arrange - Use seeded test data
+        var walletId = await TestData.GetFirstWalletIdAsync();
+        var issuerId = await TestData.GetFirstIssuerIdAsync();
+
         var request = new IssueCredentialRequestDto
         {
             WalletId = walletId,
@@ -37,7 +40,7 @@ public class CredentialControllerIntegrationTests : IntegrationTestBase
                 ["dateOfBirth"] = "1990-01-01"
             },
             ExpiryDate = DateTime.UtcNow.AddYears(1),
-            IssuerId = Guid.NewGuid()
+            IssuerId = issuerId
         };
 
         // Act
@@ -55,11 +58,14 @@ public class CredentialControllerIntegrationTests : IntegrationTestBase
     [Fact]
     public async Task GetCredentialById_WithExistingId_ReturnsCredential()
     {
-        // Arrange - First issue a credential
-        var walletId = Guid.NewGuid();
+        // Arrange - First issue a credential using seeded data
+        var walletId = await TestData.GetFirstWalletIdAsync();
+        var issuerId = await TestData.GetFirstIssuerIdAsync();
+
         var issueRequest = new IssueCredentialRequestDto
         {
             WalletId = walletId,
+            IssuerId = issuerId,
             CredentialType = "Passport",
             Subject = "Test Passport",
             Claims = new Dictionary<string, object>
@@ -107,8 +113,9 @@ public class CredentialControllerIntegrationTests : IntegrationTestBase
     [Fact]
     public async Task GetCredentialsByWallet_ReturnsWalletCredentials()
     {
-        // Arrange
-        var walletId = Guid.NewGuid();
+        // Arrange - Use seeded test data
+        var walletId = await TestData.GetFirstWalletIdAsync();
+        var issuerId = await TestData.GetFirstIssuerIdAsync();
 
         // Issue multiple credentials for the wallet
         for (int i = 0; i < 3; i++)
@@ -116,6 +123,7 @@ public class CredentialControllerIntegrationTests : IntegrationTestBase
             await PostAsync<IssueCredentialRequestDto, CredentialDto>("/api/v1/credential/issue", new IssueCredentialRequestDto
             {
                 WalletId = walletId,
+                IssuerId = issuerId,
                 CredentialType = $"TestCredential{i}",
                 Subject = $"Test Subject {i}",
                 Claims = new Dictionary<string, object> { ["index"] = i }
@@ -134,10 +142,14 @@ public class CredentialControllerIntegrationTests : IntegrationTestBase
     [Fact]
     public async Task RevokeCredential_WithValidId_ReturnsSuccess()
     {
-        // Arrange - First issue a credential
+        // Arrange - First issue a credential using seeded data
+        var walletId = await TestData.GetFirstWalletIdAsync();
+        var issuerId = await TestData.GetFirstIssuerIdAsync();
+
         var issuedCredential = await PostAsync<IssueCredentialRequestDto, CredentialDto>("/api/v1/credential/issue", new IssueCredentialRequestDto
         {
-            WalletId = Guid.NewGuid(),
+            WalletId = walletId,
+            IssuerId = issuerId,
             CredentialType = "TestCredential",
             Subject = "To Be Revoked",
             Claims = new Dictionary<string, object>()
@@ -159,10 +171,14 @@ public class CredentialControllerIntegrationTests : IntegrationTestBase
     [Fact]
     public async Task IssueCredential_WithInvalidType_ReturnsBadRequest()
     {
-        // Arrange
+        // Arrange - Use seeded wallet but invalid credential type
+        var walletId = await TestData.GetFirstWalletIdAsync();
+        var issuerId = await TestData.GetFirstIssuerIdAsync();
+
         var request = new IssueCredentialRequestDto
         {
-            WalletId = Guid.NewGuid(),
+            WalletId = walletId,
+            IssuerId = issuerId,
             CredentialType = "InvalidType",
             Subject = "Test",
             Claims = new Dictionary<string, object>()
@@ -191,10 +207,14 @@ public class CredentialControllerIntegrationTests : IntegrationTestBase
     [Fact]
     public async Task ShareCredential_CreatesShareableLink()
     {
-        // Arrange - First issue a credential
+        // Arrange - First issue a credential using seeded data
+        var walletId = await TestData.GetFirstWalletIdAsync();
+        var issuerId = await TestData.GetFirstIssuerIdAsync();
+
         var issuedCredential = await PostAsync<IssueCredentialRequestDto, CredentialDto>("/api/v1/credential/issue", new IssueCredentialRequestDto
         {
-            WalletId = Guid.NewGuid(),
+            WalletId = walletId,
+            IssuerId = issuerId,
             CredentialType = "StudentId",
             Subject = "Student ID Card",
             Claims = new Dictionary<string, object>

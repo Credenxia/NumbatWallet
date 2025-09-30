@@ -27,7 +27,10 @@ public class OrganizationRepository : RepositoryBase<Organization, Guid>, IOrgan
 
     public async Task<IEnumerable<Organization>> GetByTypeAsync(string type, CancellationToken cancellationToken = default)
     {
-        // TODO: Add Type property to Organization entity
-        return await DbSet.ToListAsync(cancellationToken);
+        if (!Enum.TryParse<Domain.Enums.OrganizationType>(type, true, out var orgType))
+        {
+            return Enumerable.Empty<Organization>();
+        }
+        return await DbSet.Where(o => o.Type == orgType).ToListAsync(cancellationToken);
     }
 }

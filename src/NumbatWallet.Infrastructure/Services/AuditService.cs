@@ -15,7 +15,7 @@ public class AuditService : IAuditService
 
     public async Task LogAccessAsync(object auditEntry, CancellationToken cancellationToken = default)
     {
-        // TODO: Implement actual audit logging
+        // TODO: Add persistent storage (e.g., Azure Table Storage or dedicated audit database) for compliance
         if (auditEntry is AuditLogEntry entry)
         {
             _logger.LogInformation("Audit: {Action} on {EntityType}:{EntityId} by {UserId}",
@@ -44,7 +44,7 @@ public class AuditService : IAuditService
         DateTimeOffset? startDate = null,
         DateTimeOffset? endDate = null)
     {
-        // TODO: Implement actual audit log retrieval
+        // TODO: Query from persistent storage when implemented
         await Task.CompletedTask;
         return new List<AuditLogEntry>();
     }
@@ -54,7 +54,7 @@ public class AuditService : IAuditService
         DateTimeOffset? startDate = null,
         DateTimeOffset? endDate = null)
     {
-        // TODO: Implement actual unmask log retrieval
+        // TODO: Query unmask operations from persistent storage when implemented
         await Task.CompletedTask;
         return new List<UnmaskAuditEntry>();
     }
@@ -63,7 +63,7 @@ public class AuditService : IAuditService
         Guid tenantId,
         TimePeriod period)
     {
-        // TODO: Implement actual statistics
+        // TODO: Calculate statistics from audit log storage when implemented
         await Task.CompletedTask;
         return new SensitiveDataAccessStats
         {

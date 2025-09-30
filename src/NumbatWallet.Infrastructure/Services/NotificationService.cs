@@ -22,7 +22,7 @@ public class NotificationService : INotificationService
         string message,
         CancellationToken cancellationToken = default)
     {
-        // TODO: Implement async notification processing
+        // TODO: Integrate push notification service (e.g., Firebase/APNS) and queue for async processing
         _logger.LogInformation("Notification for user {UserId}: {Title} - {Message}", userId, title, message);
         await Task.CompletedTask;
     }
@@ -33,7 +33,7 @@ public class NotificationService : INotificationService
         string message,
         CancellationToken cancellationToken = default)
     {
-        // TODO: Implement async urgent notification processing
+        // TODO: Add priority queue processing for urgent notifications
         _logger.LogInformation("Urgent notification for user {UserId}: {Title} - {Message}", userId, title, message);
         await Task.CompletedTask;
     }
@@ -44,7 +44,7 @@ public class NotificationService : INotificationService
         string message,
         CancellationToken cancellationToken = default)
     {
-        // TODO: Implement organization notification
+        // TODO: Implement organization member lookup and batch notification
         _logger.LogInformation("Organization notification for {OrganizationId}: {Subject} - {Message}",
             organizationId, subject, message);
         await Task.CompletedTask;
@@ -57,7 +57,7 @@ public class NotificationService : INotificationService
         DateTime scheduledTime,
         CancellationToken cancellationToken = default)
     {
-        // TODO: Implement scheduled reminders
+        // TODO: Integrate with background job scheduler (e.g., Hangfire/Quartz) for scheduled reminders
         _logger.LogInformation("Reminder scheduled for user {UserId} at {ScheduledTime}: {Title} - {Message}",
             userId, scheduledTime, title, message);
         await Task.CompletedTask;

@@ -17,7 +17,8 @@ public class IssuerRepository : RepositoryBase<Issuer, Guid>, IIssuerRepository
 
     public async Task<IEnumerable<Issuer>> GetByOrganizationIdAsync(Guid organizationId, CancellationToken cancellationToken = default)
     {
-        // TODO: Add OrganizationId to Issuer entity
+        // OrganizationId relationship not yet implemented in domain model
+        // For now, return all issuers - this will be enhanced when Organization aggregate is linked
         return await DbSet.ToListAsync(cancellationToken);
     }
 
@@ -28,8 +29,7 @@ public class IssuerRepository : RepositoryBase<Issuer, Guid>, IIssuerRepository
 
     public async Task<IEnumerable<Issuer>> GetByTenantIdAsync(Guid tenantId, CancellationToken cancellationToken = default)
     {
-        // TODO: Add TenantId to Issuer entity
-        return await DbSet.ToListAsync(cancellationToken);
+        return await DbSet.Where(i => i.TenantId == tenantId.ToString()).ToListAsync(cancellationToken);
     }
 
     public async Task<IEnumerable<Issuer>> GetActiveIssuersAsync(CancellationToken cancellationToken = default)
@@ -39,8 +39,10 @@ public class IssuerRepository : RepositoryBase<Issuer, Guid>, IIssuerRepository
 
     public async Task<IEnumerable<Issuer>> GetIssuersBySupportedCredentialTypeAsync(string credentialType, CancellationToken cancellationToken = default)
     {
-        // TODO: Add credential type support to Issuer entity
-        return await DbSet.ToListAsync(cancellationToken);
+        // Load all issuers and filter in-memory using domain logic
+        // EF Core cannot translate SupportsCredentialType method to SQL
+        var allIssuers = await DbSet.Where(i => i.IsActive).ToListAsync(cancellationToken);
+        return allIssuers.Where(i => i.SupportsCredentialType(credentialType));
     }
 
     public async Task<bool> IssuerExistsAsync(string issuerDid, CancellationToken cancellationToken = default)
@@ -50,8 +52,7 @@ public class IssuerRepository : RepositoryBase<Issuer, Guid>, IIssuerRepository
 
     public async Task<bool> CanIssueCredentialTypeAsync(string issuerDid, string credentialType, CancellationToken cancellationToken = default)
     {
-        // TODO: Implement credential type validation
         var issuer = await DbSet.FirstOrDefaultAsync(i => i.IssuerDid == issuerDid, cancellationToken);
-        return issuer != null && issuer.IsActive;
+        return issuer != null && issuer.IsActive && issuer.SupportsCredentialType(credentialType);
     }
 }

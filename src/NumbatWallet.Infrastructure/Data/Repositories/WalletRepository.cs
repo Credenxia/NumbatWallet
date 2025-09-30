@@ -22,8 +22,8 @@ public class WalletRepository : RepositoryBase<Wallet, Guid>, IWalletRepository
 
     public async Task<IEnumerable<Wallet>> GetByTenantIdAsync(Guid tenantId, CancellationToken cancellationToken = default)
     {
-        // TODO: Add TenantId to Wallet entity
-        return await DbSet.ToListAsync(cancellationToken);
+        // TenantId is a string in the Wallet entity
+        return await DbSet.Where(w => w.TenantId == tenantId.ToString()).ToListAsync(cancellationToken);
     }
 
     public async Task<IEnumerable<Wallet>> GetActiveWalletsAsync(CancellationToken cancellationToken = default)

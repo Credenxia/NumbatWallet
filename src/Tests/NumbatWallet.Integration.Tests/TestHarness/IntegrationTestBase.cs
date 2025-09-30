@@ -14,14 +14,16 @@ namespace NumbatWallet.Integration.Tests.TestHarness;
 [Collection("Integration")]
 public abstract class IntegrationTestBase : IClassFixture<IntegrationTestFixture>
 {
-    protected readonly IntegrationTestFixture Fixture;
-    protected readonly HttpClient Client;
-    protected readonly JsonSerializerOptions JsonOptions;
+    protected IntegrationTestFixture Fixture { get; }
+    protected HttpClient Client { get; }
+    protected JsonSerializerOptions JsonOptions { get; }
+    protected TestDataHelper TestData { get; }
 
     protected IntegrationTestBase(IntegrationTestFixture fixture)
     {
         Fixture = fixture;
         Client = fixture.CreateClient();
+        TestData = new TestDataHelper(fixture.Services);
 
         // Set default headers
         Client.DefaultRequestHeaders.Accept.Clear();

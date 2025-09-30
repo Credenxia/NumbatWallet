@@ -157,7 +157,12 @@ namespace NumbatWallet.Web.Api.Testing
             {
                 new System.Security.Claims.Claim("user_id", "test-user"),
                 new System.Security.Claims.Claim("tenant_id", "test-tenant"),
-                new System.Security.Claims.Claim("user_type", "officer")
+                new System.Security.Claims.Claim("user_type", "officer"),
+                new System.Security.Claims.Claim(System.Security.Claims.ClaimTypes.Role, "Issuer"),
+                new System.Security.Claims.Claim(System.Security.Claims.ClaimTypes.Role, "Admin"),
+                new System.Security.Claims.Claim(System.Security.Claims.ClaimTypes.Role, "User"),
+                new System.Security.Claims.Claim(System.Security.Claims.ClaimTypes.Name, "Test User"),
+                new System.Security.Claims.Claim(System.Security.Claims.ClaimTypes.NameIdentifier, "test-user")
             };
 
             var identity = new System.Security.Claims.ClaimsIdentity(claims, "Test");

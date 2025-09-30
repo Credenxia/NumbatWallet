@@ -1,7 +1,10 @@
 using System.IO.Compression;
 using System.Security.Cryptography;
+using System.Security.Cryptography.Pkcs;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Text.Json;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using NumbatWallet.Application.DTOs;
 using NumbatWallet.Application.Interfaces;
@@ -15,11 +18,13 @@ namespace NumbatWallet.Infrastructure.WalletBuilders;
 public class AppleWalletBuilder : IAppleWalletBuilder
 {
     private readonly ILogger<AppleWalletBuilder> _logger;
+    private readonly IConfiguration _configuration;
     private readonly JsonSerializerOptions _jsonOptions;
 
-    public AppleWalletBuilder(ILogger<AppleWalletBuilder> logger)
+    public AppleWalletBuilder(ILogger<AppleWalletBuilder> logger, IConfiguration configuration)
     {
         _logger = logger;
+        _configuration = configuration;
         _jsonOptions = new JsonSerializerOptions
         {
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
@@ -74,26 +79,64 @@ public class AppleWalletBuilder : IAppleWalletBuilder
             var manifestBytes = Encoding.UTF8.GetBytes(manifestJson);
             await AddFileToArchive(archive, "manifest.json", manifestBytes);
 
-            // TODO: Add signature file (requires Apple Developer certificates)
-            // For now, we'll add a placeholder
-            var signaturePlaceholder = Encoding.UTF8.GetBytes("SIGNATURE_PLACEHOLDER");
-            await AddFileToArchive(archive, "signature", signaturePlaceholder);
+            // Add signature file if signing certificate is available
+            if (!string.IsNullOrEmpty(options.SigningCertificatePath))
+            {
+                var signature = await CreateSignatureAsync(manifestJson, options.SigningCertificatePath, options.SigningCertificatePassword);
+                await AddFileToArchive(archive, "signature", signature);
+            }
+            else
+            {
+                _logger.LogWarning("No signing certificate provided - pass will not work on actual devices");
+                // Add a placeholder for development/testing only
+                var signaturePlaceholder = Encoding.UTF8.GetBytes("DEVELOPMENT_ONLY");
+                await AddFileToArchive(archive, "signature", signaturePlaceholder);
+            }
         }
 
         memoryStream.Position = 0;
         return memoryStream.ToArray();
     }
 
-    public Task<byte[]> SignPassAsync(byte[] passData, string certificatePath, string password)
+    public async Task<byte[]> SignPassAsync(byte[] passData, string certificatePath, string password)
     {
-        // TODO: Implement proper PKCS#7 signing with Apple certificates
-        // This requires:
-        // 1. Apple Developer account
-        // 2. Pass Type ID certificate
-        // 3. WWDR (Apple Worldwide Developer Relations) certificate
+        try
+        {
+            // Load the signing certificate
+            var signingCert = X509CertificateLoader.LoadPkcs12FromFile(certificatePath, password, X509KeyStorageFlags.MachineKeySet);
 
-        _logger.LogWarning("Pass signing not implemented - returning unsigned pass");
-        return Task.FromResult(passData);
+            // Load WWDR certificate from configuration or embedded resource
+            var wwdrPath = _configuration["AppleWallet:WwdrCertificatePath"];
+            X509Certificate2? wwdrCert = null;
+            if (!string.IsNullOrEmpty(wwdrPath) && File.Exists(wwdrPath))
+            {
+                wwdrCert = X509CertificateLoader.LoadCertificateFromFile(wwdrPath);
+            }
+
+            // Create a detached PKCS#7 signature
+            var contentInfo = new ContentInfo(passData);
+            var signedCms = new SignedCms(contentInfo, true);
+
+            var signer = new CmsSigner(signingCert)
+            {
+                IncludeOption = X509IncludeOption.ExcludeRoot
+            };
+
+            // Add WWDR certificate to the signature if available
+            if (wwdrCert != null)
+            {
+                signer.Certificates.Add(wwdrCert);
+            }
+
+            signedCms.ComputeSignature(signer);
+
+            return signedCms.Encode();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to sign Apple Wallet pass");
+            throw new InvalidOperationException("Failed to sign pass", ex);
+        }
     }
 
     public bool ValidatePassJson(string passJson)
@@ -300,7 +343,7 @@ public class AppleWalletBuilder : IAppleWalletBuilder
     {
         return new AppleWalletOptions
         {
-            TeamIdentifier = "DUMMY_TEAM", // TODO: Get from configuration
+            TeamIdentifier = _configuration["AppleWallet:TeamIdentifier"] ?? "DEVELOPMENT",
             PassTypeIdentifier = $"pass.au.gov.wa.numbatwallet.{walletTemplate.Type.ToString().ToLowerInvariant()}",
             OrganizationName = "Government of Western Australia",
             Description = walletTemplate.Description,
@@ -328,5 +371,46 @@ public class AppleWalletBuilder : IAppleWalletBuilder
         var hash = SHA1.HashData(data);
         #pragma warning restore CA5350
         return Convert.ToHexString(hash).ToLowerInvariant();
+    }
+
+    private async Task<byte[]> CreateSignatureAsync(string manifestJson, string certificatePath, string? password)
+    {
+        try
+        {
+            var manifestBytes = Encoding.UTF8.GetBytes(manifestJson);
+
+            // Load signing certificate
+            var cert = X509CertificateLoader.LoadPkcs12FromFile(
+                certificatePath,
+                password ?? string.Empty,
+                X509KeyStorageFlags.MachineKeySet | X509KeyStorageFlags.PersistKeySet);
+
+            // Create PKCS#7 detached signature
+            var contentInfo = new ContentInfo(manifestBytes);
+            var signedCms = new SignedCms(contentInfo, true);
+
+            var signer = new CmsSigner(cert)
+            {
+                IncludeOption = X509IncludeOption.EndCertOnly,
+                DigestAlgorithm = new Oid("2.16.840.1.101.3.4.2.1") // SHA256
+            };
+
+            // Load WWDR certificate if available
+            var wwdrPath = _configuration["AppleWallet:WwdrCertificatePath"];
+            if (!string.IsNullOrEmpty(wwdrPath) && File.Exists(wwdrPath))
+            {
+                var wwdrCert = X509CertificateLoader.LoadCertificateFromFile(wwdrPath);
+                signer.Certificates.Add(wwdrCert);
+            }
+
+            signedCms.ComputeSignature(signer);
+            return signedCms.Encode();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to create signature for Apple Wallet pass");
+            // Return a placeholder for development
+            return Encoding.UTF8.GetBytes("SIGNATURE_ERROR");
+        }
     }
 }

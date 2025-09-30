@@ -11,6 +11,9 @@ public class Organization : AuditableEntity<Guid>, ITenantAware
     public string Name { get; private set; } = string.Empty;
     public OrganizationType Type { get; private set; }
     public string? Description { get; private set; }
+    public string? ContactEmail { get; private set; }
+    public string? ContactPhone { get; private set; }
+    public string? Website { get; private set; }
     public bool IsActive { get; private set; }
     public string TenantId { get; private set; } = string.Empty;
 
@@ -56,5 +59,12 @@ public class Organization : AuditableEntity<Guid>, ITenantAware
     public void Deactivate()
     {
         IsActive = false;
+    }
+
+    public void UpdateContactInfo(string? email, string? phone, string? website)
+    {
+        ContactEmail = email;
+        ContactPhone = phone;
+        Website = website;
     }
 }

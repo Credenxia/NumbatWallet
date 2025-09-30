@@ -7,4 +7,5 @@ public class IssueCredentialDto
     public required Dictionary<string, object> Data { get; set; }
     public DateTime? ExpiresAt { get; set; }
     public string? IssuerId { get; set; }
+    public string Schema { get; set; } = "https://www.w3.org/2018/credentials/v1";
 }

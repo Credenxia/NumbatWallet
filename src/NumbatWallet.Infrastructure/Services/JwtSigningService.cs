@@ -187,24 +187,48 @@ public class JwtSigningService : IJwtSigningService
         {
             try
             {
-                // TODO: Replace with actual HSM key retrieval through IHsmService
                 var keyName = $"jwt-signing-{keyId}";
-                // For now, create a mock HsmKey object
-                var hsmKey = new HsmKey
-                {
-                    Name = keyName,
-                    Type = NumbatWallet.Domain.Interfaces.KeyType.RSA,
-                    KeySize = 2048
-                };
-                if (hsmKey != null)
+                var hsmKeyMetadata = await _hsmService.GetKeyMetadataAsync(keyName, cancellationToken);
+
+                if (hsmKeyMetadata != null && hsmKeyMetadata.Enabled)
                 {
                     // For RSA keys from HSM
-                    if (hsmKey.Type == NumbatWallet.Domain.Interfaces.KeyType.RSA)
+                    if (hsmKeyMetadata.Algorithm == KeyAlgorithm.RSA2048 ||
+                        hsmKeyMetadata.Algorithm == KeyAlgorithm.RSA3072 ||
+                        hsmKeyMetadata.Algorithm == KeyAlgorithm.RSA4096)
                     {
-                        // For HSM keys, we typically can't export the private key
-                        // So we'd need to use the HSM provider for signing operations
-                        // For now, fall back to configuration key
-                        _logger.LogWarning("HSM key found but cannot export private key, using configuration key");
+                        // Get public key for creating SecurityKey
+                        var publicKeyBytes = await _hsmService.GetPublicKeyAsync(keyName, cancellationToken);
+                        var rsa = RSA.Create();
+                        rsa.ImportSubjectPublicKeyInfo(publicKeyBytes, out _);
+
+                        // Create RSA security key for token signing
+                        var rsaKey = new RsaSecurityKey(rsa)
+                        {
+                            KeyId = keyId
+                        };
+
+                        return new SigningCredentials(rsaKey, SecurityAlgorithms.RsaSha256);
+                    }
+                    // For ECC keys from HSM
+                    else if (hsmKeyMetadata.Algorithm == KeyAlgorithm.ECC_P256 ||
+                             hsmKeyMetadata.Algorithm == KeyAlgorithm.ECC_P384 ||
+                             hsmKeyMetadata.Algorithm == KeyAlgorithm.ECC_P521)
+                    {
+                        var publicKeyBytes = await _hsmService.GetPublicKeyAsync(keyName, cancellationToken);
+                        var ecdsa = ECDsa.Create();
+                        ecdsa.ImportSubjectPublicKeyInfo(publicKeyBytes, out _);
+
+                        var ecKey = new ECDsaSecurityKey(ecdsa)
+                        {
+                            KeyId = keyId
+                        };
+
+                        var algorithm = hsmKeyMetadata.Algorithm == KeyAlgorithm.ECC_P256 ? SecurityAlgorithms.EcdsaSha256 :
+                                       hsmKeyMetadata.Algorithm == KeyAlgorithm.ECC_P384 ? SecurityAlgorithms.EcdsaSha384 :
+                                       SecurityAlgorithms.EcdsaSha512;
+
+                        return new SigningCredentials(ecKey, algorithm);
                     }
                 }
             }
@@ -227,20 +251,40 @@ public class JwtSigningService : IJwtSigningService
         // Try to get key from HSM first
         try
         {
-            // TODO: Replace with actual HSM key retrieval through IHsmService
             var keyName = $"jwt-signing-{keyId}";
-            // For now, create a mock HsmKey object
-            var hsmKey = new HsmKey
+            var hsmKeyMetadata = await _hsmService.GetKeyMetadataAsync(keyName, cancellationToken);
+
+            if (hsmKeyMetadata != null && hsmKeyMetadata.Enabled)
             {
-                Name = keyName,
-                Type = NumbatWallet.Domain.Interfaces.KeyType.RSA,
-                KeySize = 2048
-            };
-            if (hsmKey != null && hsmKey.Type == NumbatWallet.Domain.Interfaces.KeyType.RSA)
-            {
-                // For verification, we would typically use the public key from HSM
-                // But HsmKey doesn't expose the public key directly
-                _logger.LogWarning("HSM key found but public key not accessible, using configuration key");
+                // For RSA keys from HSM
+                if (hsmKeyMetadata.Algorithm == KeyAlgorithm.RSA2048 ||
+                    hsmKeyMetadata.Algorithm == KeyAlgorithm.RSA3072 ||
+                    hsmKeyMetadata.Algorithm == KeyAlgorithm.RSA4096)
+                {
+                    // Get public key for verification
+                    var publicKeyBytes = await _hsmService.GetPublicKeyAsync(keyName, cancellationToken);
+                    var rsa = RSA.Create();
+                    rsa.ImportSubjectPublicKeyInfo(publicKeyBytes, out _);
+
+                    return new RsaSecurityKey(rsa)
+                    {
+                        KeyId = keyId
+                    };
+                }
+                // For ECC keys from HSM
+                else if (hsmKeyMetadata.Algorithm == KeyAlgorithm.ECC_P256 ||
+                         hsmKeyMetadata.Algorithm == KeyAlgorithm.ECC_P384 ||
+                         hsmKeyMetadata.Algorithm == KeyAlgorithm.ECC_P521)
+                {
+                    var publicKeyBytes = await _hsmService.GetPublicKeyAsync(keyName, cancellationToken);
+                    var ecdsa = ECDsa.Create();
+                    ecdsa.ImportSubjectPublicKeyInfo(publicKeyBytes, out _);
+
+                    return new ECDsaSecurityKey(ecdsa)
+                    {
+                        KeyId = keyId
+                    };
+                }
             }
         }
         catch (Exception ex)

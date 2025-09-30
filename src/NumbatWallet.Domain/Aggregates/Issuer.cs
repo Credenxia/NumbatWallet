@@ -333,6 +333,11 @@ public sealed class Issuer : AuditableEntity<Guid>, ITenantAware
         WebsiteUrl = websiteUrl;
     }
 
+    public void SetTrustedDomain(string trustedDomain)
+    {
+        TrustedDomain = trustedDomain ?? string.Empty;
+    }
+
     private static string WildcardToRegex(string pattern)
     {
         var escapedPattern = Regex.Escape(pattern).Replace("\\*", ".*");

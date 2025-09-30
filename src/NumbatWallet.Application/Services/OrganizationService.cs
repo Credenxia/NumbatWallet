@@ -89,7 +89,7 @@ public class OrganizationService : IOrganizationService
             organization.Name,
             organization.Name, // Using name as identifier for now
             organization.Type,
-            "admin@example.com", // TODO: Add contact info to Organization
+            organization.ContactEmail ?? string.Empty,
             null,
             null,
             null,

@@ -1,6 +1,7 @@
 using FluentValidation;
 using Microsoft.Extensions.Logging;
 using NumbatWallet.Application.CQRS.Interfaces;
+using NumbatWallet.Domain.Events;
 using NumbatWallet.Domain.Interfaces;
 using NumbatWallet.SharedKernel.Interfaces;
 
@@ -15,17 +16,20 @@ public class DeleteTenantCommandHandler : ICommandHandler<DeleteTenantCommand>
     private readonly ITenantRepository _tenantRepository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IValidator<DeleteTenantCommand> _validator;
+    private readonly ICurrentUserService _currentUserService;
     private readonly ILogger<DeleteTenantCommandHandler> _logger;
 
     public DeleteTenantCommandHandler(
         ITenantRepository tenantRepository,
         IUnitOfWork unitOfWork,
         IValidator<DeleteTenantCommand> validator,
+        ICurrentUserService currentUserService,
         ILogger<DeleteTenantCommandHandler> logger)
     {
         _tenantRepository = tenantRepository;
         _unitOfWork = unitOfWork;
         _validator = validator;
+        _currentUserService = currentUserService;
         _logger = logger;
     }
 
@@ -67,8 +71,13 @@ public class DeleteTenantCommandHandler : ICommandHandler<DeleteTenantCommand>
 
         _logger.LogInformation("Tenant {TenantId} deleted (deactivated) successfully", command.Id);
 
-        // TODO: Raise domain event
-        // await _eventBus.PublishAsync(new TenantDeletedEvent(command.Id));
+        // Raise domain event for tenant deletion
+        var tenantDeletedEvent = new TenantDeletedEvent(
+            tenant.Identifier,
+            _currentUserService.UserId?.ToString() ?? "system",
+            "Tenant deactivated",
+            tenant.UpdatedAt);
+        tenant.AddDomainEvent(tenantDeletedEvent);
     }
 }
 

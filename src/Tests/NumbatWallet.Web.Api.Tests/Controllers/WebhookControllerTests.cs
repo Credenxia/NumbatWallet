@@ -1,5 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -8,54 +10,60 @@ using Moq;
 using NumbatWallet.Web.Api.Controllers;
 using NumbatWallet.Web.Api.Security;
 using NumbatWallet.Web.Api.Webhooks;
+using NumbatWallet.Web.Api.Tests.TestHelpers;
+using Xunit;
 
 namespace NumbatWallet.Web.Api.Tests.Controllers;
 
-public class WebhookControllerTests : IClassFixture<WebApplicationFactory<Program>>
+[Collection("Sequential")]
+public class WebhookControllerTests : ApiTestBase
 {
-    private readonly WebApplicationFactory<Program> _factory;
-    private readonly Mock<IWebhookService> _mockWebhookService;
-    private readonly Mock<ISecurityAuditService> _mockAuditService;
+    private readonly JsonSerializerOptions _jsonOptions;
 
-    public WebhookControllerTests(WebApplicationFactory<Program> factory)
+    public WebhookControllerTests(WebApplicationFactory<Program> factory) : base(factory)
     {
-        _factory = factory;
-        _mockWebhookService = new Mock<IWebhookService>();
-        _mockAuditService = new Mock<ISecurityAuditService>();
+        // Configure JSON options with StringEnumConverter to match the API
+        _jsonOptions = new JsonSerializerOptions
+        {
+            PropertyNameCaseInsensitive = true,
+            Converters = { new JsonStringEnumConverter() }
+        };
     }
 
-    private HttpClient CreateClient()
+    private (HttpClient client, Mock<IWebhookService> mockWebhookService, Mock<ISecurityAuditService> mockAuditService) CreateClientWithMocks()
     {
-        return _factory.WithWebHostBuilder(builder =>
+        // Create fresh mocks for each test to avoid interference
+        var mockWebhookService = new Mock<IWebhookService>();
+        var mockAuditService = new Mock<ISecurityAuditService>();
+
+        var client = CreateAuthenticatedClient(services =>
         {
-            builder.ConfigureServices(services =>
+            // Remove existing registrations
+            var webhookDescriptor = services.SingleOrDefault(d => d.ServiceType == typeof(IWebhookService));
+            if (webhookDescriptor != null)
             {
-                // Remove existing registrations
-                var webhookDescriptor = services.SingleOrDefault(d => d.ServiceType == typeof(IWebhookService));
-                if (webhookDescriptor != null)
-                {
-                    services.Remove(webhookDescriptor);
-                }
+                services.Remove(webhookDescriptor);
+            }
 
-                var auditDescriptor = services.SingleOrDefault(d => d.ServiceType == typeof(ISecurityAuditService));
-                if (auditDescriptor != null)
-                {
-                    services.Remove(auditDescriptor);
-                }
+            var auditDescriptor = services.SingleOrDefault(d => d.ServiceType == typeof(ISecurityAuditService));
+            if (auditDescriptor != null)
+            {
+                services.Remove(auditDescriptor);
+            }
 
-                // Add mocks
-                services.AddSingleton(_mockWebhookService.Object);
-                services.AddSingleton(_mockAuditService.Object);
-            });
-        }).CreateClient();
+            // Add mocks
+            services.AddSingleton(mockWebhookService.Object);
+            services.AddSingleton(mockAuditService.Object);
+        });
+
+        return (client, mockWebhookService, mockAuditService);
     }
 
     [Fact]
     public async Task Subscribe_WithValidRequest_ReturnsCreated()
     {
         // Arrange
-        var client = CreateClient();
-        client.DefaultRequestHeaders.Add("Authorization", "Bearer test-token");
+        var (client, mockWebhookService, mockAuditService) = CreateClientWithMocks();
 
         var request = new WebhookSubscriptionRequestDto
         {
@@ -84,12 +92,12 @@ public class WebhookControllerTests : IClassFixture<WebApplicationFactory<Progra
             CreatedAt = DateTime.UtcNow
         };
 
-        _mockWebhookService
-            .Setup(x => x.RegisterWebhookAsync(It.IsAny<WebhookSubscription>(), default))
+        mockWebhookService
+            .Setup(x => x.RegisterWebhookAsync(It.IsAny<WebhookSubscription>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(expectedId);
 
-        _mockWebhookService
-            .Setup(x => x.GetWebhookAsync(expectedId, default))
+        mockWebhookService
+            .Setup(x => x.GetWebhookAsync(expectedId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(expectedSubscription);
 
         // Act
@@ -97,7 +105,7 @@ public class WebhookControllerTests : IClassFixture<WebApplicationFactory<Progra
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Created);
-        var result = await response.Content.ReadFromJsonAsync<WebhookSubscriptionResponseDto>();
+        var result = await response.Content.ReadFromJsonAsync<WebhookSubscriptionResponseDto>(_jsonOptions);
         result.Should().NotBeNull();
         result!.Id.Should().Be(expectedId);
         result.Url.Should().Be(request.Url);
@@ -108,8 +116,7 @@ public class WebhookControllerTests : IClassFixture<WebApplicationFactory<Progra
     public async Task GetSubscription_WithExistingId_ReturnsSubscription()
     {
         // Arrange
-        var client = CreateClient();
-        client.DefaultRequestHeaders.Add("Authorization", "Bearer test-token");
+        var (client, mockWebhookService, mockAuditService) = CreateClientWithMocks();
 
         var subscriptionId = Guid.NewGuid();
         var expectedSubscription = new WebhookSubscription
@@ -124,8 +131,8 @@ public class WebhookControllerTests : IClassFixture<WebApplicationFactory<Progra
             ConsecutiveFailures = 0
         };
 
-        _mockWebhookService
-            .Setup(x => x.GetWebhookAsync(subscriptionId, default))
+        mockWebhookService
+            .Setup(x => x.GetWebhookAsync(subscriptionId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(expectedSubscription);
 
         // Act
@@ -133,7 +140,7 @@ public class WebhookControllerTests : IClassFixture<WebApplicationFactory<Progra
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
-        var result = await response.Content.ReadFromJsonAsync<WebhookSubscriptionResponseDto>();
+        var result = await response.Content.ReadFromJsonAsync<WebhookSubscriptionResponseDto>(_jsonOptions);
         result.Should().NotBeNull();
         result!.Id.Should().Be(subscriptionId);
         result.Url.Should().Be(expectedSubscription.Url);
@@ -143,13 +150,12 @@ public class WebhookControllerTests : IClassFixture<WebApplicationFactory<Progra
     public async Task GetSubscription_WithNonExistentId_ReturnsNotFound()
     {
         // Arrange
-        var client = CreateClient();
-        client.DefaultRequestHeaders.Add("Authorization", "Bearer test-token");
+        var (client, mockWebhookService, mockAuditService) = CreateClientWithMocks();
 
         var subscriptionId = Guid.NewGuid();
 
-        _mockWebhookService
-            .Setup(x => x.GetWebhookAsync(subscriptionId, default))
+        mockWebhookService
+            .Setup(x => x.GetWebhookAsync(subscriptionId, It.IsAny<CancellationToken>()))
             .ReturnsAsync((WebhookSubscription?)null);
 
         // Act
@@ -165,8 +171,7 @@ public class WebhookControllerTests : IClassFixture<WebApplicationFactory<Progra
     public async Task GetSubscriptions_ReturnsAllActiveSubscriptions()
     {
         // Arrange
-        var client = CreateClient();
-        client.DefaultRequestHeaders.Add("Authorization", "Bearer test-token");
+        var (client, mockWebhookService, mockAuditService) = CreateClientWithMocks();
 
         var subscriptions = new List<WebhookSubscription>
         {
@@ -188,7 +193,7 @@ public class WebhookControllerTests : IClassFixture<WebApplicationFactory<Progra
             }
         };
 
-        _mockWebhookService
+        mockWebhookService
             .Setup(x => x.GetActiveWebhooksAsync(default))
             .ReturnsAsync(subscriptions);
 
@@ -197,7 +202,7 @@ public class WebhookControllerTests : IClassFixture<WebApplicationFactory<Progra
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
-        var result = await response.Content.ReadFromJsonAsync<IEnumerable<WebhookSubscriptionResponseDto>>();
+        var result = await response.Content.ReadFromJsonAsync<IEnumerable<WebhookSubscriptionResponseDto>>(_jsonOptions);
         result.Should().NotBeNull();
         result.Should().HaveCount(2);
     }
@@ -206,13 +211,12 @@ public class WebhookControllerTests : IClassFixture<WebApplicationFactory<Progra
     public async Task Unsubscribe_WithExistingId_ReturnsNoContent()
     {
         // Arrange
-        var client = CreateClient();
-        client.DefaultRequestHeaders.Add("Authorization", "Bearer test-token");
+        var (client, mockWebhookService, mockAuditService) = CreateClientWithMocks();
 
         var subscriptionId = Guid.NewGuid();
 
-        _mockWebhookService
-            .Setup(x => x.UnregisterWebhookAsync(subscriptionId, default))
+        mockWebhookService
+            .Setup(x => x.UnregisterWebhookAsync(subscriptionId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
 
         // Act
@@ -222,7 +226,7 @@ public class WebhookControllerTests : IClassFixture<WebApplicationFactory<Progra
         response.StatusCode.Should().Be(HttpStatusCode.NoContent);
 
         // Verify audit was logged
-        _mockAuditService.Verify(x => x.LogSecurityEventAsync(
+        mockAuditService.Verify(x => x.LogSecurityEventAsync(
             It.IsAny<HttpContext>(),
             SecurityEventType.ConfigurationChange,
             It.Is<string>(s => s.Contains("Webhook subscription removed")),
@@ -234,13 +238,12 @@ public class WebhookControllerTests : IClassFixture<WebApplicationFactory<Progra
     public async Task Unsubscribe_WithNonExistentId_ReturnsNotFound()
     {
         // Arrange
-        var client = CreateClient();
-        client.DefaultRequestHeaders.Add("Authorization", "Bearer test-token");
+        var (client, mockWebhookService, mockAuditService) = CreateClientWithMocks();
 
         var subscriptionId = Guid.NewGuid();
 
-        _mockWebhookService
-            .Setup(x => x.UnregisterWebhookAsync(subscriptionId, default))
+        mockWebhookService
+            .Setup(x => x.UnregisterWebhookAsync(subscriptionId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(false);
 
         // Act
@@ -254,8 +257,7 @@ public class WebhookControllerTests : IClassFixture<WebApplicationFactory<Progra
     public async Task TestWebhook_WithExistingId_ReturnsTestResult()
     {
         // Arrange
-        var client = CreateClient();
-        client.DefaultRequestHeaders.Add("Authorization", "Bearer test-token");
+        var (client, mockWebhookService, mockAuditService) = CreateClientWithMocks();
 
         var subscriptionId = Guid.NewGuid();
         var subscription = new WebhookSubscription
@@ -275,12 +277,16 @@ public class WebhookControllerTests : IClassFixture<WebApplicationFactory<Progra
             DeliveredAt = DateTime.UtcNow
         };
 
-        _mockWebhookService
-            .Setup(x => x.GetWebhookAsync(subscriptionId, default))
+        mockWebhookService
+            .Setup(x => x.GetWebhookAsync(subscriptionId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(subscription);
 
-        _mockWebhookService
-            .Setup(x => x.SendWebhookAsync(WebhookEventType.WalletCreated, It.IsAny<object>(), default))
+        // Setup the mock to return the delivery result for any matching call
+        mockWebhookService
+            .Setup(x => x.DeliverWebhookAsync(
+                It.Is<WebhookSubscription>(s => s.Id == subscriptionId),
+                It.IsAny<object>(),
+                It.IsAny<CancellationToken>()))
             .ReturnsAsync(deliveryResult);
 
         // Act
@@ -288,7 +294,7 @@ public class WebhookControllerTests : IClassFixture<WebApplicationFactory<Progra
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
-        var result = await response.Content.ReadFromJsonAsync<WebhookTestResponseDto>();
+        var result = await response.Content.ReadFromJsonAsync<WebhookTestResponseDto>(_jsonOptions);
         result.Should().NotBeNull();
         result!.Success.Should().BeTrue();
         result.StatusCode.Should().Be(200);
@@ -298,8 +304,7 @@ public class WebhookControllerTests : IClassFixture<WebApplicationFactory<Progra
     public async Task TestWebhook_WithFailedDelivery_ReturnsFailureDetails()
     {
         // Arrange
-        var client = CreateClient();
-        client.DefaultRequestHeaders.Add("Authorization", "Bearer test-token");
+        var (client, mockWebhookService, mockAuditService) = CreateClientWithMocks();
 
         var subscriptionId = Guid.NewGuid();
         var subscription = new WebhookSubscription
@@ -320,12 +325,16 @@ public class WebhookControllerTests : IClassFixture<WebApplicationFactory<Progra
             DeliveredAt = DateTime.UtcNow
         };
 
-        _mockWebhookService
-            .Setup(x => x.GetWebhookAsync(subscriptionId, default))
+        mockWebhookService
+            .Setup(x => x.GetWebhookAsync(subscriptionId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(subscription);
 
-        _mockWebhookService
-            .Setup(x => x.SendWebhookAsync(WebhookEventType.WalletCreated, It.IsAny<object>(), default))
+        // Setup the mock to return the delivery result for any matching call
+        mockWebhookService
+            .Setup(x => x.DeliverWebhookAsync(
+                It.Is<WebhookSubscription>(s => s.Id == subscriptionId),
+                It.IsAny<object>(),
+                It.IsAny<CancellationToken>()))
             .ReturnsAsync(deliveryResult);
 
         // Act
@@ -333,7 +342,7 @@ public class WebhookControllerTests : IClassFixture<WebApplicationFactory<Progra
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
-        var result = await response.Content.ReadFromJsonAsync<WebhookTestResponseDto>();
+        var result = await response.Content.ReadFromJsonAsync<WebhookTestResponseDto>(_jsonOptions);
         result.Should().NotBeNull();
         result!.Success.Should().BeFalse();
         result.StatusCode.Should().Be(500);
@@ -344,7 +353,7 @@ public class WebhookControllerTests : IClassFixture<WebApplicationFactory<Progra
     public async Task ValidateSignature_WithValidSignature_ReturnsValid()
     {
         // Arrange
-        var client = CreateClient();
+        var (client, mockWebhookService, mockAuditService) = CreateClientWithMocks();
 
         var request = new ValidateWebhookRequestDto
         {
@@ -353,7 +362,7 @@ public class WebhookControllerTests : IClassFixture<WebApplicationFactory<Progra
             Secret = "whsec_secret"
         };
 
-        _mockWebhookService
+        mockWebhookService
             .Setup(x => x.ValidateWebhookSignatureAsync(request.Payload, request.Signature, request.Secret))
             .ReturnsAsync(true);
 
@@ -362,7 +371,7 @@ public class WebhookControllerTests : IClassFixture<WebApplicationFactory<Progra
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
-        var result = await response.Content.ReadFromJsonAsync<WebhookValidationResponseDto>();
+        var result = await response.Content.ReadFromJsonAsync<WebhookValidationResponseDto>(_jsonOptions);
         result.Should().NotBeNull();
         result!.IsValid.Should().BeTrue();
     }
@@ -371,7 +380,7 @@ public class WebhookControllerTests : IClassFixture<WebApplicationFactory<Progra
     public async Task ValidateSignature_WithInvalidSignature_ReturnsInvalid()
     {
         // Arrange
-        var client = CreateClient();
+        var (client, mockWebhookService, mockAuditService) = CreateClientWithMocks();
 
         var request = new ValidateWebhookRequestDto
         {
@@ -380,7 +389,7 @@ public class WebhookControllerTests : IClassFixture<WebApplicationFactory<Progra
             Secret = "whsec_secret"
         };
 
-        _mockWebhookService
+        mockWebhookService
             .Setup(x => x.ValidateWebhookSignatureAsync(request.Payload, request.Signature, request.Secret))
             .ReturnsAsync(false);
 
@@ -389,7 +398,7 @@ public class WebhookControllerTests : IClassFixture<WebApplicationFactory<Progra
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
-        var result = await response.Content.ReadFromJsonAsync<WebhookValidationResponseDto>();
+        var result = await response.Content.ReadFromJsonAsync<WebhookValidationResponseDto>(_jsonOptions);
         result.Should().NotBeNull();
         result!.IsValid.Should().BeFalse();
     }
@@ -398,8 +407,7 @@ public class WebhookControllerTests : IClassFixture<WebApplicationFactory<Progra
     public async Task Subscribe_LogsSecurityAudit()
     {
         // Arrange
-        var client = CreateClient();
-        client.DefaultRequestHeaders.Add("Authorization", "Bearer test-token");
+        var (client, mockWebhookService, mockAuditService) = CreateClientWithMocks();
 
         var request = new WebhookSubscriptionRequestDto
         {
@@ -417,19 +425,19 @@ public class WebhookControllerTests : IClassFixture<WebApplicationFactory<Progra
             IsActive = true
         };
 
-        _mockWebhookService
-            .Setup(x => x.RegisterWebhookAsync(It.IsAny<WebhookSubscription>(), default))
+        mockWebhookService
+            .Setup(x => x.RegisterWebhookAsync(It.IsAny<WebhookSubscription>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(expectedId);
 
-        _mockWebhookService
-            .Setup(x => x.GetWebhookAsync(expectedId, default))
+        mockWebhookService
+            .Setup(x => x.GetWebhookAsync(expectedId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(expectedSubscription);
 
         // Act
         await client.PostAsJsonAsync("/api/v1/webhook/subscribe", request);
 
         // Assert
-        _mockAuditService.Verify(x => x.LogSecurityEventAsync(
+        mockAuditService.Verify(x => x.LogSecurityEventAsync(
             It.IsAny<HttpContext>(),
             SecurityEventType.ConfigurationChange,
             It.Is<string>(s => s.Contains("Webhook subscription created")),

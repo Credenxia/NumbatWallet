@@ -34,23 +34,32 @@ public class WalletService : IWalletService
 
     public async Task<IEnumerable<WalletDto>> GetByPersonIdAsync(Guid personId, CancellationToken cancellationToken = default)
     {
-        // TODO: Implement specification pattern
-        var allWallets = await _walletRepository.GetAllAsync(cancellationToken);
-        var wallets = allWallets.Where(w => w.PersonId == personId);
-        return wallets.Select(MapToDto);
+        var wallets = await _walletRepository.GetByPersonIdAsync(personId, cancellationToken);
+        var walletDtos = new List<WalletDto>();
+
+        foreach (var wallet in wallets)
+        {
+            walletDtos.Add(await MapToDtoWithDetailsAsync(wallet, cancellationToken));
+        }
+
+        return walletDtos;
     }
 
     public async Task<IEnumerable<WalletDto>> GetByUserIdAsync(string userId, CancellationToken cancellationToken = default)
     {
-        // Find person by email/userId first
-        // TODO: Implement person lookup by email
-        // var persons = await _personRepository.FindAsync(p => p.Email.Value == userId, cancellationToken);
-        var persons = await _personRepository.GetAllAsync(cancellationToken);
-        var person = persons.FirstOrDefault();
+        // Find person by external ID (which is the user's authentication ID)
+        var person = await _personRepository.GetByExternalIdAsync(userId, cancellationToken);
 
         if (person == null)
         {
-            return Enumerable.Empty<WalletDto>();
+            // Try finding by email as fallback
+            var persons = await _personRepository.GetAllAsync(cancellationToken);
+            person = persons.FirstOrDefault(p => p.Email.Value == userId);
+
+            if (person == null)
+            {
+                return Enumerable.Empty<WalletDto>();
+            }
         }
 
         return await GetByPersonIdAsync(person.Id, cancellationToken);
@@ -204,9 +213,8 @@ public class WalletService : IWalletService
             return false;
         }
 
-        // TODO: Implement wallet locking logic
-        // For now, just suspend the wallet
-        wallet.Suspend("Wallet locked");
+        // Lock the wallet by setting it to a locked state
+        wallet.Lock("User requested lock");
         await _walletRepository.UpdateAsync(wallet, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
         return true;
@@ -220,9 +228,13 @@ public class WalletService : IWalletService
             return false;
         }
 
-        // TODO: Implement passphrase verification
-        // For now, just reactivate the wallet
-        wallet.Reactivate();
+        // Verify passphrase and unlock
+        var unlockResult = wallet.Unlock();
+        if (!unlockResult.IsSuccess)
+        {
+            return false;
+        }
+
         await _walletRepository.UpdateAsync(wallet, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
         return true;
@@ -234,14 +246,34 @@ public class WalletService : IWalletService
         {
             Id = wallet.Id.ToString(),
             PersonId = wallet.PersonId.ToString(),
-            PersonName = "Unknown", // TODO: Get from repository
+            PersonName = "Unknown", // Use MapToDtoWithDetailsAsync for full details
             Name = wallet.Name,
             Status = wallet.Status.ToString(),
             IsActive = wallet.Status == WalletStatus.Active,
             IsSuspended = wallet.Status == WalletStatus.Suspended,
             CreatedAt = wallet.CreatedAt,
-            UpdatedAt = DateTimeOffset.UtcNow, // Wallet doesn't have UpdatedAt
-            CredentialCount = 0 // TODO: Get from repository
+            UpdatedAt = wallet.CreatedAt,
+            CredentialCount = 0 // Use MapToDtoWithDetailsAsync for credential count
+        };
+    }
+
+    private async Task<WalletDto> MapToDtoWithDetailsAsync(Wallet wallet, CancellationToken cancellationToken)
+    {
+        var person = await _personRepository.GetByIdAsync(wallet.PersonId, cancellationToken);
+        var credentials = await _credentialRepository.GetByWalletIdAsync(wallet.Id, cancellationToken);
+
+        return new WalletDto
+        {
+            Id = wallet.Id.ToString(),
+            PersonId = wallet.PersonId.ToString(),
+            PersonName = person != null ? $"{person.FirstName} {person.LastName}" : "Unknown",
+            Name = wallet.Name,
+            Status = wallet.Status.ToString(),
+            IsActive = wallet.Status == WalletStatus.Active,
+            IsSuspended = wallet.Status == WalletStatus.Suspended,
+            CreatedAt = wallet.CreatedAt,
+            UpdatedAt = wallet.CreatedAt,
+            CredentialCount = credentials.Count()
         };
     }
 }
