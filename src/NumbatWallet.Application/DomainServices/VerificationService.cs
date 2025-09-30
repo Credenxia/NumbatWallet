@@ -3,7 +3,7 @@ using NumbatWallet.Domain.Events;
 using NumbatWallet.Domain.Interfaces;
 using NumbatWallet.SharedKernel.Enums;
 
-namespace NumbatWallet.Domain.Services;
+namespace NumbatWallet.Application.DomainServices;
 
 public interface IVerificationDomainService
 {

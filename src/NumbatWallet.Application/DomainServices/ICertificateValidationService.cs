@@ -1,6 +1,6 @@
 using NumbatWallet.Domain.Entities;
 
-namespace NumbatWallet.Domain.Services;
+namespace NumbatWallet.Application.DomainServices;
 
 /// <summary>
 /// Domain service for certificate validation logic

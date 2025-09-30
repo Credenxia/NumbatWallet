@@ -1,11 +1,11 @@
-using AutoMapper;
 using Microsoft.Extensions.Logging;
 using NumbatWallet.Application.Common.Exceptions;
 using NumbatWallet.Application.CQRS.Interfaces;
 using NumbatWallet.Application.DTOs;
+using NumbatWallet.Application.Extensions;
 using NumbatWallet.Domain.Aggregates;
 using NumbatWallet.Domain.Interfaces;
-using NumbatWallet.Domain.Services;
+using NumbatWallet.Application.DomainServices;
 using NumbatWallet.SharedKernel.Interfaces;
 
 namespace NumbatWallet.Application.Wallets.Commands.CreateWallet;
@@ -15,7 +15,6 @@ public sealed class CreateWalletCommandHandler : ICommandHandler<CreateWalletCom
     private readonly IWalletRepository _walletRepository;
     private readonly IPersonRepository _personRepository;
     private readonly IUnitOfWork _unitOfWork;
-    private readonly IMapper _mapper;
     private readonly ILogger<CreateWalletCommandHandler> _logger;
     private readonly ITenantService _tenantService;
     private readonly IWalletDomainService _walletDomainService;
@@ -25,7 +24,6 @@ public sealed class CreateWalletCommandHandler : ICommandHandler<CreateWalletCom
         IWalletRepository walletRepository,
         IPersonRepository personRepository,
         IUnitOfWork unitOfWork,
-        IMapper mapper,
         ILogger<CreateWalletCommandHandler> logger,
         ITenantService tenantService,
         IWalletDomainService walletDomainService,
@@ -34,7 +32,6 @@ public sealed class CreateWalletCommandHandler : ICommandHandler<CreateWalletCom
         _walletRepository = walletRepository;
         _personRepository = personRepository;
         _unitOfWork = unitOfWork;
-        _mapper = mapper;
         _logger = logger;
         _tenantService = tenantService;
         _walletDomainService = walletDomainService;
@@ -103,7 +100,7 @@ public sealed class CreateWalletCommandHandler : ICommandHandler<CreateWalletCom
 
         _logger.LogInformation("Wallet {WalletId} created successfully with DID {WalletDid}", wallet.Id, walletDid);
 
-        // Map to DTO and return
-        return _mapper.Map<WalletDto>(wallet);
+        // Convert to DTO and return
+        return wallet.ToDto();
     }
 }

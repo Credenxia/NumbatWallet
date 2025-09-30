@@ -3,7 +3,7 @@ using Microsoft.Extensions.Logging;
 using NumbatWallet.Application.CQRS.Interfaces;
 using NumbatWallet.Application.Services;
 using NumbatWallet.Domain.Interfaces;
-using NumbatWallet.Domain.Services;
+using NumbatWallet.Application.DomainServices;
 
 namespace NumbatWallet.Application.Commands.Certificates;
 

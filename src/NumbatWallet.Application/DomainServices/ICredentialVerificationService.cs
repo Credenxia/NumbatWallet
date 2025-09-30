@@ -1,7 +1,7 @@
 using NumbatWallet.Domain.Aggregates;
 using NumbatWallet.SharedKernel.Results;
 
-namespace NumbatWallet.Domain.Services;
+namespace NumbatWallet.Application.DomainServices;
 
 public interface ICredentialVerificationService
 {

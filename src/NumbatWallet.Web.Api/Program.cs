@@ -48,9 +48,8 @@ try
         options.AssumeDefaultVersionWhenUnspecified = true;
         options.ReportApiVersions = true;
         options.ApiVersionReader = Asp.Versioning.ApiVersionReader.Default;
-    });
-
-    builder.Services.AddVersionedApiExplorer(options =>
+    })
+    .AddApiExplorer(options =>
     {
         options.GroupNameFormat = "'v'VVV";
         options.SubstituteApiVersionInUrl = true;

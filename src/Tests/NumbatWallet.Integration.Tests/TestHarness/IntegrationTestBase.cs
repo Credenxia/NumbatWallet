@@ -95,7 +95,14 @@ public abstract class IntegrationTestBase : IClassFixture<IntegrationTestFixture
         var content = new StringContent(json, Encoding.UTF8, "application/json");
 
         var response = await Client.PostAsync(url, content);
-        response.EnsureSuccessStatusCode();
+
+        // Log error details for debugging
+        if (!response.IsSuccessStatusCode)
+        {
+            var errorContent = await response.Content.ReadAsStringAsync();
+            throw new HttpRequestException(
+                $"Response status code does not indicate success: {(int)response.StatusCode} ({response.StatusCode}).\nError: {errorContent}");
+        }
 
         var responseJson = await response.Content.ReadAsStringAsync();
         return JsonSerializer.Deserialize<TResponse>(responseJson, JsonOptions);

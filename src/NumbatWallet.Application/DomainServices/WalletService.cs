@@ -4,7 +4,7 @@ using NumbatWallet.Domain.Interfaces;
 using NumbatWallet.SharedKernel.Enums;
 using NumbatWallet.SharedKernel.Utilities;
 
-namespace NumbatWallet.Domain.Services;
+namespace NumbatWallet.Application.DomainServices;
 
 public interface IWalletDomainService
 {

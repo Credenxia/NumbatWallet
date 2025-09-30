@@ -15,8 +15,7 @@ public static class ServiceCollectionExtensions
     {
         var assembly = Assembly.GetExecutingAssembly();
 
-        // Register AutoMapper
-        services.AddAutoMapper(assembly);
+        // AutoMapper removed - using extension methods for DTO conversions
 
         // Register FluentValidation validators
         services.AddValidatorsFromAssembly(assembly);
@@ -60,10 +59,10 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IDomainEventHandler<CredentialRevokedEvent>, EventHandlers.CredentialRevokedEventHandler>();
 
         // Register Domain Services
-        services.AddScoped<Domain.Services.IWalletDomainService, Domain.Services.WalletDomainService>();
-        services.AddScoped<Domain.Services.ICredentialDomainService, Domain.Services.CredentialDomainService>();
-        services.AddScoped<Domain.Services.IVerificationDomainService, Domain.Services.VerificationDomainService>();
-        services.AddScoped<Domain.Services.IPersonVerificationService, Domain.Services.PersonVerificationService>();
+        services.AddScoped<DomainServices.IWalletDomainService, DomainServices.WalletDomainService>();
+        services.AddScoped<DomainServices.ICredentialDomainService, DomainServices.CredentialDomainService>();
+        services.AddScoped<DomainServices.IVerificationDomainService, DomainServices.VerificationDomainService>();
+        services.AddScoped<DomainServices.IPersonVerificationService, DomainServices.PersonVerificationService>();
 
         // Register Application Services
         services.AddScoped<IPersonService, PersonService>();

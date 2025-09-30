@@ -7,7 +7,7 @@ using Microsoft.Extensions.Options;
 using Moq;
 using NumbatWallet.Domain.Entities;
 using NumbatWallet.Domain.Interfaces;
-using NumbatWallet.Domain.Services;
+using NumbatWallet.Application.DomainServices;
 using NumbatWallet.Web.Api.Middleware;
 
 namespace NumbatWallet.Web.Api.Tests.Middleware;

@@ -1,7 +1,7 @@
 using System.Security.Cryptography.X509Certificates;
 using NumbatWallet.Domain.Entities;
 using NumbatWallet.Domain.Interfaces;
-using NumbatWallet.Domain.Services;
+using NumbatWallet.Application.DomainServices;
 using Microsoft.Extensions.Logging;
 
 namespace NumbatWallet.Infrastructure.Services;

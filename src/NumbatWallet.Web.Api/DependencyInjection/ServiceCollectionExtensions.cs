@@ -1,7 +1,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Asp.Versioning;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Mvc.Versioning;
 using Microsoft.Identity.Web;
 using NumbatWallet.Web.Api.Authorization.Handlers;
 // TODO: Implement GraphQL types
@@ -26,7 +26,7 @@ public static class ServiceCollectionExtensions
                 options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
             });
 
-        // Add API Versioning
+        // Add API Versioning (Asp.Versioning.Mvc)
         services.AddApiVersioning(options =>
         {
             options.DefaultApiVersion = new ApiVersion(1, 0);
@@ -35,10 +35,9 @@ public static class ServiceCollectionExtensions
             options.ApiVersionReader = ApiVersionReader.Combine(
                 new UrlSegmentApiVersionReader(),
                 new HeaderApiVersionReader("x-api-version"),
-                new MediaTypeApiVersionReader("x-api-version"));
-        });
-
-        services.AddVersionedApiExplorer(options =>
+                new QueryStringApiVersionReader("api-version"));
+        })
+        .AddApiExplorer(options =>
         {
             options.GroupNameFormat = "'v'VVV";
             options.SubstituteApiVersionInUrl = true;

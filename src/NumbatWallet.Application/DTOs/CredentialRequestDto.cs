@@ -59,3 +59,41 @@ public class ShareCredentialResultDto
     public DateTime? ExpiresAt { get; set; }
     public string? ErrorMessage { get; set; }
 }
+
+public class RevokeCredentialRequestDto
+{
+    public required string Reason { get; set; }
+}
+
+public class RequestCredentialDto
+{
+    public Guid WalletId { get; set; }
+    public Guid IssuerId { get; set; }
+    public required string CredentialType { get; set; }
+    public Dictionary<string, object>? RequestedClaims { get; set; }
+    public string? Justification { get; set; }
+}
+
+public class CredentialRequestResponseDto
+{
+    public Guid RequestId { get; set; }
+    public required string Status { get; set; }
+    public DateTime RequestedAt { get; set; }
+    public string? Message { get; set; }
+}
+
+// Extension methods for DTO conversions
+public static class VerificationOptionsDtoExtensions
+{
+    public static Dictionary<string, object> ToDictionary(this VerificationOptionsDto dto)
+    {
+        return new Dictionary<string, object>
+        {
+            ["checkRevocation"] = dto.CheckRevocation,
+            ["checkExpiry"] = dto.CheckExpiry,
+            ["checkSignature"] = dto.CheckSignature,
+            ["checkSchema"] = dto.CheckSchema,
+            ["requireTrustChain"] = dto.RequireTrustChain
+        };
+    }
+}

@@ -4,9 +4,8 @@ using NumbatWallet.Application.Wallets.Commands.CreateWallet;
 using NumbatWallet.Application.DTOs;
 using NumbatWallet.Application.Common.Exceptions;
 using NumbatWallet.Domain.Interfaces;
-using NumbatWallet.Domain.Services;
+using NumbatWallet.Application.DomainServices;
 using NumbatWallet.Domain.Aggregates;
-using AutoMapper;
 using Microsoft.Extensions.Logging;
 using NumbatWallet.SharedKernel.Interfaces;
 
@@ -17,7 +16,6 @@ public class CreateWalletCommandHandlerTests
     private readonly Mock<IWalletRepository> _walletRepositoryMock;
     private readonly Mock<IPersonRepository> _personRepositoryMock;
     private readonly Mock<IUnitOfWork> _unitOfWorkMock;
-    private readonly Mock<IMapper> _mapperMock;
     private readonly Mock<ILogger<CreateWalletCommandHandler>> _loggerMock;
     private readonly Mock<ITenantService> _tenantServiceMock;
     private readonly Mock<IWalletDomainService> _walletDomainServiceMock;
@@ -29,7 +27,6 @@ public class CreateWalletCommandHandlerTests
         _walletRepositoryMock = new Mock<IWalletRepository>();
         _personRepositoryMock = new Mock<IPersonRepository>();
         _unitOfWorkMock = new Mock<IUnitOfWork>();
-        _mapperMock = new Mock<IMapper>();
         _loggerMock = new Mock<ILogger<CreateWalletCommandHandler>>();
         _tenantServiceMock = new Mock<ITenantService>();
         _walletDomainServiceMock = new Mock<IWalletDomainService>();
@@ -39,7 +36,6 @@ public class CreateWalletCommandHandlerTests
             _walletRepositoryMock.Object,
             _personRepositoryMock.Object,
             _unitOfWorkMock.Object,
-            _mapperMock.Object,
             _loggerMock.Object,
             _tenantServiceMock.Object,
             _walletDomainServiceMock.Object,
@@ -90,8 +86,8 @@ public class CreateWalletCommandHandlerTests
             .ReturnsAsync((Wallet w, CancellationToken c) => w);
         _unitOfWorkMock.Setup(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(1);
-        _mapperMock.Setup(x => x.Map<WalletDto>(It.IsAny<Wallet>()))
-            .Returns(walletDto);
+        _hsmServiceMock.Setup(x => x.GenerateKeyPairAsync(It.IsAny<string>(), It.IsAny<KeyAlgorithm>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync("test-key-id");
 
         // Act
         var result = await _handler.HandleAsync(command, CancellationToken.None);

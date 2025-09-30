@@ -3,7 +3,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using NumbatWallet.Application.Interfaces;
 using NumbatWallet.Domain.Interfaces;
-using NumbatWallet.Domain.Services;
+using NumbatWallet.Application.DomainServices;
 using NumbatWallet.Infrastructure.Data;
 using NumbatWallet.Infrastructure.Data.Interceptors;
 using NumbatWallet.Infrastructure.Data.Repositories;
@@ -92,6 +92,8 @@ public static class ServiceCollectionExtensions
         services.AddScoped<ICertificateTrustStoreRepository, CertificateTrustStoreRepository>();
         services.AddScoped<IWalletTemplateRepository, WalletTemplateRepository>();
         services.AddScoped<IIssuanceRepository, IssuanceRepository>();
+        services.AddScoped<IAuditLogRepository, AuditLogRepository>();
+        services.AddScoped<IAdminUserRepository, AdminUserRepository>();
 
         // Register Domain Services
         services.AddHttpClient<ICertificateValidationService, CertificateValidationService>();
@@ -100,6 +102,9 @@ public static class ServiceCollectionExtensions
         // Register Security Services
         services.AddScoped<IRequestSigningService, RequestSigningService>();
         services.AddScoped<ISessionService, DistributedSessionService>();
+
+        // Register Credential Services
+        services.AddScoped<Application.Commands.Credentials.Handlers.ICredentialSharingService, CredentialSharingService>();
 
         // Register HSM Providers (required by HsmService)
         services.AddSingleton<Services.Providers.SoftwareHsmProvider>();

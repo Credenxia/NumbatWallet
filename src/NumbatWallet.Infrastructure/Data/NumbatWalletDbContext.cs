@@ -42,6 +42,8 @@ public class NumbatWalletDbContext : DbContext, IUnitOfWork
     public DbSet<CertificateRevocation> CertificateRevocations => Set<CertificateRevocation>();
     public DbSet<WalletTemplate> WalletTemplates => Set<WalletTemplate>();
     public DbSet<Issuance> Issuances => Set<Issuance>();
+    public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
+    public DbSet<AdminUser> AdminUsers => Set<AdminUser>();
 
     // Event sourcing entities
     public DbSet<StoredEvent> StoredEvents => Set<StoredEvent>();
@@ -73,6 +75,8 @@ public class NumbatWalletDbContext : DbContext, IUnitOfWork
         modelBuilder.Entity<Issuer>().HasQueryFilter(i => i.TenantId == _tenantService.TenantId.ToString());
         modelBuilder.Entity<WalletTemplate>().HasQueryFilter(wt => wt.TenantId == _tenantService.TenantId);
         modelBuilder.Entity<Issuance>().HasQueryFilter(i => i.TenantId == _tenantService.TenantId);
+        modelBuilder.Entity<AuditLog>().HasQueryFilter(a => a.TenantId == _tenantService.TenantId);
+        modelBuilder.Entity<AdminUser>().HasQueryFilter(u => u.TenantId == _tenantService.TenantId);
 
         // Configure Tenant entity
         modelBuilder.Entity<Tenant>(entity =>

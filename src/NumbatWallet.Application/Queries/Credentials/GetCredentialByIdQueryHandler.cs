@@ -39,7 +39,7 @@ public sealed class GetCredentialByIdQueryHandler : IQueryHandler<GetCredentialB
         if (credential == null)
         {
             _logger.LogWarning("Credential {CredentialId} not found", query.CredentialId);
-            throw new EntityNotFoundException("Credential", query.CredentialId.ToString());
+            return null; // Return null instead of throwing, let controller handle 404
         }
 
         // Get wallet details
