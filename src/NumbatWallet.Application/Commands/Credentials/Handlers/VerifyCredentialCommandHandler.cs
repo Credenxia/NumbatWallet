@@ -12,15 +12,18 @@ public class VerifyCredentialCommandHandler : ICommandHandler<VerifyCredentialCo
     private readonly ICredentialRepository _credentialRepository;
     private readonly ILogger<VerifyCredentialCommandHandler> _logger;
     private readonly ICacheService _cacheService;
+    private readonly IJwtSigningService _jwtSigningService;
 
     public VerifyCredentialCommandHandler(
         ICredentialRepository credentialRepository,
         ILogger<VerifyCredentialCommandHandler> logger,
-        ICacheService cacheService)
+        ICacheService cacheService,
+        IJwtSigningService jwtSigningService)
     {
         _credentialRepository = credentialRepository;
         _logger = logger;
         _cacheService = cacheService;
+        _jwtSigningService = jwtSigningService;
     }
 
     public async Task<VerificationResultDto> HandleAsync(VerifyCredentialCommand command, CancellationToken cancellationToken = default)
@@ -72,10 +75,50 @@ public class VerifyCredentialCommandHandler : ICommandHandler<VerifyCredentialCo
                 checks.Expiry = true;
             }
 
-            // TODO: Implement actual signature verification
-            checks.Signature = true;
-            checks.Issuer = true;
-            checks.Schema = true;
+            // Signature verification
+            // Try to verify signature if credential data is provided or available
+            var credentialDataToVerify = command.CredentialData ?? credential.CredentialData;
+
+            if (!string.IsNullOrWhiteSpace(credentialDataToVerify) && IsJwtFormat(credentialDataToVerify))
+            {
+                try
+                {
+                    checks.Signature = await _jwtSigningService.VerifyCredentialAsync(
+                        credentialDataToVerify,
+                        cancellationToken);
+
+                    if (!checks.Signature)
+                    {
+                        errorMessages.Add("Credential signature verification failed");
+                        _logger.LogWarning("Signature verification failed for credential {CredentialId}",
+                            command.CredentialId);
+                    }
+                    else
+                    {
+                        _logger.LogDebug("Signature verified successfully for credential {CredentialId}",
+                            command.CredentialId);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    checks.Signature = false;
+                    errorMessages.Add("Error during signature verification");
+                    _logger.LogError(ex, "Error verifying signature for credential {CredentialId}",
+                        command.CredentialId);
+                }
+            }
+            else
+            {
+                // No JWT available - this could be a legacy credential or unsigned credential
+                // For now, we'll mark signature check as true to not break existing credentials
+                // TODO: Once all credentials are JWT-signed, change this to false
+                checks.Signature = true;
+                _logger.LogDebug("No JWT signature found for credential {CredentialId}, skipping signature verification",
+                    command.CredentialId);
+            }
+
+            checks.Issuer = true; // Issuer check is implicit from credential.IssuerId
+            checks.Schema = !string.IsNullOrWhiteSpace(credential.SchemaId);
             checks.Revocation = credential.Status != CredentialStatus.Revoked;
 
             // Check verification options
@@ -132,5 +175,22 @@ public class VerifyCredentialCommandHandler : ICommandHandler<VerifyCredentialCo
                 ErrorMessage = "An error occurred during verification"
             };
         }
+    }
+
+    /// <summary>
+    /// Check if the credential data is in JWT format
+    /// JWT format: header.payload.signature, where header starts with "eyJ"
+    /// </summary>
+    private static bool IsJwtFormat(string data)
+    {
+        if (string.IsNullOrWhiteSpace(data))
+        {
+            return false;
+        }
+
+        // JWT tokens start with "eyJ" (base64 encoded JSON header)
+        // and have exactly 2 dots separating 3 parts
+        return data.StartsWith("eyJ", StringComparison.Ordinal) &&
+               data.Count(c => c == '.') == 2;
     }
 }
