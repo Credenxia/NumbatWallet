@@ -100,6 +100,12 @@ public static class ServiceCollectionExtensions
         // Register Security Services
         services.AddScoped<IRequestSigningService, RequestSigningService>();
         services.AddScoped<ISessionService, DistributedSessionService>();
+
+        // Register HSM Providers (required by HsmService)
+        services.AddSingleton<Services.Providers.SoftwareHsmProvider>();
+        services.AddSingleton<Services.Providers.KeyVaultHsmProvider>();
+        services.AddSingleton<Services.Providers.ManagedHsmProvider>();
+
         services.AddSingleton<IHsmService, HsmService>();
         services.AddSingleton<IApiKeyService, ApiKeyService>();
         services.AddScoped<Application.Interfaces.IJwtSigningService, JwtSigningService>();

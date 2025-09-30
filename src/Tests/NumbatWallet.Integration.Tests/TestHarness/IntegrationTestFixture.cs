@@ -127,6 +127,9 @@ public class IntegrationTestFixture : WebApplicationFactory<Program>, IAsyncLife
             services.AddSingleton<NumbatWallet.Application.Interfaces.IEmailService, MockEmailService>();
             services.AddSingleton<NumbatWallet.Application.Interfaces.INotificationService, MockNotificationService>();
 
+            // Register HSM Provider for tests (SoftwareHsmProvider)
+            services.AddSingleton<NumbatWallet.Infrastructure.Services.Providers.SoftwareHsmProvider>();
+
             // Register DatabaseSeeder for tests
             services.AddScoped<NumbatWallet.Infrastructure.Data.IDatabaseSeeder, NumbatWallet.Infrastructure.Data.DatabaseSeeder>();
 
