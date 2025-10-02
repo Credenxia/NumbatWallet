@@ -97,7 +97,7 @@ public class CredentialManifestTests
 
         var invalidManifest = new CredentialManifest
         {
-            Id = null, // Missing required field
+            Id = null!, // Missing required field
             Version = "1.0.0"
         };
 

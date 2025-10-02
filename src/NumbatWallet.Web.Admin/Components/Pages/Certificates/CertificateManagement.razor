@@ -2,7 +2,10 @@
 @using Microsoft.AspNetCore.Authorization
 @using NumbatWallet.Domain.Entities
 @using NumbatWallet.Application.Interfaces
+@using NumbatWallet.Application.DTOs
+@using System.Security.Cryptography.X509Certificates
 @inject ITenantService TenantService
+@inject ICertificateManagementService CertificateService
 @inject ILogger<CertificateManagement> Logger
 @inject IJSRuntime JSRuntime
 @attribute [Authorize(Policy = "AdminOnly")]
@@ -341,9 +344,10 @@
     private CertificatePurpose SelectedPurpose = CertificatePurpose.Authentication;
     private CertificateTrustLevel SelectedTrustLevel = CertificateTrustLevel.Low;
 
-    private List<TenantCertificate>? TenantCertificates;
+    private List<CertificateDto>? TenantCertificates;
     private CertificatePreviewDto? CertificatePreview;
     private IBrowserFile? SelectedFile;
+    private string? CertificateData;
 
     private int ActiveCertificateCount = 0;
     private int ExpiringCertificateCount = 0;
@@ -360,8 +364,12 @@
     {
         try
         {
-            // TODO: Load certificates from service
-            TenantCertificates = new List<TenantCertificate>();
+            var certificates = await CertificateService.GetFilteredAsync(
+                string.IsNullOrWhiteSpace(SearchTerm) ? null : SearchTerm,
+                string.IsNullOrWhiteSpace(PurposeFilter) ? null : PurposeFilter,
+                string.IsNullOrWhiteSpace(StatusFilter) ? null : StatusFilter);
+
+            TenantCertificates = certificates.ToList();
         }
         catch (Exception ex)
         {
@@ -372,11 +380,18 @@
 
     private async Task LoadStatistics()
     {
-        // TODO: Load statistics from service
-        ActiveCertificateCount = 5;
-        ExpiringCertificateCount = 2;
-        RevokedCertificateCount = 1;
-        TrustedCACount = 3;
+        try
+        {
+            var stats = await CertificateService.GetStatisticsAsync();
+            ActiveCertificateCount = stats.ActiveCertificates;
+            ExpiringCertificateCount = stats.ExpiringIn30Days;
+            RevokedCertificateCount = stats.RevokedCertificates;
+            TrustedCACount = stats.TotalCertificates;
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Failed to load statistics");
+        }
     }
 
     private void ShowUploadModal()
@@ -399,35 +414,55 @@
             var certBytes = ms.ToArray();
 
             // Parse certificate for preview
-            var certData = Convert.ToBase64String(certBytes);
-            // TODO: Parse X.509 certificate and create preview
+            X509Certificate2 cert;
+            try
+            {
+                // Try Base64 first
+                CertificateData = Convert.ToBase64String(certBytes);
+#pragma warning disable SYSLIB0057
+                cert = new X509Certificate2(certBytes);
+#pragma warning restore SYSLIB0057
+            }
+            catch
+            {
+                // Try PEM format
+                var pemString = System.Text.Encoding.UTF8.GetString(certBytes);
+                cert = X509Certificate2.CreateFromPem(pemString);
+                CertificateData = pemString;
+            }
 
             CertificatePreview = new CertificatePreviewDto
             {
-                Subject = "CN=Example Certificate",
-                Issuer = "CN=Example CA",
-                Thumbprint = "1234567890ABCDEF",
-                NotBefore = DateTimeOffset.UtcNow.AddDays(-30).ToString("yyyy-MM-dd"),
-                NotAfter = DateTimeOffset.UtcNow.AddDays(365).ToString("yyyy-MM-dd")
+                Subject = cert.SubjectName.Name ?? "Unknown",
+                Issuer = cert.IssuerName.Name ?? "Unknown",
+                Thumbprint = cert.Thumbprint,
+                NotBefore = cert.NotBefore.ToString("yyyy-MM-dd HH:mm:ss"),
+                NotAfter = cert.NotAfter.ToString("yyyy-MM-dd HH:mm:ss")
             };
         }
         catch (Exception ex)
         {
             Logger.LogError(ex, "Failed to read certificate file");
-            ShowAlert("Failed to read certificate file", "alert-danger");
+            ShowAlert("Failed to read or parse certificate file. Ensure it's a valid X.509 certificate.", "alert-danger");
         }
     }
 
     private async Task UploadCertificate()
     {
-        if (SelectedFile == null || CertificatePreview == null)
+        if (SelectedFile == null || CertificatePreview == null || string.IsNullOrEmpty(CertificateData))
             return;
 
         IsUploading = true;
         try
         {
-            // TODO: Upload certificate to service
-            await Task.Delay(1000); // Simulate upload
+            var uploadDto = new CertificateUploadDto
+            {
+                CertificateData = CertificateData,
+                Purpose = SelectedPurpose.ToString(),
+                TrustLevel = SelectedTrustLevel.ToString()
+            };
+
+            await CertificateService.UploadAsync(uploadDto);
 
             ShowAlert("Certificate uploaded successfully", "alert-success");
             ShowUpload = false;
@@ -437,7 +472,7 @@
         catch (Exception ex)
         {
             Logger.LogError(ex, "Failed to upload certificate");
-            ShowAlert("Failed to upload certificate", "alert-danger");
+            ShowAlert($"Failed to upload certificate: {ex.Message}", "alert-danger");
         }
         finally
         {
@@ -447,28 +482,87 @@
 
     private async Task SearchCertificates()
     {
+        // LoadCertificates already applies search term and filters
         await LoadCertificates();
-        // TODO: Apply filters
     }
 
-    private async Task ViewCertificateDetails(TenantCertificate cert)
+    private async Task ViewCertificateDetails(CertificateDto cert)
     {
-        // TODO: Show certificate details modal
+        await JSRuntime.InvokeVoidAsync("alert",
+            $"Certificate Details:\n\n" +
+            $"Thumbprint: {cert.Thumbprint}\n" +
+            $"Subject: {cert.SubjectDn}\n" +
+            $"Issuer: {cert.IssuerDn}\n" +
+            $"Purpose: {cert.Purpose}\n" +
+            $"Trust Level: {cert.TrustLevel}\n" +
+            $"Valid From: {cert.ValidFrom:yyyy-MM-dd}\n" +
+            $"Valid To: {cert.ValidTo:yyyy-MM-dd}\n" +
+            $"Status: {(cert.IsRevoked ? "Revoked" : cert.IsExpired ? "Expired" : cert.IsActive ? "Active" : "Inactive")}\n" +
+            $"Usage Count: {cert.UsageCount}\n" +
+            $"Last Used: {cert.LastUsedAt?.ToString("yyyy-MM-dd HH:mm:ss") ?? "Never"}");
     }
 
-    private async Task RevokeCertificate(TenantCertificate cert)
+    private async Task RevokeCertificate(CertificateDto cert)
     {
-        // TODO: Revoke certificate
+        if (!await JSRuntime.InvokeAsync<bool>("confirm",
+            $"Are you sure you want to revoke certificate {cert.Thumbprint.Substring(0, 16)}...?\n\nThis action cannot be undone."))
+            return;
+
+        try
+        {
+            var reason = "Revoked via Admin Portal";
+            await CertificateService.RevokeAsync(cert.Id, reason);
+            ShowAlert("Certificate revoked successfully", "alert-success");
+            await LoadCertificates();
+            await LoadStatistics();
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Failed to revoke certificate");
+            ShowAlert($"Failed to revoke certificate: {ex.Message}", "alert-danger");
+        }
     }
 
-    private async Task ValidateCertificate(TenantCertificate cert)
+    private async Task ValidateCertificate(CertificateDto cert)
     {
-        // TODO: Validate certificate chain and revocation status
+        try
+        {
+            var isValid = await CertificateService.ValidateAsync(cert.Id);
+
+            if (isValid)
+            {
+                ShowAlert($"Certificate {cert.Thumbprint.Substring(0, 16)}... is valid and trusted", "alert-success");
+            }
+            else
+            {
+                ShowAlert($"Certificate {cert.Thumbprint.Substring(0, 16)}... validation failed. Check chain, revocation status, or expiry.", "alert-warning");
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Failed to validate certificate");
+            ShowAlert($"Failed to validate certificate: {ex.Message}", "alert-danger");
+        }
     }
 
-    private async Task DeleteCertificate(TenantCertificate cert)
+    private async Task DeleteCertificate(CertificateDto cert)
     {
-        // TODO: Delete certificate
+        if (!await JSRuntime.InvokeAsync<bool>("confirm",
+            $"Are you sure you want to permanently delete certificate {cert.Thumbprint.Substring(0, 16)}...?\n\nThis action cannot be undone."))
+            return;
+
+        try
+        {
+            await CertificateService.DeleteAsync(cert.Id);
+            ShowAlert("Certificate deleted successfully", "alert-success");
+            await LoadCertificates();
+            await LoadStatistics();
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Failed to delete certificate");
+            ShowAlert($"Failed to delete certificate: {ex.Message}", "alert-danger");
+        }
     }
 
     private async Task CopyToClipboard(string text)
@@ -490,13 +584,14 @@
         return validTo < DateTimeOffset.UtcNow.AddDays(30);
     }
 
-    private string GetTrustLevelBadgeClass(CertificateTrustLevel level)
+    private string GetTrustLevelBadgeClass(string level)
     {
-        return level switch
+        return level.ToLowerInvariant() switch
         {
-            CertificateTrustLevel.Full => "bg-success",
-            CertificateTrustLevel.High => "bg-info",
-            CertificateTrustLevel.Medium => "bg-warning",
+            "full" => "bg-success",
+            "high" => "bg-info",
+            "medium" => "bg-warning",
+            "low" => "bg-secondary",
             _ => "bg-secondary"
         };
     }

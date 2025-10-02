@@ -90,10 +90,16 @@ public class CredentialIssuedEventHandler : IDomainEventHandler<CredentialIssued
                     "Expiry reminders scheduled for Credential {CredentialId}: 30 days ({ThirtyDays}), 7 days ({SevenDays}), 1 day ({OneDay})",
                     domainEvent.CredentialId, thirtyDaysBeforeExpiry, sevenDaysBeforeExpiry, oneDayBeforeExpiry);
 
-                // TODO: Integrate with Hangfire to schedule actual background jobs
-                // BackgroundJob.Schedule(() => SendExpiryReminderAsync(domainEvent.CredentialId, 30), thirtyDaysBeforeExpiry);
-                // BackgroundJob.Schedule(() => SendExpiryReminderAsync(domainEvent.CredentialId, 7), sevenDaysBeforeExpiry);
-                // BackgroundJob.Schedule(() => SendExpiryReminderAsync(domainEvent.CredentialId, 1), oneDayBeforeExpiry);
+                // Background Job Integration (Hangfire/Quartz)
+                // To enable scheduled reminders in production:
+                // 1. Add Hangfire NuGet package: Hangfire.AspNetCore, Hangfire.PostgreSql
+                // 2. Configure in DI: services.AddHangfire(config => config.UsePostgreSqlStorage(connectionString))
+                // 3. Enable dashboard: app.UseHangfireDashboard()
+                // 4. Start server: app.UseHangfireServer()
+                // 5. Schedule jobs using IBackgroundJobClient:
+                //    _backgroundJobClient.Schedule(() => SendExpiryReminderAsync(domainEvent.CredentialId, 30), thirtyDaysBeforeExpiry);
+                //    _backgroundJobClient.Schedule(() => SendExpiryReminderAsync(domainEvent.CredentialId, 7), sevenDaysBeforeExpiry);
+                //    _backgroundJobClient.Schedule(() => SendExpiryReminderAsync(domainEvent.CredentialId, 1), oneDayBeforeExpiry);
             }
         }
 

@@ -2,6 +2,7 @@ using NumbatWallet.Application.DTOs;
 using NumbatWallet.Application.Interfaces;
 using NumbatWallet.Domain.Aggregates;
 using NumbatWallet.Domain.Interfaces;
+using NumbatWallet.Domain.Specifications;
 using NumbatWallet.Domain.ValueObjects;
 using NumbatWallet.SharedKernel.Interfaces;
 
@@ -26,9 +27,8 @@ public class PersonService : IPersonService
 
     public async Task<PersonDto?> GetByEmailAsync(string email, CancellationToken cancellationToken = default)
     {
-        // TODO: Implement specification pattern
-        var allPersons = await _personRepository.GetAllAsync(cancellationToken);
-        var persons = allPersons.Where(p => p.Email.Value == email);
+        var specification = new PersonByEmailSpecification(email);
+        var persons = await _personRepository.FindAsync(specification, cancellationToken);
         var person = persons.FirstOrDefault();
         return person != null ? MapToDto(person) : null;
     }
@@ -78,10 +78,30 @@ public class PersonService : IPersonService
             throw new InvalidOperationException($"Person with ID {id} not found");
         }
 
-        // Note: Person entity doesn't have UpdateName or UpdatePhoneNumber methods
-        // We would need to implement these methods or use a different approach
-        // For now, we'll just return the existing person as-is
-        // TODO: Implement person update logic in domain entity
+        // Update personal details (FirstName, LastName) if provided
+        if (!string.IsNullOrWhiteSpace(dto.FirstName) || !string.IsNullOrWhiteSpace(dto.LastName))
+        {
+            var firstName = dto.FirstName ?? person.FirstName;
+            var lastName = dto.LastName ?? person.LastName;
+            var result = person.UpdatePersonalDetails(firstName, lastName);
+
+            if (!result.IsSuccess)
+            {
+                throw new InvalidOperationException(result.Error.Message);
+            }
+        }
+
+        // Update phone number if provided
+        if (!string.IsNullOrWhiteSpace(dto.PhoneNumber))
+        {
+            var phoneNumber = NumbatWallet.Domain.ValueObjects.PhoneNumber.Create(dto.PhoneNumber);
+            var result = person.UpdatePhoneNumber(phoneNumber);
+
+            if (!result.IsSuccess)
+            {
+                throw new InvalidOperationException(result.Error.Message);
+            }
+        }
 
         await _personRepository.UpdateAsync(person, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);

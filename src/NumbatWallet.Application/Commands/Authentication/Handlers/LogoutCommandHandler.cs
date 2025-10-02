@@ -24,7 +24,13 @@ public class LogoutCommandHandler : ICommandHandler<LogoutCommand, bool>
         // 2. Clear any server-side session data
         // 3. Revoke refresh tokens
 
-        // For POA, we'll just log the action
+        // For POA, revoke the refresh token if provided
+        if (!string.IsNullOrWhiteSpace(command.Token))
+        {
+            RefreshTokenCommandHandler.RevokeRefreshToken(command.Token);
+            _logger.LogInformation("Refresh token revoked for user: {UserId}", command.UserId);
+        }
+
         await Task.CompletedTask; // Simulate async work
 
         _logger.LogInformation("User logged out successfully: {UserId}", command.UserId);

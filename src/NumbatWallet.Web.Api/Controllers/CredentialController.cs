@@ -109,8 +109,8 @@ public class CredentialController : ControllerBase
             SecurityEventType.DataAccess,
             $"Credential access: {id}");
 
-        var tenantId = _tenantService.TenantId ?? "00000000-0000-0000-0000-000000000000";
-        var query = new GetCredentialByIdQuery(Guid.Parse(tenantId), id);
+        // Tenant filtering is handled by repository layer via ICurrentTenantService
+        var query = new GetCredentialByIdQuery(Guid.Empty, id);
         var result = await _getCredentialByIdHandler.HandleAsync(query);
 
         if (result == null)
@@ -133,8 +133,8 @@ public class CredentialController : ControllerBase
             SecurityEventType.DataAccess,
             $"Wallet credentials access: {walletId}");
 
-        var tenantId = _tenantService.TenantId ?? "00000000-0000-0000-0000-000000000000";
-        var query = new GetCredentialsByWalletQuery(Guid.Parse(tenantId), walletId, false);
+        // Tenant filtering is handled by repository layer via ICurrentTenantService
+        var query = new GetCredentialsByWalletQuery(Guid.Empty, walletId, false);
         var result = await _getCredentialsByWalletHandler.HandleAsync(query);
 
         return Ok(result);

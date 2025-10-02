@@ -31,6 +31,9 @@ try
     // Add Web API specific services
     builder.Services.AddScoped<ISecurityAuditService, SecurityAuditService>();
 
+    // Add security services (input sanitization, CORS, anti-forgery, data protection)
+    builder.Services.AddSingleton<IInputSanitizationService, InputSanitizationService>();
+
     // Add Controllers with JSON configuration
     builder.Services.AddControllers()
         .AddJsonOptions(options =>
@@ -74,13 +77,27 @@ try
 
     builder.Services.AddAuthorization(options =>
     {
-        options.FallbackPolicy = new Microsoft.AspNetCore.Authorization.AuthorizationPolicyBuilder()
+        // Require authenticated user for endpoints with [Authorize]
+        options.DefaultPolicy = new Microsoft.AspNetCore.Authorization.AuthorizationPolicyBuilder()
             .RequireAuthenticatedUser()
             .Build();
-        // Override with policy that allows anonymous for testing
-        options.DefaultPolicy = new Microsoft.AspNetCore.Authorization.AuthorizationPolicyBuilder()
-            .RequireAssertion(_ => true)
-            .Build();
+
+        // Admin-only policy for administrative endpoints
+        options.AddPolicy("AdminOnly", policy =>
+        {
+            policy.RequireAuthenticatedUser();
+            policy.RequireRole("Admin");
+        });
+
+        // Officer policy for service delivery endpoints
+        options.AddPolicy("OfficerOnly", policy =>
+        {
+            policy.RequireAuthenticatedUser();
+            policy.RequireRole("Officer", "Admin");
+        });
+
+        // Allow anonymous for endpoints without [Authorize] or with [AllowAnonymous]
+        options.FallbackPolicy = null;
     });
 
     // Add minimal Swagger for testing
@@ -94,9 +111,17 @@ try
         });
     });
 
+    // Add global exception handlers (order matters - more specific first)
+    builder.Services.AddExceptionHandler<NumbatWallet.Web.Api.Middleware.ArgumentExceptionHandler>();
+    builder.Services.AddExceptionHandler<NumbatWallet.Web.Api.Middleware.NotFoundExceptionHandler>();
+    builder.Services.AddExceptionHandler<NumbatWallet.Web.Api.Middleware.ValidationExceptionHandler>();
+    builder.Services.AddProblemDetails();
+
     var app = builder.Build();
 
     // Configure minimal pipeline
+    app.UseExceptionHandler(); // Global exception handling with ProblemDetails
+
     if (app.Environment.IsDevelopment())
     {
         app.UseSwagger();
@@ -142,33 +167,89 @@ namespace NumbatWallet.Web.Api.Testing
 {
     public class TestAuthenticationHandler : Microsoft.AspNetCore.Authentication.AuthenticationHandler<Microsoft.AspNetCore.Authentication.AuthenticationSchemeOptions>
     {
+        private readonly Microsoft.Extensions.Configuration.IConfiguration _configuration;
+
         public TestAuthenticationHandler(
             Microsoft.Extensions.Options.IOptionsMonitor<Microsoft.AspNetCore.Authentication.AuthenticationSchemeOptions> options,
             Microsoft.Extensions.Logging.ILoggerFactory logger,
-            System.Text.Encodings.Web.UrlEncoder encoder)
+            System.Text.Encodings.Web.UrlEncoder encoder,
+            Microsoft.Extensions.Configuration.IConfiguration configuration)
             : base(options, logger, encoder)
         {
+            _configuration = configuration;
         }
 
         protected override Task<Microsoft.AspNetCore.Authentication.AuthenticateResult> HandleAuthenticateAsync()
         {
-            var claims = new[]
+            System.Security.Claims.ClaimsPrincipal? principal = null;
+
+            // Check for Authorization header with Bearer token
+            if (Request.Headers.TryGetValue("Authorization", out var authHeader))
             {
-                new System.Security.Claims.Claim("user_id", "test-user"),
-                new System.Security.Claims.Claim("tenant_id", "test-tenant"),
-                new System.Security.Claims.Claim("user_type", "officer"),
-                new System.Security.Claims.Claim(System.Security.Claims.ClaimTypes.Role, "Issuer"),
-                new System.Security.Claims.Claim(System.Security.Claims.ClaimTypes.Role, "Admin"),
-                new System.Security.Claims.Claim(System.Security.Claims.ClaimTypes.Role, "User"),
-                new System.Security.Claims.Claim(System.Security.Claims.ClaimTypes.Name, "Test User"),
-                new System.Security.Claims.Claim(System.Security.Claims.ClaimTypes.NameIdentifier, "test-user")
-            };
+                var token = authHeader.ToString().Replace("Bearer ", "");
+                if (!string.IsNullOrWhiteSpace(token))
+                {
+                    try
+                    {
+                        // Parse JWT token to extract claims
+                        var tokenHandler = new System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler();
+                        var key = System.Text.Encoding.UTF8.GetBytes(
+                            _configuration["Jwt:SecretKey"] ?? "TestSecretKey123456789012345678901234567890");
 
-            var identity = new System.Security.Claims.ClaimsIdentity(claims, "Test");
-            var principal = new System.Security.Claims.ClaimsPrincipal(identity);
-            var ticket = new Microsoft.AspNetCore.Authentication.AuthenticationTicket(principal, "Test");
+                        var validationParameters = new Microsoft.IdentityModel.Tokens.TokenValidationParameters
+                        {
+                            ValidateIssuerSigningKey = true,
+                            IssuerSigningKey = new Microsoft.IdentityModel.Tokens.SymmetricSecurityKey(key),
+                            ValidateIssuer = false, // Allow any issuer for testing
+                            ValidateAudience = false, // Allow any audience for testing
+                            ValidateLifetime = true,
+                            ClockSkew = System.TimeSpan.FromMinutes(5)
+                        };
 
-            return Task.FromResult(Microsoft.AspNetCore.Authentication.AuthenticateResult.Success(ticket));
+                        principal = tokenHandler.ValidateToken(token, validationParameters, out _);
+                    }
+                    catch
+                    {
+                        // JWT parsing failed - use default claims
+                        principal = null;
+                    }
+                }
+            }
+
+            // If no valid JWT token, check if endpoint allows anonymous
+            if (principal == null)
+            {
+                var endpoint = Context.GetEndpoint();
+                var allowAnonymous = endpoint?.Metadata?.GetMetadata<Microsoft.AspNetCore.Authorization.IAllowAnonymous>() != null;
+
+                if (allowAnonymous)
+                {
+                    // For anonymous endpoints, return default test claims
+                    var claims = new[]
+                    {
+                        new System.Security.Claims.Claim("user_id", "test-user"),
+                        new System.Security.Claims.Claim("tenant_id", "test-tenant"),
+                        new System.Security.Claims.Claim(System.Security.Claims.ClaimTypes.Role, "User"),
+                        new System.Security.Claims.Claim(System.Security.Claims.ClaimTypes.Name, "Test User"),
+                        new System.Security.Claims.Claim(System.Security.Claims.ClaimTypes.NameIdentifier, "test-user")
+                    };
+
+                    var identity = new System.Security.Claims.ClaimsIdentity(claims, "Test");
+                    principal = new System.Security.Claims.ClaimsPrincipal(identity);
+
+                    var ticket = new Microsoft.AspNetCore.Authentication.AuthenticationTicket(principal, "Test");
+                    return Task.FromResult(Microsoft.AspNetCore.Authentication.AuthenticateResult.Success(ticket));
+                }
+                else
+                {
+                    // For non-anonymous endpoints without token, return authentication failure (401)
+                    return Task.FromResult(Microsoft.AspNetCore.Authentication.AuthenticateResult.Fail("No authentication token provided"));
+                }
+            }
+
+            // Valid JWT token - return success
+            var successTicket = new Microsoft.AspNetCore.Authentication.AuthenticationTicket(principal, "Test");
+            return Task.FromResult(Microsoft.AspNetCore.Authentication.AuthenticateResult.Success(successTicket));
         }
     }
 }

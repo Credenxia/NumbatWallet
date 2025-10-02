@@ -1,9 +1,12 @@
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.Identity.Web;
 using Microsoft.IdentityModel.Tokens;
+using System.Security.Claims;
 using System.Text;
+using System.Text.Json;
 
 namespace NumbatWallet.Web.Api.Authentication;
 
@@ -18,16 +21,80 @@ public static class OidcAuthenticationExtensions
 
         if (useRealAuth)
         {
-            // Configure Azure AD / Entra ID authentication
-            services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-                .AddMicrosoftIdentityWebApi(configuration.GetSection("AzureAd"));
+            // Configure authentication with multiple schemes
+            var authBuilder = services.AddAuthentication(options =>
+            {
+                options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+                options.DefaultChallengeScheme = "AzureAd";
+            })
+            .AddCookie(options =>
+            {
+                options.Cookie.Name = "NumbatWallet.Auth";
+                options.Cookie.HttpOnly = true;
+                options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+                options.Cookie.SameSite = SameSiteMode.Lax;
+                options.SlidingExpiration = true;
+                options.ExpireTimeSpan = TimeSpan.FromHours(1);
+
+                options.Events.OnRedirectToAccessDenied = context =>
+                {
+                    context.Response.StatusCode = 403;
+                    return Task.CompletedTask;
+                };
+
+                options.Events.OnRedirectToLogin = context =>
+                {
+                    if (IsApiRequest(context.Request))
+                    {
+                        context.Response.StatusCode = 401;
+                        return Task.CompletedTask;
+                    }
+                    context.Response.Redirect(context.RedirectUri);
+                    return Task.CompletedTask;
+                };
+            });
+
+            // Add Microsoft Identity Web API (JWT Bearer for Azure AD)
+            authBuilder.AddMicrosoftIdentityWebApi(configuration.GetSection("AzureAd"), jwtBearerScheme: "AzureAdBearer");
+
+            // Add OpenID Connect for Azure AD (for web apps)
+            authBuilder.AddOpenIdConnect("AzureAd", "Azure AD", options =>
+            {
+                var azureAdConfig = configuration.GetSection("AzureAd");
+                options.Authority = azureAdConfig["Authority"] ?? azureAdConfig["Instance"] + "/" + azureAdConfig["TenantId"];
+                options.ClientId = azureAdConfig["ClientId"] ?? throw new InvalidOperationException("AzureAd:ClientId not configured");
+                options.ClientSecret = azureAdConfig["ClientSecret"] ?? "";
+                options.ResponseType = "code";
+                options.SaveTokens = true;
+                options.GetClaimsFromUserInfoEndpoint = true;
+                options.CallbackPath = "/signin-oidc";
+                options.SignedOutCallbackPath = "/signout-callback-oidc";
+
+                options.Scope.Clear();
+                options.Scope.Add("openid");
+                options.Scope.Add("profile");
+                options.Scope.Add("email");
+
+                options.Events = new OpenIdConnectEvents
+                {
+                    OnTokenValidated = async context =>
+                    {
+                        await EnrichUserClaims(context, "AzureAd");
+                    },
+                    OnAuthenticationFailed = context =>
+                    {
+                        context.Response.Redirect("/auth/error?message=" + Uri.EscapeDataString(context.Exception.Message));
+                        context.HandleResponse();
+                        return Task.CompletedTask;
+                    }
+                };
+            });
 
             // Add ServiceWA authentication as secondary scheme
             var serviceWaConfig = configuration.GetSection("ServiceWA");
             if (serviceWaConfig.Exists())
             {
-                services.AddAuthentication()
-                    .AddOpenIdConnect("ServiceWA", options =>
+                authBuilder.AddOpenIdConnect("ServiceWA", "ServiceWA", options =>
                     {
                         options.Authority = serviceWaConfig["Authority"] ?? "https://auth.servicewa.wa.gov.au";
                         options.ClientId = serviceWaConfig["ClientId"] ?? "numbat-wallet";
@@ -35,6 +102,9 @@ public static class OidcAuthenticationExtensions
                         options.ResponseType = "code";
                         options.SaveTokens = true;
                         options.GetClaimsFromUserInfoEndpoint = true;
+                        options.CallbackPath = "/signin-servicewa";
+                        options.SignedOutCallbackPath = "/signout-callback-servicewa";
+
                         options.Scope.Clear();
                         options.Scope.Add("openid");
                         options.Scope.Add("profile");
@@ -44,51 +114,81 @@ public static class OidcAuthenticationExtensions
                         options.ClaimActions.MapJsonKey("waid", "waid");
                         options.ClaimActions.MapJsonKey("verified", "verified");
                         options.ClaimActions.MapJsonKey("credential_level", "credential_level");
+                        options.ClaimActions.MapJsonKey("phone_number", "phone_number");
+                        options.ClaimActions.MapJsonKey("phone_number_verified", "phone_number_verified");
 
                         options.Events = new OpenIdConnectEvents
                         {
                             OnTokenValidated = async context =>
                             {
-                                // Additional validation or user provisioning can be done here
-                                await Task.CompletedTask;
+                                await EnrichUserClaims(context, "ServiceWA");
                             },
                             OnAuthenticationFailed = context =>
                             {
+                                context.Response.Redirect("/auth/error?message=" + Uri.EscapeDataString(context.Exception.Message));
                                 context.HandleResponse();
-                                context.Response.StatusCode = 401;
                                 return Task.CompletedTask;
                             }
                         };
                     });
             }
 
-            // Configure JWT validation for API access
-            services.Configure<JwtBearerOptions>(JwtBearerDefaults.AuthenticationScheme, options =>
-            {
-                options.TokenValidationParameters = new TokenValidationParameters
+            // Add JWT Bearer for API access with multi-issuer support
+            authBuilder.AddJwtBearer("Bearer", options =>
                 {
-                    ValidateIssuer = true,
-                    ValidateAudience = true,
-                    ValidateLifetime = true,
-                    ValidateIssuerSigningKey = true,
-                    ClockSkew = TimeSpan.FromMinutes(5)
-                };
+                    var azureAdConfig = configuration.GetSection("AzureAd");
+                    var serviceWaConfig = configuration.GetSection("ServiceWA");
 
-                options.Events = new JwtBearerEvents
-                {
-                    OnTokenValidated = async context =>
+                    options.Authority = azureAdConfig["Authority"] ?? azureAdConfig["Instance"] + "/" + azureAdConfig["TenantId"];
+                    options.TokenValidationParameters = new TokenValidationParameters
                     {
-                        var userId = context.Principal?.FindFirst("sub")?.Value;
-                        if (!string.IsNullOrEmpty(userId))
+                        ValidateIssuer = true,
+                        ValidIssuers = new[]
                         {
-                            // Log successful authentication
+                            azureAdConfig["Authority"] ?? azureAdConfig["Instance"] + "/" + azureAdConfig["TenantId"] + "/v2.0",
+                            serviceWaConfig["Authority"] ?? "https://auth.servicewa.wa.gov.au"
+                        }.Where(i => !string.IsNullOrEmpty(i)),
+                        ValidateAudience = true,
+                        ValidAudiences = new[]
+                        {
+                            azureAdConfig["ClientId"] ?? "",
+                            serviceWaConfig["ClientId"] ?? ""
+                        }.Where(a => !string.IsNullOrEmpty(a)),
+                        ValidateLifetime = true,
+                        ClockSkew = TimeSpan.FromMinutes(5),
+                        RequireExpirationTime = true,
+                        RequireSignedTokens = true
+                    };
+
+                    options.Events = new JwtBearerEvents
+                    {
+                        OnTokenValidated = async context =>
+                        {
+                            await EnrichJwtClaims(context);
+                        },
+                        OnAuthenticationFailed = context =>
+                        {
                             var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<Program>>();
-                            logger.LogInformation("User {UserId} authenticated successfully", userId);
+                            logger.LogError(context.Exception, "JWT authentication failed");
+                            return Task.CompletedTask;
+                        },
+                        OnChallenge = async context =>
+                        {
+                            context.HandleResponse();
+                            context.Response.StatusCode = 401;
+                            context.Response.ContentType = "application/json";
+
+                            var response = new
+                            {
+                                error = "unauthorized",
+                                error_description = context.ErrorDescription ?? "Authentication required",
+                                timestamp = DateTime.UtcNow
+                            };
+
+                            await context.Response.WriteAsync(JsonSerializer.Serialize(response));
                         }
-                        await Task.CompletedTask;
-                    }
-                };
-            });
+                    };
+                });
         }
         else
         {
@@ -138,6 +238,142 @@ public static class OidcAuthenticationExtensions
         });
 
         return services;
+    }
+
+    private static bool IsApiRequest(HttpRequest request)
+    {
+        return request.Path.StartsWithSegments("/api") ||
+               request.Path.StartsWithSegments("/graphql") ||
+               request.Headers["Accept"].ToString().Contains("application/json") ||
+               request.Headers["Content-Type"].ToString().Contains("application/json");
+    }
+
+    private static async Task EnrichUserClaims(Microsoft.AspNetCore.Authentication.OpenIdConnect.TokenValidatedContext context, string provider)
+    {
+        var principal = context.Principal;
+        if (principal == null)
+        {
+            return;
+        }
+
+        var userId = principal.FindFirst("sub")?.Value
+            ?? principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        if (string.IsNullOrEmpty(userId))
+        {
+            context.Fail("User identifier not found in token");
+            return;
+        }
+
+        // Try to get IUserService if registered
+        var userService = context.HttpContext.RequestServices.GetService<IUserService>();
+        if (userService != null)
+        {
+            try
+            {
+                var user = await userService.GetOrCreateUserAsync(userId, provider, principal.Claims);
+                if (user != null)
+                {
+                    var identity = principal.Identity as ClaimsIdentity;
+                    if (identity != null)
+                    {
+                        // Add custom claims
+                        identity.AddClaim(new Claim("tenant_id", user.TenantId));
+                        identity.AddClaim(new Claim("user_id", user.Id));
+                        identity.AddClaim(new Claim("provider", provider));
+
+                        foreach (var role in user.Roles)
+                        {
+                            identity.AddClaim(new Claim(ClaimTypes.Role, role));
+                        }
+
+                        foreach (var permission in user.Permissions)
+                        {
+                            identity.AddClaim(new Claim("permission", permission));
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<Program>>();
+                logger.LogError(ex, "Failed to enrich user claims for {UserId}", userId);
+            }
+        }
+        else
+        {
+            // Fallback: add basic claims without database lookup
+            var identity = principal.Identity as ClaimsIdentity;
+            if (identity != null)
+            {
+                identity.AddClaim(new Claim("provider", provider));
+                // Default tenant for development
+                if (!identity.HasClaim(c => c.Type == "tenant_id"))
+                {
+                    identity.AddClaim(new Claim("tenant_id", "default-tenant"));
+                }
+            }
+        }
+    }
+
+    private static async Task EnrichJwtClaims(Microsoft.AspNetCore.Authentication.JwtBearer.TokenValidatedContext context)
+    {
+        var principal = context.Principal;
+        if (principal == null)
+        {
+            return;
+        }
+
+        var userId = principal.FindFirst("sub")?.Value
+            ?? principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        if (string.IsNullOrEmpty(userId))
+        {
+            return;
+        }
+
+        // Try to get IUserService if registered
+        var userService = context.HttpContext.RequestServices.GetService<IUserService>();
+        if (userService != null)
+        {
+            try
+            {
+                var provider = principal.FindFirst("iss")?.Value?.Contains("microsoft") == true ? "AzureAd" : "ServiceWA";
+                var user = await userService.GetOrCreateUserAsync(userId, provider, principal.Claims);
+
+                if (user != null)
+                {
+                    var identity = principal.Identity as ClaimsIdentity;
+                    if (identity != null)
+                    {
+                        // Add enriched claims
+                        if (!identity.HasClaim(c => c.Type == "tenant_id"))
+                        {
+                            identity.AddClaim(new Claim("tenant_id", user.TenantId));
+                        }
+                        if (!identity.HasClaim(c => c.Type == "user_id"))
+                        {
+                            identity.AddClaim(new Claim("user_id", user.Id));
+                        }
+
+                        foreach (var role in user.Roles)
+                        {
+                            if (!identity.HasClaim(c => c.Type == ClaimTypes.Role && c.Value == role))
+                            {
+                                identity.AddClaim(new Claim(ClaimTypes.Role, role));
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<Program>>();
+                logger.LogError(ex, "Failed to enrich JWT claims for {UserId}", userId);
+            }
+        }
+
+        await Task.CompletedTask;
     }
 }
 

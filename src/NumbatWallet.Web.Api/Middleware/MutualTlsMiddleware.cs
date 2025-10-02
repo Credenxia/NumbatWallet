@@ -70,7 +70,8 @@ public class MutualTlsMiddleware
         if (!tenantCert.IsActive)
         {
             _logger.LogWarning("Inactive certificate used: {Thumbprint}", thumbprint);
-            context.Response.StatusCode = 403;
+            context.Response.StatusCode = 401;
+            context.Response.Headers.Append("WWW-Authenticate", "Certificate");
             await context.Response.WriteAsync("Certificate is inactive");
             return;
         }
@@ -79,7 +80,8 @@ public class MutualTlsMiddleware
         if (tenantCert.IsExpired())
         {
             _logger.LogWarning("Expired certificate used: {Thumbprint}", thumbprint);
-            context.Response.StatusCode = 403;
+            context.Response.StatusCode = 401;
+            context.Response.Headers.Append("WWW-Authenticate", "Certificate");
             await context.Response.WriteAsync("Certificate has expired");
             return;
         }
@@ -88,9 +90,24 @@ public class MutualTlsMiddleware
         if (tenantCert.RevokedAt.HasValue)
         {
             _logger.LogWarning("Revoked certificate used: {Thumbprint}", thumbprint);
-            context.Response.StatusCode = 403;
+            context.Response.StatusCode = 401;
+            context.Response.Headers.Append("WWW-Authenticate", "Certificate");
             await context.Response.WriteAsync("Certificate has been revoked");
             return;
+        }
+
+        // Check trust level requirement
+        if (!string.IsNullOrEmpty(_options.MinimumTrustLevel))
+        {
+            var minimumTrustLevel = ParseTrustLevel(_options.MinimumTrustLevel);
+            if (tenantCert.TrustLevel < minimumTrustLevel)
+            {
+                _logger.LogWarning("Certificate trust level {ActualLevel} is below required {RequiredLevel}",
+                    tenantCert.TrustLevel, minimumTrustLevel);
+                context.Response.StatusCode = 403;
+                await context.Response.WriteAsync("Certificate trust level insufficient");
+                return;
+            }
         }
 
         // Get trust store for tenant
@@ -180,6 +197,17 @@ public class MutualTlsMiddleware
     private bool IsPathExcluded(PathString path)
     {
         return _options.ExcludedPaths.Any(p => path.StartsWithSegments(p));
+    }
+
+    private static Domain.Entities.CertificateTrustLevel ParseTrustLevel(string level)
+    {
+        return level.ToLowerInvariant() switch
+        {
+            "low" => Domain.Entities.CertificateTrustLevel.Low,
+            "medium" => Domain.Entities.CertificateTrustLevel.Medium,
+            "high" => Domain.Entities.CertificateTrustLevel.High,
+            _ => Domain.Entities.CertificateTrustLevel.Low
+        };
     }
 }
 

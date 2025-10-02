@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using NumbatWallet.Domain.Aggregates;
+using NumbatWallet.Domain.Entities;
 
 namespace NumbatWallet.Infrastructure.Data.Configurations;
 
@@ -18,6 +19,10 @@ public class WalletConfiguration : IEntityTypeConfiguration<Wallet>
             .IsRequired()
             .HasMaxLength(256);
 
+        builder.Property(w => w.WalletDid)
+            .IsRequired()
+            .HasMaxLength(512);
+
         builder.Property(w => w.PersonId)
             .IsRequired();
 
@@ -25,6 +30,17 @@ public class WalletConfiguration : IEntityTypeConfiguration<Wallet>
             .IsRequired()
             .HasConversion<string>()
             .HasMaxLength(50);
+
+        builder.Property(w => w.SuspensionReason)
+            .HasMaxLength(1000);
+
+        builder.Property(w => w.LockReason)
+            .HasMaxLength(1000);
+
+        builder.Property(w => w.ExternalId)
+            .HasMaxLength(256);
+
+        builder.Property(w => w.ExpiresAt);
 
         builder.Property(w => w.TenantId)
             .IsRequired();
@@ -41,10 +57,23 @@ public class WalletConfiguration : IEntityTypeConfiguration<Wallet>
             .HasMaxLength(256);
 
         // Indexes
+        builder.HasIndex(w => w.WalletDid)
+            .IsUnique();
         builder.HasIndex(w => w.PersonId);
         builder.HasIndex(w => w.TenantId);
         builder.HasIndex(w => w.Status);
         builder.HasIndex(w => new { w.TenantId, w.PersonId });
+
+        // Relationships
+        builder.HasOne<Person>()
+            .WithMany()
+            .HasForeignKey(w => w.PersonId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasMany(w => w.Credentials)
+            .WithOne(c => c.Wallet)
+            .HasForeignKey(c => c.WalletId)
+            .OnDelete(DeleteBehavior.Cascade);
 
         // Ignore domain events
         builder.Ignore(w => w.DomainEvents);

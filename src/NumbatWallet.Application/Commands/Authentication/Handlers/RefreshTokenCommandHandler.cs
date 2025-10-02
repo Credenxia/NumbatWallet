@@ -30,29 +30,65 @@ public class RefreshTokenCommandHandler : ICommandHandler<RefreshTokenCommand, A
         _logger = logger;
     }
 
+    /// <summary>
+    /// Store a refresh token for later validation (POA implementation)
+    /// In production, this would be stored in Redis/database
+    /// </summary>
+    public static void StoreRefreshToken(string refreshToken, string userId, DateTime expiry)
+    {
+        _refreshTokens[refreshToken] = (userId, expiry);
+    }
+
+    /// <summary>
+    /// Remove a refresh token (used during logout)
+    /// </summary>
+    public static void RevokeRefreshToken(string refreshToken)
+    {
+        _refreshTokens.Remove(refreshToken);
+    }
+
     public async Task<AuthenticationResultDto> HandleAsync(
         RefreshTokenCommand command,
         CancellationToken cancellationToken = default)
     {
         _logger.LogInformation("Token refresh requested");
 
-        // In production, validate refresh token from persistent storage
-        // For POA, we'll use a simple in-memory validation
-
-        // Check if we have a stored token (for POA, accept any non-empty token)
+        // Validate refresh token is not null/empty
         if (string.IsNullOrWhiteSpace(command.RefreshToken))
         {
+            _logger.LogWarning("Token refresh failed - empty refresh token");
             throw new UnauthorizedException("Invalid refresh token");
         }
 
-        // Get user from the refresh token or command
-        string userId = command.UserId ?? Guid.NewGuid().ToString();
+        // Validate refresh token exists in our store
+        if (!_refreshTokens.TryGetValue(command.RefreshToken, out var tokenData))
+        {
+            _logger.LogWarning("Token refresh failed - refresh token not found");
+            throw new UnauthorizedException("Invalid refresh token");
+        }
 
-        // Try to get person if userId is a valid GUID
+        // Check if token has expired
+        if (tokenData.Expiry < DateTime.UtcNow)
+        {
+            // Remove expired token
+            _refreshTokens.Remove(command.RefreshToken);
+            _logger.LogWarning("Token refresh failed - refresh token expired for user: {UserId}", tokenData.UserId);
+            throw new UnauthorizedException("Refresh token has expired");
+        }
+
+        // Get user from the stored token data
+        string userId = tokenData.UserId;
+
+        // Try to get person
         Domain.Aggregates.Person? person = null;
         if (Guid.TryParse(userId, out var personId))
         {
             person = await _personRepository.GetByIdAsync(personId, cancellationToken);
+            if (person == null)
+            {
+                _logger.LogWarning("Token refresh failed - user not found: {UserId}", userId);
+                throw new UnauthorizedException("User not found");
+            }
         }
 
         // Default values for POA
@@ -62,6 +98,10 @@ public class RefreshTokenCommandHandler : ICommandHandler<RefreshTokenCommand, A
         // Generate new tokens
         var newAccessToken = GenerateJwtToken(userId, email, roles);
         var newRefreshToken = GenerateRefreshToken();
+
+        // Remove old refresh token and store new one (refresh token rotation)
+        _refreshTokens.Remove(command.RefreshToken);
+        _refreshTokens[newRefreshToken] = (userId, DateTime.UtcNow.AddDays(30));
 
         _logger.LogInformation("Token refreshed successfully for user: {UserId}", userId);
 

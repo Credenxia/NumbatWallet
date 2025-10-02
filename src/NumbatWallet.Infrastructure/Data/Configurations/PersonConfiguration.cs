@@ -86,6 +86,18 @@ public class PersonConfiguration : IEntityTypeConfiguration<Person>
             phone.HasIndex(ph => ph.Value);
         });
 
+        // PIN security fields
+        builder.Property(p => p.PinHash)
+            .HasMaxLength(500); // BCrypt hash is ~60 chars, allow extra for future algorithms
+
+        builder.Property(p => p.FailedPinAttempts)
+            .IsRequired()
+            .HasDefaultValue(0);
+
+        builder.Property(p => p.PinLockedUntil);
+
+        builder.Property(p => p.LastPinAttemptAt);
+
         // Indexes
         builder.HasIndex(p => p.TenantId);
 

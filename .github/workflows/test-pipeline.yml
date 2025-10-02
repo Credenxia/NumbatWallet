@@ -1,0 +1,340 @@
+name: Test Pipeline
+
+on:
+  push:
+    branches: [main, develop, feature/**]
+  pull_request:
+    branches: [main, develop]
+
+env:
+  DOTNET_VERSION: '9.0.x'
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: 'true'
+  DOTNET_CLI_TELEMETRY_OPTOUT: 'true'
+
+jobs:
+  build:
+    name: Build and Validate
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Full history for SonarCloud
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Restore dependencies
+        run: dotnet restore NumbatWallet.sln
+
+      - name: Build solution
+        run: dotnet build NumbatWallet.sln --no-restore --configuration Release -warnaserror
+
+      - name: Check for vulnerabilities
+        run: dotnet list NumbatWallet.sln package --vulnerable --include-transitive | tee vulnerabilities.txt && ! grep -q "has the following vulnerable packages" vulnerabilities.txt
+
+  unit-tests:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    needs: build
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Restore dependencies
+        run: dotnet restore NumbatWallet.sln
+
+      - name: Build
+        run: dotnet build NumbatWallet.sln --no-restore --configuration Release
+
+      - name: Run Domain tests
+        run: |
+          dotnet test src/Tests/NumbatWallet.Domain.Tests/NumbatWallet.Domain.Tests.csproj \
+            --no-build \
+            --configuration Release \
+            --logger "trx;LogFileName=domain-tests.trx" \
+            --collect:"XPlat Code Coverage" \
+            --results-directory ./TestResults \
+            -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=opencover
+
+      - name: Run Application tests
+        run: |
+          dotnet test src/Tests/NumbatWallet.Application.Tests/NumbatWallet.Application.Tests.csproj \
+            --no-build \
+            --configuration Release \
+            --logger "trx;LogFileName=application-tests.trx" \
+            --collect:"XPlat Code Coverage" \
+            --results-directory ./TestResults \
+            -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=opencover
+
+      - name: Run Infrastructure tests
+        run: |
+          dotnet test src/Tests/NumbatWallet.Infrastructure.Tests/NumbatWallet.Infrastructure.Tests.csproj \
+            --no-build \
+            --configuration Release \
+            --logger "trx;LogFileName=infrastructure-tests.trx" \
+            --collect:"XPlat Code Coverage" \
+            --results-directory ./TestResults \
+            -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=opencover
+
+      - name: Run SharedKernel tests
+        run: |
+          dotnet test src/Tests/NumbatWallet.SharedKernel.Tests/NumbatWallet.SharedKernel.Tests.csproj \
+            --no-build \
+            --configuration Release \
+            --logger "trx;LogFileName=sharedkernel-tests.trx" \
+            --collect:"XPlat Code Coverage" \
+            --results-directory ./TestResults \
+            -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=opencover
+
+      - name: Install ReportGenerator
+        run: dotnet tool install --global dotnet-reportgenerator-globaltool
+
+      - name: Generate coverage report
+        run: |
+          reportgenerator \
+            -reports:./TestResults/**/coverage.opencover.xml \
+            -targetdir:./TestResults/CoverageReport \
+            -reporttypes:Html\;Cobertura\;JsonSummary\;lcov
+
+      - name: Check coverage threshold
+        run: |
+          # Extract line coverage from JSON summary
+          COVERAGE=$(cat ./TestResults/CoverageReport/Summary.json | grep -oP '"linecoverage": "[^"]*"' | grep -oP '\d+\.\d+' | head -1)
+          echo "Overall Coverage: ${COVERAGE}%"
+
+          # Check if coverage meets 85% threshold
+          if (( $(echo "$COVERAGE < 85" | bc -l) )); then
+            echo "❌ Coverage ${COVERAGE}% is below 85% threshold"
+            exit 1
+          else
+            echo "✅ Coverage ${COVERAGE}% meets 85% threshold"
+          fi
+
+      - name: Upload coverage reports
+        uses: codecov/codecov-action@v4
+        with:
+          files: ./TestResults/CoverageReport/lcov.info
+          flags: unittests
+          name: codecov-umbrella
+          fail_ci_if_error: false
+          token: ${{ secrets.CODECOV_TOKEN }}
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: unit-test-results
+          path: |
+            TestResults/**/*.trx
+            TestResults/CoverageReport/
+
+      - name: Publish test results
+        uses: dorny/test-reporter@v1
+        if: always()
+        with:
+          name: Unit Test Results
+          path: 'TestResults/*.trx'
+          reporter: dotnet-trx
+          fail-on-error: true
+
+  integration-tests:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    needs: build
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: numbatwallet_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Restore dependencies
+        run: dotnet restore NumbatWallet.sln
+
+      - name: Build
+        run: dotnet build NumbatWallet.sln --no-restore --configuration Release
+
+      - name: Run integration tests
+        env:
+          ConnectionStrings__DefaultConnection: "Host=localhost;Port=5432;Database=numbatwallet_test;Username=postgres;Password=postgres"
+          ASPNETCORE_ENVIRONMENT: Testing
+          SKIP_DB_MIGRATION: "true"
+        run: |
+          dotnet test src/Tests/NumbatWallet.Integration.Tests/NumbatWallet.Integration.Tests.csproj \
+            --no-build \
+            --configuration Release \
+            --logger "trx;LogFileName=integration-tests.trx" \
+            --collect:"XPlat Code Coverage" \
+            --results-directory ./TestResults \
+            -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=opencover
+
+      - name: Upload integration test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: integration-test-results
+          path: TestResults/
+
+      - name: Publish integration test results
+        uses: dorny/test-reporter@v1
+        if: always()
+        with:
+          name: Integration Test Results
+          path: 'TestResults/*.trx'
+          reporter: dotnet-trx
+          fail-on-error: true
+
+  security-scan:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    needs: build
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Run security scan
+        run: |
+          dotnet list NumbatWallet.sln package --vulnerable --include-transitive 2>&1 | tee security-scan.txt
+
+      - name: Check for known vulnerabilities
+        run: |
+          if grep -q "has the following vulnerable packages" security-scan.txt; then
+            echo "❌ Vulnerable packages detected"
+            cat security-scan.txt
+            exit 1
+          else
+            echo "✅ No vulnerable packages detected"
+          fi
+
+      - name: Upload security scan results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: security-scan-results
+          path: security-scan.txt
+
+  code-quality:
+    name: Code Quality Analysis
+    runs-on: ubuntu-latest
+    needs: [unit-tests, integration-tests]
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history for better analysis
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Install SonarScanner
+        run: dotnet tool install --global dotnet-sonarscanner
+
+      - name: Download unit test results
+        uses: actions/download-artifact@v4
+        with:
+          name: unit-test-results
+          path: ./TestResults/Unit
+
+      - name: Download integration test results
+        uses: actions/download-artifact@v4
+        with:
+          name: integration-test-results
+          path: ./TestResults/Integration
+
+      - name: Begin SonarCloud analysis
+        if: env.SONAR_TOKEN != ''
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: |
+          dotnet sonarscanner begin \
+            /k:"Credenxia_NumbatWallet" \
+            /o:"credenxia" \
+            /d:sonar.token="${{ secrets.SONAR_TOKEN }}" \
+            /d:sonar.host.url="https://sonarcloud.io" \
+            /d:sonar.cs.opencover.reportsPaths="TestResults/**/coverage.opencover.xml" \
+            /d:sonar.cs.vstest.reportsPaths="TestResults/**/*.trx" \
+            /d:sonar.coverage.exclusions="**Tests*.cs,**/Migrations/**" \
+            /d:sonar.cpd.exclusions="**/Migrations/**"
+
+      - name: Build for analysis
+        run: dotnet build NumbatWallet.sln --configuration Release
+
+      - name: End SonarCloud analysis
+        if: env.SONAR_TOKEN != ''
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: dotnet sonarscanner end /d:sonar.token="${{ secrets.SONAR_TOKEN }}"
+
+  test-summary:
+    name: Test Summary
+    runs-on: ubuntu-latest
+    needs: [unit-tests, integration-tests, security-scan]
+    if: always()
+
+    steps:
+      - name: Download all test results
+        uses: actions/download-artifact@v4
+        with:
+          path: all-test-results
+
+      - name: Generate test summary
+        run: |
+          echo "# Test Pipeline Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Test Results" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Unit Tests: ${{ needs.unit-tests.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Integration Tests: ${{ needs.integration-tests.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Security Scan: ${{ needs.security-scan.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Coverage" >> $GITHUB_STEP_SUMMARY
+          echo "View detailed coverage report in artifacts" >> $GITHUB_STEP_SUMMARY
+
+      - name: Check overall status
+        run: |
+          if [[ "${{ needs.unit-tests.result }}" != "success" ]] || \
+             [[ "${{ needs.integration-tests.result }}" != "success" ]] || \
+             [[ "${{ needs.security-scan.result }}" != "success" ]]; then
+            echo "❌ Test pipeline failed"
+            exit 1
+          else
+            echo "✅ All tests passed"
+          fi

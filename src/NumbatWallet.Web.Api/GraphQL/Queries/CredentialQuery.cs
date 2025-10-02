@@ -178,9 +178,21 @@ public class CredentialQuery
     {
         _logger.LogInformation("Searching credentials with criteria");
 
-        // For now, return empty until proper search handler is available
-        var credentials = new List<CredentialDto>();
-        return credentials.AsQueryable();
+        // Build search query with filters
+        var searchTerm = string.IsNullOrEmpty(type) ? null : type;
+
+        var query = new SearchCredentialsQuery(
+            TenantId: Guid.Empty, // TenantId would come from context
+            SearchTerm: searchTerm,
+            CredentialType: type,
+            Status: status,
+            PageNumber: 1,
+            PageSize: 1000, // Large page size for GraphQL - paging handled by HotChocolate
+            SortBy: null,
+            SortDescending: false);
+
+        var result = await _searchCredentialsHandler.HandleAsync(query);
+        return result.Items.AsQueryable();
     }
 
     /// <summary>
@@ -255,8 +267,36 @@ public class CredentialQuery
     {
         _logger.LogInformation("Fetching issuances for wallet {WalletId}", walletId);
 
-        // Would need a GetIssuancesByWalletQuery - for now return empty
-        return new List<IssuanceDto>().AsQueryable();
+        // Use repository directly since we don't have a specific query handler for this
+        if (_issuanceRepository == null)
+        {
+            _logger.LogWarning("IssuanceRepository not available, returning empty result");
+            return new List<IssuanceDto>().AsQueryable();
+        }
+
+        var issuances = await _issuanceRepository.GetByWalletIdAsync(walletId);
+
+        // Map to DTOs
+        var issuanceDtos = issuances.Select(i => new IssuanceDto
+        {
+            Id = i.Id,
+            WalletId = i.WalletId,
+            RequesterId = i.RequesterId,
+            CredentialType = i.CredentialType,
+            Status = i.Status,
+            CreatedAt = i.CreatedAt,
+            ApprovedAt = i.ApprovedAt,
+            RejectedAt = i.RejectedAt,
+            CompletedAt = i.CompletedAt,
+            ApprovedBy = i.ApprovedBy,
+            RejectedBy = i.RejectedBy,
+            CompletedBy = i.CompletedBy,
+            RejectionReason = i.RejectionReason,
+            CredentialId = i.CredentialId,
+            CredentialData = i.Claims.ToDictionary(kvp => kvp.Key, kvp => kvp.Value)
+        }).ToList();
+
+        return issuanceDtos.AsQueryable();
     }
 
     private static TimeSpan CalculateAverageValidityPeriod(List<CredentialDto> credentials)
@@ -289,11 +329,21 @@ public class CredentialQuery
         var weekAgo = today.AddDays(-7);
         var monthAgo = today.AddMonths(-1);
 
-        // For POA phase, return simulated statistics
-        // In production, this would query the actual database
-        var allCredentials = new List<CredentialDto>();
+        // Fetch real credentials from database using SearchCredentialsQuery
+        var query = new SearchCredentialsQuery(
+            TenantId: Guid.Empty, // TenantId would come from context
+            SearchTerm: null,
+            CredentialType: null,
+            Status: null,
+            PageNumber: 1,
+            PageSize: 10000, // Large page size to get all credentials for statistics
+            SortBy: null,
+            SortDescending: false);
 
-        // Calculate statistics
+        var searchResult = await _searchCredentialsHandler.HandleAsync(query);
+        var allCredentials = searchResult.Items.ToList();
+
+        // Calculate statistics from real data
         var stats = new CredentialStatistics
         {
             TotalCredentials = allCredentials.Count,
@@ -307,7 +357,7 @@ public class CredentialQuery
                 .ToDictionary(g => g.Key, g => g.Count()),
             CredentialsByIssuer = allCredentials.GroupBy(c => c.IssuerId ?? "Unknown")
                 .ToDictionary(g => g.Key, g => g.Count()),
-            AverageValidityPeriod = CalculateAverageValidityPeriod(allCredentials)
+            AverageValidityPeriod = allCredentials.Any() ? CalculateAverageValidityPeriod(allCredentials) : TimeSpan.Zero
         };
 
         return stats;

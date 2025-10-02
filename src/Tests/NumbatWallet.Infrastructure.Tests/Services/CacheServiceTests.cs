@@ -114,7 +114,7 @@ public class CacheServiceTests
             .Returns(Task.CompletedTask);
 
         // Act
-        await _cacheService.SetAsync<TestCacheItem>(key, null, TimeSpan.FromMinutes(10));
+        await _cacheService.SetAsync<TestCacheItem>(key, null!, TimeSpan.FromMinutes(10));
 
         // Assert
         _mockDistributedCache.Verify(x => x.RemoveAsync(

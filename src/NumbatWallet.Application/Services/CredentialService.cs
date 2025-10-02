@@ -2,6 +2,7 @@ using NumbatWallet.Application.DTOs;
 using NumbatWallet.Application.Interfaces;
 using NumbatWallet.Domain.Aggregates;
 using NumbatWallet.Domain.Interfaces;
+using NumbatWallet.Domain.Specifications;
 using NumbatWallet.SharedKernel.Interfaces;
 using NumbatWallet.SharedKernel.Enums;
 using NumbatWallet.SharedKernel.Results;
@@ -36,9 +37,8 @@ public class CredentialService : ICredentialService
 
     public async Task<IEnumerable<CredentialDto>> GetByWalletIdAsync(Guid walletId, CancellationToken cancellationToken = default)
     {
-        // TODO: Implement specification pattern
-        var allCredentials = await _credentialRepository.GetAllAsync(cancellationToken);
-        var credentials = allCredentials.Where(c => c.WalletId == walletId);
+        var specification = new CredentialByWalletSpecification(walletId);
+        var credentials = await _credentialRepository.FindAsync(specification, cancellationToken);
         return credentials.Select(MapToDto);
     }
 

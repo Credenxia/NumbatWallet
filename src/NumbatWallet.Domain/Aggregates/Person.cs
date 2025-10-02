@@ -43,6 +43,13 @@ public sealed class Person : AuditableEntity<Guid>, ITenantAware
     public PersonStatus Status { get; private set; }
     public string TenantId { get; private set; } = string.Empty;
 
+    // PIN security
+    [DataClassification(DataClassification.Secret, "Security")]
+    public string? PinHash { get; private set; }
+    public int FailedPinAttempts { get; private set; }
+    public DateTimeOffset? PinLockedUntil { get; private set; }
+    public DateTimeOffset? LastPinAttemptAt { get; private set; }
+
     // Navigation properties
     private readonly List<Wallet> _wallets = new();
     public IReadOnlyCollection<Wallet> Wallets => _wallets.AsReadOnly();
@@ -307,5 +314,102 @@ public sealed class Person : AuditableEntity<Guid>, ITenantAware
         // Convert to a 6-digit number (100000-999999)
         var value = BitConverter.ToUInt32(bytes, 0) % 900000 + 100000;
         return value.ToString(System.Globalization.CultureInfo.InvariantCulture);
+    }
+
+    /// <summary>
+    /// Sets or updates the PIN for this person (hashed with BCrypt)
+    /// </summary>
+    public Result SetPin(string pin)
+    {
+        try
+        {
+            Guard.AgainstNullOrWhiteSpace(pin, nameof(pin));
+
+            // Validate PIN format (4-6 digits)
+            if (!System.Text.RegularExpressions.Regex.IsMatch(pin, @"^\d{4,6}$"))
+            {
+                return DomainError.Validation("Person.InvalidPin", "PIN must be 4-6 digits");
+            }
+
+            // Hash the PIN using BCrypt (work factor 12)
+            PinHash = BCrypt.Net.BCrypt.HashPassword(pin, 12);
+            FailedPinAttempts = 0;
+            PinLockedUntil = null;
+
+            return Result.Success();
+        }
+        catch (ArgumentException ex)
+        {
+            return DomainError.Validation("Person.InvalidPin", ex.Message);
+        }
+    }
+
+    /// <summary>
+    /// Verifies the provided PIN against the stored hash
+    /// Implements rate limiting: max 5 attempts, then 15-minute lockout
+    /// </summary>
+    public Result<bool> VerifyPin(string pin)
+    {
+        try
+        {
+            Guard.AgainstNullOrWhiteSpace(pin, nameof(pin));
+
+            // Check if account is locked
+            if (PinLockedUntil.HasValue && PinLockedUntil.Value > DateTimeOffset.UtcNow)
+            {
+                var remainingTime = (PinLockedUntil.Value - DateTimeOffset.UtcNow).TotalMinutes;
+                return DomainError.BusinessRule(
+                    "Person.PinLocked",
+                    $"PIN verification is locked. Try again in {Math.Ceiling(remainingTime)} minute(s)");
+            }
+
+            // Check if PIN is set
+            if (string.IsNullOrEmpty(PinHash))
+            {
+                return DomainError.BusinessRule("Person.NoPinSet", "No PIN has been set for this person");
+            }
+
+            LastPinAttemptAt = DateTimeOffset.UtcNow;
+
+            // Verify PIN
+            bool isValid = BCrypt.Net.BCrypt.Verify(pin, PinHash);
+
+            if (isValid)
+            {
+                // Reset failed attempts on successful verification
+                FailedPinAttempts = 0;
+                PinLockedUntil = null;
+                return Result.Success(true);
+            }
+            else
+            {
+                // Increment failed attempts
+                FailedPinAttempts++;
+
+                // Lock account after 5 failed attempts (15-minute lockout)
+                if (FailedPinAttempts >= 5)
+                {
+                    PinLockedUntil = DateTimeOffset.UtcNow.AddMinutes(15);
+                    return DomainError.BusinessRule(
+                        "Person.PinLocked",
+                        "Too many failed PIN attempts. Account locked for 15 minutes");
+                }
+
+                return Result.Success(false);
+            }
+        }
+        catch (ArgumentException ex)
+        {
+            return DomainError.Validation("Person.InvalidPin", ex.Message);
+        }
+    }
+
+    /// <summary>
+    /// Resets the PIN lockout (admin operation)
+    /// </summary>
+    public void ResetPinLockout()
+    {
+        FailedPinAttempts = 0;
+        PinLockedUntil = null;
     }
 }

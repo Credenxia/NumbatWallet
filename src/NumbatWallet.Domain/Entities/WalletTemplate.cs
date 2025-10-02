@@ -18,20 +18,20 @@ public class WalletTemplate : Entity<Guid>
     public DateTimeOffset? UpdatedAt { get; private set; }
     public string? CreatedBy { get; private set; }
 
-    private readonly List<WalletField> _fields = new();
-    private readonly Dictionary<string, object> _metadata = new();
-    private readonly List<string> _supportedCredentialTypes = new();
-
-    public IReadOnlyList<WalletField> Fields => _fields.AsReadOnly();
-    public IReadOnlyDictionary<string, object> Metadata => _metadata.AsReadOnly();
-    public IReadOnlyList<string> SupportedCredentialTypes => _supportedCredentialTypes.AsReadOnly();
+    // EF Core-compatible collections with init setters (allows deserialization)
+    public List<WalletField> Fields { get; init; } = new();
+    public Dictionary<string, object> Metadata { get; init; } = new();
+    public List<string> SupportedCredentialTypes { get; init; } = new();
 
     private WalletTemplate() : base(Guid.Empty)
     {
-        // EF Core constructor
+        // EF Core constructor - initialize all required properties
         Name = string.Empty;
         Description = string.Empty;
         Version = "1.0.0";
+        Fields = new List<WalletField>();
+        Metadata = new Dictionary<string, object>();
+        SupportedCredentialTypes = new List<string>();
     }
 
     public WalletTemplate(
@@ -60,12 +60,12 @@ public class WalletTemplate : Entity<Guid>
     {
         Guard.AgainstNull(field, nameof(field));
 
-        if (_fields.Any(f => f.Name == field.Name))
+        if (Fields.Any(f => f.Name == field.Name))
         {
             throw new InvalidOperationException($"Field with name '{field.Name}' already exists");
         }
 
-        _fields.Add(field);
+        Fields.Add(field);
         UpdatedAt = DateTimeOffset.UtcNow;
     }
 
@@ -73,10 +73,10 @@ public class WalletTemplate : Entity<Guid>
     {
         Guard.AgainstNullOrWhiteSpace(fieldName, nameof(fieldName));
 
-        var field = _fields.FirstOrDefault(f => f.Name == fieldName);
+        var field = Fields.FirstOrDefault(f => f.Name == fieldName);
         if (field != null)
         {
-            _fields.Remove(field);
+            Fields.Remove(field);
             UpdatedAt = DateTimeOffset.UtcNow;
         }
     }
@@ -86,7 +86,7 @@ public class WalletTemplate : Entity<Guid>
         Guard.AgainstNullOrWhiteSpace(fieldName, nameof(fieldName));
         Guard.AgainstNull(updateAction, nameof(updateAction));
 
-        var field = _fields.FirstOrDefault(f => f.Name == fieldName);
+        var field = Fields.FirstOrDefault(f => f.Name == fieldName);
         if (field == null)
         {
             throw new InvalidOperationException($"Field with name '{fieldName}' not found");
@@ -100,16 +100,16 @@ public class WalletTemplate : Entity<Guid>
     {
         Guard.AgainstNullOrWhiteSpace(credentialType, nameof(credentialType));
 
-        if (!_supportedCredentialTypes.Contains(credentialType))
+        if (!SupportedCredentialTypes.Contains(credentialType))
         {
-            _supportedCredentialTypes.Add(credentialType);
+            SupportedCredentialTypes.Add(credentialType);
             UpdatedAt = DateTimeOffset.UtcNow;
         }
     }
 
     public void RemoveSupportedCredentialType(string credentialType)
     {
-        if (_supportedCredentialTypes.Remove(credentialType))
+        if (SupportedCredentialTypes.Remove(credentialType))
         {
             UpdatedAt = DateTimeOffset.UtcNow;
         }
@@ -120,7 +120,7 @@ public class WalletTemplate : Entity<Guid>
         Guard.AgainstNullOrWhiteSpace(key, nameof(key));
         Guard.AgainstNull(value, nameof(value));
 
-        _metadata[key] = value;
+        Metadata[key] = value;
         UpdatedAt = DateTimeOffset.UtcNow;
     }
 
@@ -149,16 +149,25 @@ public class WalletTemplate : Entity<Guid>
 /// </summary>
 public class WalletField
 {
-    public string Name { get; private set; }
-    public string Label { get; private set; }
-    public string FieldType { get; private set; }
-    public bool IsRequired { get; private set; }
-    public bool IsEditable { get; private set; }
-    public int DisplayOrder { get; private set; }
-    public string? ValidationRule { get; private set; }
-    public string? DefaultValue { get; private set; }
-    public string? MappedCredentialField { get; private set; }
-    public Dictionary<string, object> Properties { get; private set; }
+    public string Name { get; set; }
+    public string Label { get; set; }
+    public string FieldType { get; set; }
+    public bool IsRequired { get; set; }
+    public bool IsEditable { get; set; }
+    public int DisplayOrder { get; set; }
+    public string? ValidationRule { get; set; }
+    public string? DefaultValue { get; set; }
+    public string? MappedCredentialField { get; set; }
+    public Dictionary<string, object> Properties { get; set; }
+
+    private WalletField()
+    {
+        // EF Core constructor
+        Name = string.Empty;
+        Label = string.Empty;
+        FieldType = string.Empty;
+        Properties = new Dictionary<string, object>();
+    }
 
     public WalletField(
         string name,

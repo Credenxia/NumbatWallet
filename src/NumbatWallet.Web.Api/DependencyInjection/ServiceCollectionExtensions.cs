@@ -4,8 +4,8 @@ using Asp.Versioning;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Identity.Web;
 using NumbatWallet.Web.Api.Authorization.Handlers;
-// TODO: Implement GraphQL types
-// using NumbatWallet.Web.Api.GraphQL;
+using NumbatWallet.Web.Api.GraphQL.Schema;
+using NumbatWallet.Web.Api.GraphQL.Admin;
 using HotChocolate.Execution.Configuration;
 
 namespace NumbatWallet.Web.Api.DependencyInjection;
@@ -72,6 +72,9 @@ public static class ServiceCollectionExtensions
         services.AddScoped<Microsoft.AspNetCore.Authorization.IAuthorizationHandler, WalletOwnerHandler>();
         services.AddHttpContextAccessor(); // Required for TenantAccessHandler
 
+        // Register user service for claim enrichment
+        services.AddScoped<Authentication.IUserService, Authentication.DefaultUserService>();
+
         // Add Authorization
         services.AddAuthorization(options =>
         {
@@ -119,14 +122,15 @@ public static class ServiceCollectionExtensions
         return services
             .AddGraphQLServer()
             .AddAuthorization()
-            // TODO: Implement GraphQL types
-            // .AddQueryType<Query>()
-            // .AddMutationType<Mutation>()
-            // .AddSubscriptionType<Subscription>()
-            // .AddType<WalletType>()
-            // .AddType<CredentialType>()
-            // .AddType<PersonType>()
-            // .AddType<IssuerType>()
+            // Register base Query, Mutation, Subscription types
+            .AddQueryType<Query>()
+            .AddMutationType<Mutation>()
+            .AddSubscriptionType<Subscription>()
+            // Register Admin GraphQL extensions
+            .AddTypeExtension<AdminQuery>()
+            .AddTypeExtension<AdminMutation>()
+            .AddTypeExtension<AdminSubscription>()
+            // Add GraphQL features
             .AddFiltering()
             .AddSorting()
             .AddProjections()

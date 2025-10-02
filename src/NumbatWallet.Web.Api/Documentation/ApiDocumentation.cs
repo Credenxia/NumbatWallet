@@ -119,17 +119,27 @@ public static class ApiDocumentation
         }
     }
 
-    // /// <summary>
-    // /// Example request for creating a presentation
-    // /// </summary>
-    // public class CreatePresentationRequestExample : IExamplesProvider<CreatePresentationDto>
-    // {
-    //     public CreatePresentationDto GetExamples()
-    //     {
-    //         // TODO: Fix to match actual DTO structure
-    //         return new CreatePresentationDto();
-    //     }
-    // }
+    /// <summary>
+    /// Example request for creating a presentation
+    /// </summary>
+    public class CreatePresentationRequestExample : IExamplesProvider<CreatePresentationDto>
+    {
+        public CreatePresentationDto GetExamples()
+        {
+            return new CreatePresentationDto
+            {
+                CredentialId = Guid.Parse("a1b2c3d4-e5f6-4a5b-8c9d-0e1f2a3b4c5d"),
+                VerifierDid = "did:web:verifier.example.com",
+                DisclosedAttributes = new List<string>
+                {
+                    "name",
+                    "dateOfBirth",
+                    "licenseNumber"
+                },
+                Challenge = "challenge-nonce-12345"
+            };
+        }
+    }
 
     /// <summary>
     /// Example error response

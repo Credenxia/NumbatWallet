@@ -56,6 +56,7 @@ public class ActivateWalletCommandHandlerTests
 
         var person = Person.Create("John", "Doe", "john@example.com", "+61400000000").Value;
         person.SetTenantId(DefaultTenantId);
+        person.SetPin("1234"); // Set PIN for validation
 
         _walletRepositoryMock.Setup(x => x.GetByIdAsync(walletId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(wallet);
@@ -63,6 +64,8 @@ public class ActivateWalletCommandHandlerTests
             .ReturnsAsync(person);
         _walletRepositoryMock.Setup(x => x.UpdateAsync(It.IsAny<Wallet>(), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
+        _personRepositoryMock.Setup(x => x.UpdateAsync(It.IsAny<Person>(), It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask); // Added: person repository needs update mock
         _unitOfWorkMock.Setup(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(1);
 
@@ -140,8 +143,13 @@ public class ActivateWalletCommandHandlerTests
         wallet.SetTenantId(DefaultTenantId);
         wallet.Suspend("Test suspension");
 
+        var person = Person.Create("John", "Doe", "john@example.com", "+61400000000").Value;
+        person.SetTenantId(DefaultTenantId);
+
         _walletRepositoryMock.Setup(x => x.GetByIdAsync(walletId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(wallet);
+        _personRepositoryMock.Setup(x => x.GetByIdAsync(personId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(person);
 
         // Act
         var act = () => _handler.HandleAsync(command, CancellationToken.None);
@@ -167,8 +175,13 @@ public class ActivateWalletCommandHandlerTests
         wallet.SetTenantId(DefaultTenantId);
         wallet.Suspend("Test suspension");
 
+        var person = Person.Create("John", "Doe", "john@example.com", "+61400000000").Value;
+        person.SetTenantId(DefaultTenantId);
+
         _walletRepositoryMock.Setup(x => x.GetByIdAsync(walletId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(wallet);
+        _personRepositoryMock.Setup(x => x.GetByIdAsync(personId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(person);
 
         // Act
         var act = () => _handler.HandleAsync(command, CancellationToken.None);
@@ -196,6 +209,7 @@ public class ActivateWalletCommandHandlerTests
 
         var person = Person.Create("John", "Doe", "john@example.com", "+61400000000").Value;
         person.SetTenantId(DefaultTenantId);
+        person.SetPin("1234"); // Set PIN for validation
 
         _walletRepositoryMock.Setup(x => x.GetByIdAsync(walletId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(wallet);
@@ -203,6 +217,8 @@ public class ActivateWalletCommandHandlerTests
             .ReturnsAsync(person);
         _walletRepositoryMock.Setup(x => x.UpdateAsync(It.IsAny<Wallet>(), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
+        _personRepositoryMock.Setup(x => x.UpdateAsync(It.IsAny<Person>(), It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask); // Added: person repository needs update mock
         _unitOfWorkMock.Setup(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(1);
 
@@ -231,8 +247,14 @@ public class ActivateWalletCommandHandlerTests
         wallet.SetTenantId(DefaultTenantId);
         wallet.Lock("Security lock");
 
+        var person = Person.Create("John", "Doe", "john@example.com", "+61400000000").Value;
+        person.SetTenantId(DefaultTenantId);
+        person.SetPin("1234");
+
         _walletRepositoryMock.Setup(x => x.GetByIdAsync(walletId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(wallet);
+        _personRepositoryMock.Setup(x => x.GetByIdAsync(personId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(person);
 
         // Act
         var act = () => _handler.HandleAsync(command, CancellationToken.None);
@@ -258,8 +280,13 @@ public class ActivateWalletCommandHandlerTests
         wallet.SetTenantId(DefaultTenantId);
         // Wallet is already active by default
 
+        var person = Person.Create("John", "Doe", "john@example.com", "+61400000000").Value;
+        person.SetTenantId(DefaultTenantId);
+
         _walletRepositoryMock.Setup(x => x.GetByIdAsync(walletId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(wallet);
+        _personRepositoryMock.Setup(x => x.GetByIdAsync(personId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(person);
 
         // Act
         var act = () => _handler.HandleAsync(command, CancellationToken.None);

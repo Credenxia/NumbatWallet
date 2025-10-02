@@ -78,6 +78,11 @@ public class WalletController : ControllerBase
                 string.Join(", ", ex.Errors.Select(e => e.ErrorMessage)));
             return BadRequest(new { errors = ex.Errors.Select(e => e.ErrorMessage) });
         }
+        catch (ArgumentException ex)
+        {
+            _logger.LogWarning("Invalid argument for wallet creation: {Error}", ex.Message);
+            return BadRequest(new { error = ex.Message });
+        }
         catch (InvalidOperationException ex)
         {
             _logger.LogWarning("Wallet creation failed: {Error}", ex.Message);
@@ -209,9 +214,17 @@ public class WalletController : ControllerBase
 /// </summary>
 public class CreateWalletRequest
 {
+    [System.ComponentModel.DataAnnotations.Required]
     public Guid PersonId { get; set; }
+
+    [System.ComponentModel.DataAnnotations.Required]
+    [System.ComponentModel.DataAnnotations.StringLength(100, MinimumLength = 1)]
     public string Type { get; set; } = "HOLDER";
+
+    [System.ComponentModel.DataAnnotations.Required]
+    [System.ComponentModel.DataAnnotations.StringLength(200, MinimumLength = 1)]
     public string Name { get; set; } = string.Empty;
+
     public Dictionary<string, object>? Metadata { get; set; }
 }
 

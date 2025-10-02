@@ -24,6 +24,11 @@ public class DatabaseSeeder : IDatabaseSeeder
         using var scope = _serviceProvider.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<NumbatWalletDbContext>();
 
+        // Get tenant service from the scope
+        var tenantService = scope.ServiceProvider.GetService<SharedKernel.Interfaces.ITenantService>();
+        var currentTenantId = tenantService?.TenantId.ToString() ?? "00000000-0000-0000-0000-000000000000";
+        _logger.LogInformation("Using tenant ID for seeding: {TenantId}", currentTenantId);
+
         try
         {
             // Don't use both EnsureCreated and Migrate - they conflict
@@ -52,8 +57,8 @@ public class DatabaseSeeder : IDatabaseSeeder
 
             // Seed data
             await SeedTenantsAsync(context, cancellationToken);
-            await SeedIssuersAsync(context, cancellationToken);
-            await SeedTestPersonsAsync(context, cancellationToken);
+            await SeedIssuersAsync(context, currentTenantId, cancellationToken);
+            await SeedTestPersonsAsync(context, currentTenantId, cancellationToken);
 
             await context.SaveChangesAsync(cancellationToken);
             _logger.LogInformation("Database seeding completed successfully");
@@ -76,7 +81,7 @@ public class DatabaseSeeder : IDatabaseSeeder
         var defaultTenant = new Tenant(Guid.NewGuid())
         {
             Name = "Default Development Tenant",
-            Identifier = "default",
+            Identifier = Guid.Empty.ToString(), // "00000000-0000-0000-0000-000000000000"
             IsActive = true,
             SubscriptionTier = "Enterprise",
             CreatedAt = DateTime.UtcNow,
@@ -116,7 +121,7 @@ public class DatabaseSeeder : IDatabaseSeeder
         _logger.LogInformation("Seeded {Count} tenants", tenants.Length);
     }
 
-    private async Task SeedIssuersAsync(NumbatWalletDbContext context, CancellationToken cancellationToken)
+    private async Task SeedIssuersAsync(NumbatWalletDbContext context, string currentTenantId, CancellationToken cancellationToken)
     {
         // Check if specific issuer already exists to prevent duplicates
         if (await context.Issuers.AnyAsync(i => i.Code == "WA-DOT", cancellationToken))
@@ -132,7 +137,7 @@ public class DatabaseSeeder : IDatabaseSeeder
             issuerDid: "did:web:transport.wa.gov.au",
             publicKey: "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA...",
             endpoint: "https://api.transport.wa.gov.au/credentials",
-            tenantId: "default")
+            tenantId: currentTenantId)
         {
             CreatedAt = DateTimeOffset.UtcNow,
             CreatedBy = "system"
@@ -150,7 +155,7 @@ public class DatabaseSeeder : IDatabaseSeeder
             issuerDid: "did:web:health.wa.gov.au",
             publicKey: "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEB...",
             endpoint: "https://api.health.wa.gov.au/credentials",
-            tenantId: "default")
+            tenantId: currentTenantId)
         {
             CreatedAt = DateTimeOffset.UtcNow,
             CreatedBy = "system"
@@ -168,7 +173,7 @@ public class DatabaseSeeder : IDatabaseSeeder
             issuerDid: "did:web:education.wa.gov.au",
             publicKey: "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEC...",
             endpoint: "https://api.education.wa.gov.au/credentials",
-            tenantId: "default")
+            tenantId: currentTenantId)
         {
             CreatedAt = DateTimeOffset.UtcNow,
             CreatedBy = "system"
@@ -186,7 +191,7 @@ public class DatabaseSeeder : IDatabaseSeeder
         _logger.LogInformation("Seeded {Count} issuers", issuers.Length);
     }
 
-    private async Task SeedTestPersonsAsync(NumbatWalletDbContext context, CancellationToken cancellationToken)
+    private async Task SeedTestPersonsAsync(NumbatWalletDbContext context, string currentTenantId, CancellationToken cancellationToken)
     {
         // Only seed in development and testing environments
         var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
@@ -201,38 +206,58 @@ public class DatabaseSeeder : IDatabaseSeeder
             return;
         }
 
-        // Create test persons with short data to avoid database constraints
+        // Create test persons for integration tests with role-based emails
+        // For testing, we'll use reflection to set verification status without going through verification code flow
+        var citizen = new Person(
+            firstName: "Test",
+            lastName: "Citizen",
+            dateOfBirth: new DateOnly(1990, 1, 1),
+            email: "citizen@example.com",
+            externalId: "TEST-CITIZEN-001",
+            tenantId: currentTenantId);
+        SetVerificationStatus(citizen, SharedKernel.Enums.VerificationStatus.Verified);
+
+        var officer = new Person(
+            firstName: "Test",
+            lastName: "Officer",
+            dateOfBirth: new DateOnly(1985, 6, 15),
+            email: "officer@example.com",
+            externalId: "TEST-OFFICER-001",
+            tenantId: currentTenantId);
+        SetVerificationStatus(officer, SharedKernel.Enums.VerificationStatus.Verified);
+
+        var admin = new Person(
+            firstName: "Test",
+            lastName: "Admin",
+            dateOfBirth: new DateOnly(1980, 3, 20),
+            email: "admin@example.com",
+            externalId: "TEST-ADMIN-001",
+            tenantId: currentTenantId);
+        SetVerificationStatus(admin, SharedKernel.Enums.VerificationStatus.Verified);
+
+        // Additional test users for general testing
+        var testUser = new Person(
+            firstName: "Test",
+            lastName: "User",
+            dateOfBirth: new DateOnly(1995, 1, 1),
+            email: "test@example.com",
+            externalId: "TEST-USER-001",
+            tenantId: currentTenantId);
+        SetVerificationStatus(testUser, SharedKernel.Enums.VerificationStatus.Verified);
+
         var johnDoe = new Person(
             firstName: "John",
             lastName: "Doe",
-            dateOfBirth: new DateOnly(1990, 1, 1),
-            email: "a@b.co",
-            externalId: "T1",
-            tenantId: "default");
-        johnDoe.VerifyEmail("V1");
+            dateOfBirth: new DateOnly(1990, 5, 10),
+            email: "john.doe@example.com",
+            externalId: "TEST-USER-002",
+            tenantId: currentTenantId);
+        SetVerificationStatus(johnDoe, SharedKernel.Enums.VerificationStatus.Verified);
 
-        var janeSmith = new Person(
-            firstName: "Jane",
-            lastName: "Smith",
-            dateOfBirth: new DateOnly(1985, 6, 15),
-            email: "c@d.co",
-            externalId: "T2",
-            tenantId: "default");
-        janeSmith.VerifyEmail("V2");
-
-        var bobJohnson = new Person(
-            firstName: "Bob",
-            lastName: "Johnson",
-            dateOfBirth: new DateOnly(1995, 3, 20),
-            email: "e@f.co",
-            externalId: "T3",
-            tenantId: "default");
-        // Bob's email remains pending
-
-        var testPersons = new[] { johnDoe, janeSmith, bobJohnson };
+        var testPersons = new[] { citizen, officer, admin, testUser, johnDoe };
 
         await context.Persons.AddRangeAsync(testPersons, cancellationToken);
-        _logger.LogInformation("Seeded {Count} test persons", testPersons.Length);
+        _logger.LogInformation("Seeded {Count} test persons for integration tests", testPersons.Length);
     }
 
     private void SetAuditFields(NumbatWalletDbContext context)
@@ -250,7 +275,46 @@ public class DatabaseSeeder : IDatabaseSeeder
         }
     }
 
-    private async Task SeedTestWalletsAsync(NumbatWalletDbContext context, CancellationToken cancellationToken)
+    /// <summary>
+    /// Helper method to set verification status on Person entity for test data seeding
+    /// Uses reflection to bypass verification code validation flow
+    /// </summary>
+    private static void SetVerificationStatus(Person person, SharedKernel.Enums.VerificationStatus status)
+    {
+        var personType = person.GetType();
+
+        // Set EmailVerificationStatus
+        var emailField = personType.GetProperty("EmailVerificationStatus",
+            System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
+        if (emailField != null && emailField.CanWrite)
+        {
+            emailField.SetValue(person, status);
+        }
+        else
+        {
+            // Try backing field if property is read-only
+            var emailBackingField = personType.GetField("<EmailVerificationStatus>k__BackingField",
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            emailBackingField?.SetValue(person, status);
+        }
+
+        // Set PhoneVerificationStatus (required for IsVerified = true)
+        var phoneField = personType.GetProperty("PhoneVerificationStatus",
+            System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
+        if (phoneField != null && phoneField.CanWrite)
+        {
+            phoneField.SetValue(person, status);
+        }
+        else
+        {
+            // Try backing field if property is read-only
+            var phoneBackingField = personType.GetField("<PhoneVerificationStatus>k__BackingField",
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            phoneBackingField?.SetValue(person, status);
+        }
+    }
+
+    private async Task SeedTestWalletsAsync(NumbatWalletDbContext context, string currentTenantId, CancellationToken cancellationToken)
     {
         // Only seed in test environment
         var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
@@ -288,7 +352,7 @@ public class DatabaseSeeder : IDatabaseSeeder
 
             if (walletResult.IsSuccess)
             {
-                walletResult.Value.SetTenantId("default");
+                walletResult.Value.SetTenantId(currentTenantId);
                 wallets.Add(walletResult.Value);
                 _logger.LogInformation("Created wallet for person {PersonId}: {WalletName}", person.Id, walletResult.Value.WalletName);
             }
@@ -309,7 +373,7 @@ public class DatabaseSeeder : IDatabaseSeeder
 
             if (walletResult.IsSuccess)
             {
-                walletResult.Value.SetTenantId("default");
+                walletResult.Value.SetTenantId(currentTenantId);
                 wallets.Add(walletResult.Value);
             }
             else
@@ -323,12 +387,21 @@ public class DatabaseSeeder : IDatabaseSeeder
         _logger.LogInformation("Seeded {Count} test wallets", wallets.Count);
     }
 
-    public async Task SeedTestDataAsync(CancellationToken cancellationToken = default)
+    public async Task SeedTestDataAsync(string? tenantId = null, CancellationToken cancellationToken = default)
     {
         _logger.LogInformation("Seeding test data...");
 
         using var scope = _serviceProvider.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<NumbatWalletDbContext>();
+
+        // Get tenant ID from parameter, or try to get from service, or use default
+        var currentTenantId = tenantId;
+        if (string.IsNullOrEmpty(currentTenantId))
+        {
+            var tenantService = scope.ServiceProvider.GetService<SharedKernel.Interfaces.ITenantService>();
+            currentTenantId = tenantService?.TenantId.ToString() ?? "00000000-0000-0000-0000-000000000000";
+        }
+        _logger.LogInformation("Using tenant ID for test data: {TenantId}", currentTenantId);
 
         try
         {
@@ -342,18 +415,18 @@ public class DatabaseSeeder : IDatabaseSeeder
             // For tests, database should already be created with EnsureCreated
             // Just seed the data
             await SeedTenantsAsync(context, cancellationToken);
-            await SeedIssuersAsync(context, cancellationToken);
+            await SeedIssuersAsync(context, currentTenantId, cancellationToken);
 
             // Set audit fields for initial batch
             SetAuditFields(context);
             await context.SaveChangesAsync(cancellationToken);
 
             // Seed persons and wallets in separate transaction
-            await SeedTestPersonsAsync(context, cancellationToken);
+            await SeedTestPersonsAsync(context, currentTenantId, cancellationToken);
             SetAuditFields(context);
             await context.SaveChangesAsync(cancellationToken);
 
-            await SeedTestWalletsAsync(context, cancellationToken);
+            await SeedTestWalletsAsync(context, currentTenantId, cancellationToken);
             SetAuditFields(context);
             await context.SaveChangesAsync(cancellationToken);
             _logger.LogInformation("Test data seeding completed successfully");

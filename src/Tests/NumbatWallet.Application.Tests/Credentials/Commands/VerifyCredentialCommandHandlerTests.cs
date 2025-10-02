@@ -150,9 +150,9 @@ public class VerifyCredentialCommandHandlerTests
     }
 
     [Fact]
-    public async Task HandleAsync_NonJwtCredential_SkipsSignatureVerification()
+    public async Task HandleAsync_NonJwtCredential_FailsSignatureVerification()
     {
-        // Arrange
+        // Arrange - Updated test to reflect new security policy requiring JWT signatures
         var walletId = Guid.NewGuid();
         var issuerId = Guid.NewGuid();
         var jsonData = "{\"type\":\"DriversLicense\",\"holder\":\"John Doe\"}";
@@ -183,11 +183,12 @@ public class VerifyCredentialCommandHandlerTests
         // Act
         var result = await _handler.HandleAsync(command, CancellationToken.None);
 
-        // Assert
+        // Assert - New security policy: unsigned credentials must fail verification
         result.Should().NotBeNull();
-        result.IsValid.Should().BeTrue();
+        result.IsValid.Should().BeFalse(); // Changed: unsigned credentials no longer allowed
         result.Checks.Should().NotBeNull();
-        result.Checks!.Signature.Should().BeTrue(); // Legacy credential, no signature verification
+        result.Checks!.Signature.Should().BeFalse(); // Changed: signature check fails for unsigned
+        result.ErrorMessage.Should().Contain("Credential signature missing - all credentials must be JWT-signed");
         _jwtSigningServiceMock.Verify(x => x.VerifyCredentialAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
@@ -360,11 +361,13 @@ public class VerifyCredentialCommandHandlerTests
         var issuerId = Guid.NewGuid();
         var personId = Guid.NewGuid();
 
+        // Create credential with JWT-formatted data (required by new security policy)
+        var jwtToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c";
         var credentialResult = Credential.Create(
             walletId,
             issuerId,
             "DriversLicense",
-            "{\"type\":\"DriversLicense\"}",
+            jwtToken, // Pass JWT as credential data
             "schema:driverslicense:1.0");
 
         var credential = credentialResult.Value;
@@ -386,7 +389,8 @@ public class VerifyCredentialCommandHandlerTests
             {
                 ["requireBiometric"] = "true",
                 ["biometricToken"] = "valid_biometric_token_abc123def456",
-                ["biometricTimestamp"] = DateTimeOffset.UtcNow.ToUnixTimeSeconds()
+                ["biometricTimestamp"] = DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
+                ["boundCredentialId"] = credential.Id.ToString() // Required: credential binding for security
             }
         };
 
@@ -398,6 +402,8 @@ public class VerifyCredentialCommandHandlerTests
             .ReturnsAsync(wallet);
         _personRepositoryMock.Setup(x => x.GetByIdAsync(personId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(person);
+        _jwtSigningServiceMock.Setup(x => x.VerifyCredentialAsync(jwtToken, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true); // Mock JWT signature verification success
         _cacheServiceMock.Setup(x => x.SetAsync(It.IsAny<string>(), It.IsAny<VerificationResultDto>(), It.IsAny<TimeSpan>(), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 

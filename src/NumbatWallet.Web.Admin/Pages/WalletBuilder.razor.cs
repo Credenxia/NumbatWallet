@@ -8,18 +8,29 @@ namespace NumbatWallet.Web.Admin.Pages;
 public partial class WalletBuilder
 {
     [Inject] private IWalletTemplateService WalletTemplateService { get; set; } = default!;
+    [Inject] private IAppleWalletBuilder AppleWalletBuilder { get; set; } = default!;
+    [Inject] private IGoogleWalletBuilder GoogleWalletBuilder { get; set; } = default!;
+    [Inject] private IWebWalletBuilder WebWalletBuilder { get; set; } = default!;
     [Inject] private ILogger<WalletBuilder> Logger { get; set; } = default!;
     [Inject] private NavigationManager Navigation { get; set; } = default!;
+    [Inject] private IConfiguration Configuration { get; set; } = default!;
 
     private List<WalletTemplate> templates = new();
     private WalletTemplate? selectedTemplate;
     private bool showCreateForm = false;
     private bool showPreview = false;
     private bool isEditingField = false;
+    private string previewPlatform = "generic"; // generic, apple, google, web
+    private string activePlatformTab = "ios"; // ios, android, web
 
     private CreateTemplateModel newTemplate = new();
     private FieldModel currentField = new();
     private string newCredentialType = string.Empty;
+
+    // Platform-specific configurations
+    private PlatformConfigModel iosConfig = new();
+    private PlatformConfigModel androidConfig = new();
+    private PlatformConfigModel webConfig = new();
 
     // Cache JsonSerializerOptions to avoid CA1869
     private static readonly JsonSerializerOptions s_jsonOptions = new()
@@ -89,6 +100,56 @@ public partial class WalletBuilder
         selectedTemplate = template;
         showCreateForm = false;
         ResetFieldForm();
+        LoadPlatformConfigs();
+    }
+
+    private void LoadPlatformConfigs()
+    {
+        if (selectedTemplate == null)
+        {
+            return;
+        }
+
+        // Load platform configs from template metadata
+        if (selectedTemplate.Metadata.TryGetValue("ios_config", out var iosData))
+        {
+            iosConfig = JsonSerializer.Deserialize<PlatformConfigModel>(iosData.ToString() ?? "{}") ?? new PlatformConfigModel();
+        }
+        else
+        {
+            iosConfig = new PlatformConfigModel();
+        }
+
+        if (selectedTemplate.Metadata.TryGetValue("android_config", out var androidData))
+        {
+            androidConfig = JsonSerializer.Deserialize<PlatformConfigModel>(androidData.ToString() ?? "{}") ?? new PlatformConfigModel();
+        }
+        else
+        {
+            androidConfig = new PlatformConfigModel();
+        }
+
+        if (selectedTemplate.Metadata.TryGetValue("web_config", out var webData))
+        {
+            webConfig = JsonSerializer.Deserialize<PlatformConfigModel>(webData.ToString() ?? "{}") ?? new PlatformConfigModel();
+        }
+        else
+        {
+            webConfig = new PlatformConfigModel();
+        }
+    }
+
+    private void SavePlatformConfigs()
+    {
+        if (selectedTemplate == null)
+        {
+            return;
+        }
+
+        // Save platform configs to template metadata
+        selectedTemplate.UpdateMetadata("ios_config", JsonSerializer.Serialize(iosConfig, s_jsonOptions));
+        selectedTemplate.UpdateMetadata("android_config", JsonSerializer.Serialize(androidConfig, s_jsonOptions));
+        selectedTemplate.UpdateMetadata("web_config", JsonSerializer.Serialize(webConfig, s_jsonOptions));
     }
 
     private void EditField(WalletField field)
@@ -223,6 +284,7 @@ public partial class WalletBuilder
 
         try
         {
+            SavePlatformConfigs(); // Save platform configs before updating
             await WalletTemplateService.UpdateTemplateAsync(selectedTemplate);
             await LoadTemplates();
         }
@@ -234,7 +296,13 @@ public partial class WalletBuilder
 
     private void PreviewTemplate()
     {
+        previewPlatform = "generic";
         showPreview = true;
+    }
+
+    private void SetPreviewPlatform(string platform)
+    {
+        previewPlatform = platform;
     }
 
     private async Task ExportTemplate()
@@ -248,6 +316,127 @@ public partial class WalletBuilder
 
         // In a real implementation, this would trigger a download
         Logger.LogInformation("Exported template: {Json}", json);
+    }
+
+    private async Task ExportAppleWallet()
+    {
+        if (selectedTemplate == null)
+        {
+            return;
+        }
+
+        try
+        {
+            var options = new AppleWalletOptions
+            {
+                TeamIdentifier = Configuration["WalletProviders:Apple:TeamIdentifier"] ?? "TEAM_ID_NOT_CONFIGURED",
+                PassTypeIdentifier = Configuration["WalletProviders:Apple:PassTypeIdentifier"] ?? "pass.com.numbat.wallet",
+                OrganizationName = Configuration["WalletProviders:Apple:OrganizationName"] ?? "NumbatWallet",
+                Description = selectedTemplate.Description,
+                LogoText = selectedTemplate.Name
+            };
+
+            // Create sample data from template fields
+            var data = selectedTemplate.Fields.ToDictionary(
+                f => f.Name,
+                f => (object)(f.DefaultValue ?? string.Empty)
+            );
+
+            var pkpassBytes = await AppleWalletBuilder.GeneratePkpassAsync(
+                selectedTemplate,
+                data,
+                options,
+                CancellationToken.None);
+
+            Logger.LogInformation("Generated Apple Wallet .pkpass file ({Size} bytes)", pkpassBytes.Length);
+            // Note: File download in Blazor Server requires JavaScript interop or file endpoint
+            // For now, logging completion - implement JS download in future enhancement
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error exporting Apple Wallet");
+        }
+    }
+
+    private async Task ExportGoogleWallet()
+    {
+        if (selectedTemplate == null)
+        {
+            return;
+        }
+
+        try
+        {
+            var options = new GoogleWalletOptions
+            {
+                IssuerId = Configuration["WalletProviders:Google:IssuerId"] ?? "ISSUER_ID_NOT_CONFIGURED",
+                ClassId = $"numbat_{selectedTemplate.Id}",
+                ObjectId = Guid.NewGuid().ToString(),
+                CardTitle = selectedTemplate.Name,
+                Header = selectedTemplate.Name
+            };
+
+            // Create sample data from template fields
+            var data = selectedTemplate.Fields.ToDictionary(
+                f => f.Name,
+                f => (object)(f.DefaultValue ?? string.Empty)
+            );
+
+            var googlePass = await GoogleWalletBuilder.GenerateGooglePassAsync(
+                selectedTemplate,
+                data,
+                options,
+                CancellationToken.None);
+
+            var jwt = await GoogleWalletBuilder.CreateJwtAsync(googlePass);
+            var addToWalletLink = GoogleWalletBuilder.GetAddToWalletLink(jwt);
+
+            Logger.LogInformation("Generated Google Wallet link: {Link}", addToWalletLink);
+            // Note: Link display requires UI modal or clipboard copy - implement in future enhancement
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error exporting Google Wallet");
+        }
+    }
+
+    private async Task ExportWebWallet()
+    {
+        if (selectedTemplate == null)
+        {
+            return;
+        }
+
+        try
+        {
+            var options = new WebWalletOptions
+            {
+                Theme = Configuration["WalletProviders:Web:Theme"] ?? "light",
+                PrimaryColor = Configuration["WalletProviders:Web:PrimaryColor"] ?? "#007AFF",
+                EnableQrCode = bool.Parse(Configuration["WalletProviders:Web:EnableQrCode"] ?? "true"),
+                EnableSharing = bool.Parse(Configuration["WalletProviders:Web:EnableSharing"] ?? "true"),
+                EnableOfflineMode = bool.Parse(Configuration["WalletProviders:Web:EnableOfflineMode"] ?? "true")
+            };
+
+            // Create sample data from template fields
+            var data = selectedTemplate.Fields.ToDictionary(
+                f => f.Name,
+                f => (object)(f.DefaultValue ?? string.Empty)
+            );
+
+            var webWallet = await WebWalletBuilder.GenerateWebWalletAsync(
+                selectedTemplate,
+                data,
+                options,
+                CancellationToken.None);
+
+            Logger.LogInformation("Generated Web Wallet HTML");
+            // Note: HTML download requires file endpoint or JavaScript interop - implement in future enhancement
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error exporting Web Wallet");
+        }
     }
 
     private async Task CloneTemplate(WalletTemplate template)
@@ -438,5 +627,36 @@ public partial class WalletBuilder
         public string DefaultValue { get; set; } = string.Empty;
         public string MappedCredentialField { get; set; } = string.Empty;
         public int DisplayOrder { get; set; }
+    }
+
+    private class PlatformConfigModel
+    {
+        // Branding
+        public string BackgroundColor { get; set; } = "#FFFFFF";
+        public string ForegroundColor { get; set; } = "#000000";
+        public string LabelColor { get; set; } = "#666666";
+        public string LogoText { get; set; } = string.Empty;
+
+        // iOS-specific
+        public List<string> HeaderFields { get; set; } = new();
+        public List<string> PrimaryFields { get; set; } = new();
+        public List<string> SecondaryFields { get; set; } = new();
+        public List<string> AuxiliaryFields { get; set; } = new();
+        public List<string> BackFields { get; set; } = new();
+        public string BarcodeFormat { get; set; } = "PKBarcodeFormatQR";
+
+        // Android-specific
+        public string CardTitle { get; set; } = string.Empty;
+        public string Header { get; set; } = string.Empty;
+        public string Subheader { get; set; } = string.Empty;
+        public List<string> TextModules { get; set; } = new();
+        public List<string> InfoModules { get; set; } = new();
+
+        // Web-specific
+        public string Theme { get; set; } = "light";
+        public bool EnableQrCode { get; set; } = true;
+        public bool EnableSharing { get; set; } = true;
+        public bool EnablePrinting { get; set; } = true;
+        public string CustomCss { get; set; } = string.Empty;
     }
 }

@@ -125,7 +125,19 @@ public sealed class Credential : AuditableEntity<Guid>, ITenantAware
 
     public Result Suspend(string reason)
     {
-        Guard.AgainstNullOrWhiteSpace(reason, nameof(reason));
+        try
+        {
+            Guard.AgainstNullOrWhiteSpace(reason, nameof(reason));
+        }
+        catch (ArgumentException ex)
+        {
+            return DomainError.Validation("Credential.InvalidReason", ex.Message);
+        }
+
+        if (Status == CredentialStatus.Pending)
+        {
+            return DomainError.BusinessRule("Credential.Pending", "Cannot suspend a credential that is pending activation.");
+        }
 
         if (Status == CredentialStatus.Revoked)
         {
@@ -144,7 +156,14 @@ public sealed class Credential : AuditableEntity<Guid>, ITenantAware
 
     public Result Revoke(string reason)
     {
-        Guard.AgainstNullOrWhiteSpace(reason, nameof(reason));
+        try
+        {
+            Guard.AgainstNullOrWhiteSpace(reason, nameof(reason));
+        }
+        catch (ArgumentException ex)
+        {
+            return DomainError.Validation("Credential.InvalidReason", ex.Message);
+        }
 
         if (Status == CredentialStatus.Revoked)
         {
@@ -159,6 +178,11 @@ public sealed class Credential : AuditableEntity<Guid>, ITenantAware
 
     public Result SetExpiry(DateTimeOffset expiryDate)
     {
+        if (Status == CredentialStatus.Revoked)
+        {
+            return DomainError.BusinessRule("Credential.Revoked", "Cannot set expiry on a revoked credential.");
+        }
+
         ExpiresAt = expiryDate;
 
         if (IsExpired() && Status == CredentialStatus.Active)
@@ -171,11 +195,23 @@ public sealed class Credential : AuditableEntity<Guid>, ITenantAware
 
     public Result UpdateData(string newData)
     {
-        Guard.AgainstNullOrWhiteSpace(newData, nameof(newData));
+        try
+        {
+            Guard.AgainstNullOrWhiteSpace(newData, nameof(newData));
+        }
+        catch (ArgumentException ex)
+        {
+            return DomainError.Validation("Credential.InvalidData", ex.Message);
+        }
 
         if (Status == CredentialStatus.Revoked)
         {
             return DomainError.BusinessRule("Credential.Revoked", "Cannot update data of a revoked credential.");
+        }
+
+        if (IsExpired())
+        {
+            return DomainError.BusinessRule("Credential.Expired", "Cannot update data of an expired credential.");
         }
 
         CredentialData = newData;
