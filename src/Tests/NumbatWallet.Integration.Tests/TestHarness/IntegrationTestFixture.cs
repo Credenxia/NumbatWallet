@@ -22,7 +22,9 @@ public class IntegrationTestFixture : WebApplicationFactory<Program>, IAsyncLife
 {
     private readonly PostgreSqlContainer _postgresContainer;
     private readonly Dictionary<string, string> _testConfiguration;
-    private readonly string _testTenantId = "default"; // Must match DatabaseSeeder tenant ID
+    // Use a valid test tenant GUID (domain entities validate against Guid.Empty)
+    private readonly Guid _testTenantGuid = Guid.Parse("10000000-0000-0000-0000-000000000001");
+    private readonly string _testTenantId = "10000000-0000-0000-0000-000000000001";
     private bool _initialized = false;
 
     public IntegrationTestFixture()
@@ -77,9 +79,9 @@ public class IntegrationTestFixture : WebApplicationFactory<Program>, IAsyncLife
         await dbContext.Database.EnsureDeletedAsync();
         await dbContext.Database.EnsureCreatedAsync();
 
-        // Seed test data
+        // Seed test data with the test tenant ID
         var seeder = scope.ServiceProvider.GetRequiredService<NumbatWallet.Infrastructure.Data.IDatabaseSeeder>();
-        await seeder.SeedTestDataAsync();
+        await seeder.SeedTestDataAsync(_testTenantId);
 
         _initialized = true;
     }
@@ -109,7 +111,8 @@ public class IntegrationTestFixture : WebApplicationFactory<Program>, IAsyncLife
             services.RemoveAll<DbContextOptions<NumbatWalletDbContext>>();
 
             // Add test DbContext with real PostgreSQL from container
-            services.AddDbContext<NumbatWalletDbContext>(options =>
+            // Use factory pattern to access interceptors from DI container
+            services.AddDbContext<NumbatWalletDbContext>((serviceProvider, options) =>
             {
                 options.UseNpgsql(ConnectionString, npgsqlOptions =>
                 {
@@ -117,6 +120,14 @@ public class IntegrationTestFixture : WebApplicationFactory<Program>, IAsyncLife
                     npgsqlOptions.CommandTimeout(60);
                 });
                 options.EnableSensitiveDataLogging();
+
+                // Add interceptors for tenant isolation, auditing, and soft delete
+                // These are registered by AddInfrastructure() and are critical for multi-tenancy
+                options.AddInterceptors(
+                    serviceProvider.GetRequiredService<NumbatWallet.Infrastructure.Data.Interceptors.AuditInterceptor>(),
+                    serviceProvider.GetRequiredService<NumbatWallet.Infrastructure.Data.Interceptors.TenantInterceptor>(),
+                    serviceProvider.GetRequiredService<NumbatWallet.Infrastructure.Data.Interceptors.SoftDeleteInterceptor>());
+
                 // Suppress pending model changes warning for tests
                 options.ConfigureWarnings(w => w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
             });
@@ -136,10 +147,15 @@ public class IntegrationTestFixture : WebApplicationFactory<Program>, IAsyncLife
             // Add mock current user service for audit fields
             services.AddSingleton<NumbatWallet.SharedKernel.Interfaces.ICurrentUserService, MockCurrentUserService>();
 
-            // Replace current tenant service with mock to return consistent tenant ID for tests
+            // Replace tenant services with mocks to return consistent tenant ID for tests
+            // Mock both GUID-based and string-based tenant services for multi-tenancy support
             services.RemoveAll<NumbatWallet.SharedKernel.Interfaces.ICurrentTenantService>();
             services.AddSingleton<NumbatWallet.SharedKernel.Interfaces.ICurrentTenantService>(
                 sp => new MockCurrentTenantService(_testTenantId));
+
+            services.RemoveAll<NumbatWallet.SharedKernel.Interfaces.ITenantService>();
+            services.AddSingleton<NumbatWallet.SharedKernel.Interfaces.ITenantService>(
+                sp => new MockTenantService(_testTenantGuid));
 
             // Don't initialize database here - let it be done on first use
             // This avoids conflicts with service registration
@@ -456,7 +472,7 @@ public class MockCurrentUserService : NumbatWallet.SharedKernel.Interfaces.ICurr
 }
 
 /// <summary>
-/// Mock Current Tenant service for testing
+/// Mock Current Tenant service for testing (string-based)
 /// </summary>
 public class MockCurrentTenantService : NumbatWallet.SharedKernel.Interfaces.ICurrentTenantService
 {
@@ -476,4 +492,20 @@ public class MockCurrentTenantService : NumbatWallet.SharedKernel.Interfaces.ICu
         // Not needed for tests
         return Task.FromResult(true);
     }
+}
+
+/// <summary>
+/// Mock Tenant service for testing (GUID-based)
+/// </summary>
+public class MockTenantService : NumbatWallet.SharedKernel.Interfaces.ITenantService
+{
+    private readonly Guid _tenantId;
+
+    public MockTenantService(Guid tenantId)
+    {
+        _tenantId = tenantId;
+    }
+
+    public Guid TenantId => _tenantId;
+    public string TenantName => "Test Tenant";
 }
