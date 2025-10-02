@@ -127,10 +127,38 @@ try
         });
     });
 
-    // Add minimal authentication (for testing - allows anonymous)
-    builder.Services.AddAuthentication("Test")
-        .AddScheme<Microsoft.AspNetCore.Authentication.AuthenticationSchemeOptions, NumbatWallet.Web.Api.Testing.TestAuthenticationHandler>(
-            "Test", options => { });
+    // AUTHENTICATION: Environment-specific configuration
+    if (builder.Environment.IsDevelopment())
+    {
+        // Development: Use test handler for easier testing
+        builder.Services.AddAuthentication("Test")
+            .AddScheme<Microsoft.AspNetCore.Authentication.AuthenticationSchemeOptions, NumbatWallet.Web.Api.Authentication.TestAuthenticationHandler>(
+                "Test", options => { });
+
+        Log.Information("Using TEST authentication handler (Development only)");
+    }
+    else
+    {
+        // Production/Staging: Use real JWT Bearer authentication
+        builder.Services.AddAuthentication(Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerDefaults.AuthenticationScheme)
+            .AddJwtBearer(options =>
+            {
+                options.Authority = builder.Configuration["Jwt:Authority"];
+                options.Audience = builder.Configuration["Jwt:Audience"];
+                options.RequireHttpsMetadata = true;
+
+                options.TokenValidationParameters = new Microsoft.IdentityModel.Tokens.TokenValidationParameters
+                {
+                    ValidateIssuer = true,
+                    ValidateAudience = true,
+                    ValidateLifetime = true,
+                    ValidateIssuerSigningKey = true,
+                    ClockSkew = TimeSpan.FromMinutes(5)
+                };
+            });
+
+        Log.Information("Using JWT Bearer authentication (Production)");
+    }
 
     builder.Services.AddAuthorization(options =>
     {
@@ -350,95 +378,3 @@ finally
 
 // Make the implicit Program class public so test projects can access it
 public partial class Program { }
-
-// Minimal test authentication handler that allows all requests
-namespace NumbatWallet.Web.Api.Testing
-{
-    public class TestAuthenticationHandler : Microsoft.AspNetCore.Authentication.AuthenticationHandler<Microsoft.AspNetCore.Authentication.AuthenticationSchemeOptions>
-    {
-        private readonly Microsoft.Extensions.Configuration.IConfiguration _configuration;
-
-        public TestAuthenticationHandler(
-            Microsoft.Extensions.Options.IOptionsMonitor<Microsoft.AspNetCore.Authentication.AuthenticationSchemeOptions> options,
-            Microsoft.Extensions.Logging.ILoggerFactory logger,
-            System.Text.Encodings.Web.UrlEncoder encoder,
-            Microsoft.Extensions.Configuration.IConfiguration configuration)
-            : base(options, logger, encoder)
-        {
-            _configuration = configuration;
-        }
-
-        protected override Task<Microsoft.AspNetCore.Authentication.AuthenticateResult> HandleAuthenticateAsync()
-        {
-            System.Security.Claims.ClaimsPrincipal? principal = null;
-
-            // Check for Authorization header with Bearer token
-            if (Request.Headers.TryGetValue("Authorization", out var authHeader))
-            {
-                var token = authHeader.ToString().Replace("Bearer ", "");
-                if (!string.IsNullOrWhiteSpace(token))
-                {
-                    try
-                    {
-                        // Parse JWT token to extract claims
-                        var tokenHandler = new System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler();
-                        var key = System.Text.Encoding.UTF8.GetBytes(
-                            _configuration["Jwt:SecretKey"] ?? "TestSecretKey123456789012345678901234567890");
-
-                        var validationParameters = new Microsoft.IdentityModel.Tokens.TokenValidationParameters
-                        {
-                            ValidateIssuerSigningKey = true,
-                            IssuerSigningKey = new Microsoft.IdentityModel.Tokens.SymmetricSecurityKey(key),
-                            ValidateIssuer = false, // Allow any issuer for testing
-                            ValidateAudience = false, // Allow any audience for testing
-                            ValidateLifetime = true,
-                            ClockSkew = System.TimeSpan.FromMinutes(5)
-                        };
-
-                        principal = tokenHandler.ValidateToken(token, validationParameters, out _);
-                    }
-                    catch
-                    {
-                        // JWT parsing failed - use default claims
-                        principal = null;
-                    }
-                }
-            }
-
-            // If no valid JWT token, check if endpoint allows anonymous
-            if (principal == null)
-            {
-                var endpoint = Context.GetEndpoint();
-                var allowAnonymous = endpoint?.Metadata?.GetMetadata<Microsoft.AspNetCore.Authorization.IAllowAnonymous>() != null;
-
-                if (allowAnonymous)
-                {
-                    // For anonymous endpoints, return default test claims
-                    var claims = new[]
-                    {
-                        new System.Security.Claims.Claim("user_id", "test-user"),
-                        new System.Security.Claims.Claim("tenant_id", "test-tenant"),
-                        new System.Security.Claims.Claim(System.Security.Claims.ClaimTypes.Role, "User"),
-                        new System.Security.Claims.Claim(System.Security.Claims.ClaimTypes.Name, "Test User"),
-                        new System.Security.Claims.Claim(System.Security.Claims.ClaimTypes.NameIdentifier, "test-user")
-                    };
-
-                    var identity = new System.Security.Claims.ClaimsIdentity(claims, "Test");
-                    principal = new System.Security.Claims.ClaimsPrincipal(identity);
-
-                    var ticket = new Microsoft.AspNetCore.Authentication.AuthenticationTicket(principal, "Test");
-                    return Task.FromResult(Microsoft.AspNetCore.Authentication.AuthenticateResult.Success(ticket));
-                }
-                else
-                {
-                    // For non-anonymous endpoints without token, return authentication failure (401)
-                    return Task.FromResult(Microsoft.AspNetCore.Authentication.AuthenticateResult.Fail("No authentication token provided"));
-                }
-            }
-
-            // Valid JWT token - return success
-            var successTicket = new Microsoft.AspNetCore.Authentication.AuthenticationTicket(principal, "Test");
-            return Task.FromResult(Microsoft.AspNetCore.Authentication.AuthenticateResult.Success(successTicket));
-        }
-    }
-}

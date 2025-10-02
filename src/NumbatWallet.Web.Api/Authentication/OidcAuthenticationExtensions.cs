@@ -195,7 +195,7 @@ public static class OidcAuthenticationExtensions
             // Use test authentication for development/POA
             services.AddAuthentication("Test")
                 .AddScheme<Microsoft.AspNetCore.Authentication.AuthenticationSchemeOptions,
-                    Testing.TestAuthenticationHandler>("Test", options => { });
+                    TestAuthenticationHandler>("Test", options => { });
         }
 
         return services;
