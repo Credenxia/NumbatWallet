@@ -174,6 +174,41 @@ try
     builder.Services.AddExceptionHandler<NumbatWallet.Web.Api.Middleware.ValidationExceptionHandler>();
     builder.Services.AddProblemDetails();
 
+    // Add output caching (ASP.NET Core 9 feature)
+    builder.Services.AddOutputCache(options =>
+    {
+        // Default policy - 60 seconds cache
+        options.AddBasePolicy(builder => builder
+            .Expire(TimeSpan.FromSeconds(60))
+            .Tag("default"));
+
+        // Wallet list - 5 minutes cache
+        options.AddPolicy("WalletsList", builder => builder
+            .Expire(TimeSpan.FromMinutes(5))
+            .Tag("wallets")
+            .SetVaryByQuery("page", "pageSize", "tenantId"));
+
+        // Credentials list - 10 minutes cache
+        options.AddPolicy("CredentialsList", builder => builder
+            .Expire(TimeSpan.FromMinutes(10))
+            .Tag("credentials")
+            .SetVaryByQuery("page", "pageSize", "walletId"));
+
+        // Templates - 1 hour cache (rarely changes)
+        options.AddPolicy("Templates", builder => builder
+            .Expire(TimeSpan.FromHours(1))
+            .Tag("templates")
+            .SetVaryByQuery("tenantId"));
+
+        // Health check - 30 seconds cache
+        options.AddPolicy("Health", builder => builder
+            .Expire(TimeSpan.FromSeconds(30)));
+
+        // No cache for authenticated requests (POA - can be relaxed later)
+        options.AddPolicy("NoCache", builder => builder
+            .NoCache());
+    });
+
     var app = builder.Build();
 
     // Configure minimal pipeline with security hardening
@@ -209,6 +244,9 @@ try
 
     // SECURITY: Use environment-specific CORS (NO MORE "AllowAll"!)
     app.UseCors(app.Environment.IsProduction() ? "Production" : "Development");
+
+    // PERFORMANCE: Output caching (ASP.NET Core 9)
+    app.UseOutputCache();
 
     app.UseAuthentication();
     app.UseAuthorization();
