@@ -88,13 +88,19 @@ public class WalletTemplateService : IWalletTemplateService
                 field.DisplayOrder);
 
             if (!string.IsNullOrEmpty(field.MappedCredentialField))
+            {
                 clonedField.SetMappedCredentialField(field.MappedCredentialField);
+            }
 
             if (!string.IsNullOrEmpty(field.ValidationRule))
+            {
                 clonedField.SetValidationRule(field.ValidationRule);
+            }
 
             if (!string.IsNullOrEmpty(field.DefaultValue))
+            {
                 clonedField.SetDefaultValue(field.DefaultValue);
+            }
 
             clonedField.UpdateEditability(field.IsEditable);
 

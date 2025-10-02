@@ -103,6 +103,12 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IRequestSigningService, RequestSigningService>();
         services.AddScoped<ISessionService, DistributedSessionService>();
 
+        // Register Password Validators
+        // Multiple validators registered - LoginCommandHandler uses all that support the email domain
+        services.AddScoped<IPasswordValidator, Authentication.TestPasswordValidator>();
+        services.AddScoped<IPasswordValidator, Authentication.AzureAdPasswordValidator>();
+        services.AddScoped<IPasswordValidator, Authentication.ServiceWaPasswordValidator>();
+
         // Register Credential Services
         services.AddScoped<Application.Commands.Credentials.Handlers.ICredentialSharingService, CredentialSharingService>();
 

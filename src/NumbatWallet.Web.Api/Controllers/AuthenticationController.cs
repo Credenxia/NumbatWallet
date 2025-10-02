@@ -94,6 +94,7 @@ public class AuthenticationController : ControllerBase
                 Token = result.AccessToken,
                 RefreshToken = result.RefreshToken,
                 ExpiresIn = result.ExpiresIn,
+                ExpiresAt = result.ExpiresAt,
                 TokenType = result.TokenType,
                 UserId = result.UserId,
                 Email = result.Email,
@@ -143,6 +144,7 @@ public class AuthenticationController : ControllerBase
                 Token = result.AccessToken,
                 RefreshToken = result.RefreshToken,
                 ExpiresIn = result.ExpiresIn,
+                ExpiresAt = result.ExpiresAt,
                 TokenType = result.TokenType,
                 UserId = result.UserId,
                 Email = result.Email,
@@ -308,6 +310,7 @@ public class AuthenticationResponseDto
     public required string Token { get; set; }
     public required string RefreshToken { get; set; }
     public int ExpiresIn { get; set; }
+    public DateTime ExpiresAt { get; set; }
     public required string TokenType { get; set; }
     public string? UserId { get; set; }
     public string? Email { get; set; }

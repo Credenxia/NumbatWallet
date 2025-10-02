@@ -19,17 +19,20 @@ public class LoginCommandHandler : ICommandHandler<LoginCommand, AuthenticationR
     private readonly IPersonRepository _personRepository;
     private readonly IAuthenticationService _authenticationService;
     private readonly IConfiguration _configuration;
+    private readonly IEnumerable<IPasswordValidator> _passwordValidators;
     private readonly ILogger<LoginCommandHandler> _logger;
 
     public LoginCommandHandler(
         IPersonRepository personRepository,
         IAuthenticationService authenticationService,
         IConfiguration configuration,
+        IEnumerable<IPasswordValidator> passwordValidators,
         ILogger<LoginCommandHandler> logger)
     {
         _personRepository = personRepository;
         _authenticationService = authenticationService;
         _configuration = configuration;
+        _passwordValidators = passwordValidators;
         _logger = logger;
     }
 
@@ -51,66 +54,30 @@ public class LoginCommandHandler : ICommandHandler<LoginCommand, AuthenticationR
             throw new UnauthorizedException("Invalid credentials");
         }
 
-        // For POA, we're not storing passwords in Person entity
-        // In production, this would validate against Azure AD or ServiceWA
-        // For now, check against a hardcoded admin account or use mock validation
+        // Authentication via password validators
+        // - AzureAdPasswordValidator: Government officers (@wa.gov.au)
+        // - ServiceWaPasswordValidator: Citizens (other domains)
+        // - TestPasswordValidator: Integration testing only
 
-        bool isAuthenticated = false;
         string[] roles = Array.Empty<string>();
+        bool isAuthenticated = false;
 
-        // POA Mock Authentication:
-        // In production, this would validate against Azure AD or ServiceWA
-        // For testing, we use hardcoded passwords to enable proper test coverage
-
-        var testPasswords = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+        // Find validator that supports this email
+        foreach (var validator in _passwordValidators)
         {
-            ["admin@numbatwallet.wa.gov.au"] = "Test123!@#",
-            ["admin@example.com"] = "Test123!@#",
-            ["officer@example.com"] = "Test123!@#",
-            ["citizen@example.com"] = "Test123!@#",
-            ["test@example.com"] = "Test123!@#",
-            ["tenant1@example.com"] = "Test123!@#",
-            ["john.doe@example.com"] = "Test123!@#"
-        };
-
-        // Check if this is a test account with a known password
-        if (testPasswords.TryGetValue(command.Email, out var expectedPassword))
-        {
-            // Validate password matches expected value
-            if (command.Password == expectedPassword)
+            if (validator.SupportsEmail(command.Email))
             {
-                isAuthenticated = true;
+                _logger.LogDebug("Using {ValidatorType} for {Email}",
+                    validator.GetType().Name, command.Email);
 
-                // Assign roles based on email
-                if (command.Email.Contains("admin", StringComparison.OrdinalIgnoreCase))
-                {
-                    roles = new[] { "Admin", "Officer", "User" };
-                }
-                else if (command.Email.Contains("officer", StringComparison.OrdinalIgnoreCase))
-                {
-                    roles = new[] { "Officer", "User" };
-                }
-                else
-                {
-                    roles = new[] { "User" };
-                }
-            }
-        }
-        else
-        {
-            // For other users, check if they're verified
-            var validStatuses = new[] {
-                SharedKernel.Enums.PersonStatus.Active,
-                SharedKernel.Enums.PersonStatus.Verified,
-                SharedKernel.Enums.PersonStatus.PendingVerification
-            };
+                roles = await validator.ValidateAsync(command.Email, command.Password, cancellationToken);
 
-            if (person.IsVerified && validStatuses.Contains(person.Status) && !string.IsNullOrEmpty(command.Password))
-            {
-                // In production, validate password against identity provider
-                // For POA, accept any password for verified users (not in test list)
-                isAuthenticated = true;
-                roles = new[] { "User" };
+                if (roles.Length > 0)
+                {
+                    isAuthenticated = true;
+                    _logger.LogInformation("Authentication successful for: {Email}", command.Email);
+                    break;
+                }
             }
         }
 
@@ -130,11 +97,14 @@ public class LoginCommandHandler : ICommandHandler<LoginCommand, AuthenticationR
 
         _logger.LogInformation("Login successful for: {Email}", command.Email);
 
+        var expiresAt = DateTime.UtcNow.AddHours(1);
+
         return new AuthenticationResultDto
         {
             AccessToken = token,
             RefreshToken = refreshToken,
             ExpiresIn = 3600, // 1 hour
+            ExpiresAt = expiresAt,
             TokenType = "Bearer",
             UserId = person.Id.ToString(),
             Email = command.Email,
