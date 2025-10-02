@@ -55,7 +55,7 @@ try
     }
 
     // Add Web API specific services
-    builder.Services.AddScoped<ISecurityAuditService, SecurityAuditService>();
+    builder.Services.AddSingleton<ISecurityAuditService, SecurityAuditService>();
 
     // Add security services (input sanitization, CORS, anti-forgery, data protection)
     builder.Services.AddSingleton<IInputSanitizationService, InputSanitizationService>();
