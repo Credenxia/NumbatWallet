@@ -209,6 +209,77 @@ try
             .NoCache());
     });
 
+    // SECURITY: Rate Limiting (ASP.NET Core 9)
+    builder.Services.AddRateLimiter(options =>
+    {
+        // Global rate limit: 100 requests per minute per IP
+        options.GlobalLimiter = System.Threading.RateLimiting.PartitionedRateLimiter.Create<Microsoft.AspNetCore.Http.HttpContext, string>(context =>
+        {
+            var ipAddress = context.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+
+            return System.Threading.RateLimiting.RateLimitPartition.GetFixedWindowLimiter(ipAddress, partition =>
+                new System.Threading.RateLimiting.FixedWindowRateLimiterOptions
+                {
+                    PermitLimit = 100,
+                    Window = TimeSpan.FromMinutes(1),
+                    QueueProcessingOrder = System.Threading.RateLimiting.QueueProcessingOrder.OldestFirst,
+                    QueueLimit = 10
+                });
+        });
+
+        // Authentication endpoints: Stricter limits (5 attempts per 15 minutes)
+        options.AddPolicy("Authentication", context =>
+        {
+            var ipAddress = context.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+
+            return System.Threading.RateLimiting.RateLimitPartition.GetSlidingWindowLimiter(ipAddress, partition =>
+                new System.Threading.RateLimiting.SlidingWindowRateLimiterOptions
+                {
+                    PermitLimit = 5,
+                    Window = TimeSpan.FromMinutes(15),
+                    SegmentsPerWindow = 3,
+                    QueueProcessingOrder = System.Threading.RateLimiting.QueueProcessingOrder.OldestFirst,
+                    QueueLimit = 0
+                });
+        });
+
+        // API endpoints: Token bucket for burst handling
+        options.AddPolicy("Api", context =>
+        {
+            var userId = context.User.Identity?.Name ?? "anonymous";
+
+            return System.Threading.RateLimiting.RateLimitPartition.GetTokenBucketLimiter(userId, partition =>
+                new System.Threading.RateLimiting.TokenBucketRateLimiterOptions
+                {
+                    TokenLimit = 1000,
+                    ReplenishmentPeriod = TimeSpan.FromHours(1),
+                    TokensPerPeriod = 500,
+                    QueueLimit = 100
+                });
+        });
+
+        // Rejection response
+        options.OnRejected = async (context, cancellationToken) =>
+        {
+            context.HttpContext.Response.StatusCode = Microsoft.AspNetCore.Http.StatusCodes.Status429TooManyRequests;
+
+            if (context.Lease.TryGetMetadata(System.Threading.RateLimiting.MetadataName.RetryAfter, out var retryAfter))
+            {
+                context.HttpContext.Response.Headers.RetryAfter = retryAfter.TotalSeconds.ToString();
+            }
+
+            context.HttpContext.Response.Headers.Append("X-RateLimit-Limit", context.Lease.ToString());
+            context.HttpContext.Response.Headers.Append("X-RateLimit-Remaining", "0");
+
+            await context.HttpContext.Response.WriteAsJsonAsync(new
+            {
+                Error = "Too many requests",
+                Message = "Rate limit exceeded. Please try again later.",
+                RetryAfter = retryAfter.TotalSeconds
+            }, cancellationToken);
+        };
+    });
+
     var app = builder.Build();
 
     // Configure minimal pipeline with security hardening
@@ -244,6 +315,9 @@ try
 
     // SECURITY: Use environment-specific CORS (NO MORE "AllowAll"!)
     app.UseCors(app.Environment.IsProduction() ? "Production" : "Development");
+
+    // SECURITY: Rate Limiting (MUST be after CORS, before authentication)
+    app.UseRateLimiter();
 
     // PERFORMANCE: Output caching (ASP.NET Core 9)
     app.UseOutputCache();
