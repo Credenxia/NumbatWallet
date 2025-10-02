@@ -28,6 +28,32 @@ try
     builder.Services.AddApplication();
     builder.Services.AddInfrastructure(builder.Configuration);
 
+    // PERFORMANCE: Add distributed caching with Redis (fallback to in-memory for development)
+    var redisConnectionString = builder.Configuration.GetConnectionString("Redis");
+    if (!string.IsNullOrEmpty(redisConnectionString) && !builder.Environment.IsDevelopment())
+    {
+        try
+        {
+            builder.Services.AddStackExchangeRedisCache(options =>
+            {
+                options.Configuration = redisConnectionString;
+                options.InstanceName = "NumbatWallet_";
+            });
+            Log.Information("Using Redis distributed cache: {ConnectionString}", redisConnectionString);
+        }
+        catch (Exception ex)
+        {
+            Log.Warning(ex, "Failed to connect to Redis. Falling back to in-memory cache.");
+            builder.Services.AddDistributedMemoryCache();
+        }
+    }
+    else
+    {
+        // Development: Use in-memory cache
+        builder.Services.AddDistributedMemoryCache();
+        Log.Information("Using in-memory distributed cache (Development mode)");
+    }
+
     // Add Web API specific services
     builder.Services.AddScoped<ISecurityAuditService, SecurityAuditService>();
 
@@ -202,6 +228,14 @@ try
     builder.Services.AddExceptionHandler<NumbatWallet.Web.Api.Middleware.ValidationExceptionHandler>();
     builder.Services.AddProblemDetails();
 
+    // PERFORMANCE: Add response caching (client-side HTTP cache headers)
+    builder.Services.AddResponseCaching(options =>
+    {
+        options.MaximumBodySize = 1024 * 1024 * 10; // 10 MB
+        options.UseCaseSensitivePaths = true;
+        options.SizeLimit = 100 * 1024 * 1024; // 100 MB cache size
+    });
+
     // Add output caching (ASP.NET Core 9 feature)
     builder.Services.AddOutputCache(options =>
     {
@@ -328,6 +362,9 @@ try
     // SECURITY: Add comprehensive security headers
     app.UseMiddleware<NumbatWallet.Web.Api.Middleware.SecurityHeadersMiddleware>();
 
+    // SECURITY: Input sanitization (validate content-type, check for injection attempts)
+    app.UseMiddleware<NumbatWallet.Web.Api.Middleware.InputSanitizationMiddleware>();
+
     // SECURITY: Add security audit logging for 401/403 responses
     app.UseMiddleware<NumbatWallet.Web.Api.Security.SecurityAuditMiddleware>();
 
@@ -343,6 +380,9 @@ try
 
     // SECURITY: Use environment-specific CORS (NO MORE "AllowAll"!)
     app.UseCors(app.Environment.IsProduction() ? "Production" : "Development");
+
+    // PERFORMANCE: Response caching (client-side HTTP cache headers)
+    app.UseResponseCaching();
 
     // SECURITY: Rate Limiting (MUST be after CORS, before authentication)
     app.UseRateLimiter();
