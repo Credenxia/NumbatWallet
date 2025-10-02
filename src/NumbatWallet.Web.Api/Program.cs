@@ -34,6 +34,41 @@ try
     // Add security services (input sanitization, CORS, anti-forgery, data protection)
     builder.Services.AddSingleton<IInputSanitizationService, InputSanitizationService>();
 
+    // Configure security headers
+    builder.Services.Configure<NumbatWallet.Web.Api.Middleware.SecurityHeadersOptions>(options =>
+    {
+        options.UseHsts = true;
+        options.HstsMaxAge = 31536000; // 1 year
+        options.XFrameOptions = "DENY";
+        options.ReferrerPolicy = "strict-origin-when-cross-origin";
+        options.CspDefaultSrc = "'self'";
+        options.CspScriptSrc = "'self'";
+        options.CspStyleSrc = "'self'";
+        options.CspImgSrc = "'self' data: https:";
+        options.CspFontSrc = "'self' data:";
+        options.CspConnectSrc = "'self'";
+        options.AllowInlineScripts = false;
+        options.AllowInlineStyles = false;
+        options.UpgradeInsecureRequests = true;
+        options.BlockAllMixedContent = true;
+        options.EnableCors = false; // We handle CORS separately
+
+        // Development vs Production origins
+        if (builder.Environment.IsDevelopment())
+        {
+            options.CspScriptSrc += " 'unsafe-inline' 'unsafe-eval'"; // For Swagger UI
+            options.CspStyleSrc += " 'unsafe-inline'"; // For Swagger UI
+        }
+    });
+
+    // Configure request size limits for Kestrel (10 MB max)
+    builder.Services.Configure<Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerOptions>(options =>
+    {
+        options.Limits.MaxRequestBodySize = 10 * 1024 * 1024; // 10 MB
+        options.Limits.MaxRequestHeadersTotalSize = 32 * 1024; // 32 KB
+        options.Limits.MaxRequestLineSize = 8 * 1024; // 8 KB
+    });
+
     // Add Controllers with JSON configuration
     builder.Services.AddControllers()
         .AddJsonOptions(options =>
@@ -58,15 +93,37 @@ try
         options.SubstituteApiVersionInUrl = true;
     });
 
-    // Add basic CORS
+    // Add production-ready CORS configuration
     builder.Services.AddCors(options =>
     {
-        options.AddPolicy("AllowAll", builder =>
+        // Production policy - whitelist specific origins
+        options.AddPolicy("Production", policy =>
         {
-            builder
-                .AllowAnyOrigin()
-                .AllowAnyMethod()
-                .AllowAnyHeader();
+            policy.WithOrigins(
+                "https://wallet.numbatwallet.gov.au",
+                "https://admin.numbatwallet.gov.au",
+                "https://api.numbatwallet.gov.au"
+            )
+            .AllowCredentials()
+            .AllowAnyMethod()
+            .AllowAnyHeader()
+            .WithExposedHeaders("X-Total-Count", "X-Page-Number", "X-RateLimit-Limit", "X-RateLimit-Remaining")
+            .SetPreflightMaxAge(TimeSpan.FromHours(24));
+        });
+
+        // Development policy - localhost only
+        options.AddPolicy("Development", policy =>
+        {
+            policy.WithOrigins(
+                "http://localhost:3000",
+                "http://localhost:5173",
+                "http://localhost:4200",
+                "http://localhost:5000"
+            )
+            .AllowCredentials()
+            .AllowAnyMethod()
+            .AllowAnyHeader()
+            .WithExposedHeaders("X-Total-Count", "X-Page-Number", "X-RateLimit-Limit", "X-RateLimit-Remaining");
         });
     });
 
@@ -119,8 +176,23 @@ try
 
     var app = builder.Build();
 
-    // Configure minimal pipeline
+    // Configure minimal pipeline with security hardening
     app.UseExceptionHandler(); // Global exception handling with ProblemDetails
+
+    // SECURITY: Force HTTPS redirection (except in development)
+    if (!app.Environment.IsDevelopment())
+    {
+        app.UseHttpsRedirection();
+    }
+
+    // SECURITY: HTTP Strict Transport Security (HSTS)
+    if (!app.Environment.IsDevelopment())
+    {
+        app.UseHsts();
+    }
+
+    // SECURITY: Add comprehensive security headers
+    app.UseMiddleware<NumbatWallet.Web.Api.Middleware.SecurityHeadersMiddleware>();
 
     if (app.Environment.IsDevelopment())
     {
@@ -132,7 +204,9 @@ try
         });
     }
 
-    app.UseCors("AllowAll");
+    // SECURITY: Use environment-specific CORS (NO MORE "AllowAll"!)
+    app.UseCors(app.Environment.IsProduction() ? "Production" : "Development");
+
     app.UseAuthentication();
     app.UseAuthorization();
 
