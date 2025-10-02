@@ -194,6 +194,9 @@ try
     // SECURITY: Add comprehensive security headers
     app.UseMiddleware<NumbatWallet.Web.Api.Middleware.SecurityHeadersMiddleware>();
 
+    // SECURITY: Add security audit logging for 401/403 responses
+    app.UseMiddleware<NumbatWallet.Web.Api.Security.SecurityAuditMiddleware>();
+
     if (app.Environment.IsDevelopment())
     {
         app.UseSwagger();
