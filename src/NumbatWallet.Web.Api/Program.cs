@@ -1,5 +1,6 @@
 using NumbatWallet.Application.DependencyInjection;
 using NumbatWallet.Infrastructure.DependencyInjection;
+using NumbatWallet.Web.Api.Extensions;
 using NumbatWallet.Web.Api.Security;
 using Serilog;
 using System.Text.Json;
@@ -27,6 +28,10 @@ try
     // Add essential services
     builder.Services.AddApplication();
     builder.Services.AddInfrastructure(builder.Configuration);
+
+    // GRAPHQL: Add GraphQL server with schema
+    builder.Services.AddGraphQLServer(builder.Configuration);
+    Log.Information("GraphQL server configured at /graphql endpoint");
 
     // PERFORMANCE: Add distributed caching with Redis (fallback to in-memory for development)
     var redisConnectionString = builder.Configuration.GetConnectionString("Redis");
@@ -396,11 +401,16 @@ try
     // Map controllers
     app.MapControllers();
 
+    // GRAPHQL: Map GraphQL endpoint
+    app.MapGraphQL();
+
     // Add a simple health check endpoint
     app.MapGet("/health", () => new { Status = "Healthy", Timestamp = DateTime.UtcNow });
 
-    Log.Information("NumbatWallet Web API (Minimal) configured successfully");
+    Log.Information("NumbatWallet Web API configured successfully");
     Log.Information("Swagger UI available at: http://localhost:5000");
+    Log.Information("GraphQL endpoint available at: http://localhost:5000/graphql");
+    Log.Information("GraphQL playground available at: http://localhost:5000/graphql (Development mode)");
     Log.Information("Health check available at: http://localhost:5000/health");
     Log.Information("Wallet generation endpoints available at: http://localhost:5000/api/v1.0/wallet-generation/");
 

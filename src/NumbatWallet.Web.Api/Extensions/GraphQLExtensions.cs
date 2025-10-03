@@ -69,8 +69,16 @@ public static class GraphQLExtensions
     {
         var environment = app.Environment.EnvironmentName;
 
-        app.MapGraphQL("/graphql")
-            .RequireAuthorization();
+        // Allow anonymous access in Development for schema export and testing
+        if (environment == "Development")
+        {
+            app.MapGraphQL("/graphql");
+        }
+        else
+        {
+            app.MapGraphQL("/graphql")
+                .RequireAuthorization();
+        }
 
         // TODO: Enable GraphQL Voyager when package is available
         // if (environment != "Production")

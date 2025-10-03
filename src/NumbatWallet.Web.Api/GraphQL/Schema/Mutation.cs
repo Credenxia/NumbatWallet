@@ -5,6 +5,7 @@ using NumbatWallet.Application.Commands.Wallets;
 using NumbatWallet.Application.Wallets.Commands.CreateWallet;
 using NumbatWallet.Application.DTOs;
 using NumbatWallet.Domain.Enums;
+using System.Text.Json;
 using WalletCommands = NumbatWallet.Application.Commands.Wallets;
 
 namespace NumbatWallet.Web.Api.GraphQL.Schema;
@@ -177,11 +178,14 @@ public class Mutation
         var issuerId = httpContextAccessor.HttpContext?.User.FindFirst("sub")?.Value
             ?? throw new UnauthorizedException("Issuer not authenticated");
 
+        var claims = JsonSerializer.Deserialize<Dictionary<string, object>>(input.ClaimsJson)
+            ?? throw new ArgumentException("Invalid ClaimsJson format");
+
         var command = new IssueCredentialCommand(
             input.WalletId,
             input.CredentialType,
             input.Subject,
-            input.Claims,
+            claims,
             input.ValidFrom ?? DateTime.UtcNow,
             input.ValidUntil,
             issuerId,
@@ -250,10 +254,13 @@ public class Mutation
         var issuerId = httpContextAccessor.HttpContext?.User.FindFirst("sub")?.Value
             ?? throw new UnauthorizedException("Issuer not authenticated");
 
+        var template = JsonSerializer.Deserialize<Dictionary<string, object>>(input.TemplateJson)
+            ?? throw new ArgumentException("Invalid TemplateJson format");
+
         var command = new BulkIssueCredentialsCommand(
             input.WalletIds,
             input.CredentialType,
-            input.Template,
+            template,
             issuerId,
             input.IssuerOrganizationId,
             input.ValidFrom ?? DateTime.UtcNow,
@@ -338,7 +345,8 @@ public class IssueCredentialInput
     public Guid WalletId { get; set; }
     public required CredentialType CredentialType { get; set; }
     public required string Subject { get; set; }
-    public required Dictionary<string, object> Claims { get; set; }
+    [GraphQLDescription("JSON string containing credential claims")]
+    public required string ClaimsJson { get; set; }
     public DateTime? ValidFrom { get; set; }
     public DateTime? ValidUntil { get; set; }
     public Guid IssuerOrganizationId { get; set; }
@@ -363,10 +371,43 @@ public class BulkIssueCredentialsInput
 {
     public required List<Guid> WalletIds { get; set; }
     public required CredentialType CredentialType { get; set; }
-    public required Dictionary<string, object> Template { get; set; }
+    [GraphQLDescription("JSON string containing credential template")]
+    public required string TemplateJson { get; set; }
     public Guid IssuerOrganizationId { get; set; }
     public DateTime? ValidFrom { get; set; }
     public DateTime? ValidUntil { get; set; }
+}
+
+public class VerifyCredentialInput
+{
+    public required string CredentialId { get; set; }
+    public string? CredentialData { get; set; }
+    public bool CheckRevocation { get; set; } = true;
+    public bool CheckExpiry { get; set; } = true;
+    public bool CheckSignature { get; set; } = true;
+    public bool? CheckSchema { get; set; }
+    public bool? RequireTrustChain { get; set; }
+}
+
+public class CreateIssuanceInput
+{
+    public required string CredentialType { get; set; }
+    public required Guid WalletId { get; set; }
+    public List<string>? RequiredDocuments { get; set; }
+    [GraphQLDescription("JSON string containing additional data")]
+    public string? AdditionalDataJson { get; set; }
+}
+
+public class ApproveIssuanceInput
+{
+    public required Guid IssuanceId { get; set; }
+    public string? Comments { get; set; }
+}
+
+public class RejectIssuanceInput
+{
+    public required Guid IssuanceId { get; set; }
+    public required string Reason { get; set; }
 }
 
 // Result Types

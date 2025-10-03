@@ -2,7 +2,7 @@ using NumbatWallet.Application.Commands.Credentials;
 using NumbatWallet.Application.Commands.Issuances;
 using NumbatWallet.Application.CQRS.Interfaces;
 using NumbatWallet.Application.DTOs;
-using NumbatWallet.Web.Api.GraphQL.Types;
+using NumbatWallet.Web.Api.GraphQL.Schema;
 using NumbatWallet.Web.Api.Security;
 using System.Security.Claims;
 
@@ -14,7 +14,6 @@ namespace NumbatWallet.Web.Api.GraphQL.Mutations;
 [ExtendObjectType("Mutation")]
 public class CredentialMutation
 {
-    private readonly ICommandHandler<IssueCredentialCommand, CredentialDto> _issueCredentialHandler;
     private readonly ICommandHandler<VerifyCredentialCommand, VerificationResultDto> _verifyCredentialHandler;
     private readonly ICommandHandler<RevokeCredentialCommand, bool> _revokeCredentialHandler;
     private readonly ICommandHandler<CreateIssuanceCommand, IssuanceDto> _createIssuanceHandler;
@@ -24,7 +23,6 @@ public class CredentialMutation
     private readonly ILogger<CredentialMutation> _logger;
 
     public CredentialMutation(
-        ICommandHandler<IssueCredentialCommand, CredentialDto> issueCredentialHandler,
         ICommandHandler<VerifyCredentialCommand, VerificationResultDto> verifyCredentialHandler,
         ICommandHandler<RevokeCredentialCommand, bool> revokeCredentialHandler,
         ICommandHandler<CreateIssuanceCommand, IssuanceDto> createIssuanceHandler,
@@ -33,7 +31,6 @@ public class CredentialMutation
         ISecurityAuditService auditService,
         ILogger<CredentialMutation> logger)
     {
-        _issueCredentialHandler = issueCredentialHandler;
         _verifyCredentialHandler = verifyCredentialHandler;
         _revokeCredentialHandler = revokeCredentialHandler;
         _createIssuanceHandler = createIssuanceHandler;
@@ -41,47 +38,6 @@ public class CredentialMutation
         _rejectIssuanceHandler = rejectIssuanceHandler;
         _auditService = auditService;
         _logger = logger;
-    }
-
-    /// <summary>
-    /// Issue a new credential
-    /// </summary>
-    [GraphQLDescription("Issue a new verifiable credential")]
-    [HotChocolate.Authorization.Authorize(Roles = new[] { "Issuer", "Admin" })]
-    public async Task<CredentialDto> IssueCredential(
-        IssueCredentialInput input,
-        [Service] IHttpContextAccessor httpContextAccessor)
-    {
-        var httpContext = httpContextAccessor.HttpContext;
-        var userId = httpContext?.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-
-        _logger.LogInformation("Issuing credential of type {Type} for holder {HolderId}",
-            input.Type, input.HolderId);
-
-        if (httpContext != null)
-        {
-            await _auditService.LogSecurityEventAsync(
-                httpContext,
-                SecurityEventType.DataModification,
-                $"Credential issuance: {input.Type}");
-        }
-
-        // Map credential type string to enum
-        var credentialType = Enum.TryParse<Domain.Enums.CredentialType>(input.Type, true, out var ct)
-            ? ct : Domain.Enums.CredentialType.VerifiableCredential;
-
-        var command = new IssueCredentialCommand(
-            WalletId: Guid.Parse(input.HolderId), // Assuming HolderId is actually a wallet ID
-            CredentialType: credentialType,
-            Subject: input.Type,
-            Claims: input.CredentialSubject,
-            ValidFrom: DateTime.UtcNow,
-            ValidUntil: input.ExpirationDate,
-            IssuerId: userId ?? "system",
-            IssuerOrganizationId: Guid.Empty); // Would need to get from context
-
-        var credential = await _issueCredentialHandler.HandleAsync(command);
-        return credential;
     }
 
     /// <summary>
@@ -139,7 +95,7 @@ public class CredentialMutation
         }
 
         var command = new RevokeCredentialCommand(
-            CredentialId: Guid.Parse(input.CredentialId),
+            CredentialId: input.CredentialId,
             Reason: input.Reason,
             RevokerId: userId ?? "system");
 
@@ -170,11 +126,16 @@ public class CredentialMutation
                 $"Issuance request created: {input.CredentialType}");
         }
 
+        var additionalData = string.IsNullOrEmpty(input.AdditionalDataJson)
+            ? new Dictionary<string, object>()
+            : System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, object>>(input.AdditionalDataJson)
+              ?? new Dictionary<string, object>();
+
         var command = new CreateIssuanceCommand(
             CredentialType: input.CredentialType,
             WalletId: input.WalletId,
             RequesterId: userId ?? "system",
-            Claims: input.AdditionalData ?? new Dictionary<string, object>(),
+            Claims: additionalData,
             ExpiryDate: null,
             Metadata: input.RequiredDocuments != null
                 ? new Dictionary<string, string> { ["required_documents"] = string.Join(",", input.RequiredDocuments) }
