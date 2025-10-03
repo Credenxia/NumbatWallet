@@ -2,6 +2,7 @@ using FluentValidation;
 using Microsoft.Extensions.Logging;
 using NumbatWallet.Application.Common.Exceptions;
 using NumbatWallet.Application.CQRS.Interfaces;
+using NumbatWallet.Application.Interfaces;
 using NumbatWallet.Domain.Interfaces;
 using NumbatWallet.SharedKernel.Interfaces;
 
@@ -11,15 +12,18 @@ public class ChangePasswordCommandHandler : ICommandHandler<ChangePasswordComman
 {
     private readonly IPersonRepository _personRepository;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly IEnumerable<IPasswordValidator> _passwordValidators;
     private readonly ILogger<ChangePasswordCommandHandler> _logger;
 
     public ChangePasswordCommandHandler(
         IPersonRepository personRepository,
         IUnitOfWork unitOfWork,
+        IEnumerable<IPasswordValidator> passwordValidators,
         ILogger<ChangePasswordCommandHandler> logger)
     {
         _personRepository = personRepository;
         _unitOfWork = unitOfWork;
+        _passwordValidators = passwordValidators;
         _logger = logger;
     }
 
@@ -61,8 +65,33 @@ public class ChangePasswordCommandHandler : ICommandHandler<ChangePasswordComman
         if (!string.IsNullOrWhiteSpace(command.CurrentPassword))
         {
             _logger.LogInformation("Password change requested with current password validation for user: {UserId}", command.UserId);
-            // In production, Azure AD would validate the current password
-            // For POA, we accept any current password for testing purposes
+
+            // Validate current password using the same validators as login
+            bool isCurrentPasswordValid = false;
+
+            foreach (var validator in _passwordValidators)
+            {
+                if (validator.SupportsEmail(person.Email))
+                {
+                    _logger.LogDebug("Using {ValidatorType} to validate current password for {Email}",
+                        validator.GetType().Name, person.Email);
+
+                    var roles = await validator.ValidateAsync(person.Email, command.CurrentPassword, cancellationToken);
+
+                    if (roles.Length > 0)
+                    {
+                        isCurrentPasswordValid = true;
+                        _logger.LogInformation("Current password validated successfully for: {Email}", person.Email);
+                        break;
+                    }
+                }
+            }
+
+            if (!isCurrentPasswordValid)
+            {
+                _logger.LogWarning("Password change failed - invalid current password for user: {UserId}", command.UserId);
+                throw new ValidationException("Current password is incorrect");
+            }
         }
 
         // Log the password change (no actual password storage in Person entity)

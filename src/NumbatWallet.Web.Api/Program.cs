@@ -159,14 +159,14 @@ try
     });
 
     // AUTHENTICATION: Environment-specific configuration
-    if (builder.Environment.IsDevelopment())
+    if (builder.Environment.IsDevelopment() || builder.Environment.IsEnvironment("Testing"))
     {
-        // Development: Use test handler for easier testing
+        // Development/Testing: Use test handler for easier testing
         builder.Services.AddAuthentication("Test")
             .AddScheme<Microsoft.AspNetCore.Authentication.AuthenticationSchemeOptions, NumbatWallet.Web.Api.Authentication.TestAuthenticationHandler>(
                 "Test", options => { });
 
-        Log.Information("Using TEST authentication handler (Development only)");
+        Log.Information("Using TEST authentication handler (Development/Testing only)");
     }
     else
     {
@@ -295,15 +295,22 @@ try
         });
 
         // Authentication endpoints: Stricter limits (5 attempts per 15 minutes)
+        // Testing environment: Higher limits for integration tests
         options.AddPolicy("Authentication", context =>
         {
             var ipAddress = context.Connection.RemoteIpAddress?.ToString() ?? "unknown";
 
+            // Testing: 100 requests/min for integration tests
+            // Production: 5 requests/15min to prevent brute force
+            var (permitLimit, window) = builder.Environment.IsEnvironment("Testing")
+                ? (100, TimeSpan.FromMinutes(1))
+                : (5, TimeSpan.FromMinutes(15));
+
             return System.Threading.RateLimiting.RateLimitPartition.GetSlidingWindowLimiter(ipAddress, partition =>
                 new System.Threading.RateLimiting.SlidingWindowRateLimiterOptions
                 {
-                    PermitLimit = 5,
-                    Window = TimeSpan.FromMinutes(15),
+                    PermitLimit = permitLimit,
+                    Window = window,
                     SegmentsPerWindow = 3,
                     QueueProcessingOrder = System.Threading.RateLimiting.QueueProcessingOrder.OldestFirst,
                     QueueLimit = 0
@@ -397,6 +404,9 @@ try
 
     app.UseAuthentication();
     app.UseAuthorization();
+
+    // SDK: API Key authentication for service accounts (after authorization)
+    app.UseApiKeyAuthentication();
 
     // Map controllers
     app.MapControllers();

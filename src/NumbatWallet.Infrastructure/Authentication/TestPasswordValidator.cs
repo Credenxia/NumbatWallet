@@ -23,6 +23,7 @@ public class TestPasswordValidator : IPasswordValidator
         {
             ["admin@numbatwallet.wa.gov.au"] = ("Test123!@#", new[] { "Admin", "Officer", "User" }),
             ["admin@example.com"] = ("Test123!@#", new[] { "Admin", "Officer", "User" }),
+            ["multirole@example.com"] = ("Test123!@#", new[] { "Admin", "Issuer", "User" }),
             ["officer@example.com"] = ("Test123!@#", new[] { "Officer", "User" }),
             ["citizen@example.com"] = ("Test123!@#", new[] { "User" }),
             ["test@example.com"] = ("Test123!@#", new[] { "User" }),

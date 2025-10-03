@@ -74,6 +74,9 @@ public static class ServiceCollectionExtensions
         services.AddScoped<ICertificateManagementService, CertificateManagementService>();
         // Note: IHealthCheckService is registered in Infrastructure layer
 
+        // Register Token Blacklist Service (Singleton for state persistence)
+        services.AddSingleton<ITokenBlacklistService, TokenBlacklistService>();
+
         // Register Bulk Operation Services
         services.AddSingleton<IBulkOperationStatusService, BulkOperationStatusService>();
         services.AddHostedService<BulkOperationCleanupService>();

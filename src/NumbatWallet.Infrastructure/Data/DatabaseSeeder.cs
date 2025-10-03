@@ -254,7 +254,26 @@ public class DatabaseSeeder : IDatabaseSeeder
             tenantId: currentTenantId);
         SetVerificationStatus(johnDoe, SharedKernel.Enums.VerificationStatus.Verified);
 
-        var testPersons = new[] { citizen, officer, admin, testUser, johnDoe };
+        // Additional users for authorization policy tests
+        var multiRole = new Person(
+            firstName: "Multi",
+            lastName: "Role",
+            dateOfBirth: new DateOnly(1988, 8, 8),
+            email: "multirole@example.com",
+            externalId: "TEST-MULTIROLE-001",
+            tenantId: currentTenantId);
+        SetVerificationStatus(multiRole, SharedKernel.Enums.VerificationStatus.Verified);
+
+        var tenantA = new Person(
+            firstName: "Tenant",
+            lastName: "A User",
+            dateOfBirth: new DateOnly(1992, 2, 2),
+            email: "tenanta@example.com",
+            externalId: "TEST-TENANTA-001",
+            tenantId: currentTenantId);
+        SetVerificationStatus(tenantA, SharedKernel.Enums.VerificationStatus.Verified);
+
+        var testPersons = new[] { citizen, officer, admin, testUser, johnDoe, multiRole, tenantA };
 
         await context.Persons.AddRangeAsync(testPersons, cancellationToken);
         _logger.LogInformation("Seeded {Count} test persons for integration tests", testPersons.Length);

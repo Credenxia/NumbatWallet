@@ -78,41 +78,6 @@ public class CredentialType : ObjectType<CredentialDto>
 }
 
 /// <summary>
-/// Input type for issuing a credential
-/// </summary>
-public class IssueCredentialInput
-{
-    public required string HolderId { get; set; }
-    public required string Type { get; set; }
-    public required Dictionary<string, object> CredentialSubject { get; set; }
-    public DateTime? ExpirationDate { get; set; }
-    public Dictionary<string, string>? Metadata { get; set; }
-}
-
-/// <summary>
-/// Input type for verifying a credential
-/// </summary>
-public class VerifyCredentialInput
-{
-    public required string CredentialId { get; set; }
-    public string? CredentialData { get; set; }
-    public bool CheckRevocation { get; set; } = true;
-    public bool CheckExpiry { get; set; } = true;
-    public bool CheckSignature { get; set; } = true;
-    public bool? CheckSchema { get; set; }
-    public bool? RequireTrustChain { get; set; }
-}
-
-/// <summary>
-/// Input type for revoking a credential
-/// </summary>
-public class RevokeCredentialInput
-{
-    public required string CredentialId { get; set; }
-    public required string Reason { get; set; }
-}
-
-/// <summary>
 /// Type for credential verification result
 /// </summary>
 public class VerificationResultType : ObjectType<VerificationResultDto>
@@ -201,35 +166,6 @@ public class IssuanceType : ObjectType<IssuanceDto>
         descriptor.Field(i => i.CredentialId)
             .Description("The ID of the issued credential");
     }
-}
-
-/// <summary>
-/// Input type for creating an issuance
-/// </summary>
-public class CreateIssuanceInput
-{
-    public required string CredentialType { get; set; }
-    public required Guid WalletId { get; set; }
-    public List<string>? RequiredDocuments { get; set; }
-    public Dictionary<string, object>? AdditionalData { get; set; }
-}
-
-/// <summary>
-/// Input type for approving an issuance
-/// </summary>
-public class ApproveIssuanceInput
-{
-    public required Guid IssuanceId { get; set; }
-    public string? Comments { get; set; }
-}
-
-/// <summary>
-/// Input type for rejecting an issuance
-/// </summary>
-public class RejectIssuanceInput
-{
-    public required Guid IssuanceId { get; set; }
-    public required string Reason { get; set; }
 }
 
 /// <summary>

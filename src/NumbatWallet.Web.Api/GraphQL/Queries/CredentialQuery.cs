@@ -368,7 +368,7 @@ public class CredentialQuery
     /// </summary>
     [GraphQLDescription("Get statistical information about issuances")]
     [HotChocolate.Authorization.Authorize(Roles = new[] { "Admin" })]
-    public async Task<IssuanceStatistics> GetIssuanceStatistics(
+    public async Task<IssuanceProcessStatistics> GetIssuanceStatistics(
         DateTime? startDate = null,
         DateTime? endDate = null)
     {
@@ -400,7 +400,7 @@ public class CredentialQuery
             ? TimeSpan.FromMinutes(processedIssuances.Average(i => (i.CompletedAt!.Value - i.CreatedAt).TotalMinutes))
             : TimeSpan.Zero;
 
-        var stats = new IssuanceStatistics
+        var stats = new IssuanceProcessStatistics
         {
             TotalIssuances = allIssuances.Count,
             PendingIssuances = pendingIssuances.Count,
@@ -438,7 +438,7 @@ public class CredentialStatistics
 /// <summary>
 /// Issuance statistics model
 /// </summary>
-public class IssuanceStatistics
+public class IssuanceProcessStatistics
 {
     public int TotalIssuances { get; set; }
     public int PendingIssuances { get; set; }

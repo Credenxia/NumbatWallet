@@ -133,8 +133,13 @@ public class CredentialController : ControllerBase
             SecurityEventType.DataAccess,
             $"Wallet credentials access: {walletId}");
 
-        // Tenant filtering is handled by repository layer via ICurrentTenantService
-        var query = new GetCredentialsByWalletQuery(Guid.Empty, walletId, false);
+        // Extract tenant ID from JWT claims
+        var tenantIdClaim = User.FindFirst("tenant_id")?.Value;
+        var tenantId = !string.IsNullOrEmpty(tenantIdClaim) && Guid.TryParse(tenantIdClaim, out var tid)
+            ? tid
+            : Guid.Empty;
+
+        var query = new GetCredentialsByWalletQuery(tenantId, walletId, false);
         var result = await _getCredentialsByWalletHandler.HandleAsync(query);
 
         return Ok(result);
@@ -168,7 +173,7 @@ public class CredentialController : ControllerBase
     /// </summary>
     [HttpPost("{id:guid}/revoke")]
     [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Issuer,Admin")]
-    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> RevokeCredential(Guid id, [FromBody] RevokeCredentialRequestDto request)
     {
@@ -193,7 +198,7 @@ public class CredentialController : ControllerBase
             return NotFound($"Credential {id} not found");
         }
 
-        return NoContent();
+        return Ok(new { message = "Credential revoked successfully", credentialId = id });
     }
 
     /// <summary>

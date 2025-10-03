@@ -87,8 +87,8 @@ public class LoginCommandHandler : ICommandHandler<LoginCommand, AuthenticationR
             throw new UnauthorizedException("Invalid credentials");
         }
 
-        // Generate JWT token
-        var token = GenerateJwtToken(person.Id.ToString(), command.Email, roles);
+        // Generate JWT token with tenant context
+        var token = GenerateJwtToken(person.Id.ToString(), command.Email, roles, person.TenantId);
         var refreshToken = GenerateRefreshToken();
 
         // Store refresh token for validation (POA implementation)
@@ -120,7 +120,7 @@ public class LoginCommandHandler : ICommandHandler<LoginCommand, AuthenticationR
         };
     }
 
-    private string GenerateJwtToken(string userId, string email, string[] roles)
+    private string GenerateJwtToken(string userId, string email, string[] roles, string tenantId)
     {
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(
             _configuration["Jwt:Key"] ?? _configuration["Jwt:SecretKey"] ?? "ThisIsADevelopmentSecretKeyThatIs256BitsLong!!"));
@@ -131,7 +131,9 @@ public class LoginCommandHandler : ICommandHandler<LoginCommand, AuthenticationR
             new Claim(ClaimTypes.NameIdentifier, userId),
             new Claim(ClaimTypes.Email, email),
             new Claim(JwtRegisteredClaimNames.Sub, email),
-            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+            new Claim("tenant_id", tenantId),
+            new Claim("user_id", userId)
         };
 
         foreach (var role in roles)

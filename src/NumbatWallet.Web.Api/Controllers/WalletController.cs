@@ -14,7 +14,8 @@ namespace NumbatWallet.Web.Api.Controllers;
 /// POA: Real implementation for wallet operations
 /// </summary>
 [ApiController]
-[Route("api/v1/[controller]")]
+[Route("api/v1/wallet")]
+[Route("api/v1/wallets")] // Support plural for backwards compatibility
 [Microsoft.AspNetCore.Authorization.Authorize]
 public class WalletController : ControllerBase
 {
@@ -93,6 +94,28 @@ public class WalletController : ControllerBase
             _logger.LogError(ex, "Unexpected error creating wallet");
             return StatusCode(500, new { error = "An error occurred while creating the wallet" });
         }
+    }
+
+    /// <summary>
+    /// Get all wallets for the current user
+    /// </summary>
+    [HttpGet]
+    [ProducesResponseType(typeof(List<WalletDto>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetMyWallets(CancellationToken cancellationToken)
+    {
+        var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+
+        if (string.IsNullOrEmpty(userId) || !Guid.TryParse(userId, out var personId))
+        {
+            return Ok(new List<WalletDto>()); // Return empty list if no valid user ID
+        }
+
+        _logger.LogInformation("Getting wallets for person {PersonId}", personId);
+
+        var query = new GetWalletsByPersonQuery(personId);
+        var wallets = await _getWalletsByPersonHandler.HandleAsync(query, cancellationToken);
+
+        return Ok(wallets);
     }
 
     /// <summary>

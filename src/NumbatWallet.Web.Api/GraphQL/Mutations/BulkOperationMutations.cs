@@ -27,7 +27,7 @@ public class BulkOperationMutations
         var command = new BulkIssueCredentialsCommand(
             input.WalletIds.Select(id => Guid.Parse(id)).ToList(),
             input.CredentialType,
-            input.Template ?? new Dictionary<string, object>(),
+            input.Template,
             input.IssuerId,
             Guid.Parse(input.IssuerOrganizationId),
             input.ValidFrom ?? DateTime.UtcNow,

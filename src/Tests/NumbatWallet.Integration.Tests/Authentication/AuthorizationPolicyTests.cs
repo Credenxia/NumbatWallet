@@ -32,7 +32,7 @@ public class AuthorizationPolicyTests : IntegrationTestBase
         var loginResponse = await Client.PostAsJsonAsync("/api/v1/authentication/login", loginRequest);
         var authResult = await loginResponse.Content.ReadFromJsonAsync<AuthenticationResponseDto>(JsonOptions);
 
-        Client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", authResult!.Token);
+        Client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", authResult!.AccessToken);
 
         // Act - Try to access wallet endpoints
         var response = await Client.GetAsync("/api/v1/wallets");
@@ -53,7 +53,7 @@ public class AuthorizationPolicyTests : IntegrationTestBase
         var loginResponse = await Client.PostAsJsonAsync("/api/v1/authentication/login", loginRequest);
         var authResult = await loginResponse.Content.ReadFromJsonAsync<AuthenticationResponseDto>(JsonOptions);
 
-        Client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", authResult!.Token);
+        Client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", authResult!.AccessToken);
 
         // Act - Try to access issuer endpoints
         var response = await Client.GetAsync("/api/v1/credentials/issue");
@@ -74,7 +74,7 @@ public class AuthorizationPolicyTests : IntegrationTestBase
         var loginResponse = await Client.PostAsJsonAsync("/api/v1/authentication/login", loginRequest);
         var authResult = await loginResponse.Content.ReadFromJsonAsync<AuthenticationResponseDto>(JsonOptions);
 
-        Client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", authResult!.Token);
+        Client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", authResult!.AccessToken);
 
         // Act - Try to access admin endpoints
         var response = await Client.GetAsync("/api/v1/admin/tenants");
@@ -95,7 +95,7 @@ public class AuthorizationPolicyTests : IntegrationTestBase
         var loginResponse = await Client.PostAsJsonAsync("/api/v1/authentication/login", loginRequest);
         var authResult = await loginResponse.Content.ReadFromJsonAsync<AuthenticationResponseDto>(JsonOptions);
 
-        Client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", authResult!.Token);
+        Client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", authResult!.AccessToken);
 
         // Act - Try to access admin endpoints
         var response = await Client.GetAsync("/api/v1/admin/tenants");
@@ -116,7 +116,7 @@ public class AuthorizationPolicyTests : IntegrationTestBase
         var loginResponse = await Client.PostAsJsonAsync("/api/v1/authentication/login", loginRequest);
         var authResult = await loginResponse.Content.ReadFromJsonAsync<AuthenticationResponseDto>(JsonOptions);
 
-        Client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", authResult!.Token);
+        Client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", authResult!.AccessToken);
         Client.DefaultRequestHeaders.Add("X-Tenant-Id", "tenant-b"); // Try to access tenant B data
 
         // Act - Try to get wallets from tenant B
@@ -149,7 +149,7 @@ public class AuthorizationPolicyTests : IntegrationTestBase
         }
 
         var authResult = await loginResponse.Content.ReadFromJsonAsync<AuthenticationResponseDto>(JsonOptions);
-        Client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", authResult!.Token);
+        Client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", authResult!.AccessToken);
 
         // Act - Try to access API endpoints
         var response = await Client.GetAsync("/api/v1/wallets");
@@ -205,7 +205,7 @@ public class AuthorizationPolicyTests : IntegrationTestBase
         var loginResponse = await Client.PostAsJsonAsync("/api/v1/authentication/login", loginRequest);
         var authResult = await loginResponse.Content.ReadFromJsonAsync<AuthenticationResponseDto>(JsonOptions);
 
-        Client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", authResult!.Token);
+        Client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", authResult!.AccessToken);
 
         // Act - Validate that token has required claims
         var response = await Client.GetAsync("/api/v1/authentication/validate");
@@ -228,7 +228,7 @@ public class AuthorizationPolicyTests : IntegrationTestBase
         var loginResponse = await Client.PostAsJsonAsync("/api/v1/authentication/login", loginRequest);
         var authResult = await loginResponse.Content.ReadFromJsonAsync<AuthenticationResponseDto>(JsonOptions);
 
-        Client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", authResult!.Token);
+        Client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", authResult!.AccessToken);
 
         // Act - Try to access their own credentials
         var response = await Client.GetAsync("/api/v1/credentials");
@@ -251,7 +251,7 @@ public class AuthorizationPolicyTests : IntegrationTestBase
         var loginResponse = await Client.PostAsJsonAsync("/api/v1/authentication/login", loginRequest);
         var authResult = await loginResponse.Content.ReadFromJsonAsync<AuthenticationResponseDto>(JsonOptions);
 
-        Client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", authResult!.Token);
+        Client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", authResult!.AccessToken);
 
         // Act - Try to access their own wallet
         var response = await Client.GetAsync("/api/v1/wallets");
@@ -281,7 +281,7 @@ public class AuthorizationPolicyTests : IntegrationTestBase
         }
 
         var authResult = await loginResponse.Content.ReadFromJsonAsync<AuthenticationResponseDto>(JsonOptions);
-        Client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", authResult!.Token);
+        Client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", authResult!.AccessToken);
 
         // Act - Try to access admin-only endpoint
         var response = await Client.DeleteAsync("/api/v1/admin/tenants/some-tenant-id");
@@ -328,7 +328,7 @@ public class AuthorizationPolicyTests : IntegrationTestBase
         var loginResponse = await Client.PostAsJsonAsync("/api/v1/authentication/login", loginRequest);
         var authResult = await loginResponse.Content.ReadFromJsonAsync<AuthenticationResponseDto>(JsonOptions);
 
-        Client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", authResult!.Token);
+        Client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", authResult!.AccessToken);
 
         // Act - Validate user has multiple roles
         var validateResponse = await Client.GetAsync("/api/v1/authentication/validate");
@@ -353,7 +353,7 @@ public class AuthorizationPolicyTests : IntegrationTestBase
         var loginResponse = await Client.PostAsJsonAsync("/api/v1/authentication/login", loginRequest);
         var authResult = await loginResponse.Content.ReadFromJsonAsync<AuthenticationResponseDto>(JsonOptions);
 
-        Client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", authResult!.Token);
+        Client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", authResult!.AccessToken);
 
         // Act
         var response = await Client.GetAsync("/api/v1/authentication/validate");
@@ -375,9 +375,15 @@ public record LoginRequestDto
 
 public record AuthenticationResponseDto
 {
-    public string Token { get; init; } = string.Empty;
+    public string AccessToken { get; init; } = string.Empty;
     public string RefreshToken { get; init; } = string.Empty;
+    public int ExpiresIn { get; init; }
     public DateTime ExpiresAt { get; init; }
+    public string TokenType { get; init; } = "Bearer";
+    public string UserId { get; init; } = string.Empty;
+    public string Email { get; init; } = string.Empty;
+    public string[] Roles { get; init; } = Array.Empty<string>();
+    public Dictionary<string, string> Claims { get; init; } = new();
 }
 
 public record TokenValidationResponseDto

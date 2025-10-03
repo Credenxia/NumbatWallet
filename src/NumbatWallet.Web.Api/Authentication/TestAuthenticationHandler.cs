@@ -4,6 +4,7 @@ using System.Security.Claims;
 using System.Text.Encodings.Web;
 using System.IdentityModel.Tokens.Jwt;
 using Microsoft.IdentityModel.Tokens;
+using NumbatWallet.Application.Services;
 
 namespace NumbatWallet.Web.Api.Authentication;
 
@@ -14,15 +15,18 @@ namespace NumbatWallet.Web.Api.Authentication;
 public class TestAuthenticationHandler : AuthenticationHandler<AuthenticationSchemeOptions>
 {
     private readonly IConfiguration _configuration;
+    private readonly ITokenBlacklistService _tokenBlacklistService;
 
     public TestAuthenticationHandler(
         IOptionsMonitor<AuthenticationSchemeOptions> options,
         ILoggerFactory logger,
         UrlEncoder encoder,
-        IConfiguration configuration)
+        IConfiguration configuration,
+        ITokenBlacklistService tokenBlacklistService)
         : base(options, logger, encoder)
     {
         _configuration = configuration;
+        _tokenBlacklistService = tokenBlacklistService;
     }
 
     protected override Task<AuthenticateResult> HandleAuthenticateAsync()
@@ -35,10 +39,19 @@ public class TestAuthenticationHandler : AuthenticationHandler<AuthenticationSch
             var token = authHeader.ToString().Replace("Bearer ", "");
             if (!string.IsNullOrWhiteSpace(token))
             {
+                // Check if token is blacklisted (logged out)
+                if (_tokenBlacklistService.IsTokenBlacklisted(token))
+                {
+                    return Task.FromResult(AuthenticateResult.Fail("Token has been revoked"));
+                }
+
                 try
                 {
                     // Parse JWT token to extract claims
-                    var tokenHandler = new JwtSecurityTokenHandler();
+                    var tokenHandler = new JwtSecurityTokenHandler
+                    {
+                        MapInboundClaims = false // Preserve original JWT claim names (sub, email, etc)
+                    };
                     var key = System.Text.Encoding.UTF8.GetBytes(
                         _configuration["Jwt:SecretKey"] ?? "TestSecretKey123456789012345678901234567890");
 

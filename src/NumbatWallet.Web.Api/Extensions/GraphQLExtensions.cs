@@ -17,13 +17,18 @@ public static class GraphQLExtensions
         services
             .AddGraphQLServer()
             .AddAuthorization()
+            // AnyType for OUTPUT Dictionary<string, object> fields
+            // Note: INPUT types must use JSON strings, not Dictionary
+            .AddType<AnyType>()
+            .BindRuntimeType<Dictionary<string, object>, AnyType>()
             .AddQueryType<Query>()
             .AddMutationType<Mutation>()
-            .AddSubscriptionType<Subscription>()
-            // Register credential types
-            .AddType<CredentialType>()
-            .AddType<IssuanceType>()
-            .AddType<VerificationResultType>()
+            // TODO: Re-enable subscriptions after fixing type registration issues
+            // .AddSubscriptionType<Subscription>()
+            // Register credential types (auto-discovery will find these via query/mutation return types)
+            // .AddType<CredentialType>()
+            // .AddType<IssuanceType>()
+            // .AddType<VerificationResultType>()
             // Register credential queries and mutations
             .AddTypeExtension<CredentialQuery>()
             .AddTypeExtension<CredentialMutation>()
@@ -43,8 +48,8 @@ public static class GraphQLExtensions
             .UseExceptions()
             .UseTimeout()
             .UseDocumentCache()
+            .UseDocumentParser()        // MUST be before UseDocumentValidation
             .UseDocumentValidation()
-            .UseDocumentParser()
             .UseOperationCache()
             .UseOperationResolver()
             .UseOperationVariableCoercion()
@@ -86,8 +91,9 @@ public static class GraphQLExtensions
         //     app.UseGraphQLVoyager("/graphql-voyager");
         // }
 
-        // Map WebSocket for subscriptions
-        app.MapGraphQLWebSocket("/graphql");
+        // Map WebSocket for subscriptions (separate path to avoid conflict with HTTP)
+        // TODO: Re-enable when subscriptions are needed
+        // app.MapGraphQLWebSocket("/graphql/ws");
 
         return app;
     }

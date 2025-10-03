@@ -54,9 +54,11 @@ public class AuthenticationController : ControllerBase
     /// </summary>
     [HttpPost("login")]
     [Microsoft.AspNetCore.Authorization.AllowAnonymous]
+    [Microsoft.AspNetCore.RateLimiting.EnableRateLimiting("Authentication")]
     [ProducesResponseType(typeof(AuthenticationResponseDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
     public async Task<IActionResult> Login([FromBody] LoginRequestDto request)
     {
         // Validate input
@@ -91,7 +93,7 @@ public class AuthenticationController : ControllerBase
 
             return Ok(new AuthenticationResponseDto
             {
-                Token = result.AccessToken,
+                AccessToken = result.AccessToken,
                 RefreshToken = result.RefreshToken,
                 ExpiresIn = result.ExpiresIn,
                 ExpiresAt = result.ExpiresAt,
@@ -141,7 +143,7 @@ public class AuthenticationController : ControllerBase
 
             return Ok(new AuthenticationResponseDto
             {
-                Token = result.AccessToken,
+                AccessToken = result.AccessToken,
                 RefreshToken = result.RefreshToken,
                 ExpiresIn = result.ExpiresIn,
                 ExpiresAt = result.ExpiresAt,
@@ -167,13 +169,17 @@ public class AuthenticationController : ControllerBase
     {
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
+        // Extract access token from Authorization header
+        var authHeader = HttpContext.Request.Headers.Authorization.ToString();
+        var accessToken = authHeader.Replace("Bearer ", "", StringComparison.OrdinalIgnoreCase);
+
         // Log logout
         await _auditService.LogSecurityEventAsync(
             HttpContext,
             SecurityEventType.LogoutSuccess,
             $"User logged out: {userId}");
 
-        var command = new LogoutCommand(userId ?? string.Empty);
+        var command = new LogoutCommand(userId ?? string.Empty, accessToken);
         await _logoutHandler.HandleAsync(command);
 
         return NoContent();
@@ -266,7 +272,7 @@ public class AuthenticationController : ControllerBase
     private string GenerateJwtToken(string email, string role, string userId)
     {
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(
-            _configuration["Jwt:Key"] ?? "ThisIsAVerySecureKeyForDevelopmentOnly123456789"));
+            _configuration["Jwt:SecretKey"] ?? "ThisIsADevelopmentSecretKeyThatIs256BitsLong!!"));
         var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
         var claims = new[]
@@ -307,7 +313,7 @@ public class LoginRequestDto
 
 public class AuthenticationResponseDto
 {
-    public required string Token { get; set; }
+    public required string AccessToken { get; set; }
     public required string RefreshToken { get; set; }
     public int ExpiresIn { get; set; }
     public DateTime ExpiresAt { get; set; }
