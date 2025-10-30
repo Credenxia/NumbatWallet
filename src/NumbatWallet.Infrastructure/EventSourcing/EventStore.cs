@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -28,15 +29,22 @@ public class StoredEvent
 {
     public Guid Id { get; set; } = Guid.NewGuid();
     public Guid AggregateId { get; set; }
+    [MaxLength(200)]
     public string AggregateType { get; set; } = string.Empty;
+    [MaxLength(200)]
     public string EventType { get; set; } = string.Empty;
+    [MaxLength]
     public string EventData { get; set; } = string.Empty;
+    [MaxLength]
     public string? Metadata { get; set; }
     public DateTime OccurredAt { get; set; }
+    [MaxLength(200)]
     public string UserId { get; set; } = string.Empty;
+    [MaxLength(100)]
     public string TenantId { get; set; } = string.Empty;
     public int Version { get; set; }
     public Guid CorrelationId { get; set; }
+    [MaxLength(100)]
     public string? CausationId { get; set; }
 }
 
@@ -47,10 +55,13 @@ public class EventSnapshot
 {
     public Guid Id { get; set; } = Guid.NewGuid();
     public Guid AggregateId { get; set; }
+    [MaxLength(200)]
     public string AggregateType { get; set; } = string.Empty;
+    [MaxLength]
     public string SnapshotData { get; set; } = string.Empty;
     public int Version { get; set; }
     public DateTime CreatedAt { get; set; }
+    [MaxLength(100)]
     public string TenantId { get; set; } = string.Empty;
 }
 
