@@ -167,7 +167,7 @@ public class TenantController : ControllerBase
                 WalletCount = stats.TotalWallets,
                 CredentialCount = stats.TotalCredentials,
                 ActiveSessions = 0, // Not tracked in the DTO
-                StorageUsedMB = (decimal)(stats.StorageUsedGB * 1024), // Convert GB to MB
+                StorageUsedMB = stats.StorageUsedGB * 1024, // Convert GB to MB
                 LastActivityDate = stats.PeriodEnd
             };
 

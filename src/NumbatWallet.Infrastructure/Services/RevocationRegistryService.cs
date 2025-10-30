@@ -374,7 +374,7 @@ public class RevocationRegistryService : IRevocationRegistryService
             using (responseBuilder.PushSequence())
             {
                 // ResponseStatus
-                responseBuilder.WriteEnumeratedValue((OcspResponseStatus)status);
+                responseBuilder.WriteEnumeratedValue(status);
 
                 if (status == OcspResponseStatus.Good)
                 {
