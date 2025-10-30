@@ -160,12 +160,13 @@ public static class Guard
     /// </summary>
     public static IEnumerable<T> AgainstNullOrEmpty<T>(IEnumerable<T>? input, [CallerArgumentExpression("input")] string? parameterName = null)
     {
-        if (input is null || !input.Any())
+        var materializedInput = input?.ToList();
+        if (materializedInput is null || materializedInput.Count == 0)
         {
             throw new ArgumentException($"Required input {parameterName} was empty.", parameterName);
         }
 
-        return input;
+        return materializedInput;
     }
 
     /// <summary>
