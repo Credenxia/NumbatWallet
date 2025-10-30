@@ -140,10 +140,6 @@ public class DocumentationService : IDocumentationService
             {
                 html.AppendLine($"<h3>{line[4..]}</h3>");
             }
-            else if (line.StartsWith("```", StringComparison.Ordinal))
-            {
-                continue; // Skip code block markers
-            }
             else if (line.StartsWith("- ", StringComparison.Ordinal))
             {
                 html.AppendLine($"<li>{line[2..]}</li>");

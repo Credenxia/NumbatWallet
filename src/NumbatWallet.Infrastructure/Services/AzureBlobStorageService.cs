@@ -284,7 +284,7 @@ public class AzureBlobStorageService : IBlobStorageService
 
     private string GetContentType(string fileName)
     {
-        var extension = Path.GetExtension(fileName)?.ToLowerInvariant();
+        var extension = Path.GetExtension(fileName).ToLowerInvariant();
 
         return extension switch
         {
