@@ -128,8 +128,8 @@ public class CertificateManagementService : ICertificateManagementService
             tenantId,
             Convert.ToBase64String(cert.Export(X509ContentType.Cert)),
             cert.Thumbprint,
-            cert.SubjectName.Name ?? string.Empty,
-            cert.IssuerName.Name ?? string.Empty,
+            cert.SubjectName.Name,
+            cert.IssuerName.Name,
             cert.NotBefore,
             cert.NotAfter,
             purpose

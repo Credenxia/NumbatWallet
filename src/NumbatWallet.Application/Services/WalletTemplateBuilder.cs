@@ -319,7 +319,6 @@ public class WalletTemplateBuilder : IWalletTemplateBuilder
                         wallet, template, cancellationToken);
                     break;
 
-                case "web":
                 default:
                     packages["web"] = await _platformBuilder.BuildWebWalletAsync(
                         wallet, template, cancellationToken);
