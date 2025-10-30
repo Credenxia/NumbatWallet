@@ -103,9 +103,6 @@ public class RenewCertificateCommandHandler : ICommandHandler<RenewCertificateCo
             // Handle auto-rotation
             if (command.AutoRotate)
             {
-                // Calculate grace period end date
-                var gracePeriodEnd = DateTimeOffset.UtcNow.AddDays(command.GracePeriodDays);
-
                 // If old certificate expires before grace period, keep it active
                 if (oldCertificate.ValidTo > DateTimeOffset.UtcNow)
                 {

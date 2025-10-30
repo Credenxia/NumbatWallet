@@ -10,18 +10,15 @@ public class StatisticsService : IStatisticsService
     private readonly IPersonRepository _personRepository;
     private readonly IWalletRepository _walletRepository;
     private readonly ICredentialRepository _credentialRepository;
-    private readonly IOrganizationRepository _organizationRepository;
 
     public StatisticsService(
         IPersonRepository personRepository,
         IWalletRepository walletRepository,
-        ICredentialRepository credentialRepository,
-        IOrganizationRepository organizationRepository)
+        ICredentialRepository credentialRepository)
     {
         _personRepository = personRepository;
         _walletRepository = walletRepository;
         _credentialRepository = credentialRepository;
-        _organizationRepository = organizationRepository;
     }
 
     public async Task<DashboardStatisticsDto> GetDashboardStatisticsAsync(CancellationToken cancellationToken = default)

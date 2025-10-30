@@ -16,7 +16,6 @@ public class CreateWalletCommandHandlerTests
     private readonly Mock<IUnitOfWork> _unitOfWorkMock;
     private readonly Mock<ILogger<CreateWalletCommandHandler>> _loggerMock;
     private readonly Mock<ITenantService> _tenantServiceMock;
-    private readonly Mock<IWalletDomainService> _walletDomainServiceMock;
     private readonly Mock<IHsmService> _hsmServiceMock;
     private readonly CreateWalletCommandHandler _handler;
 
@@ -27,7 +26,6 @@ public class CreateWalletCommandHandlerTests
         _unitOfWorkMock = new Mock<IUnitOfWork>();
         _loggerMock = new Mock<ILogger<CreateWalletCommandHandler>>();
         _tenantServiceMock = new Mock<ITenantService>();
-        _walletDomainServiceMock = new Mock<IWalletDomainService>();
         _hsmServiceMock = new Mock<IHsmService>();
 
         _handler = new CreateWalletCommandHandler(
@@ -36,7 +34,6 @@ public class CreateWalletCommandHandlerTests
             _unitOfWorkMock.Object,
             _loggerMock.Object,
             _tenantServiceMock.Object,
-            _walletDomainServiceMock.Object,
             _hsmServiceMock.Object);
     }
 

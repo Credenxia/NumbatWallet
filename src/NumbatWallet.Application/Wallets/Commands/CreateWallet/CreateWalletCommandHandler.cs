@@ -17,7 +17,6 @@ public sealed class CreateWalletCommandHandler : ICommandHandler<CreateWalletCom
     private readonly IUnitOfWork _unitOfWork;
     private readonly ILogger<CreateWalletCommandHandler> _logger;
     private readonly ITenantService _tenantService;
-    private readonly IWalletDomainService _walletDomainService;
     private readonly IHsmService _hsmService;
 
     public CreateWalletCommandHandler(
@@ -26,7 +25,6 @@ public sealed class CreateWalletCommandHandler : ICommandHandler<CreateWalletCom
         IUnitOfWork unitOfWork,
         ILogger<CreateWalletCommandHandler> logger,
         ITenantService tenantService,
-        IWalletDomainService walletDomainService,
         IHsmService hsmService)
     {
         _walletRepository = walletRepository;
@@ -34,7 +32,6 @@ public sealed class CreateWalletCommandHandler : ICommandHandler<CreateWalletCom
         _unitOfWork = unitOfWork;
         _logger = logger;
         _tenantService = tenantService;
-        _walletDomainService = walletDomainService;
         _hsmService = hsmService;
     }
 
