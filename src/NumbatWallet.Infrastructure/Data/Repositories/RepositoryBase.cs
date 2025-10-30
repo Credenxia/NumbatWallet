@@ -70,10 +70,7 @@ public abstract class RepositoryBase<TEntity, TId> : IRepository<TEntity, TId>
     {
         var query = _dbSet.AsQueryable();
 
-        if (specification.Criteria != null)
-        {
-            query = query.Where(specification.Criteria);
-        }
+        query = query.Where(specification.Criteria);
 
         // Apply includes
         query = specification.Includes

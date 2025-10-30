@@ -25,7 +25,7 @@ public class PersonRepository : RepositoryBase<Person, Guid>, IPersonRepository
 
     public async Task<Person?> GetByMobileNumberAsync(string mobileNumber, CancellationToken cancellationToken = default)
     {
-        return await DbSet.FirstOrDefaultAsync(p => p.PhoneNumber != null && p.PhoneNumber.Value == mobileNumber, cancellationToken);
+        return await DbSet.FirstOrDefaultAsync(p => p.PhoneNumber.Value == mobileNumber, cancellationToken);
     }
 
     public async Task<IReadOnlyList<Person>> GetByStatusAsync(PersonStatus status, CancellationToken cancellationToken = default)
@@ -133,7 +133,7 @@ public class PersonRepository : RepositoryBase<Person, Guid>, IPersonRepository
 
     public async Task<bool> IsMobileNumberUniqueAsync(string mobileNumber, Guid? excludeId = null, CancellationToken cancellationToken = default)
     {
-        var query = DbSet.Where(p => p.PhoneNumber != null && p.PhoneNumber.Value == mobileNumber);
+        var query = DbSet.Where(p => p.PhoneNumber.Value == mobileNumber);
         if (excludeId.HasValue)
         {
             query = query.Where(p => p.Id != excludeId.Value);
