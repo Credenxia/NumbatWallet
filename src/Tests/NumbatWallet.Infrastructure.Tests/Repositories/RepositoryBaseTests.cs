@@ -44,8 +44,6 @@ public class RepositoryBaseTests : IDisposable
 {
     private readonly NumbatWalletDbContext _context;
     private readonly TestWalletRepository _repository;
-    private readonly Mock<ITenantService> _tenantServiceMock;
-    private readonly Mock<ICurrentTenantService> _currentTenantServiceMock;
     private readonly Guid _tenantId;
     private readonly SqliteConnection _connection;
 
@@ -55,8 +53,8 @@ public class RepositoryBaseTests : IDisposable
         _connection = new SqliteConnection("DataSource=:memory:");
         _connection.Open();
 
-        _tenantServiceMock = new Mock<ITenantService>();
-        _currentTenantServiceMock = new Mock<ICurrentTenantService>();
+        var tenantServiceMock = new Mock<ITenantService>();
+        var currentTenantServiceMock = new Mock<ICurrentTenantService>();
         var currentUserServiceMock = new Mock<ICurrentUserService>();
         var dateTimeServiceMock = new Mock<IDateTimeService>();
         var eventDispatcherMock = new Mock<IEventDispatcher>();
@@ -66,20 +64,20 @@ public class RepositoryBaseTests : IDisposable
         var tenantIdString = _tenantId.ToString();
 
         // Mock both tenant services to return the same tenant ID
-        _tenantServiceMock.Setup(x => x.TenantId).Returns(_tenantId);
-        _currentTenantServiceMock.Setup(x => x.TenantId).Returns(tenantIdString);
+        tenantServiceMock.Setup(x => x.TenantId).Returns(_tenantId);
+        currentTenantServiceMock.Setup(x => x.TenantId).Returns(tenantIdString);
         currentUserServiceMock.Setup(x => x.UserId).Returns("test-user");
         dateTimeServiceMock.Setup(x => x.UtcNow).Returns(DateTimeOffset.UtcNow);
 
         var options = new DbContextOptionsBuilder<NumbatWalletDbContext>()
             .UseSqlite(_connection)
             .EnableSensitiveDataLogging()
-            .AddInterceptors(new TenantInterceptor(_currentTenantServiceMock.Object))
+            .AddInterceptors(new TenantInterceptor(currentTenantServiceMock.Object))
             .Options;
 
         _context = new NumbatWalletDbContext(
             options,
-            _tenantServiceMock.Object,
+            tenantServiceMock.Object,
             currentUserServiceMock.Object,
             dateTimeServiceMock.Object,
             eventDispatcherMock.Object,
