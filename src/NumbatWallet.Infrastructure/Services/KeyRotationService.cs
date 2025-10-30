@@ -1,7 +1,6 @@
 using Azure.Messaging.ServiceBus;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Distributed;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using NumbatWallet.Domain.Interfaces;
 using NumbatWallet.Infrastructure.Data;

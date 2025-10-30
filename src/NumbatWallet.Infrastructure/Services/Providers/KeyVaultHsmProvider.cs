@@ -2,7 +2,6 @@ using System.Text;
 using Azure.Identity;
 using Azure.Security.KeyVault.Keys;
 using AzureCrypto = Azure.Security.KeyVault.Keys.Cryptography;
-using Azure.Security.KeyVault.Secrets;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
