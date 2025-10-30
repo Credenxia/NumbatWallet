@@ -150,6 +150,7 @@ public class GetCredentialStatisticsQueryHandler : IQueryHandler<GetCredentialSt
         DateTimeOffset to,
         string labelPrefix)
     {
+        var credentialsList = credentials.ToList();
         var points = new List<TimeSeriesDataPoint>();
         var current = from;
 
@@ -182,7 +183,7 @@ public class GetCredentialStatisticsQueryHandler : IQueryHandler<GetCredentialSt
                     break;
             }
 
-            var count = credentials.Count(c =>
+            var count = credentialsList.Count(c =>
             {
                 var date = dateSelector(c);
                 return date >= current && date < periodEnd;

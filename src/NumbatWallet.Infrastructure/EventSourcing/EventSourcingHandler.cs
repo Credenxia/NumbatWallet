@@ -244,9 +244,9 @@ public class EventSourcingService : IEventSourcingService
         CancellationToken cancellationToken = default) where T : class, new()
     {
         var events = await _eventStore.GetEventsAsync(aggregateId, cancellationToken);
-        var eventsBeforeDate = events.Where(e => e.OccurredAt <= asOf);
+        var eventsBeforeDate = events.Where(e => e.OccurredAt <= asOf).ToList();
 
-        if (!eventsBeforeDate.Any())
+        if (eventsBeforeDate.Count == 0)
         {
             return null;
         }

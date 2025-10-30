@@ -358,7 +358,7 @@ public class EventProjector : IEventProjector
         Action<IDomainEvent> handler,
         CancellationToken cancellationToken = default)
     {
-        var events = await _eventStore.GetEventsAsync(aggregateId, cancellationToken);
+        var events = (await _eventStore.GetEventsAsync(aggregateId, cancellationToken)).ToList();
 
         foreach (var storedEvent in events.OrderBy(e => e.Version))
         {
@@ -372,7 +372,7 @@ public class EventProjector : IEventProjector
         }
 
         _logger.LogInformation("Replayed {Count} events for aggregate {AggregateId}",
-            events.Count(), aggregateId);
+            events.Count, aggregateId);
     }
 
     private void ApplyEvent<T>(T aggregate, IDomainEvent domainEvent) where T : class

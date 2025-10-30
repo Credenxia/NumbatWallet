@@ -245,7 +245,7 @@ public class CredentialManifestTests
         };
 
         // Act
-        var formats = manifest.GetSupportedFormats();
+        var formats = manifest.GetSupportedFormats().ToList();
 
         // Assert
         formats.Should().Contain("jwt_vc");
