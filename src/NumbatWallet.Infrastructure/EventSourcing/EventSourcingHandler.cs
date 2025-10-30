@@ -76,7 +76,7 @@ public class EventSourcingInterceptor : SaveChangesInterceptor
 
     public EventSourcingInterceptor(
         IEventSourcingHandler eventHandler,
-        ILogger<EventSourcingInterceptor> logger)
+        ILogger<EventSourcingInterceptor> _)
     {
         _eventHandler = eventHandler;
     }
