@@ -39,16 +39,18 @@ public class WalletTemplateRepository : IWalletTemplateRepository
     {
         _logger.LogDebug("Getting wallet template by ID: {Id}", id);
 
+        var tenantId = GetCurrentTenantIdOrThrow();
         return await _context.Set<WalletTemplate>()
-            .FirstOrDefaultAsync(t => t.Id == id && t.TenantId == GetCurrentTenantIdOrThrow(), cancellationToken);
+            .FirstOrDefaultAsync(t => t.Id == id && t.TenantId == tenantId, cancellationToken);
     }
 
     public async Task<IEnumerable<WalletTemplate>> GetAllAsync(CancellationToken cancellationToken = default)
     {
         _logger.LogDebug("Getting all wallet templates for tenant: {TenantId}", _tenantService.TenantId);
 
+        var tenantId = GetCurrentTenantIdOrThrow();
         return await _context.Set<WalletTemplate>()
-            .Where(t => t.TenantId == GetCurrentTenantIdOrThrow())
+            .Where(t => t.TenantId == tenantId)
             .OrderBy(t => t.Name)
             .ToListAsync(cancellationToken);
     }
@@ -84,8 +86,9 @@ public class WalletTemplateRepository : IWalletTemplateRepository
 
     public async Task<bool> ExistsAsync(Guid id, CancellationToken cancellationToken = default)
     {
+        var tenantId = GetCurrentTenantIdOrThrow();
         return await _context.Set<WalletTemplate>()
-            .AnyAsync(t => t.Id == id && t.TenantId == GetCurrentTenantIdOrThrow(), cancellationToken);
+            .AnyAsync(t => t.Id == id && t.TenantId == tenantId, cancellationToken);
     }
 
     public async Task<IEnumerable<WalletTemplate>> FindAsync(
