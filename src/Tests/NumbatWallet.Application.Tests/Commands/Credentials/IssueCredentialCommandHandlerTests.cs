@@ -16,9 +16,7 @@ public class IssueCredentialCommandHandlerTests
     private readonly Mock<ICredentialRepository> _credentialRepositoryMock;
     private readonly Mock<IWalletRepository> _walletRepositoryMock;
     private readonly Mock<IIssuerRepository> _issuerRepositoryMock;
-    private readonly Mock<IUnitOfWork> _unitOfWorkMock;
     private readonly Mock<Application.Interfaces.IEventDispatcher> _eventDispatcherMock;
-    private readonly Mock<ILogger<IssueCredentialCommandHandler>> _loggerMock;
     private readonly IssueCredentialCommandHandler _handler;
 
     public IssueCredentialCommandHandlerTests()
@@ -26,17 +24,17 @@ public class IssueCredentialCommandHandlerTests
         _credentialRepositoryMock = new Mock<ICredentialRepository>();
         _walletRepositoryMock = new Mock<IWalletRepository>();
         _issuerRepositoryMock = new Mock<IIssuerRepository>();
-        _unitOfWorkMock = new Mock<IUnitOfWork>();
+        var unitOfWorkMock = new Mock<IUnitOfWork>();
         _eventDispatcherMock = new Mock<Application.Interfaces.IEventDispatcher>();
-        _loggerMock = new Mock<ILogger<IssueCredentialCommandHandler>>();
+        var loggerMock = new Mock<ILogger<IssueCredentialCommandHandler>>();
 
         _handler = new IssueCredentialCommandHandler(
             _credentialRepositoryMock.Object,
             _walletRepositoryMock.Object,
             _issuerRepositoryMock.Object,
-            _unitOfWorkMock.Object,
+            unitOfWorkMock.Object,
             _eventDispatcherMock.Object,
-            _loggerMock.Object);
+            loggerMock.Object);
     }
 
     [Fact]
@@ -82,7 +80,7 @@ public class IssueCredentialCommandHandlerTests
 
         _credentialRepositoryMock
             .Setup(x => x.AddAsync(It.IsAny<Credential>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync((Credential c, CancellationToken ct) => c);
+            .ReturnsAsync((Credential c, CancellationToken _) => c);
 
         _eventDispatcherMock
             .Setup(x => x.DispatchAsync(It.IsAny<CredentialIssuedEvent>(), It.IsAny<CancellationToken>()))
@@ -283,7 +281,7 @@ public class IssueCredentialCommandHandlerTests
 
         _credentialRepositoryMock
             .Setup(x => x.AddAsync(It.IsAny<Credential>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync((Credential c, CancellationToken ct) => c);
+            .ReturnsAsync((Credential c, CancellationToken _) => c);
 
         _eventDispatcherMock
             .Setup(x => x.DispatchAsync(It.IsAny<CredentialIssuedEvent>(), It.IsAny<CancellationToken>()))
