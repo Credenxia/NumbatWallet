@@ -202,10 +202,9 @@ public class RedisCacheService : ICacheService
 
         try
         {
-            var redisKeys = keys.Select(k => (RedisKey)k).ToArray();
-            var values = await _database.StringGetAsync(redisKeys);
-
             var keyArray = keys.ToArray();
+            var redisKeys = keyArray.Select(k => (RedisKey)k).ToArray();
+            var values = await _database.StringGetAsync(redisKeys);
             for (int i = 0; i < keyArray.Length; i++)
             {
                 if (!values[i].IsNullOrEmpty)

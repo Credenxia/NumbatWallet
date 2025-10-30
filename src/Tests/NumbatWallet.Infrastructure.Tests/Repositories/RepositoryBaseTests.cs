@@ -255,7 +255,7 @@ public class RepositoryBaseTests : IDisposable
         var spec = new WalletByPersonIdSpecification(person1.Id);
 
         // Act
-        var results = await _repository.FindAsync(spec);
+        var results = (await _repository.FindAsync(spec)).ToList();
 
         // Assert
         Assert.Single(results);
