@@ -131,7 +131,6 @@ public class RequestSigningService : IRequestSigningService
         {
             case "SHA256":
             case "RSA-SHA256":
-                using (var sha256 = SHA256.Create())
                 {
                     var dataBytes = Encoding.UTF8.GetBytes(data);
                     var hashBytes = SHA256.HashData(dataBytes);
@@ -153,10 +152,8 @@ public class RequestSigningService : IRequestSigningService
                 break;
 
             case "SHA384":
-                using (var sha384 = SHA384.Create())
                 {
                     var dataBytes = Encoding.UTF8.GetBytes(data);
-                    var hashBytes = SHA384.HashData(dataBytes);
 
                     using var hmac = new HMACSHA384(Convert.FromBase64String(privateKey));
                     signatureBytes = hmac.ComputeHash(dataBytes);
@@ -165,7 +162,6 @@ public class RequestSigningService : IRequestSigningService
 
             case "SHA512":
             case "RSA-SHA512":
-                using (var sha512 = SHA512.Create())
                 {
                     var dataBytes = Encoding.UTF8.GetBytes(data);
                     var hashBytes = SHA512.HashData(dataBytes);
@@ -204,7 +200,6 @@ public class RequestSigningService : IRequestSigningService
             {
                 case "SHA256":
                 case "RSA-SHA256":
-                    using (var sha256 = SHA256.Create())
                     {
                         var hashBytes = SHA256.HashData(dataBytes);
 
@@ -233,7 +228,6 @@ public class RequestSigningService : IRequestSigningService
 
                 case "SHA512":
                 case "RSA-SHA512":
-                    using (var sha512 = SHA512.Create())
                     {
                         var hashBytes = SHA512.HashData(dataBytes);
 
