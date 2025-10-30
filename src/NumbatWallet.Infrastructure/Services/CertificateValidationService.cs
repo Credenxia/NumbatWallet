@@ -9,7 +9,6 @@ namespace NumbatWallet.Infrastructure.Services;
 public class CertificateValidationService : ICertificateValidationService
 {
     private readonly ICertificateAuthorityRepository _authorityRepository;
-    private readonly ICertificateTrustStoreRepository _trustStoreRepository;
     private readonly ILogger<CertificateValidationService> _logger;
     private readonly HttpClient _httpClient;
 
@@ -20,7 +19,6 @@ public class CertificateValidationService : ICertificateValidationService
         HttpClient httpClient)
     {
         _authorityRepository = authorityRepository;
-        _trustStoreRepository = trustStoreRepository;
         _logger = logger;
         _httpClient = httpClient;
     }

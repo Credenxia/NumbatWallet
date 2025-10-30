@@ -216,14 +216,12 @@ public interface IDatabaseBackupService
 
 public class DatabaseBackupService : IDatabaseBackupService
 {
-    private readonly IConfiguration _configuration;
     private readonly ILogger<DatabaseBackupService> _logger;
 
     public DatabaseBackupService(
         IConfiguration configuration,
         ILogger<DatabaseBackupService> logger)
     {
-        _configuration = configuration;
         _logger = logger;
     }
 

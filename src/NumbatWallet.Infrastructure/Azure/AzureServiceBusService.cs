@@ -9,14 +9,12 @@ namespace NumbatWallet.Infrastructure.Azure;
 /// </summary>
 public class AzureServiceBusService : IAzureServiceBusService
 {
-    private readonly string _connectionString;
     private readonly ILogger<AzureServiceBusService> _logger;
 
     public AzureServiceBusService(
         string connectionString,
         ILogger<AzureServiceBusService> logger)
     {
-        _connectionString = connectionString;
         _logger = logger;
     }
 
