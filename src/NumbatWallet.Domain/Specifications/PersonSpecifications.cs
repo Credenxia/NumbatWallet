@@ -74,7 +74,7 @@ public class PersonSearchSpecification : Specification<Person>
                 p.FirstName.ToLowerInvariant().Contains(lowerSearchTerm) ||
                 p.LastName.ToLowerInvariant().Contains(lowerSearchTerm) ||
                 p.Email.Value.ToLowerInvariant().Contains(lowerSearchTerm) ||
-                (p.ExternalId != null && p.ExternalId.ToLowerInvariant().Contains(lowerSearchTerm)));
+                p.ExternalId.ToLowerInvariant().Contains(lowerSearchTerm));
         }
 
         ApplyOrderBy(p => p.LastName);
