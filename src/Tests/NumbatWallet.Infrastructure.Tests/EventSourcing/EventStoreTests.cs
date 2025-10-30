@@ -10,12 +10,6 @@ public class EventStoreTests : IDisposable
 {
     private readonly NumbatWalletDbContext _context;
     private readonly EventStore _eventStore;
-    private readonly Mock<ILogger<EventStore>> _mockLogger;
-    private readonly Mock<ITenantService> _mockTenantService;
-    private readonly Mock<ICurrentUserService> _mockCurrentUserService;
-    private readonly Mock<IDateTimeService> _mockDateTimeService;
-    private readonly Mock<IEventDispatcher> _mockEventDispatcher;
-    private readonly Mock<ILogger<NumbatWalletDbContext>> _mockDbLogger;
 
     public EventStoreTests()
     {
@@ -25,31 +19,31 @@ public class EventStoreTests : IDisposable
             .Options;
 
         // Mock dependencies for DbContext
-        _mockTenantService = new Mock<ITenantService>();
-        _mockCurrentUserService = new Mock<ICurrentUserService>();
-        _mockDateTimeService = new Mock<IDateTimeService>();
-        _mockEventDispatcher = new Mock<IEventDispatcher>();
-        _mockDbLogger = new Mock<ILogger<NumbatWalletDbContext>>();
+        var mockTenantService = new Mock<ITenantService>();
+        var mockCurrentUserService = new Mock<ICurrentUserService>();
+        var mockDateTimeService = new Mock<IDateTimeService>();
+        var mockEventDispatcher = new Mock<IEventDispatcher>();
+        var mockDbLogger = new Mock<ILogger<NumbatWalletDbContext>>();
 
         // Setup default behaviors
-        _mockTenantService.Setup(x => x.TenantId).Returns(Guid.NewGuid());
-        _mockTenantService.Setup(x => x.TenantName).Returns("test-tenant");
-        _mockCurrentUserService.Setup(x => x.UserId).Returns("test-user");
-        _mockDateTimeService.Setup(x => x.UtcNow).Returns(DateTime.UtcNow);
+        mockTenantService.Setup(x => x.TenantId).Returns(Guid.NewGuid());
+        mockTenantService.Setup(x => x.TenantName).Returns("test-tenant");
+        mockCurrentUserService.Setup(x => x.UserId).Returns("test-user");
+        mockDateTimeService.Setup(x => x.UtcNow).Returns(DateTime.UtcNow);
 
         _context = new NumbatWalletDbContext(
             options,
-            _mockTenantService.Object,
-            _mockCurrentUserService.Object,
-            _mockDateTimeService.Object,
-            _mockEventDispatcher.Object,
-            _mockDbLogger.Object);
+            mockTenantService.Object,
+            mockCurrentUserService.Object,
+            mockDateTimeService.Object,
+            mockEventDispatcher.Object,
+            mockDbLogger.Object);
 
         // Ensure database is created with required tables
         _context.Database.EnsureCreated();
 
-        _mockLogger = new Mock<ILogger<EventStore>>();
-        _eventStore = new EventStore(_context, _mockLogger.Object);
+        var mockLogger = new Mock<ILogger<EventStore>>();
+        _eventStore = new EventStore(_context, mockLogger.Object);
     }
 
     [Fact]
