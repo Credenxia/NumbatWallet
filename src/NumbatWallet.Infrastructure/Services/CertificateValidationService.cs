@@ -215,7 +215,7 @@ public class CertificateValidationService : ICertificateValidationService
             }
 
             // Download CRL
-            var crlData = await _httpClient.GetByteArrayAsync(crlUrl, cancellationToken);
+            _ = await _httpClient.GetByteArrayAsync(crlUrl, cancellationToken);
 
             // Note: Full CRL implementation would require parsing the CRL and checking certificate serial number
             // For now, we'll assume the certificate is not revoked if we can download the CRL
