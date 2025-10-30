@@ -10,7 +10,6 @@ namespace NumbatWallet.Infrastructure.Services;
 /// </summary>
 public class CredentialSharingService : ICredentialSharingService
 {
-    private readonly IConfiguration _configuration;
     private readonly ILogger<CredentialSharingService> _logger;
     private readonly string _baseUrl;
 
@@ -18,9 +17,8 @@ public class CredentialSharingService : ICredentialSharingService
         IConfiguration configuration,
         ILogger<CredentialSharingService> logger)
     {
-        _configuration = configuration;
         _logger = logger;
-        _baseUrl = _configuration["App:BaseUrl"] ?? "https://wallet.numbatwallet.com";
+        _baseUrl = configuration["App:BaseUrl"] ?? "https://wallet.numbatwallet.com";
     }
 
     public Task<string> CreateShareLinkAsync(

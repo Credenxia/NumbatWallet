@@ -20,7 +20,6 @@ public class HsmService : IHsmService
     private readonly IHsmProvider _provider;
     private readonly IConfiguration _configuration;
     private readonly ILogger<HsmService> _logger;
-    private readonly string _providerType;
 
     public HsmService(
         IServiceProvider serviceProvider,
@@ -31,14 +30,14 @@ public class HsmService : IHsmService
         _logger = logger;
 
         // Select provider based on configuration
-        _providerType = configuration["Hsm:Provider"] ?? "Software";
+        var providerType = configuration["Hsm:Provider"] ?? "Software";
 
-        _provider = _providerType.ToLowerInvariant() switch
+        _provider = providerType.ToLowerInvariant() switch
         {
             "software" => serviceProvider.GetRequiredService<SoftwareHsmProvider>(),
             "keyvault" => serviceProvider.GetRequiredService<KeyVaultHsmProvider>(),
             "managedhsm" => serviceProvider.GetRequiredService<ManagedHsmProvider>(),
-            _ => throw new NotSupportedException($"HSM provider '{_providerType}' not supported")
+            _ => throw new NotSupportedException($"HSM provider '{providerType}' not supported")
         };
 
         _logger.LogInformation("HSM Service initialized with {Provider} provider (FIPS: {Compliance})",
