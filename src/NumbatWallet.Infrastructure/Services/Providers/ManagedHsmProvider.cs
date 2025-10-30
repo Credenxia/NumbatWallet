@@ -714,10 +714,10 @@ public class ManagedHsmProvider : IHsmProvider, IDisposable
     }
 
     private async Task<MigrationResult> MigrateToManagedHsmAsync(
-        string _,
+        string _keyId,
         ManagedHsmProvider _targetHsm,
         MigrationOptions _options,
-        CancellationToken _ct)
+        CancellationToken _cancellationToken)
     {
         // Optimized Managed HSM to Managed HSM migration
 

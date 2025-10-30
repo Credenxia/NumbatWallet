@@ -14,7 +14,7 @@ public class RedisCacheService : ICacheService
     private readonly JsonSerializerOptions _jsonOptions;
 
     public RedisCacheService(
-        IDistributedCache _,
+        IDistributedCache _distributedCache,
         IConnectionMultiplexer redis,
         ILogger<RedisCacheService> logger)
     {
