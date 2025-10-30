@@ -36,7 +36,6 @@ public class AdminMutation
         [Service] IHttpContextAccessor httpContextAccessor)
     {
         var httpContext = httpContextAccessor.HttpContext;
-        var userId = httpContext?.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
         _logger.LogInformation("Creating tenant {TenantName}", input.Name);
 
@@ -131,7 +130,7 @@ public class AdminMutation
         Directory.CreateDirectory(backupPath);
 
         // Queue backup task (in production, use a background service)
-        var backupTask = Task.Run(async () =>
+        _ = Task.Run(async () =>
         {
             // Simulate backup process
             await Task.Delay(1000);

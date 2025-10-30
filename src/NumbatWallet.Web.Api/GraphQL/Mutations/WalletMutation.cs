@@ -89,7 +89,6 @@ public class WalletMutation
         [Service] IHttpContextAccessor httpContextAccessor)
     {
         var httpContext = httpContextAccessor.HttpContext;
-        var userId = httpContext?.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
         _logger.LogInformation("Updating wallet {WalletId}", input.WalletId);
 
@@ -126,7 +125,6 @@ public class WalletMutation
         [Service] IHttpContextAccessor httpContextAccessor)
     {
         var httpContext = httpContextAccessor.HttpContext;
-        var userId = httpContext?.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
         _logger.LogWarning("Deactivating wallet {WalletId} for reason: {Reason}",
             input.WalletId, input.Reason);
@@ -159,7 +157,6 @@ public class WalletMutation
         [Service] IHttpContextAccessor httpContextAccessor)
     {
         var httpContext = httpContextAccessor.HttpContext;
-        var userId = httpContext?.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
         _logger.LogInformation("Exporting wallet {WalletId} in format {Format}",
             input.WalletId, input.Format);
