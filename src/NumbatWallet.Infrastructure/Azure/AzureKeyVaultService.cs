@@ -199,11 +199,9 @@ public class MockAzureKeyVaultService : IAzureKeyVaultService
 {
     private readonly Dictionary<string, string> _secrets = new();
     private readonly Dictionary<string, byte[]> _keys = new();
-    private readonly ILogger<MockAzureKeyVaultService> _logger;
 
     public MockAzureKeyVaultService(ILogger<MockAzureKeyVaultService> logger)
     {
-        _logger = logger;
     }
 
     public Task<string> GetSecretAsync(string secretName, CancellationToken cancellationToken = default)

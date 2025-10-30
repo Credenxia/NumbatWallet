@@ -134,14 +134,14 @@ public static class AzurePostgreSQLConfiguration
         return builder.ConnectionString;
     }
 
-    private static async Task<string> GetAzureADTokenAsync(IConfiguration configuration)
+    private static async Task<string> GetAzureADTokenAsync(IConfiguration _)
     {
         // Use Azure.Identity to get token for PostgreSQL
         var credential = new DefaultAzureCredential();
         var tokenRequestContext = new TokenRequestContext(
             new[] { "https://ossrdbms-aad.database.windows.net/.default" });
 
-        var token = await credential.GetTokenAsync(tokenRequestContext, default);
+        var token = await credential.GetTokenAsync(tokenRequestContext);
         return token.Token;
     }
 }

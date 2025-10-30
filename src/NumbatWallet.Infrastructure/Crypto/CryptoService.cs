@@ -237,7 +237,7 @@ public class CryptoService : ICryptoService
             {
                 new PostEvictionCallbackRegistration
                 {
-                    EvictionCallback = (key, value, reason, state) =>
+                    EvictionCallback = (_, value, _, _) =>
                     {
                         if (value is byte[] keyData)
                         {

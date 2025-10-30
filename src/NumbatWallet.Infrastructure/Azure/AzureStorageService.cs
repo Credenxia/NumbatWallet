@@ -33,13 +33,12 @@ public class AzureStorageService : IAzureStorageService
 
             // Ensure container exists
             await containerClient.CreateIfNotExistsAsync(
-                PublicAccessType.None,
                 cancellationToken: cancellationToken);
 
             var blobClient = containerClient.GetBlobClient(blobName);
 
             using var stream = new MemoryStream(data);
-            var response = await blobClient.UploadAsync(
+            _ = await blobClient.UploadAsync(
                 stream,
                 overwrite: true,
                 cancellationToken: cancellationToken);
