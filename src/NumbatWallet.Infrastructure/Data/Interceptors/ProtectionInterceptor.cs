@@ -69,7 +69,7 @@ public class ProtectionInterceptor : SaveChangesInterceptor
         ISearchTokenService searchTokenService,
         ITenantPolicyService tenantPolicyService,
         Guid tenantId,
-        CancellationToken cancellationToken)
+        CancellationToken _cancellationToken)
     {
         var entityType = entry.Entity.GetType();
 
@@ -111,7 +111,7 @@ public class ProtectionInterceptor : SaveChangesInterceptor
             // Apply protection based on policy
             if (currentValue is string stringValue)
             {
-                var protectedValue = await protectionService.ProtectAsync(
+                _ = await protectionService.ProtectAsync(
                     stringValue,
                     classificationAttr.Classification,
                     propertyInfo.Name,
@@ -139,9 +139,9 @@ public class ProtectionInterceptor : SaveChangesInterceptor
     }
 
     private async Task StoreSearchTokens(
-        EntityEntry entry,
-        string propertyName,
-        IEnumerable<string> tokens)
+        EntityEntry _entry,
+        string _propertyName,
+        IEnumerable<string> _tokens)
     {
         // Implementation would store search tokens for the field
         // This could be in a shadow property, separate table, or within the JSONB structure
