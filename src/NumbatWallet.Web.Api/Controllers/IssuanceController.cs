@@ -17,7 +17,6 @@ public class IssuanceController : ControllerBase
     private readonly ICommandHandler<ApproveIssuanceCommand, IssuanceDto> _approveIssuanceHandler;
     private readonly ICommandHandler<RejectIssuanceCommand, IssuanceDto> _rejectIssuanceHandler;
     private readonly ICommandHandler<CompleteIssuanceCommand, IssuanceDto> _completeIssuanceHandler;
-    private readonly ICommandHandler<CancelIssuanceCommand, bool> _cancelIssuanceHandler;
     private readonly IQueryHandler<GetIssuanceByIdQuery, IssuanceDto?> _getIssuanceByIdHandler;
     private readonly IQueryHandler<GetIssuancesByStatusQuery, IEnumerable<IssuanceDto>> _getIssuancesByStatusHandler;
     private readonly ICredentialService _credentialService;
@@ -29,7 +28,6 @@ public class IssuanceController : ControllerBase
         ICommandHandler<ApproveIssuanceCommand, IssuanceDto> approveIssuanceHandler,
         ICommandHandler<RejectIssuanceCommand, IssuanceDto> rejectIssuanceHandler,
         ICommandHandler<CompleteIssuanceCommand, IssuanceDto> completeIssuanceHandler,
-        ICommandHandler<CancelIssuanceCommand, bool> cancelIssuanceHandler,
         IQueryHandler<GetIssuanceByIdQuery, IssuanceDto?> getIssuanceByIdHandler,
         IQueryHandler<GetIssuancesByStatusQuery, IEnumerable<IssuanceDto>> getIssuancesByStatusHandler,
         ICredentialService credentialService,
@@ -40,7 +38,6 @@ public class IssuanceController : ControllerBase
         _approveIssuanceHandler = approveIssuanceHandler;
         _rejectIssuanceHandler = rejectIssuanceHandler;
         _completeIssuanceHandler = completeIssuanceHandler;
-        _cancelIssuanceHandler = cancelIssuanceHandler;
         _getIssuanceByIdHandler = getIssuanceByIdHandler;
         _getIssuancesByStatusHandler = getIssuancesByStatusHandler;
         _credentialService = credentialService;

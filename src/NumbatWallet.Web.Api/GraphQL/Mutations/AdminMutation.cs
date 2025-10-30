@@ -11,20 +11,17 @@ public class AdminMutation
 {
     private readonly ISecurityAuditService _auditService;
     private readonly ILogger<AdminMutation> _logger;
-    private readonly ISystemMetricsService _metricsService;
     private readonly ICacheService _cacheService;
     private readonly IKeyRotationService? _keyRotationService;
 
     public AdminMutation(
         ISecurityAuditService auditService,
         ILogger<AdminMutation> logger,
-        ISystemMetricsService metricsService,
         ICacheService cacheService,
         IKeyRotationService? keyRotationService = null)
     {
         _auditService = auditService;
         _logger = logger;
-        _metricsService = metricsService;
         _cacheService = cacheService;
         _keyRotationService = keyRotationService;
     }

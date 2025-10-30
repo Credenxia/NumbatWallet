@@ -21,7 +21,6 @@ public class CredentialController : ControllerBase
     private readonly ICommandHandler<RequestCredentialCommand, CredentialRequestDto> _requestCredentialHandler;
     private readonly IQueryHandler<GetCredentialByIdQuery, CredentialDto?> _getCredentialByIdHandler;
     private readonly IQueryHandler<GetCredentialsByWalletQuery, IEnumerable<CredentialDto>> _getCredentialsByWalletHandler;
-    private readonly ICurrentTenantService _tenantService;
     private readonly ISecurityAuditService _auditService;
     private readonly ILogger<CredentialController> _logger;
 
@@ -33,7 +32,6 @@ public class CredentialController : ControllerBase
         ICommandHandler<RequestCredentialCommand, CredentialRequestDto> requestCredentialHandler,
         IQueryHandler<GetCredentialByIdQuery, CredentialDto?> getCredentialByIdHandler,
         IQueryHandler<GetCredentialsByWalletQuery, IEnumerable<CredentialDto>> getCredentialsByWalletHandler,
-        ICurrentTenantService tenantService,
         ISecurityAuditService auditService,
         ILogger<CredentialController> logger)
     {
@@ -44,7 +42,6 @@ public class CredentialController : ControllerBase
         _requestCredentialHandler = requestCredentialHandler;
         _getCredentialByIdHandler = getCredentialByIdHandler;
         _getCredentialsByWalletHandler = getCredentialsByWalletHandler;
-        _tenantService = tenantService;
         _auditService = auditService;
         _logger = logger;
     }

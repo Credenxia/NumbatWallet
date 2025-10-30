@@ -16,7 +16,6 @@ public class WalletMutation
 {
     private readonly ICommandHandler<CreateWalletCommand, WalletDto> _createWalletHandler;
     private readonly ICommandHandler<UpdateWalletCommand, WalletDto> _updateWalletHandler;
-    private readonly ICommandHandler<ActivateWalletCommand, WalletDto> _activateWalletHandler;
     private readonly ICommandHandler<DeleteWalletCommand, bool> _deleteWalletHandler;
     private readonly IQueryHandler<GetWalletByIdQuery, WalletDto?> _getWalletHandler;
     private readonly ISecurityAuditService _auditService;
@@ -26,7 +25,6 @@ public class WalletMutation
     public WalletMutation(
         ICommandHandler<CreateWalletCommand, WalletDto> createWalletHandler,
         ICommandHandler<UpdateWalletCommand, WalletDto> updateWalletHandler,
-        ICommandHandler<ActivateWalletCommand, WalletDto> activateWalletHandler,
         ICommandHandler<DeleteWalletCommand, bool> deleteWalletHandler,
         IQueryHandler<GetWalletByIdQuery, WalletDto?> getWalletHandler,
         ISecurityAuditService auditService,
@@ -35,7 +33,6 @@ public class WalletMutation
     {
         _createWalletHandler = createWalletHandler;
         _updateWalletHandler = updateWalletHandler;
-        _activateWalletHandler = activateWalletHandler;
         _deleteWalletHandler = deleteWalletHandler;
         _getWalletHandler = getWalletHandler;
         _auditService = auditService;
