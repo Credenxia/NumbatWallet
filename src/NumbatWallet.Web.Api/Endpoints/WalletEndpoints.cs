@@ -19,7 +19,7 @@ public class WalletEndpoints : ICarterModule
         group.MapGet("/", GetMyWallets)
             .WithName("GetMyWallets")
             .WithOpenApi()
-            .Produces<IEnumerable<WalletDto>>(StatusCodes.Status200OK);
+            .Produces<IEnumerable<WalletDto>>();
 
         // GET /api/v1/wallets/{id}
         group.MapGet("/{id:guid}", GetWalletById)
@@ -80,7 +80,7 @@ public class WalletEndpoints : ICarterModule
         group.MapGet("/{id:guid}/credentials", GetWalletCredentials)
             .WithName("GetWalletCredentials")
             .WithOpenApi()
-            .Produces<IEnumerable<CredentialDto>>(StatusCodes.Status200OK)
+            .Produces<IEnumerable<CredentialDto>>()
             .Produces(StatusCodes.Status404NotFound);
 
         // GET /api/v1/wallets/{id}/statistics

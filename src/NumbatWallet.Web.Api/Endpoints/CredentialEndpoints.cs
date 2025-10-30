@@ -75,14 +75,14 @@ public class CredentialEndpoints : ICarterModule
             .WithName("GetCredentialTypes")
             .WithOpenApi()
             .AllowAnonymous()
-            .Produces<IEnumerable<CredentialTypeInfo>>(StatusCodes.Status200OK);
+            .Produces<IEnumerable<CredentialTypeInfo>>();
 
         // GET /api/v1/credentials/search
         group.MapGet("/search", SearchCredentials)
             .WithName("SearchCredentials")
             .WithOpenApi()
             .RequireAuthorization("AdminOrOfficer")
-            .Produces<IEnumerable<CredentialDto>>(StatusCodes.Status200OK);
+            .Produces<IEnumerable<CredentialDto>>();
 
         // POST /api/v1/credentials/validate-jwt-vc
         group.MapPost("/validate-jwt-vc", ValidateJwtVc)

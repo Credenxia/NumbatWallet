@@ -136,7 +136,7 @@ public class CredentialController : ControllerBase
             ? tid
             : Guid.Empty;
 
-        var query = new GetCredentialsByWalletQuery(tenantId, walletId, false);
+        var query = new GetCredentialsByWalletQuery(tenantId, walletId);
         var result = await _getCredentialsByWalletHandler.HandleAsync(query);
 
         return Ok(result);

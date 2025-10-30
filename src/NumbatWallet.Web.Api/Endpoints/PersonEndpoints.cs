@@ -18,7 +18,7 @@ public class PersonEndpoints : ICarterModule
             .WithName("GetAllPersons")
             .WithOpenApi()
             .RequireAuthorization("AdminOrOfficer")
-            .Produces<IEnumerable<PersonDto>>(StatusCodes.Status200OK);
+            .Produces<IEnumerable<PersonDto>>();
 
         // GET /api/v1/persons/{id}
         group.MapGet("/{id:guid}", GetPersonById)
@@ -32,7 +32,7 @@ public class PersonEndpoints : ICarterModule
             .WithName("SearchPersons")
             .WithOpenApi()
             .RequireAuthorization("AdminOrOfficer")
-            .Produces<IEnumerable<PersonDto>>(StatusCodes.Status200OK);
+            .Produces<IEnumerable<PersonDto>>();
 
         // POST /api/v1/persons
         group.MapPost("/", CreatePerson)
@@ -100,9 +100,7 @@ public class PersonEndpoints : ICarterModule
     {
         var query = new SearchPersonsQuery(
             searchRequest.SearchTerm,
-            null,
-            1,
-            20);
+            null);
 
         var result = await handler.HandleAsync(query, cancellationToken);
         return Results.Ok(result);
