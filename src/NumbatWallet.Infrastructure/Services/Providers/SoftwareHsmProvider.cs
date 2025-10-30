@@ -330,7 +330,7 @@ public class SoftwareHsmProvider : IHsmProvider
         KeyWrapAlgorithm algorithm,
         CancellationToken cancellationToken = default)
     {
-        if (!_keys.TryGetValue(wrappingKeyId, out var key))
+        if (!_keys.TryGetValue(wrappingKeyId, out _))
         {
             throw new KeyNotFoundException($"Wrapping key {wrappingKeyId} not found");
         }
@@ -349,7 +349,7 @@ public class SoftwareHsmProvider : IHsmProvider
         KeyWrapAlgorithm algorithm,
         CancellationToken cancellationToken = default)
     {
-        if (!_keys.TryGetValue(unwrappingKeyId, out var key))
+        if (!_keys.TryGetValue(unwrappingKeyId, out _))
         {
             throw new KeyNotFoundException($"Unwrapping key {unwrappingKeyId} not found");
         }
