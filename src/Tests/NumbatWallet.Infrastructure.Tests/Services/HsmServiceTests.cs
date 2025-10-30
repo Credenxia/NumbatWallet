@@ -135,7 +135,7 @@ public class HsmServiceTests
             });
 
         services.AddSingleton(mockSoftwareProvider.Object);
-        services.AddSingleton<KeyVaultHsmProvider>(_ =>
+        services.AddSingleton(_ =>
             new Mock<KeyVaultHsmProvider>(Mock.Of<ILogger<KeyVaultHsmProvider>>()).Object);
         services.AddSingleton<ManagedHsmProvider>(_ =>
             new Mock<ManagedHsmProvider>(Mock.Of<ILogger<ManagedHsmProvider>>()).Object);
