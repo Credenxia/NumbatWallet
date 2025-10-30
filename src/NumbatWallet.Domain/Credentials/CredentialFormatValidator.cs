@@ -7,10 +7,6 @@ namespace NumbatWallet.Domain.Credentials;
 /// </summary>
 public class CredentialFormatValidator
 {
-    public CredentialFormatValidator()
-    {
-    }
-
     public bool IsValidJwtVc(string credential)
     {
         if (string.IsNullOrWhiteSpace(credential))

@@ -23,11 +23,11 @@ public class TenantCertificate : Entity<Guid>
     public string? RevocationReason { get; private set; }
     public DateTimeOffset? LastUsedAt { get; private set; }
     public int UsageCount { get; private set; }
-    public string? SerialNumber { get; private set; }
-    public DateTimeOffset NotBefore { get; private set; }
-    public DateTimeOffset NotAfter { get; private set; }
+    public string? SerialNumber { get; init; }
+    public DateTimeOffset NotBefore { get; init; }
+    public DateTimeOffset NotAfter { get; init; }
     public bool IsRevoked => RevokedAt.HasValue;
-    public bool IsBlocked { get; private set; }
+    public bool IsBlocked { get; init; }
 
     private TenantCertificate() : base(Guid.Empty)
     {

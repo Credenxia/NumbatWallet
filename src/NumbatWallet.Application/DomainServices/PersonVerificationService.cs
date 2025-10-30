@@ -140,7 +140,7 @@ public class PersonVerificationService : IPersonVerificationService
     private async Task<bool> VerifyEmailMethod(
         Person _,
         Dictionary<string, object> verificationData,
-        CancellationToken cancellationToken)
+        CancellationToken _ct)
     {
         if (!verificationData.ContainsKey("verificationCode"))
         {
@@ -159,7 +159,7 @@ public class PersonVerificationService : IPersonVerificationService
     private async Task<bool> VerifyPhoneMethod(
         Person _,
         Dictionary<string, object> verificationData,
-        CancellationToken cancellationToken)
+        CancellationToken _ct)
     {
         if (!verificationData.ContainsKey("smsCode"))
         {
@@ -178,7 +178,7 @@ public class PersonVerificationService : IPersonVerificationService
     private async Task<bool> VerifyDocumentMethod(
         Person _,
         Dictionary<string, object> verificationData,
-        CancellationToken cancellationToken)
+        CancellationToken _ct)
     {
         // In real implementation, this would integrate with document verification service
         // For now, check if required document data is present
@@ -190,7 +190,7 @@ public class PersonVerificationService : IPersonVerificationService
     private async Task<bool> VerifyBiometricMethod(
         Person _,
         Dictionary<string, object> verificationData,
-        CancellationToken cancellationToken)
+        CancellationToken _ct)
     {
         // In real implementation, this would integrate with biometric verification service
         // For now, check if biometric data is present

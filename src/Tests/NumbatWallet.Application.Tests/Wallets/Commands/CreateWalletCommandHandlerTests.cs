@@ -1,8 +1,6 @@
 using NumbatWallet.Application.Wallets.Commands.CreateWallet;
-using NumbatWallet.Application.DTOs;
 using NumbatWallet.Application.Common.Exceptions;
 using NumbatWallet.Domain.Interfaces;
-using NumbatWallet.Application.DomainServices;
 using NumbatWallet.Domain.Aggregates;
 using Microsoft.Extensions.Logging;
 using NumbatWallet.SharedKernel.Interfaces;

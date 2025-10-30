@@ -23,18 +23,13 @@ public class CredentialManifestValidator
             return false;
         }
 
-        if (manifest.Issuer == null)
-        {
-            return false;
-        }
-
         if (string.IsNullOrWhiteSpace(manifest.Issuer.Id))
         {
             return false;
         }
 
         // Must have at least one output descriptor
-        if (manifest.OutputDescriptors == null || manifest.OutputDescriptors.Count == 0)
+        if (manifest.OutputDescriptors.Count == 0)
         {
             return false;
         }
@@ -61,8 +56,7 @@ public class CredentialManifestValidator
                 return false;
             }
 
-            if (manifest.PresentationDefinition.InputDescriptors == null ||
-                manifest.PresentationDefinition.InputDescriptors.Count == 0)
+            if (manifest.PresentationDefinition.InputDescriptors.Count == 0)
             {
                 return false;
             }
@@ -74,7 +68,7 @@ public class CredentialManifestValidator
                     return false;
                 }
 
-                if (inputDescriptor.Schema == null || inputDescriptor.Schema.Count == 0)
+                if (inputDescriptor.Schema.Count == 0)
                 {
                     return false;
                 }
@@ -107,18 +101,13 @@ public class CredentialManifestValidator
             result.Errors.Add("Manifest version is required");
         }
 
-        if (manifest.Issuer == null)
-        {
-            result.IsValid = false;
-            result.Errors.Add("Manifest issuer is required");
-        }
-        else if (string.IsNullOrWhiteSpace(manifest.Issuer.Id))
+        if (string.IsNullOrWhiteSpace(manifest.Issuer.Id))
         {
             result.IsValid = false;
             result.Errors.Add("Issuer ID is required");
         }
 
-        if (manifest.OutputDescriptors == null || manifest.OutputDescriptors.Count == 0)
+        if (manifest.OutputDescriptors.Count == 0)
         {
             result.IsValid = false;
             result.Errors.Add("At least one output descriptor is required");

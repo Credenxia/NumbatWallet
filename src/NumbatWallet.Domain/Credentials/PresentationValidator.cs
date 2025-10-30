@@ -32,7 +32,7 @@ public class PresentationValidator
 
     private bool ValidateInputDescriptor(Dictionary<string, object> presentation, InputDescriptor descriptor)
     {
-        if (descriptor.Constraints == null || descriptor.Constraints.Fields == null)
+        if (descriptor.Constraints == null)
         {
             return true; // No constraints to validate
         }

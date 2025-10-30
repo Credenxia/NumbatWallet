@@ -5,7 +5,6 @@ using NumbatWallet.Application.DTOs;
 using NumbatWallet.Application.Extensions;
 using NumbatWallet.Domain.Aggregates;
 using NumbatWallet.Domain.Interfaces;
-using NumbatWallet.Application.DomainServices;
 using NumbatWallet.SharedKernel.Interfaces;
 
 namespace NumbatWallet.Application.Wallets.Commands.CreateWallet;
