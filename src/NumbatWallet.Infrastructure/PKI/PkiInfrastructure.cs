@@ -317,7 +317,7 @@ public class CertificateService : ICertificateService
 
     public Task<bool> IsRevokedAsync(X509Certificate2 certificate, CancellationToken cancellationToken = default)
     {
-        var isRevoked = _revokedCertificates.Contains(certificate.SerialNumber ?? "");
+        var isRevoked = _revokedCertificates.Contains(certificate.SerialNumber);
         return Task.FromResult(isRevoked);
     }
 

@@ -217,7 +217,7 @@ public class EventStore : IEventStore
         // Try to get from current user service
         if (_currentUserService != null)
         {
-            return _currentUserService.UserId ?? "system";
+            return _currentUserService.UserId;
         }
 
         return "system";

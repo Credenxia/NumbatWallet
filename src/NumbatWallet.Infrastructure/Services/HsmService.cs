@@ -349,9 +349,9 @@ public class HsmService : IHsmService
                 Algorithm = ConvertKeyTypeToAlgorithm(key.Type, key.KeySize),
                 CreatedAt = key.CreatedOn,
                 ExpiresAt = key.ExpiresOn,
-                Version = key.Version ?? string.Empty,
+                Version = key.Version,
                 Enabled = key.Enabled,
-                Tags = key.Tags ?? new Dictionary<string, string>(),
+                Tags = key.Tags,
                 AllowedOperations = ConvertKeyUsageToOperations(key.Usage)
             };
         }
@@ -376,9 +376,9 @@ public class HsmService : IHsmService
                 Algorithm = ConvertKeyTypeToAlgorithm(k.Type, k.KeySize),
                 CreatedAt = k.CreatedOn,
                 ExpiresAt = k.ExpiresOn,
-                Version = k.Version ?? string.Empty,
+                Version = k.Version,
                 Enabled = k.Enabled,
-                Tags = k.Tags ?? new Dictionary<string, string>(),
+                Tags = k.Tags,
                 AllowedOperations = ConvertKeyUsageToOperations(k.Usage)
             });
         }
