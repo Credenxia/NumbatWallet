@@ -31,15 +31,15 @@ public sealed class Person : AuditableEntity<Guid>, ITenantAware
     public DateOnly DateOfBirth { get; private set; }
 
     public string ExternalId { get; private set; }
-    public string? MobileNumber { get; private set; }
-    public DateTimeOffset? EmailVerifiedAt { get; private set; }
+    public string? MobileNumber { get; init; }
+    public DateTimeOffset? EmailVerifiedAt { get; init; }
 
     public VerificationStatus EmailVerificationStatus { get; private set; }
     public VerificationStatus PhoneVerificationStatus { get; private set; }
     public bool IsVerified => EmailVerificationStatus == VerificationStatus.Verified
                            && PhoneVerificationStatus == VerificationStatus.Verified;
     public DateTimeOffset? VerifiedAt { get; private set; }
-    public VerificationLevel? VerificationLevel { get; private set; }
+    public VerificationLevel? VerificationLevel { get; init; }
     public PersonStatus Status { get; private set; }
     public string TenantId { get; private set; } = string.Empty;
 
@@ -51,8 +51,7 @@ public sealed class Person : AuditableEntity<Guid>, ITenantAware
     public DateTimeOffset? LastPinAttemptAt { get; private set; }
 
     // Navigation properties
-    private readonly List<Wallet> _wallets = new();
-    public IReadOnlyCollection<Wallet> Wallets => _wallets.AsReadOnly();
+    public IReadOnlyCollection<Wallet> Wallets { get; init; } = new List<Wallet>();
 
 #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring as nullable.
     private Person() : base(Guid.Empty)

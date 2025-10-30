@@ -33,10 +33,9 @@ public sealed class Credential : AuditableEntity<Guid>, ITenantAware
     public string TenantId { get; private set; } = string.Empty;
 
     // Navigation properties
-    public Wallet? Wallet { get; private set; }
-    public Issuer? Issuer { get; private set; }
-    private readonly Dictionary<string, object> _claims = new();
-    public IReadOnlyDictionary<string, object> Claims => _claims;
+    public Wallet? Wallet { get; init; }
+    public Issuer? Issuer { get; init; }
+    public IReadOnlyDictionary<string, object> Claims { get; init; } = new Dictionary<string, object>();
 
     private Credential() : base(Guid.Empty)
     {

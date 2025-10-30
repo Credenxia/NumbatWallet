@@ -26,8 +26,8 @@ public sealed class Wallet : AuditableEntity<Guid>, ITenantAware
     public WalletStatus Status { get; private set; }
     public string? SuspensionReason { get; private set; }
     public string? LockReason { get; private set; }
-    public string? ExternalId { get; private set; }
-    public DateTimeOffset? ExpiresAt { get; private set; }
+    public string? ExternalId { get; init; }
+    public DateTimeOffset? ExpiresAt { get; init; }
     public IReadOnlyCollection<Guid> GetCredentials() => _credentialIds.AsReadOnly();
     public IReadOnlyCollection<Credential> Credentials { get; } = new List<Credential>();
 

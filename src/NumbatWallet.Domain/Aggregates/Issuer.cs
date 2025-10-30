@@ -44,7 +44,7 @@ public sealed class Issuer : AuditableEntity<Guid>, ITenantAware
     public int TrustLevel { get; private set; }
     public string? Jurisdiction { get; private set; }
     public string? WebsiteUrl { get; private set; }
-    public DateTimeOffset? CertificateExpiresAt { get; private set; }
+    public DateTimeOffset? CertificateExpiresAt { get; init; }
     public IReadOnlyCollection<RevocationRegistry> RevocationRegistries { get; } = new List<RevocationRegistry>();
     public IReadOnlyCollection<SupportedCredentialType> SupportedCredentialTypes { get; } = new List<SupportedCredentialType>();
 
@@ -335,7 +335,7 @@ public sealed class Issuer : AuditableEntity<Guid>, ITenantAware
 
     public void SetTrustedDomain(string trustedDomain)
     {
-        TrustedDomain = trustedDomain ?? string.Empty;
+        TrustedDomain = trustedDomain;
     }
 
     private static string WildcardToRegex(string pattern)

@@ -7,13 +7,8 @@ namespace NumbatWallet.Domain.Credentials;
 /// </summary>
 public class CredentialFormatValidator
 {
-    private readonly JwtVcFormat _jwtFormat;
-    private readonly JsonLdFormat _jsonLdFormat;
-
     public CredentialFormatValidator()
     {
-        _jwtFormat = new JwtVcFormat();
-        _jsonLdFormat = new JsonLdFormat();
     }
 
     public bool IsValidJwtVc(string credential)
@@ -39,11 +34,11 @@ public class CredentialFormatValidator
                 if (padding > 0)
                 {
                     var paddedPart = part + new string('=', 4 - padding);
-                    Convert.FromBase64String(paddedPart);
+                    _ = Convert.FromBase64String(paddedPart);
                 }
                 else
                 {
-                    Convert.FromBase64String(part);
+                    _ = Convert.FromBase64String(part);
                 }
             }
 
