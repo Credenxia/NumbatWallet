@@ -702,12 +702,12 @@ public class ManagedHsmProvider : IHsmProvider, IDisposable
             _ => HashAlgorithmName.SHA256
         };
 
-        using var hasher = hashAlgorithm.Name switch
+        using HashAlgorithm hasher = hashAlgorithm.Name switch
         {
-            "SHA256" => (HashAlgorithm)SHA256.Create(),
-            "SHA384" => (HashAlgorithm)SHA384.Create(),
-            "SHA512" => (HashAlgorithm)SHA512.Create(),
-            _ => (HashAlgorithm)SHA256.Create()
+            "SHA256" => SHA256.Create(),
+            "SHA384" => SHA384.Create(),
+            "SHA512" => SHA512.Create(),
+            _ => SHA256.Create()
         };
 
         return hasher.ComputeHash(data);
