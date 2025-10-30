@@ -29,7 +29,7 @@ public class EntityConfigurationsAdvancedTests
             .FirstOrDefault(fk => fk.PrincipalEntityType.ClrType == typeof(Person));
 
         personForeignKey.Should().NotBeNull();
-        personForeignKey!.DeleteBehavior.Should().Be(DeleteBehavior.Restrict);
+        personForeignKey.DeleteBehavior.Should().Be(DeleteBehavior.Restrict);
     }
 
     [Fact]
@@ -49,7 +49,7 @@ public class EntityConfigurationsAdvancedTests
             .FirstOrDefault(fk => fk.PrincipalEntityType.ClrType == typeof(Wallet));
 
         walletForeignKey.Should().NotBeNull();
-        walletForeignKey!.DeleteBehavior.Should().Be(DeleteBehavior.Cascade);
+        walletForeignKey.DeleteBehavior.Should().Be(DeleteBehavior.Cascade);
     }
 
     [Fact]
@@ -69,7 +69,7 @@ public class EntityConfigurationsAdvancedTests
             .FirstOrDefault(fk => fk.PrincipalEntityType.ClrType == typeof(Issuer));
 
         issuerForeignKey.Should().NotBeNull();
-        issuerForeignKey!.DeleteBehavior.Should().Be(DeleteBehavior.Restrict);
+        issuerForeignKey.DeleteBehavior.Should().Be(DeleteBehavior.Restrict);
     }
 
     #endregion
@@ -91,7 +91,7 @@ public class EntityConfigurationsAdvancedTests
             .FirstOrDefault(idx => idx.Properties.Any(p => p.Name == "WalletDid"));
 
         didIndex.Should().NotBeNull();
-        didIndex!.IsUnique.Should().BeTrue();
+        didIndex.IsUnique.Should().BeTrue();
     }
 
     [Fact]
@@ -126,7 +126,7 @@ public class EntityConfigurationsAdvancedTests
             .FirstOrDefault(idx => idx.Properties.Any(p => p.Name == "Code"));
 
         codeIndex.Should().NotBeNull();
-        codeIndex!.IsUnique.Should().BeTrue();
+        codeIndex.IsUnique.Should().BeTrue();
     }
 
     [Fact]
@@ -186,7 +186,7 @@ public class EntityConfigurationsAdvancedTests
 
         // Assert
         dataProperty.Should().NotBeNull();
-        dataProperty!.GetColumnType().Should().Be("jsonb");
+        dataProperty.GetColumnType().Should().Be("jsonb");
     }
 
     [Fact]
@@ -449,7 +449,7 @@ public class EntityConfigurationsAdvancedTests
 
         // Assert
         credentialsNavigation.Should().NotBeNull();
-        credentialsNavigation!.IsCollection.Should().BeTrue();
+        credentialsNavigation.IsCollection.Should().BeTrue();
     }
 
     [Fact]

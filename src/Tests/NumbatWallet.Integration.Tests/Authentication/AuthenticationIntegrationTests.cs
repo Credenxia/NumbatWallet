@@ -33,7 +33,7 @@ public class AuthenticationIntegrationTests : IntegrationTestBase
         response.StatusCode.Should().Be(HttpStatusCode.OK);
         var result = await response.Content.ReadFromJsonAsync<AuthenticationResponseDto>(JsonOptions);
         result.Should().NotBeNull();
-        result!.AccessToken.Should().NotBeNullOrEmpty();
+        result.AccessToken.Should().NotBeNullOrEmpty();
         result.RefreshToken.Should().NotBeNullOrEmpty();
         result.ExpiresAt.Should().BeAfter(DateTime.UtcNow);
     }
@@ -92,7 +92,7 @@ public class AuthenticationIntegrationTests : IntegrationTestBase
         response.StatusCode.Should().Be(HttpStatusCode.OK);
         var validation = await response.Content.ReadFromJsonAsync<TokenValidationResponseDto>(JsonOptions);
         validation.Should().NotBeNull();
-        validation!.IsValid.Should().BeTrue();
+        validation.IsValid.Should().BeTrue();
         validation.Claims.Should().NotBeEmpty();
     }
 
@@ -131,7 +131,7 @@ public class AuthenticationIntegrationTests : IntegrationTestBase
         response.StatusCode.Should().Be(HttpStatusCode.OK);
         var result = await response.Content.ReadFromJsonAsync<AuthenticationResponseDto>(JsonOptions);
         result.Should().NotBeNull();
-        result!.AccessToken.Should().NotBeNullOrEmpty();
+        result.AccessToken.Should().NotBeNullOrEmpty();
         result.AccessToken.Should().NotBe(authResult.AccessToken); // Should be a new token
     }
 

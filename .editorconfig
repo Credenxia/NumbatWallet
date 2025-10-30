@@ -48,6 +48,8 @@ dotnet_naming_rule.test_methods_should_be_pascal_case_with_underscores.severity 
 # Field can be converted to local variable - xUnit test fixture pattern (JUSTIFIED)
 # Reason: xUnit creates new instance per test, constructor-initialized fields are the standard pattern
 resharper_convert_to_local_function_highlighting = none
+resharper_convert_to_constant_local_highlighting = none
+resharper_field_can_be_made_read_only_global_highlighting = hint
 
 # ReSharper inspections - Only suppress FALSE POSITIVES, not real issues
 [*.cs]

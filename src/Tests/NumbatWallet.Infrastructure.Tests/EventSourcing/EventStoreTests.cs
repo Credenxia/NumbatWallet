@@ -196,7 +196,7 @@ public class EventStoreTests : IDisposable
             .FirstOrDefaultAsync(s => s.AggregateId == aggregateId);
 
         storedSnapshot.Should().NotBeNull();
-        storedSnapshot!.Version.Should().Be(10);
+        storedSnapshot.Version.Should().Be(10);
         storedSnapshot.SnapshotData.Should().Be("{ \"state\": \"snapshot\" }");
     }
 
@@ -230,7 +230,7 @@ public class EventStoreTests : IDisposable
 
         // Assert
         result.Should().NotBeNull();
-        result!.Version.Should().Be(10);
+        result.Version.Should().Be(10);
     }
 
     [Fact]

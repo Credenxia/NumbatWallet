@@ -28,7 +28,7 @@ public class WalletTemplateControllerIntegrationTests : IntegrationTestBase
 
         // Assert
         response.Should().NotBeNull();
-        response!.Should().BeOfType<List<WalletTemplateDto>>();
+        response.Should().BeOfType<List<WalletTemplateDto>>();
     }
 
     [Fact(Skip = "WalletTemplates table not in database schema - POA milestone pending")]
@@ -50,7 +50,7 @@ public class WalletTemplateControllerIntegrationTests : IntegrationTestBase
 
         // Assert
         response.Should().NotBeNull();
-        response!.Id.Should().Be(createdTemplate.Id);
+        response.Id.Should().Be(createdTemplate.Id);
         response.Name.Should().Be("Test Template");
     }
 
@@ -77,7 +77,7 @@ public class WalletTemplateControllerIntegrationTests : IntegrationTestBase
 
         // Assert
         response.Should().NotBeNull();
-        response!.Name.Should().Be("Apple Wallet Driver License");
+        response.Name.Should().Be("Apple Wallet Driver License");
         response.Platform.Should().Be("Apple");
         response.Id.Should().NotBeNullOrEmpty();
     }
@@ -165,7 +165,7 @@ public class WalletTemplateControllerIntegrationTests : IntegrationTestBase
 
         // Assert
         response.Should().NotBeNull();
-        response!.Should().OnlyContain(t => t.Platform == "Apple");
+        response.Should().OnlyContain(t => t.Platform == "Apple");
     }
 
     [Fact(Skip = "WalletTemplates table not in database schema - POA milestone pending")]

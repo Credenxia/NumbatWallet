@@ -3,22 +3,16 @@ Solution NumbatWallet.sln
       src\NumbatWallet.AppHost\Program.cs:36 Local variable 'admin' is never used
     
     Project NumbatWallet.Application
-      src\NumbatWallet.Application\Commands\Authentication\Handlers\LoginCommandHandler.cs:19 Field '_authenticationService' is assigned but its value is never used
       src\NumbatWallet.Application\Commands\Certificates\RenewCertificateCommandHandler.cs:107 Local variable 'gracePeriodEnd' is never used
       src\NumbatWallet.Application\Commands\Tenants\CreateTenantCommandHandler.cs:100 Redundant 'Object.ToString()' call
       src\NumbatWallet.Application\Commands\Tenants\DeleteTenantCommandHandler.cs:77 Redundant 'Object.ToString()' call
-      src\NumbatWallet.Application\DomainServices\PersonVerificationService.cs:141 Parameter 'person' is never used
       src\NumbatWallet.Application\DomainServices\PersonVerificationService.cs:143 Parameter 'cancellationToken' is never used
-      src\NumbatWallet.Application\DomainServices\PersonVerificationService.cs:160 Parameter 'person' is never used
       src\NumbatWallet.Application\DomainServices\PersonVerificationService.cs:162 Parameter 'cancellationToken' is never used
-      src\NumbatWallet.Application\DomainServices\PersonVerificationService.cs:179 Parameter 'person' is never used
       src\NumbatWallet.Application\DomainServices\PersonVerificationService.cs:181 Parameter 'cancellationToken' is never used
-      src\NumbatWallet.Application\DomainServices\PersonVerificationService.cs:191 Parameter 'person' is never used
       src\NumbatWallet.Application\DomainServices\PersonVerificationService.cs:193 Parameter 'cancellationToken' is never used
-      src\NumbatWallet.Application\DomainServices\VerificationService.cs:32 Field '_credentialRepository' is assigned but its value is never used
-      src\NumbatWallet.Application\DomainServices\VerificationService.cs:123 Possible multiple enumeration
-      src\NumbatWallet.Application\DomainServices\VerificationService.cs:135 Possible multiple enumeration
-      src\NumbatWallet.Application\Handlers\Credentials\IssueCredentialHandler.cs:18 Field '_credentialService' is assigned but its value is never used
+      src\NumbatWallet.Application\DomainServices\VerificationService.cs:120 Possible multiple enumeration
+      src\NumbatWallet.Application\DomainServices\VerificationService.cs:132 Possible multiple enumeration
+      src\NumbatWallet.Application\Handlers\Credentials\IssueCredentialHandler.cs:4 Using directive is not required by the code and can be safely removed
       src\NumbatWallet.Application\Queries\Credentials\GetCredentialsByIssuerQuery.cs:45 Possible multiple enumeration
       src\NumbatWallet.Application\Queries\Credentials\GetCredentialsByIssuerQuery.cs:59 Possible multiple enumeration
       src\NumbatWallet.Application\Queries\Credentials\GetCredentialStatisticsQuery.cs:185 Possible multiple enumeration
@@ -90,6 +84,10 @@ Solution NumbatWallet.sln
       src\Tests\NumbatWallet.Application.Tests\Queries\Wallets\GetWalletQueryTests.cs:15 The field is always assigned before being used and can be converted into a local variable
       src\Tests\NumbatWallet.Application.Tests\Wallets\Commands\ActivateWalletCommandHandlerTests.cs:18 The field is always assigned before being used and can be converted into a local variable
       src\Tests\NumbatWallet.Application.Tests\Wallets\Commands\ActivateWalletCommandHandlerTests.cs:19 The field is always assigned before being used and can be converted into a local variable
+      src\Tests\NumbatWallet.Application.Tests\Wallets\Commands\ActivateWalletCommandHandlerTests.cs:88 The parameter 'Pin' has the same default value
+      src\Tests\NumbatWallet.Application.Tests\Wallets\Commands\ActivateWalletCommandHandlerTests.cs:110 The parameter 'Pin' has the same default value
+      src\Tests\NumbatWallet.Application.Tests\Wallets\Commands\ActivateWalletCommandHandlerTests.cs:136 The parameter 'Pin' has the same default value
+      src\Tests\NumbatWallet.Application.Tests\Wallets\Commands\ActivateWalletCommandHandlerTests.cs:273 The parameter 'Pin' has the same default value
       src\Tests\NumbatWallet.Application.Tests\Wallets\Commands\CreateWalletCommandHandlerTests.cs:17 The field is always assigned before being used and can be converted into a local variable
       src\Tests\NumbatWallet.Application.Tests\Wallets\Commands\CreateWalletCommandHandlerTests.cs:19 The field is always assigned before being used and can be converted into a local variable
       src\Tests\NumbatWallet.Application.Tests\Wallets\Commands\CreateWalletCommandHandlerTests.cs:70 Local variable 'walletDto' is never used
@@ -145,16 +143,20 @@ Solution NumbatWallet.sln
       src\NumbatWallet.Infrastructure\Azure\AzurePostgreSQLConfiguration.cs:128 Type argument specification is redundant
       src\NumbatWallet.Infrastructure\Azure\AzurePostgreSQLConfiguration.cs:129 Type argument specification is redundant
       src\NumbatWallet.Infrastructure\Azure\AzurePostgreSQLConfiguration.cs:137 Parameter 'configuration' is never used
+      src\NumbatWallet.Infrastructure\Azure\AzurePostgreSQLConfiguration.cs:144 The parameter 'cancellationToken' has the same default value
       src\NumbatWallet.Infrastructure\Azure\AzurePostgreSQLConfiguration.cs:219 Field '_configuration' is assigned but its value is never used
       src\NumbatWallet.Infrastructure\Azure\AzureServiceBusService.cs:12 Field '_connectionString' is assigned but its value is never used
       src\NumbatWallet.Infrastructure\Azure\AzureServiceConfiguration.cs:23 Type argument specification is redundant
       src\NumbatWallet.Infrastructure\Azure\AzureServiceConfiguration.cs:29 Type argument specification is redundant
       src\NumbatWallet.Infrastructure\Azure\AzureServiceConfiguration.cs:54 Parameter 'sp' is never used
+      src\NumbatWallet.Infrastructure\Azure\AzureStorageService.cs:36 The parameter 'publicAccessType' has the same default value
       src\NumbatWallet.Infrastructure\Azure\AzureStorageService.cs:42 Local variable 'response' is never used
       src\NumbatWallet.Infrastructure\Crypto\CryptoService.cs:240 Parameter 'key' is never used
       src\NumbatWallet.Infrastructure\Crypto\CryptoService.cs:240 Parameter 'reason' is never used
       src\NumbatWallet.Infrastructure\Crypto\CryptoService.cs:240 Parameter 'state' is never used
       src\NumbatWallet.Infrastructure\Crypto\KeyVaultWrapProvider.cs:17 The field is always assigned before being used and can be converted into a local variable
+      src\NumbatWallet.Infrastructure\Data\DatabaseSeeder.cs:370 The parameter 'type' has the same default value
+      src\NumbatWallet.Infrastructure\Data\DatabaseSeeder.cs:391 The parameter 'type' has the same default value
       src\NumbatWallet.Infrastructure\Data\Interceptors\AuditInterceptor.cs:58 Expression is always true according to nullable reference types' annotations
       src\NumbatWallet.Infrastructure\Data\Interceptors\ProtectionInterceptor.cs:72 Parameter 'cancellationToken' is never used
       src\NumbatWallet.Infrastructure\Data\Interceptors\ProtectionInterceptor.cs:114 Local variable 'protectedValue' is never used
@@ -168,7 +170,6 @@ Solution NumbatWallet.sln
       src\NumbatWallet.Infrastructure\Data\Repositories\WalletTemplateRepository.cs:51 Function is not convertible to SQL and must not be called in the database context
       src\NumbatWallet.Infrastructure\Data\Repositories\WalletTemplateRepository.cs:88 Function is not convertible to SQL and must not be called in the database context
       src\NumbatWallet.Infrastructure\Data\Repositories\WalletTemplateRepository.cs:113 Expression is always true according to nullable reference types' annotations
-      src\NumbatWallet.Infrastructure\Data\UnitOfWork.cs:10 Field '_repositories' is assigned but its value is never used
       src\NumbatWallet.Infrastructure\DependencyInjection\ServiceCollectionExtensions.cs:259 Parameter 'sp' is never used
       src\NumbatWallet.Infrastructure\EventSourcing\EventSourcingHandler.cs:76 Field '_logger' is assigned but its value is never used
       src\NumbatWallet.Infrastructure\EventSourcing\EventSourcingHandler.cs:249 Possible multiple enumeration
@@ -187,6 +188,7 @@ Solution NumbatWallet.sln
       src\NumbatWallet.Infrastructure\Security\RequestSigningService.cs:168 Local variable 'sha512' is never used
       src\NumbatWallet.Infrastructure\Security\RequestSigningService.cs:207 Local variable 'sha256' is never used
       src\NumbatWallet.Infrastructure\Security\RequestSigningService.cs:236 Local variable 'sha512' is never used
+      src\NumbatWallet.Infrastructure\Services\AzureBlobStorageService.cs:58 The parameter 'publicAccessType' has the same default value
       src\NumbatWallet.Infrastructure\Services\AzureBlobStorageService.cs:287 Conditional access qualifier expression is known to be not null
       src\NumbatWallet.Infrastructure\Services\CertificateValidationService.cs:12 Field '_trustStoreRepository' is assigned but its value is never used
       src\NumbatWallet.Infrastructure\Services\CertificateValidationService.cs:117 Possible multiple enumeration
@@ -272,11 +274,7 @@ Solution NumbatWallet.sln
       src\NumbatWallet.Infrastructure\Services\SystemMetricsService.cs:371 Empty general catch clause suppresses any errors
       src\NumbatWallet.Infrastructure\Services\SystemMetricsService.cs:385 Empty general catch clause suppresses any errors
       src\NumbatWallet.Infrastructure\Services\TelemetryService.cs:18 Field '_logger' is assigned but its value is never used
-      src\NumbatWallet.Infrastructure\WalletBuilders\AppleWalletBuilder.cs:334 Redundant 'switch' expression arms
-      src\NumbatWallet.Infrastructure\WalletBuilders\GoogleWalletBuilder.cs:21 Field '_jsonOptions' is assigned but its value is never used
-      src\NumbatWallet.Infrastructure\WalletBuilders\GoogleWalletBuilder.cs:166 Parameter 'walletTemplate' is never used
-      src\NumbatWallet.Infrastructure\WalletBuilders\PlatformWalletBuilder.cs:313 Parameter 'walletTemplate' is never used
-      src\NumbatWallet.Infrastructure\WalletBuilders\WebWalletBuilder.cs:441 Parameter 'walletTemplate' is never used
+      src\NumbatWallet.Infrastructure\WalletBuilders\GoogleWalletBuilder.cs:4 Using directive is not required by the code and can be safely removed
     
     Project NumbatWallet.Infrastructure.Tests
       src\Tests\NumbatWallet.Infrastructure.Tests\Data\EntityConfigurationsTests.cs:137 Possible multiple enumeration
@@ -323,6 +321,20 @@ Solution NumbatWallet.sln
       src\Tests\NumbatWallet.Infrastructure.Tests\Services\RevocationRegistryServiceTests.cs:26 The field is always assigned before being used and can be converted into a local variable
       src\Tests\NumbatWallet.Infrastructure.Tests\Services\RevocationRegistryServiceTests.cs:27 The field is always assigned before being used and can be converted into a local variable
       src\Tests\NumbatWallet.Infrastructure.Tests\Services\RevocationRegistryServiceTests.cs:28 The field is always assigned before being used and can be converted into a local variable
+      src\Tests\NumbatWallet.Infrastructure.Tests\Services\RevocationRegistryServiceTests.cs:95 The parameter 'revokedBy' has the same default value
+      src\Tests\NumbatWallet.Infrastructure.Tests\Services\RevocationRegistryServiceTests.cs:121 The parameter 'revokedBy' has the same default value
+      src\Tests\NumbatWallet.Infrastructure.Tests\Services\RevocationRegistryServiceTests.cs:162 The parameter 'comment' has the same default value
+      src\Tests\NumbatWallet.Infrastructure.Tests\Services\RevocationRegistryServiceTests.cs:162 The parameter 'revokedBy' has the same default value
+      src\Tests\NumbatWallet.Infrastructure.Tests\Services\RevocationRegistryServiceTests.cs:163 The parameter 'comment' has the same default value
+      src\Tests\NumbatWallet.Infrastructure.Tests\Services\RevocationRegistryServiceTests.cs:163 The parameter 'revokedBy' has the same default value
+      src\Tests\NumbatWallet.Infrastructure.Tests\Services\RevocationRegistryServiceTests.cs:183 The parameter 'comment' has the same default value
+      src\Tests\NumbatWallet.Infrastructure.Tests\Services\RevocationRegistryServiceTests.cs:183 The parameter 'revokedBy' has the same default value
+      src\Tests\NumbatWallet.Infrastructure.Tests\Services\RevocationRegistryServiceTests.cs:184 The parameter 'comment' has the same default value
+      src\Tests\NumbatWallet.Infrastructure.Tests\Services\RevocationRegistryServiceTests.cs:184 The parameter 'revokedBy' has the same default value
+      src\Tests\NumbatWallet.Infrastructure.Tests\Services\RevocationRegistryServiceTests.cs:249 The parameter 'comment' has the same default value
+      src\Tests\NumbatWallet.Infrastructure.Tests\Services\RevocationRegistryServiceTests.cs:249 The parameter 'revokedBy' has the same default value
+      src\Tests\NumbatWallet.Infrastructure.Tests\Services\RevocationRegistryServiceTests.cs:277 The parameter 'comment' has the same default value
+      src\Tests\NumbatWallet.Infrastructure.Tests\Services\RevocationRegistryServiceTests.cs:278 The parameter 'revokedBy' has the same default value
       src\Tests\NumbatWallet.Infrastructure.Tests\Services\TelemetryServiceTests.cs:19 The field is always assigned before being used and can be converted into a local variable
       src\Tests\NumbatWallet.Infrastructure.Tests\Services\TelemetryServiceTests.cs:20 The field is always assigned before being used and can be converted into a local variable
       src\Tests\NumbatWallet.Infrastructure.Tests\Services\TelemetryServiceTests.cs:122 Parameter '__' is never used
@@ -335,6 +347,7 @@ Solution NumbatWallet.sln
       src\Tests\NumbatWallet.Infrastructure.Tests\WalletBuilders\WebWalletBuilderTests.cs:12 The field is always assigned before being used and can be converted into a local variable
     
     Project NumbatWallet.Integration.Tests
+      src\Tests\NumbatWallet.Integration.Tests\MultiTenancy\MultiTenantIsolationTests.cs:367 The parameter 'type' has the same default value
       src\Tests\NumbatWallet.Integration.Tests\Performance\PerformanceBaselineTests.cs:42 Xunit tests should use ITestOutputHelper instead of System.Console
       src\Tests\NumbatWallet.Integration.Tests\Security\SecurityValidationTests.cs:128 Local variable 'request' is never used
       src\Tests\NumbatWallet.Integration.Tests\Security\SecurityValidationTests.cs:203 Local variable 'response' is never used
@@ -391,6 +404,8 @@ Solution NumbatWallet.sln
       src\NumbatWallet.Web.Admin\Components\Dashboard\TenantAdminDashboard.razor:87 Name 'SubscriptionPlan' does not match rule 'Instance fields (private)'. Suggested name is '_subscriptionPlan'.
       src\NumbatWallet.Web.Admin\Components\Dashboard\TenantAdminDashboard.razor:88 Name 'MonthlyUsage' does not match rule 'Instance fields (private)'. Suggested name is '_monthlyUsage'.
       src\NumbatWallet.Web.Admin\Components\Dashboard\TenantAdminDashboard.razor:263 Local variable 'data' is never used
+      src\NumbatWallet.Web.Admin\Components\Layout\AdminLayout.razor:142 Avoid using 'async' lambda when delegate type returns 'void': any exceptions unhandled by the lambda might lead to the process crash
+      src\NumbatWallet.Web.Admin\Components\Layout\AdminLayout.razor:142 Cannot resolve symbol 'Key'
       src\NumbatWallet.Web.Admin\Components\Layout\AdminLayout.razor:228 Name 'IsSidebarCollapsed' does not match rule 'Instance fields (private)'. Suggested name is '_isSidebarCollapsed'.
       src\NumbatWallet.Web.Admin\Components\Layout\AdminLayout.razor:228 Initializing field by default value is redundant
       src\NumbatWallet.Web.Admin\Components\Layout\AdminLayout.razor:229 Name 'IsUserMenuOpen' does not match rule 'Instance fields (private)'. Suggested name is '_isUserMenuOpen'.
@@ -410,6 +425,8 @@ Solution NumbatWallet.sln
       src\NumbatWallet.Web.Admin\Components\Layout\AdminLayout.razor:244 Name 'IsMasterAdmin' does not match rule 'Instance fields (private)'. Suggested name is '_isMasterAdmin'.
       src\NumbatWallet.Web.Admin\Components\Layout\AdminLayout.razor:247 Name 'Notifications' does not match rule 'Instance fields (private)'. Suggested name is '_notifications'.
       src\NumbatWallet.Web.Admin\Components\Layout\MainLayout.razor:2 Name 'JS' does not match rule 'Properties'. Suggested name is 'Js'.
+      src\NumbatWallet.Web.Admin\Components\Pages\AuditLogs.razor:85 Avoid using 'async' lambda when delegate type returns 'void': any exceptions unhandled by the lambda might lead to the process crash
+      src\NumbatWallet.Web.Admin\Components\Pages\AuditLogs.razor:85 Cannot resolve symbol 'Key'
       src\NumbatWallet.Web.Admin\Components\Pages\AuditLogs.razor:242 Name 'IsLoading' does not match rule 'Instance fields (private)'. Suggested name is '_isLoading'.
       src\NumbatWallet.Web.Admin\Components\Pages\AuditLogs.razor:243 Name 'IsRealTimeEnabled' does not match rule 'Instance fields (private)'. Suggested name is '_isRealTimeEnabled'.
       src\NumbatWallet.Web.Admin\Components\Pages\AuditLogs.razor:243 Initializing field by default value is redundant
@@ -424,6 +441,8 @@ Solution NumbatWallet.sln
       src\NumbatWallet.Web.Admin\Components\Pages\AuditLogs.razor:327 Avoid using 'async' lambda when delegate type returns 'void': any exceptions unhandled by the lambda might lead to the process crash
       src\NumbatWallet.Web.Admin\Components\Pages\AuditLogs.razor:347 The parameter 'format' has the same default value
       src\NumbatWallet.Web.Admin\Components\Pages\Credentials.razor:7 Name 'JS' does not match rule 'Properties'. Suggested name is 'Js'.
+      src\NumbatWallet.Web.Admin\Components\Pages\Credentials.razor:85 Avoid using 'async' lambda when delegate type returns 'void': any exceptions unhandled by the lambda might lead to the process crash
+      src\NumbatWallet.Web.Admin\Components\Pages\Credentials.razor:85 Argument type 'Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder' is not assignable to parameter type 'Microsoft.AspNetCore.Components.ChangeEventArgs'
       src\NumbatWallet.Web.Admin\Components\Pages\Credentials.razor:447 Name 'IsLoading' does not match rule 'Instance fields (private)'. Suggested name is '_isLoading'.
       src\NumbatWallet.Web.Admin\Components\Pages\Credentials.razor:447 Initializing field by default value is redundant
       src\NumbatWallet.Web.Admin\Components\Pages\Credentials.razor:448 Name 'ErrorMessage' does not match rule 'Instance fields (private)'. Suggested name is '_errorMessage'.
@@ -444,6 +463,8 @@ Solution NumbatWallet.sln
       src\NumbatWallet.Web.Admin\Components\Pages\Credentials.razor:529 Possible multiple enumeration
       src\NumbatWallet.Web.Admin\Components\Pages\Credentials.razor:594 Parameter 'credential' is never used
       src\NumbatWallet.Web.Admin\Components\Pages\Tenants.razor:7 Name 'JS' does not match rule 'Properties'. Suggested name is 'Js'.
+      src\NumbatWallet.Web.Admin\Components\Pages\Tenants.razor:45 Avoid using 'async' lambda when delegate type returns 'void': any exceptions unhandled by the lambda might lead to the process crash
+      src\NumbatWallet.Web.Admin\Components\Pages\Tenants.razor:45 Argument type 'Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder' is not assignable to parameter type 'Microsoft.AspNetCore.Components.ChangeEventArgs'
       src\NumbatWallet.Web.Admin\Components\Pages\Tenants.razor:371 Name 'IsLoading' does not match rule 'Instance fields (private)'. Suggested name is '_isLoading'.
       src\NumbatWallet.Web.Admin\Components\Pages\Tenants.razor:372 Name 'ErrorMessage' does not match rule 'Instance fields (private)'. Suggested name is '_errorMessage'.
       src\NumbatWallet.Web.Admin\Components\Pages\Tenants.razor:373 Name 'TenantsList' does not match rule 'Instance fields (private)'. Suggested name is '_tenantsList'.
@@ -461,8 +482,9 @@ Solution NumbatWallet.sln
       src\NumbatWallet.Web.Admin\Components\Pages\Tenants.razor:386 Initializing field by default value is redundant
       src\NumbatWallet.Web.Admin\Components\Pages\Tenants.razor:387 Name 'CurrentTenant' does not match rule 'Instance fields (private)'. Suggested name is '_currentTenant'.
       src\NumbatWallet.Web.Admin\Components\Pages\Test.razor:16 Name 'currentCount' does not match rule 'Instance fields (private)'. Suggested name is '_currentCount'.
-      src\NumbatWallet.Web.Admin\Components\Pages\Test.razor:16 Initializing field by default value is redundant
       src\NumbatWallet.Web.Admin\Components\Pages\Wallets.razor:7 Name 'JS' does not match rule 'Properties'. Suggested name is 'Js'.
+      src\NumbatWallet.Web.Admin\Components\Pages\Wallets.razor:85 Avoid using 'async' lambda when delegate type returns 'void': any exceptions unhandled by the lambda might lead to the process crash
+      src\NumbatWallet.Web.Admin\Components\Pages\Wallets.razor:85 Argument type 'Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder' is not assignable to parameter type 'Microsoft.AspNetCore.Components.ChangeEventArgs'
       src\NumbatWallet.Web.Admin\Components\Pages\Wallets.razor:415 Name 'IsLoading' does not match rule 'Instance fields (private)'. Suggested name is '_isLoading'.
       src\NumbatWallet.Web.Admin\Components\Pages\Wallets.razor:415 Initializing field by default value is redundant
       src\NumbatWallet.Web.Admin\Components\Pages\Wallets.razor:416 Name 'ErrorMessage' does not match rule 'Instance fields (private)'. Suggested name is '_errorMessage'.
@@ -651,6 +673,7 @@ Solution NumbatWallet.sln
       src\NumbatWallet.Web.Admin\Pages\UserManagement.razor:324 Name 'totalPages' does not match rule 'Instance fields (private)'. Suggested name is '_totalPages'.
       src\NumbatWallet.Web.Admin\Pages\UserManagement.razor:326 Name 'availablePermissions' does not match rule 'Instance fields (private)'. Suggested name is '_availablePermissions'.
       src\NumbatWallet.Web.Admin\Pages\UserManagement.razor:493 Parameter 'user' is never used
+      src\NumbatWallet.Web.Admin\Pages\WalletBuilder.razor:5 Using directive is not required by the code and can be safely removed
       src\NumbatWallet.Web.Admin\Pages\WalletBuilder.razor.cs:15 Auto-property accessor 'Navigation.get' is never used
       src\NumbatWallet.Web.Admin\Pages\WalletBuilder.razor.cs:20 Initializing field by default value is redundant
       src\NumbatWallet.Web.Admin\Pages\WalletBuilder.razor.cs:21 Initializing field by default value is redundant
@@ -676,6 +699,7 @@ Solution NumbatWallet.sln
       src\NumbatWallet.Web.Api\Controllers\AuditController.cs:264 Possible multiple enumeration
       src\NumbatWallet.Web.Api\Controllers\AuditController.cs:264 Possible multiple enumeration
       src\NumbatWallet.Web.Api\Controllers\CredentialController.cs:24 Field '_tenantService' is assigned but its value is never used
+      src\NumbatWallet.Web.Api\Controllers\CredentialController.cs:142 The parameter 'IncludeRevoked' has the same default value
       src\NumbatWallet.Web.Api\Controllers\HealthController.cs:12 Field '_logger' is assigned but its value is never used
       src\NumbatWallet.Web.Api\Controllers\IssuanceController.cs:20 Field '_cancelIssuanceHandler' is assigned but its value is never used
       src\NumbatWallet.Web.Api\Controllers\IssuanceController.cs:373 Possible multiple enumeration
@@ -685,7 +709,31 @@ Solution NumbatWallet.sln
       src\NumbatWallet.Web.Api\Controllers\WalletGenerationController.cs:309 Return type of 'GetPlatformRequirements' can be made non-nullable
       src\NumbatWallet.Web.Api\Documentation\DocumentationService.cs:145 Redundant control flow jump statement
       src\NumbatWallet.Web.Api\Documentation\DocumentationService.cs:167 Local variable 'html' is never used
+      src\NumbatWallet.Web.Api\Endpoints\BulkOperationEndpoints.cs:42 The parameter 'statusCode' has the same default value
+      src\NumbatWallet.Web.Api\Endpoints\BulkOperationEndpoints.cs:59 The parameter 'statusCode' has the same default value
+      src\NumbatWallet.Web.Api\Endpoints\BulkOperationEndpoints.cs:75 The parameter 'statusCode' has the same default value
+      src\NumbatWallet.Web.Api\Endpoints\CredentialEndpoints.cs:36 The parameter 'statusCode' has the same default value
+      src\NumbatWallet.Web.Api\Endpoints\CredentialEndpoints.cs:44 The parameter 'statusCode' has the same default value
+      src\NumbatWallet.Web.Api\Endpoints\CredentialEndpoints.cs:51 The parameter 'statusCode' has the same default value
+      src\NumbatWallet.Web.Api\Endpoints\CredentialEndpoints.cs:69 The parameter 'statusCode' has the same default value
+      src\NumbatWallet.Web.Api\Endpoints\CredentialEndpoints.cs:78 The parameter 'statusCode' has the same default value
+      src\NumbatWallet.Web.Api\Endpoints\CredentialEndpoints.cs:85 The parameter 'statusCode' has the same default value
+      src\NumbatWallet.Web.Api\Endpoints\CredentialEndpoints.cs:93 The parameter 'statusCode' has the same default value
+      src\NumbatWallet.Web.Api\Endpoints\CredentialEndpoints.cs:100 The parameter 'statusCode' has the same default value
+      src\NumbatWallet.Web.Api\Endpoints\PersonEndpoints.cs:21 The parameter 'statusCode' has the same default value
+      src\NumbatWallet.Web.Api\Endpoints\PersonEndpoints.cs:27 The parameter 'statusCode' has the same default value
+      src\NumbatWallet.Web.Api\Endpoints\PersonEndpoints.cs:35 The parameter 'statusCode' has the same default value
+      src\NumbatWallet.Web.Api\Endpoints\PersonEndpoints.cs:51 The parameter 'statusCode' has the same default value
+      src\NumbatWallet.Web.Api\Endpoints\PersonEndpoints.cs:69 The parameter 'statusCode' has the same default value
+      src\NumbatWallet.Web.Api\Endpoints\PersonEndpoints.cs:104 The parameter 'PageNumber' has the same default value
+      src\NumbatWallet.Web.Api\Endpoints\PersonEndpoints.cs:105 The parameter 'PageSize' has the same default value
       src\NumbatWallet.Web.Api\Endpoints\PersonEndpoints.cs:190 '??' left operand is never null according to nullable reference types' annotations
+      src\NumbatWallet.Web.Api\Endpoints\WalletEndpoints.cs:22 The parameter 'statusCode' has the same default value
+      src\NumbatWallet.Web.Api\Endpoints\WalletEndpoints.cs:28 The parameter 'statusCode' has the same default value
+      src\NumbatWallet.Web.Api\Endpoints\WalletEndpoints.cs:44 The parameter 'statusCode' has the same default value
+      src\NumbatWallet.Web.Api\Endpoints\WalletEndpoints.cs:52 The parameter 'statusCode' has the same default value
+      src\NumbatWallet.Web.Api\Endpoints\WalletEndpoints.cs:83 The parameter 'statusCode' has the same default value
+      src\NumbatWallet.Web.Api\Endpoints\WalletEndpoints.cs:90 The parameter 'statusCode' has the same default value
       src\NumbatWallet.Web.Api\Endpoints\WalletEndpoints.cs:139 Expression is always true according to nullable reference types' annotations
       src\NumbatWallet.Web.Api\Extensions\GraphQLExtensions.cs:37 Type argument specification is redundant
       src\NumbatWallet.Web.Api\Extensions\GraphQLExtensions.cs:42 Type argument specification is redundant
@@ -711,6 +759,7 @@ Solution NumbatWallet.sln
       src\NumbatWallet.Web.Api\GraphQL\Mutations\WalletMutation.cs:226 Local variable 'walletData' is never used
       src\NumbatWallet.Web.Api\GraphQL\Mutations\WalletMutation.cs:242 Redundant 'Object.ToString()' call
       src\NumbatWallet.Web.Api\GraphQL\Queries\CredentialQuery.cs:21 Field '_credentialRepository' is assigned but its value is never used
+      src\NumbatWallet.Web.Api\GraphQL\Queries\CredentialQuery.cs:100 The parameter 'IncludeRevoked' has the same default value
       src\NumbatWallet.Web.Api\GraphQL\Queries\CredentialQuery.cs:304 Possible multiple enumeration
       src\NumbatWallet.Web.Api\GraphQL\Queries\CredentialQuery.cs:309 Possible multiple enumeration
       src\NumbatWallet.Web.Api\GraphQL\Queries\CredentialQuery.cs:325 Local variable 'start' is never used
@@ -776,11 +825,26 @@ Solution NumbatWallet.sln
       src\NumbatWallet.Web.Api\RateLimiting\RateLimitingPolicies.cs:174 Parameter 'partition' is never used
       src\NumbatWallet.Web.Api\RateLimiting\RateLimitingPolicies.cs:192 Parameter 'partition' is never used
       src\NumbatWallet.Web.Api\RateLimiting\RateLimitingPolicies.cs:277 Method is recursive on all execution paths
+      src\NumbatWallet.Web.Api\Rest\Modules\DtpModule.cs:23 The parameter 'statusCode' has the same default value
+      src\NumbatWallet.Web.Api\Rest\Modules\DtpModule.cs:29 The parameter 'statusCode' has the same default value
+      src\NumbatWallet.Web.Api\Rest\Modules\DtpModule.cs:35 The parameter 'statusCode' has the same default value
+      src\NumbatWallet.Web.Api\Rest\Modules\DtpModule.cs:42 The parameter 'statusCode' has the same default value
+      src\NumbatWallet.Web.Api\Rest\Modules\DtpModule.cs:48 The parameter 'statusCode' has the same default value
+      src\NumbatWallet.Web.Api\Rest\Modules\DtpModule.cs:63 The parameter 'statusCode' has the same default value
+      src\NumbatWallet.Web.Api\Rest\Modules\DtpModule.cs:77 The parameter 'statusCode' has the same default value
+      src\NumbatWallet.Web.Api\Rest\Modules\DtpModule.cs:103 The parameter 'statusCode' has the same default value
       src\NumbatWallet.Web.Api\Rest\Modules\DtpModule.cs:107 Possible multiple enumeration
       src\NumbatWallet.Web.Api\Rest\Modules\DtpModule.cs:112 Possible multiple enumeration
+      src\NumbatWallet.Web.Api\Rest\Modules\DtpModule.cs:130 The parameter 'statusCode' has the same default value
+      src\NumbatWallet.Web.Api\Rest\Modules\DtpModule.cs:156 The parameter 'statusCode' has the same default value
       src\NumbatWallet.Web.Api\Rest\Modules\DtpModule.cs:160 Possible multiple enumeration
       src\NumbatWallet.Web.Api\Rest\Modules\DtpModule.cs:165 Possible multiple enumeration
+      src\NumbatWallet.Web.Api\Rest\Modules\DtpModule.cs:190 The parameter 'statusCode' has the same default value
+      src\NumbatWallet.Web.Api\Rest\Modules\DtpModule.cs:223 The parameter 'statusCode' has the same default value
+      src\NumbatWallet.Web.Api\Rest\Modules\DtpModule.cs:268 The parameter 'statusCode' has the same default value
       src\NumbatWallet.Web.Api\Rest\Modules\DtpModule.cs:271 Local variable 'revokerId' is never used
+      src\NumbatWallet.Web.Api\Rest\Modules\DtpModule.cs:290 The parameter 'statusCode' has the same default value
+      src\NumbatWallet.Web.Api\Rest\Modules\WebhookModule.cs:175 The parameter 'statusCode' has the same default value
       src\NumbatWallet.Web.Api\Rest\Modules\WebhookModule.cs:267 Parameter 'request' is never used
       src\NumbatWallet.Web.Api\Rest\Modules\WebhookModule.cs:267 Parameter 'walletService' is never used
       src\NumbatWallet.Web.Api\Rest\Modules\WebhookModule.cs:267 Parameter 'cancellationToken' is never used

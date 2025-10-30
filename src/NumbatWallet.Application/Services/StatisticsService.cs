@@ -29,15 +29,15 @@ public class StatisticsService : IStatisticsService
         var stats = new DashboardStatisticsDto();
 
         // Get total counts
-        var allPersons = await _personRepository.GetAllAsync(cancellationToken);
-        stats.TotalPersons = allPersons.Count();
+        var allPersons = (await _personRepository.GetAllAsync(cancellationToken)).ToList();
+        stats.TotalPersons = allPersons.Count;
 
-        var allWallets = await _walletRepository.GetAllAsync(cancellationToken);
-        stats.TotalWallets = allWallets.Count();
+        var allWallets = (await _walletRepository.GetAllAsync(cancellationToken)).ToList();
+        stats.TotalWallets = allWallets.Count;
         stats.ActiveWallets = allWallets.Count(w => w.Status == WalletStatus.Active);
 
-        var allCredentials = await _credentialRepository.GetAllAsync(cancellationToken);
-        stats.TotalCredentials = allCredentials.Count();
+        var allCredentials = (await _credentialRepository.GetAllAsync(cancellationToken)).ToList();
+        stats.TotalCredentials = allCredentials.Count;
         stats.ActiveCredentials = allCredentials.Count(c => c.Status == CredentialStatus.Active);
 
         // Today's issuances

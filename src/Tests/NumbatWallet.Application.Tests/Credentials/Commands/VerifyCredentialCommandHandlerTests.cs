@@ -99,7 +99,7 @@ public class VerifyCredentialCommandHandlerTests
         result.Should().NotBeNull();
         result.IsValid.Should().BeTrue();
         result.Checks.Should().NotBeNull();
-        result.Checks!.Signature.Should().BeTrue();
+        result.Checks.Signature.Should().BeTrue();
         _jwtSigningServiceMock.Verify(x => x.VerifyCredentialAsync(validJwt, It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -141,7 +141,7 @@ public class VerifyCredentialCommandHandlerTests
         result.Should().NotBeNull();
         result.IsValid.Should().BeFalse();
         result.Checks.Should().NotBeNull();
-        result.Checks!.Signature.Should().BeFalse();
+        result.Checks.Signature.Should().BeFalse();
         result.ErrorMessage.Should().Contain("signature verification failed");
         _jwtSigningServiceMock.Verify(x => x.VerifyCredentialAsync(invalidJwt, It.IsAny<CancellationToken>()), Times.Once);
     }
@@ -184,7 +184,7 @@ public class VerifyCredentialCommandHandlerTests
         result.Should().NotBeNull();
         result.IsValid.Should().BeFalse(); // Changed: unsigned credentials no longer allowed
         result.Checks.Should().NotBeNull();
-        result.Checks!.Signature.Should().BeFalse(); // Changed: signature check fails for unsigned
+        result.Checks.Signature.Should().BeFalse(); // Changed: signature check fails for unsigned
         result.ErrorMessage.Should().Contain("Credential signature missing - all credentials must be JWT-signed");
         _jwtSigningServiceMock.Verify(x => x.VerifyCredentialAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
     }
@@ -225,7 +225,7 @@ public class VerifyCredentialCommandHandlerTests
         result.Should().NotBeNull();
         result.IsValid.Should().BeFalse();
         result.Checks.Should().NotBeNull();
-        result.Checks!.Expiry.Should().BeFalse();
+        result.Checks.Expiry.Should().BeFalse();
         result.ErrorMessage.Should().Contain("expired");
     }
 
@@ -265,7 +265,7 @@ public class VerifyCredentialCommandHandlerTests
         result.Should().NotBeNull();
         result.IsValid.Should().BeFalse();
         result.Checks.Should().NotBeNull();
-        result.Checks!.Revocation.Should().BeFalse();
+        result.Checks.Revocation.Should().BeFalse();
         result.ErrorMessage.Should().Contain("Revoked");
     }
 
@@ -346,7 +346,7 @@ public class VerifyCredentialCommandHandlerTests
         // Assert
         result.Should().NotBeNull();
         result.IsValid.Should().BeTrue();
-        result.Checks!.Signature.Should().BeTrue();
+        result.Checks.Signature.Should().BeTrue();
         _jwtSigningServiceMock.Verify(x => x.VerifyCredentialAsync(providedJwt, It.IsAny<CancellationToken>()), Times.Once);
     }
 

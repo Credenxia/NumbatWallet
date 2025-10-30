@@ -42,7 +42,7 @@ public class CacheServiceTests
 
         // Assert
         result.Should().NotBeNull();
-        result!.Id.Should().Be(expectedValue.Id);
+        result.Id.Should().Be(expectedValue.Id);
         result.Name.Should().Be(expectedValue.Name);
     }
 
@@ -171,7 +171,7 @@ public class CacheServiceTests
 
         // Assert
         result.Should().NotBeNull();
-        result!.Id.Should().Be(expectedValue.Id);
+        result.Id.Should().Be(expectedValue.Id);
         result.Name.Should().Be(expectedValue.Name);
 
         _mockDistributedCache.Verify(x => x.GetAsync(
@@ -214,7 +214,7 @@ public class CacheServiceTests
 
         // Assert
         result.Should().NotBeNull();
-        result!.Id.Should().Be(cachedValue.Id);
+        result.Id.Should().Be(cachedValue.Id);
         result.Name.Should().Be(cachedValue.Name);
         factoryCalled.Should().BeFalse();
 

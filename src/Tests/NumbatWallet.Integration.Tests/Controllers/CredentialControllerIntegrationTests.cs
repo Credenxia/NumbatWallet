@@ -45,7 +45,7 @@ public class CredentialControllerIntegrationTests : IntegrationTestBase
 
         // Assert
         response.Should().NotBeNull();
-        response!.Id.Should().NotBeNullOrEmpty();
+        response.Id.Should().NotBeNullOrEmpty();
         response.HolderId.Should().Be(walletId.ToString());
         response.Type.Should().Be("DriversLicense"); // Fixed: enum name is DriversLicense
         response.Status.Should().Be("Active");
@@ -80,7 +80,7 @@ public class CredentialControllerIntegrationTests : IntegrationTestBase
 
         // Assert
         response.Should().NotBeNull();
-        response!.Id.Should().Be(credentialId.ToString());
+        response.Id.Should().Be(credentialId.ToString());
         response.Type.Should().Be("Passport");
     }
 
@@ -103,7 +103,7 @@ public class CredentialControllerIntegrationTests : IntegrationTestBase
 
         // Assert
         response.Should().NotBeNull();
-        response!.IsValid.Should().BeTrue();
+        response.IsValid.Should().BeTrue();
         response.Checks.Should().NotBeNull();
     }
 
@@ -133,7 +133,7 @@ public class CredentialControllerIntegrationTests : IntegrationTestBase
 
         // Assert
         response.Should().NotBeNull();
-        response!.Should().HaveCountGreaterThanOrEqualTo(3);
+        response.Should().HaveCountGreaterThanOrEqualTo(3);
         response.Should().OnlyContain(c => c.HolderId == walletId.ToString());
     }
 
@@ -240,7 +240,7 @@ public class CredentialControllerIntegrationTests : IntegrationTestBase
 
         // Assert
         response.Should().NotBeNull();
-        response!.ShareUrl.Should().NotBeNullOrEmpty();
+        response.ShareUrl.Should().NotBeNullOrEmpty();
         response.ExpiresAt.Should().BeAfter(DateTime.UtcNow);
     }
 }

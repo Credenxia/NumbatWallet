@@ -63,7 +63,7 @@ public class MultiTenantIsolationTests : IntegrationTestBase
         // Assert - Should only see Tenant A's wallet (filter by specific wallet ID)
         var testWallet = walletsForTenantA.FirstOrDefault(w => w.Id == walletAId);
         testWallet.Should().NotBeNull();
-        testWallet!.TenantId.Should().Be(tenantAId);
+        testWallet.TenantId.Should().Be(tenantAId);
         walletsForTenantA.Should().NotContain(w => w.Id == walletBId);
 
         // Cleanup - Delete test wallets
@@ -152,7 +152,7 @@ public class MultiTenantIsolationTests : IntegrationTestBase
         // Assert - TenantId should be set to fixture's test tenant
         var savedWallet = await dbContext.Set<Wallet>().FindAsync(wallet.Id);
         savedWallet.Should().NotBeNull();
-        savedWallet!.TenantId.Should().Be(Fixture.TestTenantId);
+        savedWallet.TenantId.Should().Be(Fixture.TestTenantId);
     }
 
     [Fact]
@@ -258,7 +258,7 @@ public class MultiTenantIsolationTests : IntegrationTestBase
         // Assert - Should only see tenant1's wallet (check for specific ID)
         var testWallet = visibleWallets.FirstOrDefault(w => w.Id == wallet1Id);
         testWallet.Should().NotBeNull();
-        testWallet!.TenantId.Should().Be(tenant1);
+        testWallet.TenantId.Should().Be(tenant1);
         visibleWallets.Should().NotContain(w => w.Id == wallet2Id);
 
         // Cleanup - Delete test wallets
@@ -376,7 +376,7 @@ public class MultiTenantIsolationTests : IntegrationTestBase
         // Act - Try to verify tenant ID property protection
         var tenantIdProperty = typeof(Wallet).GetProperty("TenantId");
         tenantIdProperty.Should().NotBeNull();
-        tenantIdProperty!.SetMethod.Should().NotBeNull();
+        tenantIdProperty.SetMethod.Should().NotBeNull();
         tenantIdProperty.SetMethod!.IsPrivate.Should().BeTrue();
 
         // Assert - Verify wallet still has original tenant
