@@ -93,7 +93,7 @@ public class IntegrationTestFixture : WebApplicationFactory<Program>, IAsyncLife
     {
         builder.UseEnvironment("Testing");
 
-        builder.ConfigureAppConfiguration((context, config) =>
+        builder.ConfigureAppConfiguration((_context, config) =>
         {
             config.AddInMemoryCollection(_testConfiguration.Select(kvp => new KeyValuePair<string, string?>(kvp.Key, kvp.Value)));
         });
@@ -148,11 +148,11 @@ public class IntegrationTestFixture : WebApplicationFactory<Program>, IAsyncLife
             // Mock both GUID-based and string-based tenant services for multi-tenancy support
             services.RemoveAll<SharedKernel.Interfaces.ICurrentTenantService>();
             services.AddSingleton<SharedKernel.Interfaces.ICurrentTenantService>(
-                sp => new MockCurrentTenantService(_testTenantId));
+                _sp => new MockCurrentTenantService(_testTenantId));
 
             services.RemoveAll<SharedKernel.Interfaces.ITenantService>();
             services.AddSingleton<SharedKernel.Interfaces.ITenantService>(
-                sp => new MockTenantService(_testTenantGuid));
+                _sp => new MockTenantService(_testTenantGuid));
 
             // Don't initialize database here - let it be done on first use
             // This avoids conflicts with service registration
