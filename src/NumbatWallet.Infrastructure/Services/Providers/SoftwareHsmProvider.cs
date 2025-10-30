@@ -428,7 +428,6 @@ public class SoftwareHsmProvider : IHsmProvider
             {
                 // Soft delete - mark as deleted but keep in storage
                 key.Enabled = false;
-                key.DeletedOn = DateTime.UtcNow;
                 _keys[keyId] = key;
             }
 
@@ -793,7 +792,6 @@ public class SoftwareHsmProvider : IHsmProvider
         public DateTime CreatedOn { get; set; }
         public DateTime? ExpiresOn { get; set; }
         public DateTime? LastUsedOn { get; set; }
-        public DateTime? DeletedOn { get; set; }
         public bool Enabled { get; set; } = true;
         public Dictionary<string, string> Tags { get; set; } = new();
     }
