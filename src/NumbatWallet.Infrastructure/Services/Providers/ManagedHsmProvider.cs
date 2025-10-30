@@ -80,7 +80,7 @@ public class ManagedHsmProvider : IHsmProvider, IDisposable
         {
             // Check HSM availability and security domain status
             var testKeyName = $"availability-test-{Guid.NewGuid():N}";
-            var testKey = await _keyClient.CreateRsaKeyAsync(new AzureKeys.CreateRsaKeyOptions(testKeyName, hardwareProtected: true)
+            _ = await _keyClient.CreateRsaKeyAsync(new AzureKeys.CreateRsaKeyOptions(testKeyName, hardwareProtected: true)
             {
                 KeySize = 2048            }, cancellationToken);
 
@@ -714,14 +714,12 @@ public class ManagedHsmProvider : IHsmProvider, IDisposable
     }
 
     private async Task<MigrationResult> MigrateToManagedHsmAsync(
-        string keyId,
-        ManagedHsmProvider targetHsm,
-        MigrationOptions options,
-        CancellationToken cancellationToken)
+        string _,
+        ManagedHsmProvider _targetHsm,
+        MigrationOptions _options,
+        CancellationToken _ct)
     {
         // Optimized Managed HSM to Managed HSM migration
-        var startTime = DateTime.UtcNow;
-        var keyName = ExtractKeyName(keyId);
 
         // Note: Backup/Restore operations require the Azure Key Vault Administration client library
         // For production Managed HSM, you would use:
