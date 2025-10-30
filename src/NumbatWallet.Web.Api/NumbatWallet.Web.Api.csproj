@@ -25,7 +25,11 @@
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
     <!-- Deprecated versioning packages removed - now using Asp.Versioning.Mvc above -->
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
+    <!-- Roslyn packages explicitly referenced to resolve EF Core Design 9.0.9 version conflict -->
     <PackageReference Include="Microsoft.CodeAnalysis.Common" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" />
+    <PackageReference Include="Microsoft.CodeAnalysis.Workspaces.Common" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
