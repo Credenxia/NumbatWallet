@@ -12,7 +12,6 @@ public class ProtectionService : IProtectionService
     private readonly ITenantPolicyService _tenantPolicyService;
     private readonly ICurrentTenantService _currentTenantService;
     private readonly IAuditService _auditService;
-    private readonly ILogger<ProtectionService> _logger;
 
     public ProtectionService(
         IEncryptionService encryptionService,
@@ -25,7 +24,6 @@ public class ProtectionService : IProtectionService
         _tenantPolicyService = tenantPolicyService;
         _currentTenantService = currentTenantService;
         _auditService = auditService;
-        _logger = logger;
     }
 
     public async Task<ProtectedValue<T>> ProtectAsync<T>(

@@ -7,7 +7,6 @@ namespace NumbatWallet.Infrastructure.Services;
 public class NotificationService : INotificationService
 {
     private readonly ILogger<NotificationService> _logger;
-    private readonly IEmailService _emailService;
     private readonly Channel<NotificationMessage> _notificationQueue;
     private readonly Channel<NotificationMessage> _urgentQueue;
 
@@ -16,7 +15,6 @@ public class NotificationService : INotificationService
         IEmailService emailService)
     {
         _logger = logger;
-        _emailService = emailService;
 
         // Create unbounded channels for notification queuing
         // In production, use bounded channels with appropriate capacity
