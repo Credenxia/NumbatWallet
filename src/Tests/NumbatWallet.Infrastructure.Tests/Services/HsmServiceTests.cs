@@ -112,7 +112,7 @@ public class HsmServiceTests
     {
         // This test verifies that all algorithm types are properly handled in the switch statement
         // Actual key generation would require Azure Key Vault connection
-        Assert.True(Enum.IsDefined<KeyAlgorithm>(algorithm));
+        Assert.True(Enum.IsDefined(algorithm));
     }
 
     [Fact]
@@ -166,7 +166,7 @@ public class HsmServiceTests
     public void SignDataAsync_WithValidSignatureAlgorithm_ShouldSupportAlgorithm(SignatureAlgorithm algorithm)
     {
         // This test verifies that all signature algorithms are properly mapped
-        Assert.True(Enum.IsDefined<SignatureAlgorithm>(algorithm));
+        Assert.True(Enum.IsDefined(algorithm));
     }
 
     [Fact]

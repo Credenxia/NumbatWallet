@@ -34,12 +34,12 @@ public static class GraphQLExtensions
             .ModifyRequestOptions(opt =>
             {
                 opt.IncludeExceptionDetails = configuration.GetValue<bool>("GraphQL:IncludeExceptionDetails");
-                opt.ExecutionTimeout = TimeSpan.FromSeconds(configuration.GetValue<int>("GraphQL:ExecutionTimeoutSeconds", 30));
+                opt.ExecutionTimeout = TimeSpan.FromSeconds(configuration.GetValue("GraphQL:ExecutionTimeoutSeconds", 30));
             })
             // .AddDiagnosticEventListener<GraphQLDiagnosticEventListener>() // Re-enable when HotChocolate supports this
             // .AddHttpRequestInterceptor<GraphQLRequestInterceptor>() // Re-enable when HotChocolate supports this
             .AddErrorFilter<GraphQLErrorFilter>()
-            .AddMaxExecutionDepthRule(configuration.GetValue<int>("GraphQL:MaxExecutionDepth", 15))
+            .AddMaxExecutionDepthRule(configuration.GetValue("GraphQL:MaxExecutionDepth", 15))
             .UseExceptions()
             .UseTimeout()
             .UseDocumentCache()

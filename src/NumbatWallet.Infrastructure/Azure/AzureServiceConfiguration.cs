@@ -20,7 +20,7 @@ public static class AzureServiceConfiguration
         IConfiguration configuration)
     {
         var azureConfig = configuration.GetSection("Azure");
-        var useRealAzure = azureConfig.GetValue<bool>("UseRealServices", false);
+        var useRealAzure = azureConfig.GetValue("UseRealServices", false);
 
         if (useRealAzure)
         {

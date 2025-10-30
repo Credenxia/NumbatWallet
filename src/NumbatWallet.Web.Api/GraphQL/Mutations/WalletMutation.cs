@@ -106,7 +106,7 @@ public class WalletMutation
 
         var command = new UpdateWalletCommand
         {
-            WalletId = input.WalletId.ToString(),
+            WalletId = input.WalletId,
             Name = input.DisplayName,
             Metadata = input.Metadata
         };
@@ -239,7 +239,7 @@ public class WalletMutation
         var result = new WalletImportResultDto
         {
             Success = true,
-            WalletId = wallet.Id.ToString(),
+            WalletId = wallet.Id,
             ImportedAt = DateTime.UtcNow,
             CredentialsImported = 0, // Would be populated from actual import
             CredentialsSkipped = 0,

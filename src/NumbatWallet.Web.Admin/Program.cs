@@ -41,7 +41,7 @@ try
 
     // Add authentication - use development auth ONLY in development mode AND when explicitly enabled
     if (builder.Environment.IsDevelopment() &&
-        builder.Configuration.GetValue<bool>("Authentication:BypassInDevelopment", false) &&
+        builder.Configuration.GetValue("Authentication:BypassInDevelopment", false) &&
         !builder.Environment.IsProduction()) // Extra safety: never bypass in production
     {
         // Use development authentication handler

@@ -66,7 +66,7 @@ public class RevocationRegistryService : IRevocationRegistryService
                 serialNumber,
                 (int)reason,
                 comment,
-                _currentUserService.UserId?.ToString()
+                _currentUserService.UserId
             );
 
             _context.Set<Domain.Entities.CertificateRevocation>().Add(revocation);

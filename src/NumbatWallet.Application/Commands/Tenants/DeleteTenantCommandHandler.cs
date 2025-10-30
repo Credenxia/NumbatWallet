@@ -74,7 +74,7 @@ public class DeleteTenantCommandHandler : ICommandHandler<DeleteTenantCommand>
         // Raise domain event for tenant deletion
         var tenantDeletedEvent = new TenantDeletedEvent(
             tenant.Identifier,
-            _currentUserService.UserId?.ToString() ?? "system",
+            _currentUserService.UserId ?? "system",
             "Tenant deactivated",
             tenant.UpdatedAt);
         tenant.AddDomainEvent(tenantDeletedEvent);

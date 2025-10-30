@@ -16,7 +16,7 @@ public static class OidcAuthenticationExtensions
         IConfiguration configuration)
     {
         var authConfig = configuration.GetSection("Authentication");
-        var useRealAuth = authConfig.GetValue<bool>("UseRealAuthentication", false);
+        var useRealAuth = authConfig.GetValue("UseRealAuthentication", false);
 
         if (useRealAuth)
         {

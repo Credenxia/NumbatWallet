@@ -4,8 +4,8 @@ Solution NumbatWallet.sln
     
     Project NumbatWallet.Application
       src\NumbatWallet.Application\Commands\Certificates\RenewCertificateCommandHandler.cs:107 Local variable 'gracePeriodEnd' is never used
-      src\NumbatWallet.Application\Commands\Tenants\CreateTenantCommandHandler.cs:100 Redundant 'Object.ToString()' call
-      src\NumbatWallet.Application\Commands\Tenants\DeleteTenantCommandHandler.cs:77 Redundant 'Object.ToString()' call
+      src\NumbatWallet.Application\Commands\Tenants\CreateTenantCommandHandler.cs:100 '??' left operand is never null according to nullable reference types' annotations
+      src\NumbatWallet.Application\Commands\Tenants\DeleteTenantCommandHandler.cs:77 '??' left operand is never null according to nullable reference types' annotations
       src\NumbatWallet.Application\DomainServices\PersonVerificationService.cs:143 Parameter 'cancellationToken' is never used
       src\NumbatWallet.Application\DomainServices\PersonVerificationService.cs:162 Parameter 'cancellationToken' is never used
       src\NumbatWallet.Application\DomainServices\PersonVerificationService.cs:181 Parameter 'cancellationToken' is never used
@@ -42,14 +42,6 @@ Solution NumbatWallet.sln
       src\NumbatWallet.Application\Services\CredentialManifestService.cs:66 Expression is always false according to nullable reference types' annotations
       src\NumbatWallet.Application\Services\CredentialManifestService.cs:67 Expression is always false according to nullable reference types' annotations
       src\NumbatWallet.Application\Services\StatisticsService.cs:13 Field '_organizationRepository' is assigned but its value is never used
-      src\NumbatWallet.Application\Services\StatisticsService.cs:36 Possible multiple enumeration
-      src\NumbatWallet.Application\Services\StatisticsService.cs:37 Possible multiple enumeration
-      src\NumbatWallet.Application\Services\StatisticsService.cs:40 Possible multiple enumeration
-      src\NumbatWallet.Application\Services\StatisticsService.cs:41 Possible multiple enumeration
-      src\NumbatWallet.Application\Services\StatisticsService.cs:45 Possible multiple enumeration
-      src\NumbatWallet.Application\Services\StatisticsService.cs:49 Possible multiple enumeration
-      src\NumbatWallet.Application\Services\StatisticsService.cs:56 Possible multiple enumeration
-      src\NumbatWallet.Application\Services\StatisticsService.cs:61 Possible multiple enumeration
       src\NumbatWallet.Application\Services\StatisticsService.cs:82 Possible multiple enumeration
       src\NumbatWallet.Application\Services\StatisticsService.cs:83 Possible multiple enumeration
       src\NumbatWallet.Application\Services\StatisticsService.cs:84 Possible multiple enumeration
@@ -131,22 +123,10 @@ Solution NumbatWallet.sln
     
     Project NumbatWallet.Infrastructure
       src\NumbatWallet.Infrastructure\Azure\AzureKeyVaultService.cs:202 Field '_logger' is assigned but its value is never used
-      src\NumbatWallet.Infrastructure\Azure\AzurePostgreSQLConfiguration.cs:23 Type argument specification is redundant
-      src\NumbatWallet.Infrastructure\Azure\AzurePostgreSQLConfiguration.cs:42 Type argument specification is redundant
-      src\NumbatWallet.Infrastructure\Azure\AzurePostgreSQLConfiguration.cs:55 Type argument specification is redundant
-      src\NumbatWallet.Infrastructure\Azure\AzurePostgreSQLConfiguration.cs:111 Type argument specification is redundant
-      src\NumbatWallet.Infrastructure\Azure\AzurePostgreSQLConfiguration.cs:116 Type argument specification is redundant
-      src\NumbatWallet.Infrastructure\Azure\AzurePostgreSQLConfiguration.cs:122 Type argument specification is redundant
-      src\NumbatWallet.Infrastructure\Azure\AzurePostgreSQLConfiguration.cs:123 Type argument specification is redundant
-      src\NumbatWallet.Infrastructure\Azure\AzurePostgreSQLConfiguration.cs:124 Type argument specification is redundant
-      src\NumbatWallet.Infrastructure\Azure\AzurePostgreSQLConfiguration.cs:125 Type argument specification is redundant
-      src\NumbatWallet.Infrastructure\Azure\AzurePostgreSQLConfiguration.cs:128 Type argument specification is redundant
-      src\NumbatWallet.Infrastructure\Azure\AzurePostgreSQLConfiguration.cs:129 Type argument specification is redundant
       src\NumbatWallet.Infrastructure\Azure\AzurePostgreSQLConfiguration.cs:137 Parameter 'configuration' is never used
       src\NumbatWallet.Infrastructure\Azure\AzurePostgreSQLConfiguration.cs:144 The parameter 'cancellationToken' has the same default value
       src\NumbatWallet.Infrastructure\Azure\AzurePostgreSQLConfiguration.cs:219 Field '_configuration' is assigned but its value is never used
       src\NumbatWallet.Infrastructure\Azure\AzureServiceBusService.cs:12 Field '_connectionString' is assigned but its value is never used
-      src\NumbatWallet.Infrastructure\Azure\AzureServiceConfiguration.cs:23 Type argument specification is redundant
       src\NumbatWallet.Infrastructure\Azure\AzureServiceConfiguration.cs:29 Type argument specification is redundant
       src\NumbatWallet.Infrastructure\Azure\AzureServiceConfiguration.cs:54 Parameter 'sp' is never used
       src\NumbatWallet.Infrastructure\Azure\AzureStorageService.cs:36 The parameter 'publicAccessType' has the same default value
@@ -265,7 +245,6 @@ Solution NumbatWallet.sln
       src\NumbatWallet.Infrastructure\Services\RedisCacheService.cs:11 Field '_distributedCache' is assigned but its value is never used
       src\NumbatWallet.Infrastructure\Services\RedisCacheService.cs:207 Possible multiple enumeration
       src\NumbatWallet.Infrastructure\Services\RedisCacheService.cs:210 Possible multiple enumeration
-      src\NumbatWallet.Infrastructure\Services\RevocationRegistryService.cs:69 Redundant 'Object.ToString()' call
       src\NumbatWallet.Infrastructure\Services\RevocationRegistryService.cs:377 Type cast is redundant
       src\NumbatWallet.Infrastructure\Services\ServiceWAIdXService.cs:19 Field '_configuration' is assigned but its value is never used
       src\NumbatWallet.Infrastructure\Services\ServiceWAIdXService.cs:23 The field is always assigned before being used and can be converted into a local variable
@@ -304,11 +283,9 @@ Solution NumbatWallet.sln
       src\Tests\NumbatWallet.Infrastructure.Tests\Services\HsmServiceTests.cs:64 Parameter 'sp' is never used
       src\Tests\NumbatWallet.Infrastructure.Tests\Services\HsmServiceTests.cs:68 Parameter 'sp' is never used
       src\Tests\NumbatWallet.Infrastructure.Tests\Services\HsmServiceTests.cs:70 Parameter 'sp' is never used
-      src\Tests\NumbatWallet.Infrastructure.Tests\Services\HsmServiceTests.cs:115 Type argument specification is redundant
       src\Tests\NumbatWallet.Infrastructure.Tests\Services\HsmServiceTests.cs:137 Type argument specification is redundant
       src\Tests\NumbatWallet.Infrastructure.Tests\Services\HsmServiceTests.cs:138 Parameter 'sp' is never used
       src\Tests\NumbatWallet.Infrastructure.Tests\Services\HsmServiceTests.cs:140 Parameter 'sp' is never used
-      src\Tests\NumbatWallet.Infrastructure.Tests\Services\HsmServiceTests.cs:169 Type argument specification is redundant
       src\Tests\NumbatWallet.Infrastructure.Tests\Services\HsmServiceTests.cs:176 Local variable 'service' is never used
       src\Tests\NumbatWallet.Infrastructure.Tests\Services\HsmServiceTests.cs:195 Local variable 'service' is never used
       src\Tests\NumbatWallet.Infrastructure.Tests\Services\ProtectionServiceTests.cs:16 The field is always assigned before being used and can be converted into a local variable
@@ -680,13 +657,11 @@ Solution NumbatWallet.sln
       src\NumbatWallet.Web.Admin\Pages\WalletBuilder.razor.cs:22 Initializing field by default value is redundant
       src\NumbatWallet.Web.Admin\Pages\WalletBuilder.razor.cs:427 Local variable 'webWallet' is never used
       src\NumbatWallet.Web.Admin\Pages\WalletBuilder.razor.cs:628 Auto-property accessor 'DisplayOrder.get' is never used
-      src\NumbatWallet.Web.Admin\Program.cs:44 Type argument specification is redundant
       src\NumbatWallet.Web.Admin\Program.cs:224 Parameter 'outcome' is never used
       src\NumbatWallet.Web.Admin\Program.cs:224 Parameter 'context' is never used
       src\NumbatWallet.Web.Admin\Program.cs:237 Parameter 'result' is never used
     
     Project NumbatWallet.Web.Api
-      src\NumbatWallet.Web.Api\Authentication\OidcAuthenticationExtensions.cs:19 Type argument specification is redundant
       src\NumbatWallet.Web.Api\Authentication\OidcAuthenticationExtensions.cs:139 Local variable 'serviceWaConfig' hides outer local variable with the same name
       src\NumbatWallet.Web.Api\Authentication\OidcAuthenticationExtensions.cs:197 Parameter 'options' is never used
       src\NumbatWallet.Web.Api\Caching\CacheInvalidationService.cs:142 Parameter 'cancellationToken' is never used
@@ -735,8 +710,6 @@ Solution NumbatWallet.sln
       src\NumbatWallet.Web.Api\Endpoints\WalletEndpoints.cs:83 The parameter 'statusCode' has the same default value
       src\NumbatWallet.Web.Api\Endpoints\WalletEndpoints.cs:90 The parameter 'statusCode' has the same default value
       src\NumbatWallet.Web.Api\Endpoints\WalletEndpoints.cs:139 Expression is always true according to nullable reference types' annotations
-      src\NumbatWallet.Web.Api\Extensions\GraphQLExtensions.cs:37 Type argument specification is redundant
-      src\NumbatWallet.Web.Api\Extensions\GraphQLExtensions.cs:42 Type argument specification is redundant
       src\NumbatWallet.Web.Api\Extensions\RateLimitingExtensions.cs:17 Parameter 'partition' is never used
       src\NumbatWallet.Web.Api\Extensions\RateLimitingExtensions.cs:28 Parameter 'partition' is never used
       src\NumbatWallet.Web.Api\Extensions\RateLimitingExtensions.cs:40 Parameter 'partition' is never used
@@ -753,11 +726,9 @@ Solution NumbatWallet.sln
       src\NumbatWallet.Web.Api\GraphQL\Mutations\AdminMutation.cs:278 Value assigned is not used in any execution path
       src\NumbatWallet.Web.Api\GraphQL\Mutations\WalletMutation.cs:19 Field '_activateWalletHandler' is assigned but its value is never used
       src\NumbatWallet.Web.Api\GraphQL\Mutations\WalletMutation.cs:95 Local variable 'userId' is never used
-      src\NumbatWallet.Web.Api\GraphQL\Mutations\WalletMutation.cs:109 Redundant 'Object.ToString()' call
       src\NumbatWallet.Web.Api\GraphQL\Mutations\WalletMutation.cs:132 Local variable 'userId' is never used
       src\NumbatWallet.Web.Api\GraphQL\Mutations\WalletMutation.cs:165 Local variable 'userId' is never used
       src\NumbatWallet.Web.Api\GraphQL\Mutations\WalletMutation.cs:226 Local variable 'walletData' is never used
-      src\NumbatWallet.Web.Api\GraphQL\Mutations\WalletMutation.cs:242 Redundant 'Object.ToString()' call
       src\NumbatWallet.Web.Api\GraphQL\Queries\CredentialQuery.cs:21 Field '_credentialRepository' is assigned but its value is never used
       src\NumbatWallet.Web.Api\GraphQL\Queries\CredentialQuery.cs:100 The parameter 'IncludeRevoked' has the same default value
       src\NumbatWallet.Web.Api\GraphQL\Queries\CredentialQuery.cs:304 Possible multiple enumeration
@@ -795,12 +766,7 @@ Solution NumbatWallet.sln
       src\NumbatWallet.Web.Api\Middleware\EnhancedRateLimitingMiddleware.cs:305 Parameter 'clientId' is never used
       src\NumbatWallet.Web.Api\Middleware\EnhancedRateLimitingMiddleware.cs:395 Parameter 'partition' is never used
       src\NumbatWallet.Web.Api\Middleware\ExceptionHandlingMiddleware.cs:128 Local variable 'timeoutEx' is never used
-      src\NumbatWallet.Web.Api\Middleware\RateLimitingMiddleware.cs:37 Type argument specification is redundant
       src\NumbatWallet.Web.Api\Middleware\RateLimitingMiddleware.cs:49 Specify string culture explicitly
-      src\NumbatWallet.Web.Api\Middleware\RateLimitingMiddleware.cs:82 Type argument specification is redundant
-      src\NumbatWallet.Web.Api\Middleware\RateLimitingMiddleware.cs:87 Type argument specification is redundant
-      src\NumbatWallet.Web.Api\Middleware\RateLimitingMiddleware.cs:92 Type argument specification is redundant
-      src\NumbatWallet.Web.Api\Middleware\RateLimitingMiddleware.cs:95 Type argument specification is redundant
       src\NumbatWallet.Web.Api\Middleware\RequestSignatureMiddleware.cs:115 Content of collection 'headers' is only updated but never used
       src\NumbatWallet.Web.Api\Middleware\SecurityHeadersMiddleware.cs:290 Initializing property by default value is redundant
       src\NumbatWallet.Web.Api\Middleware\SecurityHeadersMiddleware.cs:291 Initializing property by default value is redundant
@@ -878,9 +844,6 @@ Solution NumbatWallet.sln
       src\NumbatWallet.Web.Api\Telemetry\PerformanceMetrics.cs:20 Field '_memoryUsage' is assigned but its value is never used
       src\NumbatWallet.Web.Api\Telemetry\PerformanceMetrics.cs:21 Field '_threadCount' is assigned but its value is never used
       src\NumbatWallet.Web.Api\Telemetry\PerformanceMetrics.cs:22 Field '_cpuUsage' is assigned but its value is never used
-      src\NumbatWallet.Web.Api\Telemetry\PerformanceMetrics.cs:74 Type argument specification is redundant
-      src\NumbatWallet.Web.Api\Telemetry\PerformanceMetrics.cs:80 Type argument specification is redundant
-      src\NumbatWallet.Web.Api\Telemetry\PerformanceMetrics.cs:86 Type argument specification is redundant
       src\NumbatWallet.Web.Api\Telemetry\TelemetryExtensions.cs:128 Redundant explicit array type specification
       src\NumbatWallet.Web.Api\Telemetry\TelemetryExtensions.cs:177 Field '_activeWallets' is assigned but its value is never used
       src\NumbatWallet.Web.Api\Telemetry\TelemetryExtensions.cs:178 Initializing field by default value is redundant
