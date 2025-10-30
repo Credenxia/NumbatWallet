@@ -10,7 +10,6 @@ namespace NumbatWallet.Application.Tests.EventHandlers;
 
 public class CredentialIssuedEventHandlerTests
 {
-    private readonly Mock<ILogger<CredentialIssuedEventHandler>> _loggerMock;
     private readonly Mock<INotificationService> _notificationServiceMock;
     private readonly Mock<IAuditService> _auditServiceMock;
     private readonly Mock<IWalletRepository> _walletRepositoryMock;
@@ -18,13 +17,13 @@ public class CredentialIssuedEventHandlerTests
 
     public CredentialIssuedEventHandlerTests()
     {
-        _loggerMock = new Mock<ILogger<CredentialIssuedEventHandler>>();
+        var loggerMock = new Mock<ILogger<CredentialIssuedEventHandler>>();
         _notificationServiceMock = new Mock<INotificationService>();
         _auditServiceMock = new Mock<IAuditService>();
         _walletRepositoryMock = new Mock<IWalletRepository>();
 
         _handler = new CredentialIssuedEventHandler(
-            _loggerMock.Object,
+            loggerMock.Object,
             _notificationServiceMock.Object,
             _auditServiceMock.Object,
             _walletRepositoryMock.Object);

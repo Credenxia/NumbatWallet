@@ -11,7 +11,6 @@ namespace NumbatWallet.Application.Tests.Credentials.Commands;
 public class VerifyCredentialCommandHandlerTests
 {
     private readonly Mock<ICredentialRepository> _credentialRepositoryMock;
-    private readonly Mock<ILogger<VerifyCredentialCommandHandler>> _loggerMock;
     private readonly Mock<ICacheService> _cacheServiceMock;
     private readonly Mock<IJwtSigningService> _jwtSigningServiceMock;
     private readonly Mock<IWalletRepository> _walletRepositoryMock;
@@ -21,7 +20,7 @@ public class VerifyCredentialCommandHandlerTests
     public VerifyCredentialCommandHandlerTests()
     {
         _credentialRepositoryMock = new Mock<ICredentialRepository>();
-        _loggerMock = new Mock<ILogger<VerifyCredentialCommandHandler>>();
+        var loggerMock = new Mock<ILogger<VerifyCredentialCommandHandler>>();
         _cacheServiceMock = new Mock<ICacheService>();
         _jwtSigningServiceMock = new Mock<IJwtSigningService>();
         _walletRepositoryMock = new Mock<IWalletRepository>();
@@ -29,7 +28,7 @@ public class VerifyCredentialCommandHandlerTests
 
         _handler = new VerifyCredentialCommandHandler(
             _credentialRepositoryMock.Object,
-            _loggerMock.Object,
+            loggerMock.Object,
             _cacheServiceMock.Object,
             _jwtSigningServiceMock.Object,
             _walletRepositoryMock.Object,

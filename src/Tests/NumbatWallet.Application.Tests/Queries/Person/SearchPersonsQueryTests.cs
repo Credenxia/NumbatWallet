@@ -24,12 +24,6 @@ public sealed class SearchPersonsQueryTests
             "john@example.com",
             "+61400000000").Value;
 
-        var person2 = Domain.Aggregates.Person.Create(
-            "Jane",
-            "Smith",
-            "jane@example.com",
-            "+61400000001").Value;
-
         var query = new SearchPersonsQuery
         {
             SearchTerm = "john"

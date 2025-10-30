@@ -15,8 +15,6 @@ public class ActivateWalletCommandHandlerTests
     private readonly Mock<IWalletRepository> _walletRepositoryMock;
     private readonly Mock<IPersonRepository> _personRepositoryMock;
     private readonly Mock<IUnitOfWork> _unitOfWorkMock;
-    private readonly Mock<ICurrentTenantService> _tenantServiceMock;
-    private readonly Mock<ILogger<ActivateWalletCommandHandler>> _loggerMock;
     private readonly ActivateWalletCommandHandler _handler;
     private const string DefaultTenantId = "test-tenant";
 
@@ -25,17 +23,17 @@ public class ActivateWalletCommandHandlerTests
         _walletRepositoryMock = new Mock<IWalletRepository>();
         _personRepositoryMock = new Mock<IPersonRepository>();
         _unitOfWorkMock = new Mock<IUnitOfWork>();
-        _tenantServiceMock = new Mock<ICurrentTenantService>();
-        _loggerMock = new Mock<ILogger<ActivateWalletCommandHandler>>();
+        var tenantServiceMock = new Mock<ICurrentTenantService>();
+        var loggerMock = new Mock<ILogger<ActivateWalletCommandHandler>>();
 
-        _tenantServiceMock.Setup(x => x.TenantId).Returns(DefaultTenantId);
+        tenantServiceMock.Setup(x => x.TenantId).Returns(DefaultTenantId);
 
         _handler = new ActivateWalletCommandHandler(
             _walletRepositoryMock.Object,
             _personRepositoryMock.Object,
             _unitOfWorkMock.Object,
-            _tenantServiceMock.Object,
-            _loggerMock.Object);
+            tenantServiceMock.Object,
+            loggerMock.Object);
     }
 
     [Fact]

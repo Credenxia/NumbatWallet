@@ -12,7 +12,6 @@ public class GetWalletQueryTests
     private readonly Mock<IWalletRepository> _walletRepositoryMock;
     private readonly Mock<IPersonRepository> _personRepositoryMock;
     private readonly Mock<ICredentialRepository> _credentialRepositoryMock;
-    private readonly Mock<ILogger<GetWalletQueryHandler>> _loggerMock;
     private readonly GetWalletQueryHandler _handler;
 
     public GetWalletQueryTests()
@@ -20,13 +19,13 @@ public class GetWalletQueryTests
         _walletRepositoryMock = new Mock<IWalletRepository>();
         _personRepositoryMock = new Mock<IPersonRepository>();
         _credentialRepositoryMock = new Mock<ICredentialRepository>();
-        _loggerMock = new Mock<ILogger<GetWalletQueryHandler>>();
+        var loggerMock = new Mock<ILogger<GetWalletQueryHandler>>();
 
         _handler = new GetWalletQueryHandler(
             _walletRepositoryMock.Object,
             _personRepositoryMock.Object,
             _credentialRepositoryMock.Object,
-            _loggerMock.Object);
+            loggerMock.Object);
     }
 
     [Fact]
