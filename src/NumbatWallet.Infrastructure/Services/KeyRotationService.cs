@@ -610,7 +610,6 @@ public class KeyRotationService : IKeyRotationService
             RotatableKeyType.EncryptionKey => KeyType.AES,
             RotatableKeyType.TlsCertificate => KeyType.RSA,
             RotatableKeyType.ApiKey => KeyType.AES,
-            RotatableKeyType.HsmMasterKey => KeyType.RSA,
             _ => KeyType.RSA
         };
     }
