@@ -24,7 +24,7 @@ public class PersonEndpoints : ICarterModule
         group.MapGet("/{id:guid}", GetPersonById)
             .WithName("GetPersonById")
             .WithOpenApi()
-            .Produces<PersonDto>(StatusCodes.Status200OK)
+            .Produces<PersonDto>()
             .Produces(StatusCodes.Status404NotFound);
 
         // GET /api/v1/persons/search
@@ -48,7 +48,7 @@ public class PersonEndpoints : ICarterModule
             .WithName("UpdatePerson")
             .WithOpenApi()
             .Accepts<UpdatePersonCommand>("application/json")
-            .Produces<PersonDto>(StatusCodes.Status200OK)
+            .Produces<PersonDto>()
             .Produces(StatusCodes.Status404NotFound)
             .ProducesValidationProblem();
 
@@ -66,7 +66,7 @@ public class PersonEndpoints : ICarterModule
             .WithOpenApi()
             .RequireAuthorization("AdminOrOfficer")
             .Accepts<VerifyIdentityRequest>("application/json")
-            .Produces<VerificationResult>(StatusCodes.Status200OK)
+            .Produces<VerificationResult>()
             .Produces(StatusCodes.Status404NotFound);
     }
 

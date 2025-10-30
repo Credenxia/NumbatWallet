@@ -20,32 +20,32 @@ public class DtpModule : RestEndpointBase
         group.MapGet("/wallets/{id}", GetWalletById)
             .WithName("GetDtpWallet")
             .WithOpenApi()
-            .Produces<object>(200)
+            .Produces<object>()
             .Produces(404);
 
         group.MapGet("/wallets/person/{personId}", GetWalletsByPerson)
             .WithName("GetDtpWalletsByPerson")
             .WithOpenApi()
-            .Produces<object>(200);
+            .Produces<object>();
 
         // Credential endpoints
         group.MapGet("/credentials/{id}", GetCredentialById)
             .WithName("GetDtpCredential")
             .WithOpenApi()
-            .Produces<object>(200)
+            .Produces<object>()
             .Produces(404);
 
         group.MapPost("/credentials/verify", VerifyCredential)
             .WithName("VerifyDtpCredential")
             .WithOpenApi()
             .Accepts<DtpVerifyRequest>("application/json")
-            .Produces<object>(200)
+            .Produces<object>()
             .Produces(400);
 
         group.MapGet("/credentials/wallet/{walletId}", GetCredentialsByWallet)
             .WithName("GetDtpCredentialsByWallet")
             .WithOpenApi()
-            .Produces<object>(200);
+            .Produces<object>();
 
         // Issuer endpoints
         group.MapPost("/credentials/issue", IssueCredential)
@@ -60,7 +60,7 @@ public class DtpModule : RestEndpointBase
             .WithName("RevokeDtpCredential")
             .WithOpenApi()
             .Accepts<DtpRevokeRequest>("application/json")
-            .Produces<object>(200)
+            .Produces<object>()
             .Produces(400)
             .RequireAuthorization("Issuer");
     }

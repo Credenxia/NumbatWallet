@@ -25,7 +25,7 @@ public class WalletEndpoints : ICarterModule
         group.MapGet("/{id:guid}", GetWalletById)
             .WithName("GetWalletById")
             .WithOpenApi()
-            .Produces<WalletDto>(StatusCodes.Status200OK)
+            .Produces<WalletDto>()
             .Produces(StatusCodes.Status404NotFound);
 
         // POST /api/v1/wallets
@@ -41,7 +41,7 @@ public class WalletEndpoints : ICarterModule
             .WithName("UpdateWalletSettings")
             .WithOpenApi()
             .Accepts<UpdateWalletSettingsRequest>("application/json")
-            .Produces<WalletDto>(StatusCodes.Status200OK)
+            .Produces<WalletDto>()
             .Produces(StatusCodes.Status404NotFound)
             .ProducesValidationProblem();
 
@@ -49,7 +49,7 @@ public class WalletEndpoints : ICarterModule
         group.MapPost("/{id:guid}/backup", BackupWallet)
             .WithName("BackupWallet")
             .WithOpenApi()
-            .Produces<Application.Commands.Wallets.BackupResult>(StatusCodes.Status200OK)
+            .Produces<Application.Commands.Wallets.BackupResult>()
             .Produces(StatusCodes.Status404NotFound);
 
         // POST /api/v1/wallets/restore
@@ -87,7 +87,7 @@ public class WalletEndpoints : ICarterModule
         group.MapGet("/{id:guid}/statistics", GetWalletStatistics)
             .WithName("GetWalletStatistics")
             .WithOpenApi()
-            .Produces<WalletStatistics>(StatusCodes.Status200OK)
+            .Produces<WalletStatistics>()
             .Produces(StatusCodes.Status404NotFound);
 
         // DELETE /api/v1/wallets/{id}

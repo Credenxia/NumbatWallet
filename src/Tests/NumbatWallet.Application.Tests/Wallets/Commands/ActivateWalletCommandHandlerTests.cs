@@ -85,7 +85,7 @@ public class ActivateWalletCommandHandlerTests
     {
         // Arrange
         var walletId = Guid.NewGuid();
-        var command = new ActivateWalletCommand(walletId, null);
+        var command = new ActivateWalletCommand(walletId);
 
         _walletRepositoryMock.Setup(x => x.GetByIdAsync(walletId, It.IsAny<CancellationToken>()))
             .ReturnsAsync((Wallet?)null);
@@ -107,7 +107,7 @@ public class ActivateWalletCommandHandlerTests
         // Arrange
         var walletId = Guid.NewGuid();
         var personId = Guid.NewGuid();
-        var command = new ActivateWalletCommand(walletId, null);
+        var command = new ActivateWalletCommand(walletId);
 
         var walletResult = Wallet.Create(personId, "Test Wallet");
         var wallet = walletResult.Value;
@@ -133,7 +133,7 @@ public class ActivateWalletCommandHandlerTests
         // Arrange
         var walletId = Guid.NewGuid();
         var personId = Guid.NewGuid();
-        var command = new ActivateWalletCommand(walletId, null); // No PIN provided
+        var command = new ActivateWalletCommand(walletId); // No PIN provided
 
         var walletResult = Wallet.Create(personId, "Test Wallet");
         var wallet = walletResult.Value;
@@ -270,7 +270,7 @@ public class ActivateWalletCommandHandlerTests
         // Arrange
         var walletId = Guid.NewGuid();
         var personId = Guid.NewGuid();
-        var command = new ActivateWalletCommand(walletId, null);
+        var command = new ActivateWalletCommand(walletId);
 
         var walletResult = Wallet.Create(personId, "Test Wallet");
         var wallet = walletResult.Value;

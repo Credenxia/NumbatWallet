@@ -33,7 +33,7 @@ public class CredentialEndpoints : ICarterModule
             .WithOpenApi()
             .RequireAuthorization("CanIssueCredentials")
             .Accepts<BulkIssueCredentialsRequest>("application/json")
-            .Produces<BulkIssueResult>(StatusCodes.Status200OK)
+            .Produces<BulkIssueResult>()
             .ProducesValidationProblem()
             .RequireRateLimiting("expensive");
 
@@ -41,14 +41,14 @@ public class CredentialEndpoints : ICarterModule
         group.MapGet("/{id:guid}", GetCredentialById)
             .WithName("GetCredentialById")
             .WithOpenApi()
-            .Produces<CredentialDto>(StatusCodes.Status200OK)
+            .Produces<CredentialDto>()
             .Produces(StatusCodes.Status404NotFound);
 
         // POST /api/v1/credentials/{id}/verify
         group.MapPost("/{id:guid}/verify", VerifyCredential)
             .WithName("VerifyCredential")
             .WithOpenApi()
-            .Produces<VerificationResult>(StatusCodes.Status200OK)
+            .Produces<VerificationResult>()
             .Produces(StatusCodes.Status404NotFound);
 
         // POST /api/v1/credentials/{id}/revoke
@@ -66,7 +66,7 @@ public class CredentialEndpoints : ICarterModule
             .WithName("ShareCredential")
             .WithOpenApi()
             .Accepts<ShareCredentialRequest>("application/json")
-            .Produces<ShareCredentialResult>(StatusCodes.Status200OK)
+            .Produces<ShareCredentialResult>()
             .Produces(StatusCodes.Status404NotFound)
             .ProducesValidationProblem();
 
@@ -90,14 +90,14 @@ public class CredentialEndpoints : ICarterModule
             .WithOpenApi()
             .AllowAnonymous()
             .Accepts<ValidateJwtVcRequest>("application/json")
-            .Produces<JwtVcValidationResult>(StatusCodes.Status200OK);
+            .Produces<JwtVcValidationResult>();
 
         // POST /api/v1/credentials/present
         group.MapPost("/present", PresentCredential)
             .WithName("PresentCredential")
             .WithOpenApi()
             .Accepts<PresentCredentialRequest>("application/json")
-            .Produces<PresentationResult>(StatusCodes.Status200OK)
+            .Produces<PresentationResult>()
             .ProducesValidationProblem();
     }
 

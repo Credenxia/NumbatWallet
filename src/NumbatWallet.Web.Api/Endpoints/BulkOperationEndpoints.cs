@@ -39,7 +39,7 @@ public class BulkOperationEndpoints : ICarterModule
             .WithName("BulkVerifyCredentials")
             .WithSummary("Bulk verify multiple credentials")
             .WithDescription("Verify multiple credentials and return validation results")
-            .Produces<BulkVerificationResult>(StatusCodes.Status200OK)
+            .Produces<BulkVerificationResult>()
             .Produces<ProblemDetails>(StatusCodes.Status400BadRequest);
 
         // Import credentials from file
@@ -56,7 +56,7 @@ public class BulkOperationEndpoints : ICarterModule
             .WithName("GetBulkOperationStatus")
             .WithSummary("Get the status of a bulk operation")
             .WithDescription("Check the progress and status of a running bulk operation")
-            .Produces<BulkOperationStatus>(StatusCodes.Status200OK)
+            .Produces<BulkOperationStatus>()
             .Produces(StatusCodes.Status404NotFound);
 
         // Cancel bulk operation
@@ -72,7 +72,7 @@ public class BulkOperationEndpoints : ICarterModule
             .WithName("GetBulkOperationHistory")
             .WithSummary("Get bulk operation history")
             .WithDescription("Retrieve the history of bulk operations with filtering")
-            .Produces<List<BulkOperationSummary>>(StatusCodes.Status200OK);
+            .Produces<List<BulkOperationSummary>>();
 
         // Export bulk operation results
         group.MapGet("/operations/{operationId}/export", ExportOperationResults)
