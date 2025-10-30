@@ -257,7 +257,7 @@ public class HsmService : IHsmService
                 }
             };
 
-            var key = await _provider.GenerateKeyAsync(keyRequest, cancellationToken);
+            _ = await _provider.GenerateKeyAsync(keyRequest, cancellationToken);
 
             // Create certificate request
             using var rsa = RSA.Create(2048);
@@ -395,7 +395,7 @@ public class HsmService : IHsmService
     {
         try
         {
-            var backup = await _provider.BackupKeyAsync(keyName, cancellationToken);
+            _ = await _provider.BackupKeyAsync(keyName, cancellationToken);
 
             // Store backup reference (in production, this would be stored securely)
             var backupId = $"backup_{keyName}_{DateTime.UtcNow:yyyyMMddHHmmss}";
@@ -464,7 +464,7 @@ public class HsmService : IHsmService
                 }
             };
 
-            var newKey = await _provider.GenerateKeyAsync(request, cancellationToken);
+            _ = await _provider.GenerateKeyAsync(request, cancellationToken);
 
             // Mark old key for deletion (soft delete)
             await _provider.DeleteKeyAsync(keyName, false, cancellationToken);
@@ -505,7 +505,7 @@ public class HsmService : IHsmService
                 }
             };
 
-            var newKey = await _provider.GenerateKeyAsync(request, cancellationToken);
+            _ = await _provider.GenerateKeyAsync(request, cancellationToken);
 
             // Mark old key for deletion (soft delete)
             await _provider.DeleteKeyAsync(oldKeyName, false, cancellationToken);
