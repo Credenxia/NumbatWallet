@@ -11,7 +11,6 @@ namespace NumbatWallet.Infrastructure.Tests.Services;
 
 public class HsmServiceTests
 {
-    private readonly Mock<IConfiguration> _configurationMock;
     private readonly Mock<ILogger<HsmService>> _loggerMock;
     private readonly Mock<IServiceProvider> _serviceProviderMock;
     private readonly IConfiguration _configuration;
@@ -19,7 +18,6 @@ public class HsmServiceTests
 
     public HsmServiceTests()
     {
-        _configurationMock = new Mock<IConfiguration>();
         _loggerMock = new Mock<ILogger<HsmService>>();
         _serviceProviderMock = new Mock<IServiceProvider>();
 
