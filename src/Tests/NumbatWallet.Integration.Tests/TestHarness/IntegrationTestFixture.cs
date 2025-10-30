@@ -22,7 +22,7 @@ public class IntegrationTestFixture : WebApplicationFactory<Program>, IAsyncLife
     // Use a valid test tenant GUID (domain entities validate against Guid.Empty)
     private readonly Guid _testTenantGuid = Guid.Parse("10000000-0000-0000-0000-000000000001");
     private readonly string _testTenantId = "10000000-0000-0000-0000-000000000001";
-    private bool _initialized = false;
+    private bool _initialized;
 
     public IntegrationTestFixture()
     {
