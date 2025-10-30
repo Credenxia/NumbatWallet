@@ -12,7 +12,7 @@ public class NotificationService : INotificationService
 
     public NotificationService(
         ILogger<NotificationService> logger,
-        IEmailService emailService)
+        IEmailService _)
     {
         _logger = logger;
 
@@ -140,7 +140,7 @@ public class NotificationService : INotificationService
         {
             // Scheduled reminders require background job infrastructure (Hangfire/Quartz)
             // For now, we create a scheduled notification record
-            var scheduledNotification = new ScheduledNotification
+            _ = new ScheduledNotification
             {
                 UserId = userId,
                 Title = title,
