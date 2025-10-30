@@ -73,14 +73,12 @@ public class EventSourcingHandler : IEventSourcingHandler
 public class EventSourcingInterceptor : SaveChangesInterceptor
 {
     private readonly IEventSourcingHandler _eventHandler;
-    private readonly ILogger<EventSourcingInterceptor> _logger;
 
     public EventSourcingInterceptor(
         IEventSourcingHandler eventHandler,
         ILogger<EventSourcingInterceptor> logger)
     {
         _eventHandler = eventHandler;
-        _logger = logger;
     }
 
     public override async ValueTask<InterceptionResult<int>> SavingChangesAsync(

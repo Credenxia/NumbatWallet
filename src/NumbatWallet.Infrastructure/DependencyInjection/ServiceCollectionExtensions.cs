@@ -256,7 +256,7 @@ public static class ServiceCollectionExtensions
         if (!string.IsNullOrEmpty(redisConnectionString))
         {
             // Add StackExchange.Redis IConnectionMultiplexer
-            services.AddSingleton<IConnectionMultiplexer>(sp =>
+            services.AddSingleton<IConnectionMultiplexer>(_ =>
             {
                 var config = ConfigurationOptions.Parse(redisConnectionString);
                 config.AbortOnConnectFail = false; // Allow retry on initial connection failure
