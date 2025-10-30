@@ -85,7 +85,7 @@ public class RevokedCredentialSpecification : Specification<Credential>
 
 public class CredentialWithClaimSpecification : Specification<Credential>
 {
-    public CredentialWithClaimSpecification(string claimKey, object _)
+    public CredentialWithClaimSpecification(string claimKey, object claimValue)
     {
         // This would need custom SQL/LINQ for JSON queries
         // Simplified version - actual implementation would query JSON

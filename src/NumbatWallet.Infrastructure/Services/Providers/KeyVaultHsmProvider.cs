@@ -53,7 +53,7 @@ public class KeyVaultHsmProvider : IHsmProvider
         try
         {
             // Test connectivity by listing keys (with limit of 1)
-            await foreach (var keyProps in _keyClient.GetPropertiesOfKeysAsync(cancellationToken))
+            await foreach (var _ in _keyClient.GetPropertiesOfKeysAsync(cancellationToken))
             {
                 break; // Just checking if we can access at least one key
             }
@@ -538,10 +538,10 @@ public class KeyVaultHsmProvider : IHsmProvider
     }
 
     private async Task<MigrationResult> MigrateToKeyVaultAsync(
-        string keyId,
-        KeyVaultHsmProvider targetProvider,
-        MigrationOptions options,
-        CancellationToken cancellationToken)
+        string _,
+        KeyVaultHsmProvider _targetProvider,
+        MigrationOptions _options,
+        CancellationToken _ct)
     {
         // Backup/Restore operations are only available in Managed HSM
         // For Key Vault Premium, we need to recreate the key in the target vault
