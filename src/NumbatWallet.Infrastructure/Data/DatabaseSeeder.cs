@@ -366,8 +366,7 @@ public class DatabaseSeeder : IDatabaseSeeder
         {
             var walletResult = Wallet.Create(
                 person.Id,
-                $"Test Wallet for {person.FirstName}",
-                SharedKernel.Enums.WalletType.Holder);
+                $"Test Wallet for {person.FirstName}");
 
             if (walletResult.IsSuccess)
             {
@@ -387,8 +386,7 @@ public class DatabaseSeeder : IDatabaseSeeder
         {
             var walletResult = Wallet.Create(
                 persons.First().Id,
-                $"Test Integration Wallet {i + 1}",
-                SharedKernel.Enums.WalletType.Holder);
+                $"Test Integration Wallet {i + 1}");
 
             if (walletResult.IsSuccess)
             {
