@@ -12,7 +12,7 @@ public class AzureServiceBusService : IAzureServiceBusService
     private readonly ILogger<AzureServiceBusService> _logger;
 
     public AzureServiceBusService(
-        string connectionString,
+        string _,
         ILogger<AzureServiceBusService> logger)
     {
         _logger = logger;
