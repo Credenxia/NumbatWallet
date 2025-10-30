@@ -113,10 +113,7 @@ public class WalletTemplateRepository : IWalletTemplateRepository
             .Where(t => t.TenantId == tenantId);
 
         // Apply specification criteria
-        if (specification.Criteria != null)
-        {
-            query = query.Where(specification.Criteria);
-        }
+        query = query.Where(specification.Criteria);
 
         // Apply includes
         foreach (var include in specification.Includes)
