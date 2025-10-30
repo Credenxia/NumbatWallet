@@ -328,13 +328,7 @@ public class AppleWalletBuilder : IAppleWalletBuilder
     {
         return templateType switch
         {
-            WalletTemplateType.DriverLicense => "generic",
-            WalletTemplateType.Passport => "generic",
             WalletTemplateType.StudentId => "storeCard",
-            WalletTemplateType.HealthCard => "generic",
-            WalletTemplateType.ProofOfAge => "generic",
-            WalletTemplateType.VaccinationCertificate => "generic",
-            WalletTemplateType.WorkingWithChildren => "generic",
             _ => "generic"
         };
     }

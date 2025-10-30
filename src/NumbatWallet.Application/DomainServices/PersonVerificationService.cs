@@ -138,7 +138,7 @@ public class PersonVerificationService : IPersonVerificationService
     }
 
     private async Task<bool> VerifyEmailMethod(
-        Person person,
+        Person _,
         Dictionary<string, object> verificationData,
         CancellationToken cancellationToken)
     {
@@ -157,7 +157,7 @@ public class PersonVerificationService : IPersonVerificationService
     }
 
     private async Task<bool> VerifyPhoneMethod(
-        Person person,
+        Person _,
         Dictionary<string, object> verificationData,
         CancellationToken cancellationToken)
     {
@@ -176,7 +176,7 @@ public class PersonVerificationService : IPersonVerificationService
     }
 
     private async Task<bool> VerifyDocumentMethod(
-        Person person,
+        Person _,
         Dictionary<string, object> verificationData,
         CancellationToken cancellationToken)
     {
@@ -188,7 +188,7 @@ public class PersonVerificationService : IPersonVerificationService
     }
 
     private async Task<bool> VerifyBiometricMethod(
-        Person person,
+        Person _,
         Dictionary<string, object> verificationData,
         CancellationToken cancellationToken)
     {

@@ -34,7 +34,7 @@ public class AuditService : IAuditService
                     entry.EntityType,
                     entry.EntityId,
                     entry.TenantId,
-                    SharedKernel.Enums.AuditEventType.Read);
+                    AuditEventType.Read);
 
                 // Set change values (convert dictionary to JSON)
                 var oldValues = entry.ChangedFields.Any()

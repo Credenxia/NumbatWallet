@@ -1,4 +1,3 @@
-using NumbatWallet.Domain.ValueObjects;
 using NumbatWallet.SharedKernel.Interfaces;
 using NumbatWallet.SharedKernel.Primitives;
 

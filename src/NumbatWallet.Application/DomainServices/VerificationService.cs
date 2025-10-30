@@ -29,14 +29,11 @@ public interface IVerificationDomainService
 
 public class VerificationDomainService : IVerificationDomainService
 {
-    private readonly ICredentialRepository _credentialRepository;
     private readonly IIssuerRepository _issuerRepository;
 
     public VerificationDomainService(
-        ICredentialRepository credentialRepository,
         IIssuerRepository issuerRepository)
     {
-        _credentialRepository = credentialRepository;
         _issuerRepository = issuerRepository;
     }
 

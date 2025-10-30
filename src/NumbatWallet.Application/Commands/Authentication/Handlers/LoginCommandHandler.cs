@@ -6,7 +6,6 @@ using NumbatWallet.Application.CQRS.Interfaces;
 using NumbatWallet.Application.DTOs;
 using NumbatWallet.Application.Interfaces;
 using NumbatWallet.Domain.Interfaces;
-using NumbatWallet.SharedKernel.Exceptions;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
@@ -17,20 +16,17 @@ namespace NumbatWallet.Application.Commands.Authentication.Handlers;
 public class LoginCommandHandler : ICommandHandler<LoginCommand, AuthenticationResultDto>
 {
     private readonly IPersonRepository _personRepository;
-    private readonly IAuthenticationService _authenticationService;
     private readonly IConfiguration _configuration;
     private readonly IEnumerable<IPasswordValidator> _passwordValidators;
     private readonly ILogger<LoginCommandHandler> _logger;
 
     public LoginCommandHandler(
         IPersonRepository personRepository,
-        IAuthenticationService authenticationService,
         IConfiguration configuration,
         IEnumerable<IPasswordValidator> passwordValidators,
         ILogger<LoginCommandHandler> logger)
     {
         _personRepository = personRepository;
-        _authenticationService = authenticationService;
         _configuration = configuration;
         _passwordValidators = passwordValidators;
         _logger = logger;

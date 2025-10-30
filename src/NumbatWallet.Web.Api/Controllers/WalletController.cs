@@ -1,7 +1,4 @@
-using FluentValidation;
 using NumbatWallet.Application.Commands.Wallets;
-using NumbatWallet.Application.Common.Exceptions;
-using NumbatWallet.Application.CQRS.Interfaces;
 using NumbatWallet.Application.DTOs;
 using NumbatWallet.Application.Queries.Wallets;
 using NumbatWallet.Application.Wallets.Commands.CreateWallet;

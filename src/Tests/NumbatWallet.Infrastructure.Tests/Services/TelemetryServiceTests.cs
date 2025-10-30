@@ -3,12 +3,10 @@ using Microsoft.ApplicationInsights.Channel;
 using Microsoft.ApplicationInsights.DataContracts;
 using Microsoft.ApplicationInsights.Extensibility;
 using Microsoft.Extensions.Logging;
-using Moq;
 using NumbatWallet.Application.Interfaces;
 using NumbatWallet.Infrastructure.Services;
 using NumbatWallet.SharedKernel.Interfaces;
 using NumbatWallet.SharedKernel.Enums;
-using FluentAssertions;
 
 namespace NumbatWallet.Infrastructure.Tests.Services;
 

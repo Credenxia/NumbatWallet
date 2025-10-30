@@ -167,7 +167,7 @@ public class AdminQuery
     [UsePaging]
     [UseFiltering]
     [UseSorting]
-    public IQueryable<Application.Interfaces.AdminUserDto> GetAdminUsers(
+    public IQueryable<AdminUserDto> GetAdminUsers(
         [Service] NumbatWalletDbContext context,
         UserFilterInput? filter = null)
     {
@@ -192,7 +192,7 @@ public class AdminQuery
             // For now we'll skip it in the database query and can filter in memory if needed
         }
 
-        return query.Select(u => new Application.Interfaces.AdminUserDto
+        return query.Select(u => new AdminUserDto
         {
             Id = u.Id.ToString(),
             Email = u.Email,

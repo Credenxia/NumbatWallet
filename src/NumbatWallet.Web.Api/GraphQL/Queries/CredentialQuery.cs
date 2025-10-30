@@ -1,4 +1,3 @@
-using NumbatWallet.Application.CQRS.Interfaces;
 using NumbatWallet.Application.DTOs;
 using NumbatWallet.Application.Queries.Credentials;
 using NumbatWallet.Application.Queries.Issuances;
@@ -52,7 +51,7 @@ public class CredentialQuery
     /// Get a credential by ID
     /// </summary>
     [GraphQLDescription("Get a credential by its unique identifier")]
-    [HotChocolate.Authorization.Authorize]
+    [Authorize]
     public async Task<CredentialDto?> GetCredential(
         string id,
         [Service] IHttpContextAccessor httpContextAccessor)
@@ -78,7 +77,7 @@ public class CredentialQuery
     /// Get all credentials for a wallet
     /// </summary>
     [GraphQLDescription("Get all credentials associated with a specific wallet")]
-    [HotChocolate.Authorization.Authorize]
+    [Authorize]
     [UsePaging]
     [UseFiltering]
     [UseSorting]
@@ -107,7 +106,7 @@ public class CredentialQuery
     /// Get credentials by issuer
     /// </summary>
     [GraphQLDescription("Get all credentials issued by a specific issuer")]
-    [HotChocolate.Authorization.Authorize(Roles = new[] { "Issuer", "Admin" })]
+    [Authorize(Roles = new[] { "Issuer", "Admin" })]
     [UsePaging]
     [UseFiltering]
     [UseSorting]
@@ -136,7 +135,7 @@ public class CredentialQuery
     /// Get credentials by type
     /// </summary>
     [GraphQLDescription("Get all credentials of a specific type")]
-    [HotChocolate.Authorization.Authorize]
+    [Authorize]
     [UsePaging]
     [UseFiltering]
     [UseSorting]
@@ -162,7 +161,7 @@ public class CredentialQuery
     /// Search credentials
     /// </summary>
     [GraphQLDescription("Search credentials based on various criteria")]
-    [HotChocolate.Authorization.Authorize]
+    [Authorize]
     [UsePaging]
     [UseFiltering]
     [UseSorting]
@@ -199,7 +198,7 @@ public class CredentialQuery
     /// Get an issuance by ID
     /// </summary>
     [GraphQLDescription("Get an issuance request by its unique identifier")]
-    [HotChocolate.Authorization.Authorize]
+    [Authorize]
     public async Task<IssuanceDto?> GetIssuance(
         Guid id,
         [Service] IHttpContextAccessor httpContextAccessor)
@@ -225,7 +224,7 @@ public class CredentialQuery
     /// Get issuances by status
     /// </summary>
     [GraphQLDescription("Get all issuance requests with a specific status")]
-    [HotChocolate.Authorization.Authorize(Roles = new[] { "Issuer", "Admin" })]
+    [Authorize(Roles = new[] { "Issuer", "Admin" })]
     [UsePaging]
     [UseFiltering]
     [UseSorting]
@@ -242,7 +241,7 @@ public class CredentialQuery
     /// Get pending issuances
     /// </summary>
     [GraphQLDescription("Get all pending issuance requests awaiting approval")]
-    [HotChocolate.Authorization.Authorize(Roles = new[] { "Issuer", "Admin" })]
+    [Authorize(Roles = new[] { "Issuer", "Admin" })]
     [UsePaging]
     [UseFiltering]
     [UseSorting]
@@ -259,7 +258,7 @@ public class CredentialQuery
     /// Get issuances for a wallet
     /// </summary>
     [GraphQLDescription("Get all issuance requests for a specific wallet")]
-    [HotChocolate.Authorization.Authorize]
+    [Authorize]
     [UsePaging]
     [UseFiltering]
     [UseSorting]
@@ -315,7 +314,7 @@ public class CredentialQuery
     /// Get credential statistics
     /// </summary>
     [GraphQLDescription("Get statistical information about credentials")]
-    [HotChocolate.Authorization.Authorize(Roles = new[] { "Admin" })]
+    [Authorize(Roles = new[] { "Admin" })]
     public async Task<CredentialStatistics> GetCredentialStatistics(
         DateTime? startDate = null,
         DateTime? endDate = null)
@@ -367,7 +366,7 @@ public class CredentialQuery
     /// Get issuance statistics
     /// </summary>
     [GraphQLDescription("Get statistical information about issuances")]
-    [HotChocolate.Authorization.Authorize(Roles = new[] { "Admin" })]
+    [Authorize(Roles = new[] { "Admin" })]
     public async Task<IssuanceProcessStatistics> GetIssuanceStatistics(
         DateTime? startDate = null,
         DateTime? endDate = null)

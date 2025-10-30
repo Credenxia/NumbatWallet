@@ -1,0 +1,38 @@
+@page "/users"
+@using Microsoft.AspNetCore.Components.Authorization
+
+<PageTitle>Users - NumbatWallet Admin</PageTitle>
+
+<div class="page-header">
+    <h1>User Management</h1>
+    <div class="page-actions">
+        <button class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Add User
+        </button>
+    </div>
+</div>
+
+<AuthorizeView>
+    <Authorized>
+        <div class="card">
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i>
+                    <div>
+                        <strong>Coming Soon</strong>
+                        <p class="mb-0">User management functionality will be available in the next release.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </Authorized>
+    <NotAuthorized>
+        <div class="alert alert-warning">
+            <i class="bi bi-shield-exclamation"></i>
+            <div>
+                <strong>Authentication Required</strong>
+                <p class="mb-0">Please <a href="/login">sign in</a> to access user management.</p>
+            </div>
+        </div>
+    </NotAuthorized>
+</AuthorizeView>

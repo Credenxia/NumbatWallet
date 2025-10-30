@@ -1,5 +1,3 @@
-using FluentAssertions;
-using Moq;
 using NumbatWallet.Application.Queries.Person;
 using NumbatWallet.Domain.Interfaces;
 

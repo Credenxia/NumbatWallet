@@ -1,7 +1,5 @@
-using FluentAssertions;
 using NumbatWallet.Domain.Aggregates;
 using NumbatWallet.SharedKernel.Enums;
-using Xunit;
 
 namespace NumbatWallet.Domain.Tests.Aggregates;
 

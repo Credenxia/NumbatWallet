@@ -228,9 +228,9 @@ try
     });
 
     // Add global exception handlers (order matters - more specific first)
-    builder.Services.AddExceptionHandler<NumbatWallet.Web.Api.Middleware.ArgumentExceptionHandler>();
-    builder.Services.AddExceptionHandler<NumbatWallet.Web.Api.Middleware.NotFoundExceptionHandler>();
-    builder.Services.AddExceptionHandler<NumbatWallet.Web.Api.Middleware.ValidationExceptionHandler>();
+    builder.Services.AddExceptionHandler<ArgumentExceptionHandler>();
+    builder.Services.AddExceptionHandler<NotFoundExceptionHandler>();
+    builder.Services.AddExceptionHandler<ValidationExceptionHandler>();
     builder.Services.AddProblemDetails();
 
     // PERFORMANCE: Add response caching (client-side HTTP cache headers)
@@ -280,7 +280,7 @@ try
     builder.Services.AddRateLimiter(options =>
     {
         // Global rate limit: 100 requests per minute per IP
-        options.GlobalLimiter = System.Threading.RateLimiting.PartitionedRateLimiter.Create<Microsoft.AspNetCore.Http.HttpContext, string>(context =>
+        options.GlobalLimiter = System.Threading.RateLimiting.PartitionedRateLimiter.Create<HttpContext, string>(context =>
         {
             var ipAddress = context.Connection.RemoteIpAddress?.ToString() ?? "unknown";
 
@@ -335,7 +335,7 @@ try
         // Rejection response
         options.OnRejected = async (context, cancellationToken) =>
         {
-            context.HttpContext.Response.StatusCode = Microsoft.AspNetCore.Http.StatusCodes.Status429TooManyRequests;
+            context.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
 
             if (context.Lease.TryGetMetadata(System.Threading.RateLimiting.MetadataName.RetryAfter, out var retryAfter))
             {
@@ -375,10 +375,10 @@ try
     app.UseMiddleware<NumbatWallet.Web.Api.Middleware.SecurityHeadersMiddleware>();
 
     // SECURITY: Input sanitization (validate content-type, check for injection attempts)
-    app.UseMiddleware<NumbatWallet.Web.Api.Middleware.InputSanitizationMiddleware>();
+    app.UseMiddleware<InputSanitizationMiddleware>();
 
     // SECURITY: Add security audit logging for 401/403 responses
-    app.UseMiddleware<NumbatWallet.Web.Api.Security.SecurityAuditMiddleware>();
+    app.UseMiddleware<SecurityAuditMiddleware>();
 
     if (app.Environment.IsDevelopment())
     {

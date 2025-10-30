@@ -119,8 +119,8 @@ public static class ServiceCollectionExtensions
 
         services.AddSingleton<IHsmService, HsmService>();
         services.AddSingleton<IApiKeyService, ApiKeyService>();
-        services.AddScoped<Application.Interfaces.IJwtSigningService, JwtSigningService>();
-        services.AddSingleton<Application.Interfaces.IJsonLdContextService, JsonLdContextService>();
+        services.AddScoped<IJwtSigningService, JwtSigningService>();
+        services.AddSingleton<IJsonLdContextService, JsonLdContextService>();
 
         // Register Infrastructure Services
         services.AddScoped<Application.Interfaces.ITenantService, TenantService>();
@@ -184,13 +184,13 @@ public static class ServiceCollectionExtensions
             Application.Queries.Wallets.GetWalletByIdQueryHandler>();
         services.AddScoped<Application.CQRS.Interfaces.IQueryHandler<Application.Queries.Credentials.GetCredentialByIdQuery, Application.DTOs.CredentialDto?>,
             Application.Queries.Credentials.GetCredentialByIdQueryHandler>();
-        services.AddScoped<Application.CQRS.Interfaces.IQueryHandler<Application.Queries.Credentials.GetCredentialsByWalletQuery, System.Collections.Generic.IEnumerable<Application.DTOs.CredentialDto>>,
+        services.AddScoped<Application.CQRS.Interfaces.IQueryHandler<Application.Queries.Credentials.GetCredentialsByWalletQuery, IEnumerable<Application.DTOs.CredentialDto>>,
             Application.Handlers.Credentials.GetCredentialsByWalletHandler>();
 
         // Register Issuance Query Handlers
         services.AddScoped<Application.CQRS.Interfaces.IQueryHandler<Application.Queries.Issuances.GetIssuanceByIdQuery, Application.DTOs.IssuanceDto?>,
             Application.Queries.Issuances.Handlers.GetIssuanceByIdHandler>();
-        services.AddScoped<Application.CQRS.Interfaces.IQueryHandler<Application.Queries.Issuances.GetIssuancesByStatusQuery, System.Collections.Generic.IEnumerable<Application.DTOs.IssuanceDto>>,
+        services.AddScoped<Application.CQRS.Interfaces.IQueryHandler<Application.Queries.Issuances.GetIssuancesByStatusQuery, IEnumerable<Application.DTOs.IssuanceDto>>,
             Application.Queries.Issuances.Handlers.GetIssuancesByStatusHandler>();
 
         // Register Wallet Command Handlers
@@ -204,19 +204,19 @@ public static class ServiceCollectionExtensions
             Application.Commands.Wallets.Handlers.DeleteWalletCommandHandler>();
 
         // Register Wallet Query Handlers
-        services.AddScoped<Application.CQRS.Interfaces.IQueryHandler<Application.Queries.Wallets.GetWalletsByPersonQuery, System.Collections.Generic.IEnumerable<Application.DTOs.WalletDto>>,
+        services.AddScoped<Application.CQRS.Interfaces.IQueryHandler<Application.Queries.Wallets.GetWalletsByPersonQuery, IEnumerable<Application.DTOs.WalletDto>>,
             Application.Queries.Wallets.GetWalletsByPersonQueryHandler>();
 
         // Register Tenant Query Handlers
         services.AddScoped<Application.CQRS.Interfaces.IQueryHandler<Application.Queries.Tenants.GetTenantByIdQuery, Application.DTOs.TenantDto?>,
             Application.Queries.Tenants.GetTenantByIdQueryHandler>();
-        services.AddScoped<Application.CQRS.Interfaces.IQueryHandler<Application.Queries.Tenants.GetAllTenantsQuery, System.Collections.Generic.IEnumerable<Application.DTOs.TenantDto>>,
+        services.AddScoped<Application.CQRS.Interfaces.IQueryHandler<Application.Queries.Tenants.GetAllTenantsQuery, IEnumerable<Application.DTOs.TenantDto>>,
             Application.Queries.Tenants.GetAllTenantsQueryHandler>();
         services.AddScoped<Application.CQRS.Interfaces.IQueryHandler<Application.Queries.Tenants.GetTenantStatisticsQuery, Application.DTOs.TenantStatisticsDto>,
             Application.Queries.Tenants.Handlers.GetTenantStatisticsQueryHandler>();
 
         // Register Tenant Command Handlers
-        services.AddScoped<Application.CQRS.Interfaces.ICommandHandler<Application.Commands.Tenants.CreateTenantCommand, System.Guid>,
+        services.AddScoped<Application.CQRS.Interfaces.ICommandHandler<Application.Commands.Tenants.CreateTenantCommand, Guid>,
             Application.Commands.Tenants.CreateTenantCommandHandler>();
         services.AddScoped<Application.CQRS.Interfaces.ICommandHandler<Application.Commands.Tenants.UpdateTenantCommand>,
             Application.Commands.Tenants.UpdateTenantCommandHandler>();

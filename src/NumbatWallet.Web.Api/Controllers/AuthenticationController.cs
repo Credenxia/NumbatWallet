@@ -1,8 +1,6 @@
-using FluentValidation;
 using Microsoft.IdentityModel.Tokens;
 using NumbatWallet.Application.Commands.Authentication;
 using NumbatWallet.Application.Common.Exceptions;
-using NumbatWallet.Application.CQRS.Interfaces;
 using NumbatWallet.Application.DTOs;
 using NumbatWallet.Web.Api.Security;
 using System.IdentityModel.Tokens.Jwt;

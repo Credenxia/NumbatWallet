@@ -1,5 +1,3 @@
-using NumbatWallet.Web.Api.Security;
-
 namespace NumbatWallet.Web.Api.Middleware;
 
 /// <summary>

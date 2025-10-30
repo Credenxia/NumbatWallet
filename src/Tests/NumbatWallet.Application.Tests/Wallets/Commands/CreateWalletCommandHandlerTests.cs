@@ -1,5 +1,3 @@
-using Moq;
-using FluentAssertions;
 using NumbatWallet.Application.Wallets.Commands.CreateWallet;
 using NumbatWallet.Application.DTOs;
 using NumbatWallet.Application.Common.Exceptions;

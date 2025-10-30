@@ -1,13 +1,10 @@
-using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using NumbatWallet.Domain.Aggregates;
-using NumbatWallet.Domain.Entities;
 using NumbatWallet.Infrastructure.Data;
 using NumbatWallet.Integration.Tests.TestHarness;
 using NumbatWallet.SharedKernel.Enums;
 using NumbatWallet.SharedKernel.Interfaces;
-using Xunit;
 
 namespace NumbatWallet.Integration.Tests.MultiTenancy;
 

@@ -3,7 +3,6 @@ using NumbatWallet.Application.DTOs;
 using NumbatWallet.Application.Interfaces;
 using NumbatWallet.Domain.Entities;
 using NumbatWallet.Domain.Interfaces;
-using NumbatWallet.SharedKernel.Interfaces;
 
 namespace NumbatWallet.Application.Services;
 

@@ -18,7 +18,6 @@ public class GoogleWalletBuilder : IGoogleWalletBuilder
 {
     private readonly ILogger<GoogleWalletBuilder> _logger;
     private readonly IConfiguration _configuration;
-    private readonly JsonSerializerOptions _jsonOptions;
     private const string GoogleWalletApiUrl = "https://walletobjects.googleapis.com/walletobjects/v1";
     private const string GoogleWalletSaveUrl = "https://pay.google.com/gp/v/save";
 
@@ -26,11 +25,6 @@ public class GoogleWalletBuilder : IGoogleWalletBuilder
     {
         _logger = logger;
         _configuration = configuration;
-        _jsonOptions = new JsonSerializerOptions
-        {
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-            WriteIndented = false
-        };
     }
 
 
@@ -42,7 +36,7 @@ public class GoogleWalletBuilder : IGoogleWalletBuilder
     {
         _logger.LogInformation("Generating Google Wallet pass for template {TemplateId}", walletTemplate.Id);
 
-        var passClass = CreatePassClass(walletTemplate, options);
+        var passClass = CreatePassClass(options);
         var passObject = CreatePassObject(walletTemplate, data, options);
 
         var googlePass = new GoogleWalletPassDto
@@ -163,7 +157,7 @@ public class GoogleWalletBuilder : IGoogleWalletBuilder
         };
     }
 
-    private Dictionary<string, object> CreatePassClass(WalletTemplate walletTemplate, GoogleWalletOptions options)
+    private Dictionary<string, object> CreatePassClass(GoogleWalletOptions options)
     {
         return new Dictionary<string, object>
         {

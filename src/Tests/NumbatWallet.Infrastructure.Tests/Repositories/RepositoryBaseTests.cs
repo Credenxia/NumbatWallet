@@ -7,7 +7,6 @@ using NumbatWallet.Domain.Aggregates;
 using NumbatWallet.SharedKernel.Specifications;
 using NumbatWallet.SharedKernel.Interfaces;
 using Microsoft.Extensions.Logging;
-using Moq;
 
 namespace NumbatWallet.Infrastructure.Tests.Repositories;
 

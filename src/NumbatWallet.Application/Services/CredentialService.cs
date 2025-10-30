@@ -420,7 +420,7 @@ public class CredentialService : ICredentialService
             var payloadJson = System.Text.Encoding.UTF8.GetString(payloadBytes);
 
             // Parse as JSON to check if it's valid
-            var jsonDoc = System.Text.Json.JsonDocument.Parse(payloadJson);
+            var jsonDoc = JsonDocument.Parse(payloadJson);
 
             // Check for required VC fields
             if (!jsonDoc.RootElement.TryGetProperty("vc", out var vcElement))

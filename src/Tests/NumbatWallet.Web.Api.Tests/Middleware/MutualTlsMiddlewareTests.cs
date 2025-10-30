@@ -1,10 +1,8 @@
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
-using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Moq;
 using NumbatWallet.Domain.Entities;
 using NumbatWallet.Domain.Interfaces;
 using NumbatWallet.Application.DomainServices;

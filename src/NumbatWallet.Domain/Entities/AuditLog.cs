@@ -16,7 +16,7 @@ public class AuditLog
         string entityType,
         string entityId,
         Guid tenantId,
-        SharedKernel.Enums.AuditEventType eventType)
+        AuditEventType eventType)
     {
         Id = Guid.NewGuid();
         UserId = userId ?? throw new ArgumentNullException(nameof(userId));
@@ -38,7 +38,7 @@ public class AuditLog
     public string? IpAddress { get; private set; }
     public string? UserAgent { get; private set; }
     public Guid TenantId { get; private set; }
-    public SharedKernel.Enums.AuditEventType EventType { get; private set; }
+    public AuditEventType EventType { get; private set; }
     public DataClassification MaxClassification { get; private set; }
     public DateTimeOffset CreatedAt { get; private set; }
 

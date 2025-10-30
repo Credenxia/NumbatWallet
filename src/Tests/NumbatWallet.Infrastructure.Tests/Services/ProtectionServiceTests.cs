@@ -1,11 +1,9 @@
 using System.Text;
 using Microsoft.Extensions.Logging;
-using Moq;
 using NumbatWallet.Application.Interfaces;
 using NumbatWallet.Infrastructure.Services;
 using NumbatWallet.SharedKernel.Enums;
 using NumbatWallet.SharedKernel.Interfaces;
-using FluentAssertions;
 
 namespace NumbatWallet.Infrastructure.Tests.Services;
 

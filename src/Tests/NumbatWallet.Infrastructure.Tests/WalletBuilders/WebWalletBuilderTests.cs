@@ -1,8 +1,5 @@
-using FluentAssertions;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using Moq;
-using NumbatWallet.Application.DTOs;
 using NumbatWallet.Application.Interfaces;
 using NumbatWallet.Domain.Entities;
 using NumbatWallet.Infrastructure.WalletBuilders;
@@ -151,7 +148,7 @@ public class WebWalletBuilderTests
     {
         // Arrange
         var template = CreateTestTemplate();
-        template.AddField(new WalletField("fullName", "Full Name", "text", true, 0));
+        template.AddField(new WalletField("fullName", "Full Name", "text", true));
         template.AddField(new WalletField("dateOfBirth", "Date of Birth", "date", true, 1));
 
         var data = new Dictionary<string, object>
@@ -197,7 +194,7 @@ public class WebWalletBuilderTests
     {
         // Arrange
         var template = CreateTestTemplate();
-        template.AddField(new WalletField("field1", "Field 1", "text", true, 0));
+        template.AddField(new WalletField("field1", "Field 1", "text", true));
         template.AddField(new WalletField("field2", "Field 2", "text", false, 1));
 
         var data = new Dictionary<string, object>
@@ -217,7 +214,7 @@ public class WebWalletBuilderTests
         subject.Should().NotBeNull();
         subject.Should().ContainKey("field1");
         subject.Should().ContainKey("field2");
-        subject!["field1"].Should().Be("Value 1");
+        subject["field1"].Should().Be("Value 1");
         subject["field2"].Should().Be("Value 2");
     }
 
@@ -612,7 +609,7 @@ public class WebWalletBuilderTests
         // Arrange
         var template = CreateTestTemplate();
         template.AddField(new WalletField("field3", "Field 3", "text", true, 2));
-        template.AddField(new WalletField("field1", "Field 1", "text", true, 0));
+        template.AddField(new WalletField("field1", "Field 1", "text", true));
         template.AddField(new WalletField("field2", "Field 2", "text", true, 1));
 
         var data = new Dictionary<string, object>

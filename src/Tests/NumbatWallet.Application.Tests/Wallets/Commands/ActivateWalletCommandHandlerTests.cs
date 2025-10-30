@@ -1,8 +1,5 @@
-using Moq;
-using FluentAssertions;
 using NumbatWallet.Application.Commands.Wallets;
 using NumbatWallet.Application.Commands.Wallets.Handlers;
-using NumbatWallet.Application.DTOs;
 using NumbatWallet.Domain.Interfaces;
 using NumbatWallet.Domain.Aggregates;
 using Microsoft.Extensions.Logging;

@@ -1,5 +1,4 @@
 using NumbatWallet.Application.CQRS.Interfaces;
-using NumbatWallet.Application.DTOs;
 
 namespace NumbatWallet.Application.Commands.Credentials;
 

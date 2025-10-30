@@ -1,6 +1,5 @@
 using NumbatWallet.Application.Commands.Credentials;
 using NumbatWallet.Application.Commands.Issuances;
-using NumbatWallet.Application.CQRS.Interfaces;
 using NumbatWallet.Application.DTOs;
 using NumbatWallet.Web.Api.GraphQL.Schema;
 using NumbatWallet.Web.Api.Security;
@@ -44,7 +43,7 @@ public class CredentialMutation
     /// Verify a credential
     /// </summary>
     [GraphQLDescription("Verify a verifiable credential")]
-    [HotChocolate.Authorization.AllowAnonymous]
+    [AllowAnonymous]
     public async Task<VerificationResultDto> VerifyCredential(
         VerifyCredentialInput input,
         [Service] IHttpContextAccessor httpContextAccessor)
@@ -75,7 +74,7 @@ public class CredentialMutation
     /// Revoke a credential
     /// </summary>
     [GraphQLDescription("Revoke an issued credential")]
-    [HotChocolate.Authorization.Authorize(Roles = new[] { "Issuer", "Admin" })]
+    [Authorize(Roles = new[] { "Issuer", "Admin" })]
     public async Task<bool> RevokeCredential(
         RevokeCredentialInput input,
         [Service] IHttpContextAccessor httpContextAccessor)
@@ -107,7 +106,7 @@ public class CredentialMutation
     /// Create an issuance request
     /// </summary>
     [GraphQLDescription("Create a new issuance request")]
-    [HotChocolate.Authorization.Authorize]
+    [Authorize]
     public async Task<IssuanceDto> CreateIssuance(
         CreateIssuanceInput input,
         [Service] IHttpContextAccessor httpContextAccessor)
@@ -149,7 +148,7 @@ public class CredentialMutation
     /// Approve an issuance request
     /// </summary>
     [GraphQLDescription("Approve a pending issuance request")]
-    [HotChocolate.Authorization.Authorize(Roles = new[] { "Issuer", "Admin" })]
+    [Authorize(Roles = new[] { "Issuer", "Admin" })]
     public async Task<IssuanceDto> ApproveIssuance(
         ApproveIssuanceInput input,
         [Service] IHttpContextAccessor httpContextAccessor)
@@ -180,7 +179,7 @@ public class CredentialMutation
     /// Reject an issuance request
     /// </summary>
     [GraphQLDescription("Reject a pending issuance request")]
-    [HotChocolate.Authorization.Authorize(Roles = new[] { "Issuer", "Admin" })]
+    [Authorize(Roles = new[] { "Issuer", "Admin" })]
     public async Task<IssuanceDto> RejectIssuance(
         RejectIssuanceInput input,
         [Service] IHttpContextAccessor httpContextAccessor)

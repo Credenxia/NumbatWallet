@@ -76,7 +76,7 @@ public class PlatformWalletBuilder : IPlatformWalletBuilder
 
                 case WalletPlatform.Web:
                 case WalletPlatform.PWA:
-                    var webOptions = CreateWebWalletOptions(walletTemplate, data);
+                    var webOptions = CreateWebWalletOptions(data);
                     var webWallet = await _webWalletBuilder.GenerateWebWalletAsync(
                         walletTemplate, data, webOptions, cancellationToken);
 
@@ -310,7 +310,7 @@ public class PlatformWalletBuilder : IPlatformWalletBuilder
         return options;
     }
 
-    private WebWalletOptions CreateWebWalletOptions(WalletTemplate walletTemplate, Dictionary<string, object> data)
+    private WebWalletOptions CreateWebWalletOptions(Dictionary<string, object> data)
     {
         return new WebWalletOptions
         {
@@ -376,7 +376,7 @@ public class PlatformWalletBuilder : IPlatformWalletBuilder
             ["walletName"] = wallet.WalletName
         };
 
-        var options = CreateWebWalletOptions(walletTemplate, data);
+        var options = CreateWebWalletOptions(data);
         var webWallet = await _webWalletBuilder.GenerateWebWalletAsync(
             walletTemplate, data, options, cancellationToken);
 

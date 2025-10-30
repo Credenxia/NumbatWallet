@@ -2,10 +2,7 @@ using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Security.Claims;
-using FluentAssertions;
 using NumbatWallet.Integration.Tests.TestHarness;
-using NumbatWallet.Web.Api.Controllers;
-using Xunit;
 
 namespace NumbatWallet.Integration.Tests.Authentication;
 

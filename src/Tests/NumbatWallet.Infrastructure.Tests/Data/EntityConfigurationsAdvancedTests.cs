@@ -1,10 +1,6 @@
-using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata;
 using NumbatWallet.Domain.Aggregates;
-using NumbatWallet.Domain.Entities;
 using NumbatWallet.Infrastructure.Data.Configurations;
-using Xunit;
 
 namespace NumbatWallet.Infrastructure.Tests.Data;
 

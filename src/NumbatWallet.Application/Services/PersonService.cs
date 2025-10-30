@@ -94,7 +94,7 @@ public class PersonService : IPersonService
         // Update phone number if provided
         if (!string.IsNullOrWhiteSpace(dto.PhoneNumber))
         {
-            var phoneNumber = NumbatWallet.Domain.ValueObjects.PhoneNumber.Create(dto.PhoneNumber);
+            var phoneNumber = PhoneNumber.Create(dto.PhoneNumber);
             var result = person.UpdatePhoneNumber(phoneNumber);
 
             if (!result.IsSuccess)

@@ -359,12 +359,12 @@ public class DatabaseSeeder : IDatabaseSeeder
 
         _logger.LogInformation("Found {Count} persons for wallet seeding", persons.Count);
 
-        var wallets = new List<Domain.Aggregates.Wallet>();
+        var wallets = new List<Wallet>();
 
         // Create wallets for each test person
         foreach (var person in persons)
         {
-            var walletResult = Domain.Aggregates.Wallet.Create(
+            var walletResult = Wallet.Create(
                 person.Id,
                 $"Test Wallet for {person.FirstName}",
                 SharedKernel.Enums.WalletType.Holder);
@@ -385,7 +385,7 @@ public class DatabaseSeeder : IDatabaseSeeder
         // We can't set specific GUIDs with the factory method, so just create more wallets
         for (int i = 0; i < 3; i++)
         {
-            var walletResult = Domain.Aggregates.Wallet.Create(
+            var walletResult = Wallet.Create(
                 persons.First().Id,
                 $"Test Integration Wallet {i + 1}",
                 SharedKernel.Enums.WalletType.Holder);

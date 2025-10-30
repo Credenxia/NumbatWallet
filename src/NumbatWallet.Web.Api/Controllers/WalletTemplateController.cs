@@ -1,7 +1,4 @@
 using Asp.Versioning;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
-using NumbatWallet.Application.Interfaces;
 using NumbatWallet.Domain.Entities;
 using NumbatWallet.Web.Api.Extensions;
 using System.ComponentModel.DataAnnotations;

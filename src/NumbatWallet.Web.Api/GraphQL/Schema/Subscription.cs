@@ -1,6 +1,4 @@
-using HotChocolate.Subscriptions;
 using NumbatWallet.Application.DTOs;
-using System.Runtime.CompilerServices;
 
 namespace NumbatWallet.Web.Api.GraphQL.Schema;
 

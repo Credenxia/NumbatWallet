@@ -1,5 +1,3 @@
-using Xunit;
-
 namespace NumbatWallet.Web.Api.Tests.TestHelpers;
 
 /// <summary>

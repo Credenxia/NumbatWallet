@@ -1,4 +1,3 @@
-using System.Data.Common;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
@@ -6,11 +5,9 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
-using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using NumbatWallet.Infrastructure.Data;
 using Testcontainers.PostgreSql;
-using Xunit;
 
 namespace NumbatWallet.Integration.Tests.TestHarness;
 
@@ -80,7 +77,7 @@ public class IntegrationTestFixture : WebApplicationFactory<Program>, IAsyncLife
         await dbContext.Database.EnsureCreatedAsync();
 
         // Seed test data with the test tenant ID
-        var seeder = scope.ServiceProvider.GetRequiredService<NumbatWallet.Infrastructure.Data.IDatabaseSeeder>();
+        var seeder = scope.ServiceProvider.GetRequiredService<IDatabaseSeeder>();
         await seeder.SeedTestDataAsync(_testTenantId);
 
         _initialized = true;
@@ -124,37 +121,37 @@ public class IntegrationTestFixture : WebApplicationFactory<Program>, IAsyncLife
                 // Add interceptors for tenant isolation, auditing, and soft delete
                 // These are registered by AddInfrastructure() and are critical for multi-tenancy
                 options.AddInterceptors(
-                    serviceProvider.GetRequiredService<NumbatWallet.Infrastructure.Data.Interceptors.AuditInterceptor>(),
-                    serviceProvider.GetRequiredService<NumbatWallet.Infrastructure.Data.Interceptors.TenantInterceptor>(),
-                    serviceProvider.GetRequiredService<NumbatWallet.Infrastructure.Data.Interceptors.SoftDeleteInterceptor>());
+                    serviceProvider.GetRequiredService<Infrastructure.Data.Interceptors.AuditInterceptor>(),
+                    serviceProvider.GetRequiredService<Infrastructure.Data.Interceptors.TenantInterceptor>(),
+                    serviceProvider.GetRequiredService<Infrastructure.Data.Interceptors.SoftDeleteInterceptor>());
 
                 // Suppress pending model changes warning for tests
                 options.ConfigureWarnings(w => w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
             });
 
             // Replace external services with mocks
-            services.AddSingleton<NumbatWallet.Application.Interfaces.IKeyVaultService, MockKeyVaultService>();
-            services.AddSingleton<NumbatWallet.Application.Interfaces.IBlobStorageService, MockBlobStorageService>();
-            services.AddSingleton<NumbatWallet.Application.Interfaces.IEmailService, MockEmailService>();
-            services.AddSingleton<NumbatWallet.Application.Interfaces.INotificationService, MockNotificationService>();
+            services.AddSingleton<Application.Interfaces.IKeyVaultService, MockKeyVaultService>();
+            services.AddSingleton<Application.Interfaces.IBlobStorageService, MockBlobStorageService>();
+            services.AddSingleton<Application.Interfaces.IEmailService, MockEmailService>();
+            services.AddSingleton<Application.Interfaces.INotificationService, MockNotificationService>();
 
             // Register HSM Provider for tests (SoftwareHsmProvider)
-            services.AddSingleton<NumbatWallet.Infrastructure.Services.Providers.SoftwareHsmProvider>();
+            services.AddSingleton<Infrastructure.Services.Providers.SoftwareHsmProvider>();
 
             // Register DatabaseSeeder for tests
-            services.AddScoped<NumbatWallet.Infrastructure.Data.IDatabaseSeeder, NumbatWallet.Infrastructure.Data.DatabaseSeeder>();
+            services.AddScoped<IDatabaseSeeder, DatabaseSeeder>();
 
             // Add mock current user service for audit fields
-            services.AddSingleton<NumbatWallet.SharedKernel.Interfaces.ICurrentUserService, MockCurrentUserService>();
+            services.AddSingleton<SharedKernel.Interfaces.ICurrentUserService, MockCurrentUserService>();
 
             // Replace tenant services with mocks to return consistent tenant ID for tests
             // Mock both GUID-based and string-based tenant services for multi-tenancy support
-            services.RemoveAll<NumbatWallet.SharedKernel.Interfaces.ICurrentTenantService>();
-            services.AddSingleton<NumbatWallet.SharedKernel.Interfaces.ICurrentTenantService>(
+            services.RemoveAll<SharedKernel.Interfaces.ICurrentTenantService>();
+            services.AddSingleton<SharedKernel.Interfaces.ICurrentTenantService>(
                 sp => new MockCurrentTenantService(_testTenantId));
 
-            services.RemoveAll<NumbatWallet.SharedKernel.Interfaces.ITenantService>();
-            services.AddSingleton<NumbatWallet.SharedKernel.Interfaces.ITenantService>(
+            services.RemoveAll<SharedKernel.Interfaces.ITenantService>();
+            services.AddSingleton<SharedKernel.Interfaces.ITenantService>(
                 sp => new MockTenantService(_testTenantGuid));
 
             // Don't initialize database here - let it be done on first use
@@ -184,7 +181,7 @@ public class IntegrationTestCollection : ICollectionFixture<IntegrationTestFixtu
 /// <summary>
 /// Mock Key Vault service for testing
 /// </summary>
-public class MockKeyVaultService : NumbatWallet.Application.Interfaces.IKeyVaultService
+public class MockKeyVaultService : Application.Interfaces.IKeyVaultService
 {
     private readonly Dictionary<string, string> _secrets = new();
 
@@ -233,7 +230,7 @@ public class MockKeyVaultService : NumbatWallet.Application.Interfaces.IKeyVault
 /// <summary>
 /// Mock Blob Storage service for testing
 /// </summary>
-public class MockBlobStorageService : NumbatWallet.Application.Interfaces.IBlobStorageService
+public class MockBlobStorageService : Application.Interfaces.IBlobStorageService
 {
     private readonly Dictionary<string, byte[]> _blobs = new();
     private readonly Dictionary<string, Dictionary<string, string>> _metadata = new();
@@ -321,7 +318,7 @@ public class MockBlobStorageService : NumbatWallet.Application.Interfaces.IBlobS
 /// <summary>
 /// Mock Email service for testing
 /// </summary>
-public class MockEmailService : NumbatWallet.Application.Interfaces.IEmailService
+public class MockEmailService : Application.Interfaces.IEmailService
 {
     private readonly List<(string To, string Subject, string Body)> _sentEmails = new();
 
@@ -386,7 +383,7 @@ public class MockEmailService : NumbatWallet.Application.Interfaces.IEmailServic
 /// <summary>
 /// Mock Notification service for testing
 /// </summary>
-public class MockNotificationService : NumbatWallet.Application.Interfaces.INotificationService
+public class MockNotificationService : Application.Interfaces.INotificationService
 {
     private readonly List<(string UserId, string Title, string Message)> _notifications = new();
 
@@ -463,7 +460,7 @@ public class MockNotificationService : NumbatWallet.Application.Interfaces.INoti
 /// <summary>
 /// Mock Current User service for testing
 /// </summary>
-public class MockCurrentUserService : NumbatWallet.SharedKernel.Interfaces.ICurrentUserService
+public class MockCurrentUserService : SharedKernel.Interfaces.ICurrentUserService
 {
     public string UserId => "integration-test-user";
     public string UserName => "Test User";
@@ -474,7 +471,7 @@ public class MockCurrentUserService : NumbatWallet.SharedKernel.Interfaces.ICurr
 /// <summary>
 /// Mock Current Tenant service for testing (string-based)
 /// </summary>
-public class MockCurrentTenantService : NumbatWallet.SharedKernel.Interfaces.ICurrentTenantService
+public class MockCurrentTenantService : SharedKernel.Interfaces.ICurrentTenantService
 {
     private readonly string _tenantId;
 
@@ -497,7 +494,7 @@ public class MockCurrentTenantService : NumbatWallet.SharedKernel.Interfaces.ICu
 /// <summary>
 /// Mock Tenant service for testing (GUID-based)
 /// </summary>
-public class MockTenantService : NumbatWallet.SharedKernel.Interfaces.ITenantService
+public class MockTenantService : SharedKernel.Interfaces.ITenantService
 {
     private readonly Guid _tenantId;
 

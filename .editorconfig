@@ -44,8 +44,16 @@ dotnet_diagnostic.CA1062.severity = none
 # Test method naming convention (xUnit style with underscores)
 dotnet_naming_rule.test_methods_should_be_pascal_case_with_underscores.severity = none
 
-# Suppress various warnings that aren't critical
+# ReSharper inspections - Only justified suppressions for test files
+# Field can be converted to local variable - xUnit test fixture pattern (JUSTIFIED)
+# Reason: xUnit creates new instance per test, constructor-initialized fields are the standard pattern
+resharper_convert_to_local_function_highlighting = none
+
+# ReSharper inspections - Only suppress FALSE POSITIVES, not real issues
 [*.cs]
+# Keep all warnings enabled - we will FIX the issues, not suppress them
+
+# Suppress various warnings that aren't critical
 # CA1805: Do not initialize unnecessarily
 dotnet_diagnostic.CA1805.severity = none
 
@@ -84,6 +92,7 @@ dotnet_diagnostic.CS8766.severity = suggestion
 
 # CA1848: Use the LoggerMessage delegates
 dotnet_diagnostic.CA1848.severity = none
+
 
 # JSON files
 [*.json]

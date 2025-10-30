@@ -1,9 +1,6 @@
 using System.Net;
 using System.Net.Http.Json;
-using FluentAssertions;
-using NumbatWallet.Application.DTOs;
 using NumbatWallet.Integration.Tests.TestHarness;
-using Xunit;
 
 namespace NumbatWallet.Integration.Tests.Controllers;
 

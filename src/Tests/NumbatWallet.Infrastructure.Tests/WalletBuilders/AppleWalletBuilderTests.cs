@@ -1,12 +1,9 @@
-using FluentAssertions;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using Moq;
 using NumbatWallet.Application.Interfaces;
 using NumbatWallet.Domain.Entities;
 using NumbatWallet.Infrastructure.WalletBuilders;
 using System.IO.Compression;
-using System.Text;
 using System.Text.Json;
 
 namespace NumbatWallet.Infrastructure.Tests.WalletBuilders;
@@ -235,7 +232,7 @@ public class AppleWalletBuilderTests
     {
         // Arrange
         var template = CreateTestTemplate();
-        template.AddField(new WalletField("field1", "Field 1", "text", true, 0));
+        template.AddField(new WalletField("field1", "Field 1", "text", true));
         template.AddField(new WalletField("field2", "Field 2", "text", false, 1));
 
         var data = new Dictionary<string, object>
@@ -341,7 +338,7 @@ public class AppleWalletBuilderTests
     {
         // Arrange
         var template = CreateTestTemplate();
-        template.AddField(new WalletField("test", "Test", "text", true, 0));
+        template.AddField(new WalletField("test", "Test", "text", true));
 
         // Act
         var result = _builder.IsTemplateCompatible(template, WalletPlatform.AppleWallet);
@@ -368,7 +365,7 @@ public class AppleWalletBuilderTests
     {
         // Arrange
         var template = CreateTestTemplate();
-        template.AddField(new WalletField("test", "Test", "text", true, 0));
+        template.AddField(new WalletField("test", "Test", "text", true));
 
         // Act
         var result = _builder.IsTemplateCompatible(template, WalletPlatform.GoogleWallet);

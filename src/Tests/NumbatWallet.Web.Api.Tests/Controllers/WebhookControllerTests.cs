@@ -2,16 +2,13 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
-using Moq;
 using NumbatWallet.Web.Api.Controllers;
 using NumbatWallet.Web.Api.Security;
 using NumbatWallet.Web.Api.Webhooks;
 using NumbatWallet.Web.Api.Tests.TestHelpers;
-using Xunit;
 
 namespace NumbatWallet.Web.Api.Tests.Controllers;
 

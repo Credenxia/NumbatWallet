@@ -35,6 +35,7 @@ var api = builder.AddProject<Projects.NumbatWallet_Web_Api>("webapi")
 // Add Admin Portal - only references API, not database directly (Clean Architecture)
 var admin = builder.AddProject<Projects.NumbatWallet_Web_Admin>("admin")
     .WithReference(api)  // Admin communicates only through API
+    .WithExternalHttpEndpoints()  // Make admin portal accessible from outside
     .WithEnvironment("ASPNETCORE_ENVIRONMENT", "Development");
 
 // Add health checks dashboard

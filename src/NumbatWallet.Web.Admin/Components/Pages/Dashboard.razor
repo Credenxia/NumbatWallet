@@ -150,9 +150,15 @@
     private string? ErrorMessage { get; set; }
     private DashboardStats? Stats { get; set; }
 
-    protected override async Task OnInitializedAsync()
+    // CHANGED: Use OnAfterRenderAsync instead of OnInitializedAsync to avoid blocking
+    // during Blazor Server circuit initialization
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        await LoadDashboardData();
+        if (firstRender)
+        {
+            await LoadDashboardData();
+            StateHasChanged(); // Trigger re-render after data loads
+        }
     }
 
     private async Task LoadDashboardData()
@@ -162,19 +168,31 @@
             IsLoading = true;
             ErrorMessage = null;
 
-            // Check if user is authenticated
+            // Check if user is authenticated (non-blocking, just checks claims)
             if (!await AuthService.IsAuthenticatedAsync())
             {
                 Logger.LogWarning("User is not authenticated");
+                IsLoading = false;
                 return;
             }
 
-            // Fetch dashboard statistics from API
-            Stats = await ApiClient.GetAsync<DashboardStats>("/api/admin/statistics/dashboard");
+            // Create cancellation token with 5-second timeout to prevent infinite waits
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+
+            // Fetch dashboard statistics from API with timeout protection
+            try
+            {
+                Stats = await ApiClient.GetAsync<DashboardStats>("/api/admin/statistics/dashboard", cts.Token);
+            }
+            catch (TaskCanceledException)
+            {
+                Logger.LogWarning("Dashboard API call timed out after 5 seconds");
+                // Fall through to use default values
+            }
 
             if (Stats == null)
             {
-                // Use default values if API call fails
+                // Use default values if API call fails or times out
                 Stats = new DashboardStats
                 {
                     TotalPersons = 0,
@@ -184,17 +202,44 @@
                     IssuedToday = 0,
                     ExpiringThisWeek = 0
                 };
+
+                if (ErrorMessage == null)
+                {
+                    ErrorMessage = "Dashboard API is unavailable. Showing default values.";
+                }
             }
         }
         catch (ApiException ex)
         {
             Logger.LogError(ex, "Failed to load dashboard statistics");
             ErrorMessage = $"Failed to load dashboard data: {ex.Message}";
+
+            // Use default values
+            Stats = new DashboardStats
+            {
+                TotalPersons = 0,
+                TotalWallets = 0,
+                TotalCredentials = 0,
+                ActiveCredentials = 0,
+                IssuedToday = 0,
+                ExpiringThisWeek = 0
+            };
         }
         catch (Exception ex)
         {
             Logger.LogError(ex, "Unexpected error loading dashboard");
             ErrorMessage = "An unexpected error occurred while loading the dashboard.";
+
+            // Use default values
+            Stats = new DashboardStats
+            {
+                TotalPersons = 0,
+                TotalWallets = 0,
+                TotalCredentials = 0,
+                ActiveCredentials = 0,
+                IssuedToday = 0,
+                ExpiringThisWeek = 0
+            };
         }
         finally
         {

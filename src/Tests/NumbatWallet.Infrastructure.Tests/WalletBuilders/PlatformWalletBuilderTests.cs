@@ -1,6 +1,4 @@
-using FluentAssertions;
 using Microsoft.Extensions.Logging;
-using Moq;
 using NumbatWallet.Application.DTOs;
 using NumbatWallet.Application.Interfaces;
 using NumbatWallet.Domain.Aggregates;
@@ -257,7 +255,7 @@ public class PlatformWalletBuilderTests
     {
         // Arrange
         var template = CreateTestTemplate();
-        template.AddField(new WalletField("name", "Name", "text", true, 0));
+        template.AddField(new WalletField("name", "Name", "text", true));
 
         // Act
         var result = _builder.IsTemplateCompatible(template, WalletPlatform.AppleWallet);
@@ -271,7 +269,7 @@ public class PlatformWalletBuilderTests
     {
         // Arrange
         var template = CreateTestTemplate();
-        template.AddField(new WalletField("dateOfBirth", "Date of Birth", "date", true, 0));
+        template.AddField(new WalletField("dateOfBirth", "Date of Birth", "date", true));
 
         // Act
         var result = _builder.IsTemplateCompatible(template, WalletPlatform.AppleWallet);
@@ -285,7 +283,7 @@ public class PlatformWalletBuilderTests
     {
         // Arrange
         var template = CreateTestTemplate();
-        template.AddField(new WalletField("photo", "Photo", "image", true, 0));
+        template.AddField(new WalletField("photo", "Photo", "image", true));
 
         // Act
         var result = _builder.IsTemplateCompatible(template, WalletPlatform.AppleWallet);
@@ -299,7 +297,7 @@ public class PlatformWalletBuilderTests
     {
         // Arrange
         var template = CreateTestTemplate();
-        template.AddField(new WalletField("name", "Name", "text", true, 0));
+        template.AddField(new WalletField("name", "Name", "text", true));
 
         // Act
         var result = _builder.IsTemplateCompatible(template, WalletPlatform.GoogleWallet);
@@ -313,7 +311,7 @@ public class PlatformWalletBuilderTests
     {
         // Arrange
         var template = CreateTestTemplate();
-        template.AddField(new WalletField("age", "Age", "number", true, 0));
+        template.AddField(new WalletField("age", "Age", "number", true));
 
         // Act
         var result = _builder.IsTemplateCompatible(template, WalletPlatform.GoogleWallet);
@@ -353,7 +351,7 @@ public class PlatformWalletBuilderTests
     {
         // Arrange
         var template = CreateTestTemplate();
-        template.AddField(new WalletField("name", "Name", "text", true, 0));
+        template.AddField(new WalletField("name", "Name", "text", true));
         template.AddField(new WalletField("age", "Age", "number", true, 1));
 
         // Act

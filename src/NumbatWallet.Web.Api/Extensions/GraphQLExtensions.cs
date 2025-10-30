@@ -1,12 +1,7 @@
 using HotChocolate.AspNetCore;
-using HotChocolate.Execution;
-using HotChocolate.Execution.Configuration;
-using HotChocolate.Utilities;
 using NumbatWallet.Web.Api.GraphQL.Schema;
-using NumbatWallet.Web.Api.GraphQL.Types;
 using NumbatWallet.Web.Api.GraphQL.Queries;
 using NumbatWallet.Web.Api.GraphQL.Mutations;
-using System.Diagnostics.CodeAnalysis;
 
 namespace NumbatWallet.Web.Api.Extensions;
 

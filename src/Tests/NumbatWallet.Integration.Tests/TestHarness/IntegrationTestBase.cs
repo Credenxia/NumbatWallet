@@ -7,7 +7,6 @@ using System.Text.Json.Serialization;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using NumbatWallet.Infrastructure.Data;
-using Xunit;
 
 namespace NumbatWallet.Integration.Tests.TestHarness;
 

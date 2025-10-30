@@ -1,6 +1,4 @@
 using Microsoft.AspNetCore.Diagnostics;
-using Microsoft.AspNetCore.Mvc;
-using NumbatWallet.Application.Common.Exceptions;
 
 namespace NumbatWallet.Web.Api.Middleware;
 

@@ -3,7 +3,6 @@ using System.Security.Cryptography.X509Certificates;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Moq;
 using NumbatWallet.Domain.Interfaces;
 using NumbatWallet.Infrastructure.Services;
 using NumbatWallet.Infrastructure.Services.Providers;

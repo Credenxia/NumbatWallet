@@ -5,7 +5,6 @@ using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.Identity.Web;
 using Microsoft.IdentityModel.Tokens;
 using System.Security.Claims;
-using System.Text;
 using System.Text.Json;
 
 namespace NumbatWallet.Web.Api.Authentication;
@@ -194,7 +193,7 @@ public static class OidcAuthenticationExtensions
         {
             // Use test authentication for development/POA
             services.AddAuthentication("Test")
-                .AddScheme<Microsoft.AspNetCore.Authentication.AuthenticationSchemeOptions,
+                .AddScheme<AuthenticationSchemeOptions,
                     TestAuthenticationHandler>("Test", options => { });
         }
 
@@ -405,7 +404,7 @@ public class ServiceWAIdXService : IWAIdXService
             if (response.IsSuccessStatusCode)
             {
                 var json = await response.Content.ReadAsStringAsync();
-                return System.Text.Json.JsonSerializer.Deserialize<WAIdXUserInfo>(json);
+                return JsonSerializer.Deserialize<WAIdXUserInfo>(json);
             }
 
             _logger.LogWarning("Failed to get user info: {StatusCode}", response.StatusCode);
@@ -435,7 +434,7 @@ public class ServiceWAIdXService : IWAIdXService
             if (response.IsSuccessStatusCode)
             {
                 var json = await response.Content.ReadAsStringAsync();
-                var result = System.Text.Json.JsonSerializer.Deserialize<TokenIntrospectionResponse>(json);
+                var result = JsonSerializer.Deserialize<TokenIntrospectionResponse>(json);
                 return result?.Active ?? false;
             }
 
@@ -469,7 +468,7 @@ public class ServiceWAIdXService : IWAIdXService
             if (response.IsSuccessStatusCode)
             {
                 var json = await response.Content.ReadAsStringAsync();
-                var tokenResponse = System.Text.Json.JsonSerializer.Deserialize<TokenResponse>(json);
+                var tokenResponse = JsonSerializer.Deserialize<TokenResponse>(json);
                 return tokenResponse?.AccessToken ?? throw new InvalidOperationException("No access token in response");
             }
 

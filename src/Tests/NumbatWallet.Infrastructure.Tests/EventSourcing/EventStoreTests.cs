@@ -1,7 +1,5 @@
-using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using Moq;
 using NumbatWallet.Infrastructure.Data;
 using NumbatWallet.Infrastructure.EventSourcing;
 using NumbatWallet.SharedKernel.Interfaces;
@@ -13,10 +11,10 @@ public class EventStoreTests : IDisposable
     private readonly NumbatWalletDbContext _context;
     private readonly EventStore _eventStore;
     private readonly Mock<ILogger<EventStore>> _mockLogger;
-    private readonly Mock<SharedKernel.Interfaces.ITenantService> _mockTenantService;
+    private readonly Mock<ITenantService> _mockTenantService;
     private readonly Mock<ICurrentUserService> _mockCurrentUserService;
     private readonly Mock<IDateTimeService> _mockDateTimeService;
-    private readonly Mock<SharedKernel.Interfaces.IEventDispatcher> _mockEventDispatcher;
+    private readonly Mock<IEventDispatcher> _mockEventDispatcher;
     private readonly Mock<ILogger<NumbatWalletDbContext>> _mockDbLogger;
 
     public EventStoreTests()
@@ -27,10 +25,10 @@ public class EventStoreTests : IDisposable
             .Options;
 
         // Mock dependencies for DbContext
-        _mockTenantService = new Mock<SharedKernel.Interfaces.ITenantService>();
+        _mockTenantService = new Mock<ITenantService>();
         _mockCurrentUserService = new Mock<ICurrentUserService>();
         _mockDateTimeService = new Mock<IDateTimeService>();
-        _mockEventDispatcher = new Mock<SharedKernel.Interfaces.IEventDispatcher>();
+        _mockEventDispatcher = new Mock<IEventDispatcher>();
         _mockDbLogger = new Mock<ILogger<NumbatWalletDbContext>>();
 
         // Setup default behaviors

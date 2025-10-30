@@ -1,7 +1,5 @@
 using NumbatWallet.Application.Commands.Issuances;
-using NumbatWallet.Application.CQRS.Interfaces;
 using NumbatWallet.Application.DTOs;
-using NumbatWallet.Application.Interfaces;
 using NumbatWallet.Application.Queries.Issuances;
 using NumbatWallet.Web.Api.Security;
 using System.Security.Claims;
@@ -225,7 +223,7 @@ public class IssuanceController : ControllerBase
             $"Issuance completed: {id}");
 
         // Issue the credential based on the issuance request
-        var issueCredentialDto = new Application.DTOs.IssueCredentialDto
+        var issueCredentialDto = new IssueCredentialDto
         {
             WalletId = request.WalletId ?? Guid.NewGuid(), // Wallet ID from request
             IssuerId = userId ?? "system",
@@ -284,7 +282,7 @@ public class IssuanceController : ControllerBase
 
         var uploadedDocuments = new List<UploadedDocumentDto>();
         var documentsPath = System.IO.Path.Combine("uploads", "issuances", id.ToString());
-        System.IO.Directory.CreateDirectory(documentsPath);
+        Directory.CreateDirectory(documentsPath);
 
         foreach (var file in files)
         {
@@ -295,7 +293,7 @@ public class IssuanceController : ControllerBase
                 var filePath = System.IO.Path.Combine(documentsPath, fileName);
 
                 // Save file to disk (in production, use blob storage)
-                using (var stream = new System.IO.FileStream(filePath, System.IO.FileMode.Create))
+                using (var stream = new FileStream(filePath, FileMode.Create))
                 {
                     await file.CopyToAsync(stream);
                 }

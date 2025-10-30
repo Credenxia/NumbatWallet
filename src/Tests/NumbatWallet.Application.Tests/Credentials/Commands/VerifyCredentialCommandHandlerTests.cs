@@ -1,5 +1,3 @@
-using Moq;
-using FluentAssertions;
 using NumbatWallet.Application.Commands.Credentials;
 using NumbatWallet.Application.Commands.Credentials.Handlers;
 using NumbatWallet.Application.DTOs;
@@ -7,7 +5,6 @@ using NumbatWallet.Application.Interfaces;
 using NumbatWallet.Domain.Interfaces;
 using NumbatWallet.Domain.Aggregates;
 using Microsoft.Extensions.Logging;
-using NumbatWallet.SharedKernel.Enums;
 
 namespace NumbatWallet.Application.Tests.Credentials.Commands;
 

@@ -1,7 +1,5 @@
 using NumbatWallet.Application.Commands.Wallets;
-using NumbatWallet.Application.CQRS.Interfaces;
 using NumbatWallet.Application.DTOs;
-using NumbatWallet.Application.Interfaces;
 using NumbatWallet.Application.Queries.Wallets;
 using NumbatWallet.Application.Wallets.Commands.CreateWallet;
 using NumbatWallet.SharedKernel.Enums;
@@ -49,7 +47,7 @@ public class WalletMutation
     /// Create a new wallet
     /// </summary>
     [GraphQLDescription("Create a new digital wallet for a user")]
-    [HotChocolate.Authorization.Authorize]
+    [Authorize]
     public async Task<WalletDto> CreateWallet(
         CreateWalletInput input,
         [Service] IHttpContextAccessor httpContextAccessor)
@@ -88,7 +86,7 @@ public class WalletMutation
     /// Update wallet settings
     /// </summary>
     [GraphQLDescription("Update wallet settings and metadata")]
-    [HotChocolate.Authorization.Authorize]
+    [Authorize]
     public async Task<WalletDto> UpdateWallet(
         UpdateWalletInput input,
         [Service] IHttpContextAccessor httpContextAccessor)
@@ -125,7 +123,7 @@ public class WalletMutation
     /// Deactivate a wallet
     /// </summary>
     [GraphQLDescription("Deactivate a digital wallet")]
-    [HotChocolate.Authorization.Authorize]
+    [Authorize]
     public async Task<bool> DeactivateWallet(
         DeactivateWalletInput input,
         [Service] IHttpContextAccessor httpContextAccessor)
@@ -158,7 +156,7 @@ public class WalletMutation
     /// Export wallet data
     /// </summary>
     [GraphQLDescription("Export wallet data in various formats")]
-    [HotChocolate.Authorization.Authorize]
+    [Authorize]
     public async Task<WalletExportDto> ExportWallet(
         ExportWalletInput input,
         [Service] IHttpContextAccessor httpContextAccessor)
@@ -205,7 +203,7 @@ public class WalletMutation
     /// Import wallet data
     /// </summary>
     [GraphQLDescription("Import wallet data from backup")]
-    [HotChocolate.Authorization.Authorize]
+    [Authorize]
     public async Task<WalletImportResultDto> ImportWallet(
         ImportWalletInput input,
         [Service] IHttpContextAccessor httpContextAccessor)

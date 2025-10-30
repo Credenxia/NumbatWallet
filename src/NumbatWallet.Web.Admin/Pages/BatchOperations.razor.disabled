@@ -2,7 +2,7 @@
 @using Microsoft.AspNetCore.Authorization
 @using Microsoft.AspNetCore.Components.Forms
 @using Microsoft.JSInterop
-@using NumbatWallet.Application.DTOs
+@using NumbatWallet.Web.Admin.Models
 @using System.Net.Http.Headers
 @attribute [Authorize(Roles = "Admin")]
 @inject HttpClient Http

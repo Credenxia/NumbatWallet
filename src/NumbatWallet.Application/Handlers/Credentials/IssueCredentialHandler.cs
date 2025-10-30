@@ -15,20 +15,17 @@ public class IssueCredentialHandler : ICommandHandler<IssueCredentialCommand, Cr
 {
     private readonly ICredentialRepository _credentialRepository;
     private readonly IWalletRepository _walletRepository;
-    private readonly ICredentialService _credentialService;
     private readonly IUnitOfWork _unitOfWork;
     private readonly ILogger<IssueCredentialHandler> _logger;
 
     public IssueCredentialHandler(
         ICredentialRepository credentialRepository,
         IWalletRepository walletRepository,
-        ICredentialService credentialService,
         IUnitOfWork unitOfWork,
         ILogger<IssueCredentialHandler> logger)
     {
         _credentialRepository = credentialRepository;
         _walletRepository = walletRepository;
-        _credentialService = credentialService;
         _unitOfWork = unitOfWork;
         _logger = logger;
     }

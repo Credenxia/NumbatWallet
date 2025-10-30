@@ -1,5 +1,4 @@
 using System.Text.Json;
-using FluentAssertions;
 using NumbatWallet.Domain.Credentials;
 using NumbatWallet.SharedKernel.Enums;
 

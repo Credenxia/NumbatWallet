@@ -1,0 +1,41 @@
+@page "/certificates"
+@using Microsoft.AspNetCore.Components.Authorization
+
+<PageTitle>Certificates - NumbatWallet Admin</PageTitle>
+
+<div class="page-header">
+    <h1>Certificate Management</h1>
+    <div class="page-actions">
+        <button class="btn btn-secondary">
+            <i class="bi bi-upload"></i> Upload Certificate
+        </button>
+        <button class="btn btn-primary">
+            <i class="bi bi-key"></i> Generate CSR
+        </button>
+    </div>
+</div>
+
+<AuthorizeView>
+    <Authorized>
+        <div class="card">
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <i class="bi bi-shield-check"></i>
+                    <div>
+                        <strong>Certificate Management</strong>
+                        <p class="mb-0">PKI certificate management for Apple Pass signing and Google Wallet authentication.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </Authorized>
+    <NotAuthorized>
+        <div class="alert alert-warning">
+            <i class="bi bi-shield-exclamation"></i>
+            <div>
+                <strong>Authentication Required</strong>
+                <p class="mb-0">Please <a href="/login">sign in</a> to manage certificates.</p>
+            </div>
+        </div>
+    </NotAuthorized>
+</AuthorizeView>

@@ -1,9 +1,7 @@
 using System.Text;
-using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Moq;
 using NumbatWallet.Application.Interfaces;
 using NumbatWallet.Domain.Interfaces;
 using NumbatWallet.Domain.ValueObjects;

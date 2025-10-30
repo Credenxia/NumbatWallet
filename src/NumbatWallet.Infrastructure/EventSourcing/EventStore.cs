@@ -62,7 +62,7 @@ public class EventStore : IEventStore
     private readonly NumbatWalletDbContext _context;
     private readonly ILogger<EventStore> _logger;
     private readonly JsonSerializerOptions _jsonOptions;
-    private readonly SharedKernel.Interfaces.ITenantService? _tenantService;
+    private readonly ITenantService? _tenantService;
     private readonly ICurrentUserService? _currentUserService;
 
     public EventStore(
@@ -79,7 +79,7 @@ public class EventStore : IEventStore
 
         // Try to get tenant and user services from DbContext via reflection
         var tenantServiceProperty = context.GetType().GetField("_tenantService", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-        _tenantService = tenantServiceProperty?.GetValue(context) as SharedKernel.Interfaces.ITenantService;
+        _tenantService = tenantServiceProperty?.GetValue(context) as ITenantService;
 
         var currentUserServiceProperty = context.GetType().GetField("_currentUserService", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         _currentUserService = currentUserServiceProperty?.GetValue(context) as ICurrentUserService;

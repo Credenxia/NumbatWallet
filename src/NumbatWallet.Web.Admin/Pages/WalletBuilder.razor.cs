@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Components;
-using NumbatWallet.Domain.Entities;
-using NumbatWallet.Application.Interfaces;
+using NumbatWallet.Web.Admin.Models;
+using NumbatWallet.Web.Admin.Services;
 using System.Text.Json;
 
 namespace NumbatWallet.Web.Admin.Pages;
@@ -15,8 +15,8 @@ public partial class WalletBuilder
     [Inject] private NavigationManager Navigation { get; set; } = default!;
     [Inject] private IConfiguration Configuration { get; set; } = default!;
 
-    private List<WalletTemplate> templates = new();
-    private WalletTemplate? selectedTemplate;
+    private List<WalletTemplateDto> templates = [];
+    private WalletTemplateDto? selectedTemplate;
     private bool showCreateForm = false;
     private bool showPreview = false;
     private bool isEditingField = false;
@@ -72,17 +72,18 @@ public partial class WalletBuilder
     {
         try
         {
-            var template = new WalletTemplate(
-                Guid.NewGuid(), // TenantId should come from current context
-                newTemplate.Name,
-                newTemplate.Description,
-                newTemplate.Type,
-                "Admin User"); // Should come from current user
-
-            foreach (var credType in newTemplate.SupportedCredentialTypes)
+            var template = new WalletTemplateDto
             {
-                template.AddSupportedCredentialType(credType);
-            }
+                Id = Guid.NewGuid(),
+                TenantId = Guid.NewGuid(), // Should come from current context
+                Name = newTemplate.Name,
+                Description = newTemplate.Description,
+                Type = newTemplate.Type,
+                IsActive = true,
+                SupportedCredentialTypes = [.. newTemplate.SupportedCredentialTypes],
+                CreatedBy = "Admin User", // Should come from current user
+                CreatedAt = DateTime.UtcNow
+            };
 
             await WalletTemplateService.CreateTemplateAsync(template);
             await LoadTemplates();
@@ -95,7 +96,7 @@ public partial class WalletBuilder
         }
     }
 
-    private void SelectTemplate(WalletTemplate template)
+    private void SelectTemplate(WalletTemplateDto template)
     {
         selectedTemplate = template;
         showCreateForm = false;
@@ -147,12 +148,12 @@ public partial class WalletBuilder
         }
 
         // Save platform configs to template metadata
-        selectedTemplate.UpdateMetadata("ios_config", JsonSerializer.Serialize(iosConfig, s_jsonOptions));
-        selectedTemplate.UpdateMetadata("android_config", JsonSerializer.Serialize(androidConfig, s_jsonOptions));
-        selectedTemplate.UpdateMetadata("web_config", JsonSerializer.Serialize(webConfig, s_jsonOptions));
+        selectedTemplate.Metadata["ios_config"] = JsonSerializer.Serialize(iosConfig, s_jsonOptions);
+        selectedTemplate.Metadata["android_config"] = JsonSerializer.Serialize(androidConfig, s_jsonOptions);
+        selectedTemplate.Metadata["web_config"] = JsonSerializer.Serialize(webConfig, s_jsonOptions);
     }
 
-    private void EditField(WalletField field)
+    private void EditField(WalletFieldDto field)
     {
         currentField = new FieldModel
         {
@@ -180,29 +181,31 @@ public partial class WalletBuilder
         {
             if (isEditingField)
             {
-                selectedTemplate.UpdateField(currentField.Name, field =>
+                var existingField = selectedTemplate.Fields.FirstOrDefault(f => f.Name == currentField.Name);
+                if (existingField != null)
                 {
-                    field.SetMappedCredentialField(currentField.MappedCredentialField);
-                    field.SetValidationRule(currentField.ValidationRule);
-                    field.SetDefaultValue(currentField.DefaultValue);
-                    field.UpdateEditability(currentField.IsEditable);
-                });
+                    existingField.MappedCredentialField = currentField.MappedCredentialField;
+                    existingField.ValidationRule = currentField.ValidationRule;
+                    existingField.DefaultValue = currentField.DefaultValue;
+                    existingField.IsEditable = currentField.IsEditable;
+                }
             }
             else
             {
-                var newField = new WalletField(
-                    currentField.Name,
-                    currentField.Label,
-                    currentField.FieldType,
-                    currentField.IsRequired,
-                    selectedTemplate.Fields.Count);
+                var newField = new WalletFieldDto
+                {
+                    Name = currentField.Name,
+                    Label = currentField.Label,
+                    FieldType = currentField.FieldType,
+                    IsRequired = currentField.IsRequired,
+                    IsEditable = currentField.IsEditable,
+                    MappedCredentialField = currentField.MappedCredentialField,
+                    ValidationRule = currentField.ValidationRule,
+                    DefaultValue = currentField.DefaultValue,
+                    DisplayOrder = selectedTemplate.Fields.Count
+                };
 
-                newField.SetMappedCredentialField(currentField.MappedCredentialField);
-                newField.SetValidationRule(currentField.ValidationRule);
-                newField.SetDefaultValue(currentField.DefaultValue);
-                newField.UpdateEditability(currentField.IsEditable);
-
-                selectedTemplate.AddField(newField);
+                selectedTemplate.Fields.Add(newField);
             }
 
             ResetFieldForm();
@@ -224,12 +227,12 @@ public partial class WalletBuilder
         isEditingField = false;
     }
 
-    private void RemoveField(WalletField field)
+    private void RemoveField(WalletFieldDto field)
     {
-        selectedTemplate?.RemoveField(field.Name);
+        selectedTemplate?.Fields.Remove(field);
     }
 
-    private void MoveFieldUp(WalletField field)
+    private void MoveFieldUp(WalletFieldDto field)
     {
         if (selectedTemplate == null)
         {
@@ -240,12 +243,12 @@ public partial class WalletBuilder
         var index = fields.IndexOf(field);
         if (index > 0)
         {
-            field.UpdateDisplayOrder(field.DisplayOrder - 1);
-            fields[index - 1].UpdateDisplayOrder(fields[index - 1].DisplayOrder + 1);
+            field.DisplayOrder--;
+            fields[index - 1].DisplayOrder++;
         }
     }
 
-    private void MoveFieldDown(WalletField field)
+    private void MoveFieldDown(WalletFieldDto field)
     {
         if (selectedTemplate == null)
         {
@@ -256,8 +259,8 @@ public partial class WalletBuilder
         var index = fields.IndexOf(field);
         if (index < fields.Count - 1)
         {
-            field.UpdateDisplayOrder(field.DisplayOrder + 1);
-            fields[index + 1].UpdateDisplayOrder(fields[index + 1].DisplayOrder - 1);
+            field.DisplayOrder++;
+            fields[index + 1].DisplayOrder--;
         }
     }
 
@@ -349,8 +352,6 @@ public partial class WalletBuilder
                 CancellationToken.None);
 
             Logger.LogInformation("Generated Apple Wallet .pkpass file ({Size} bytes)", pkpassBytes.Length);
-            // Note: File download in Blazor Server requires JavaScript interop or file endpoint
-            // For now, logging completion - implement JS download in future enhancement
         }
         catch (Exception ex)
         {
@@ -392,7 +393,6 @@ public partial class WalletBuilder
             var addToWalletLink = GoogleWalletBuilder.GetAddToWalletLink(jwt);
 
             Logger.LogInformation("Generated Google Wallet link: {Link}", addToWalletLink);
-            // Note: Link display requires UI modal or clipboard copy - implement in future enhancement
         }
         catch (Exception ex)
         {
@@ -431,7 +431,6 @@ public partial class WalletBuilder
                 CancellationToken.None);
 
             Logger.LogInformation("Generated Web Wallet HTML");
-            // Note: HTML download requires file endpoint or JavaScript interop - implement in future enhancement
         }
         catch (Exception ex)
         {
@@ -439,26 +438,35 @@ public partial class WalletBuilder
         }
     }
 
-    private async Task CloneTemplate(WalletTemplate template)
+    private async Task CloneTemplate(WalletTemplateDto template)
     {
         try
         {
-            var cloned = new WalletTemplate(
-                template.TenantId,
-                $"{template.Name} (Copy)",
-                template.Description,
-                template.Type,
-                "Admin User");
-
-            foreach (var field in template.Fields)
+            var cloned = new WalletTemplateDto
             {
-                cloned.AddField(field);
-            }
-
-            foreach (var credType in template.SupportedCredentialTypes)
-            {
-                cloned.AddSupportedCredentialType(credType);
-            }
+                Id = Guid.NewGuid(),
+                TenantId = template.TenantId,
+                Name = $"{template.Name} (Copy)",
+                Description = template.Description,
+                Type = template.Type,
+                IsActive = template.IsActive,
+                Fields = template.Fields.Select(f => new WalletFieldDto
+                {
+                    Name = f.Name,
+                    Label = f.Label,
+                    FieldType = f.FieldType,
+                    IsRequired = f.IsRequired,
+                    IsEditable = f.IsEditable,
+                    ValidationRule = f.ValidationRule,
+                    DefaultValue = f.DefaultValue,
+                    MappedCredentialField = f.MappedCredentialField,
+                    DisplayOrder = f.DisplayOrder
+                }).ToList(),
+                SupportedCredentialTypes = [.. template.SupportedCredentialTypes],
+                Metadata = new Dictionary<string, object>(template.Metadata),
+                CreatedBy = "Admin User",
+                CreatedAt = DateTime.UtcNow
+            };
 
             await WalletTemplateService.CreateTemplateAsync(cloned);
             await LoadTemplates();
@@ -469,19 +477,11 @@ public partial class WalletBuilder
         }
     }
 
-    private async Task ToggleTemplateStatus(WalletTemplate template)
+    private async Task ToggleTemplateStatus(WalletTemplateDto template)
     {
         try
         {
-            if (template.IsActive)
-            {
-                template.Deactivate();
-            }
-            else
-            {
-                template.Activate();
-            }
-
+            template.IsActive = !template.IsActive;
             await WalletTemplateService.UpdateTemplateAsync(template);
             await LoadTemplates();
         }
@@ -491,7 +491,7 @@ public partial class WalletBuilder
         }
     }
 
-    private async Task DeleteTemplate(WalletTemplate template)
+    private async Task DeleteTemplate(WalletTemplateDto template)
     {
         try
         {
@@ -521,26 +521,22 @@ public partial class WalletBuilder
             "passport" => GetPassportFields(),
             "healthCard" => GetHealthCardFields(),
             "studentId" => GetStudentIdFields(),
-            _ => new List<WalletField>()
+            _ => []
         };
 
         foreach (var field in fields)
         {
-            try
+            if (!selectedTemplate.Fields.Any(f => f.Name == field.Name))
             {
-                selectedTemplate.AddField(field);
-            }
-            catch
-            {
-                // Field might already exist
+                selectedTemplate.Fields.Add(field);
             }
         }
     }
 
-    private List<WalletField> GetDriverLicenseFields()
+    private List<WalletFieldDto> GetDriverLicenseFields()
     {
-        var fields = new List<WalletField>
-        {
+        return
+        [
             CreateField("licenseNumber", "License Number", "text", true, "org.iso.18013.5.1.mDL.license_number"),
             CreateField("fullName", "Full Name", "text", true, "org.iso.18013.5.1.mDL.family_name"),
             CreateField("dateOfBirth", "Date of Birth", "date", true, "org.iso.18013.5.1.mDL.birth_date"),
@@ -550,14 +546,13 @@ public partial class WalletBuilder
             CreateField("portrait", "Photo", "image", true, "org.iso.18013.5.1.mDL.portrait"),
             CreateField("signature", "Signature", "image", false, "org.iso.18013.5.1.mDL.signature"),
             CreateField("vehicleCategories", "Vehicle Categories", "text", true, "org.iso.18013.5.1.mDL.driving_privileges")
-        };
-        return fields;
+        ];
     }
 
-    private List<WalletField> GetPassportFields()
+    private List<WalletFieldDto> GetPassportFields()
     {
-        var fields = new List<WalletField>
-        {
+        return
+        [
             CreateField("passportNumber", "Passport Number", "text", true, "passport.documentNumber"),
             CreateField("surname", "Surname", "text", true, "passport.familyName"),
             CreateField("givenNames", "Given Names", "text", true, "passport.givenNames"),
@@ -568,27 +563,25 @@ public partial class WalletBuilder
             CreateField("dateOfExpiry", "Date of Expiry", "date", true, "passport.expiryDate"),
             CreateField("issuingAuthority", "Issuing Authority", "text", true, "passport.issuingAuthority"),
             CreateField("photo", "Photo", "image", true, "passport.photo")
-        };
-        return fields;
+        ];
     }
 
-    private List<WalletField> GetHealthCardFields()
+    private List<WalletFieldDto> GetHealthCardFields()
     {
-        var fields = new List<WalletField>
-        {
+        return
+        [
             CreateField("medicareNumber", "Medicare Number", "text", true, "health.medicareNumber"),
             CreateField("individualRefNumber", "Individual Reference Number", "number", true, "health.irf"),
             CreateField("fullName", "Full Name", "text", true, "health.fullName"),
             CreateField("validTo", "Valid To", "date", true, "health.expiryDate"),
             CreateField("cardColor", "Card Color", "text", false, "health.cardColor")
-        };
-        return fields;
+        ];
     }
 
-    private List<WalletField> GetStudentIdFields()
+    private List<WalletFieldDto> GetStudentIdFields()
     {
-        var fields = new List<WalletField>
-        {
+        return
+        [
             CreateField("studentId", "Student ID", "text", true, "student.id"),
             CreateField("fullName", "Full Name", "text", true, "student.fullName"),
             CreateField("institution", "Institution", "text", true, "student.institution"),
@@ -597,15 +590,21 @@ public partial class WalletBuilder
             CreateField("validFrom", "Valid From", "date", true, "student.validFrom"),
             CreateField("validTo", "Valid To", "date", true, "student.validTo"),
             CreateField("photo", "Photo", "image", true, "student.photo")
-        };
-        return fields;
+        ];
     }
 
-    private WalletField CreateField(string name, string label, string type, bool required, string mapping)
+    private WalletFieldDto CreateField(string name, string label, string type, bool required, string mapping)
     {
-        var field = new WalletField(name, label, type, required, 0);
-        field.SetMappedCredentialField(mapping);
-        return field;
+        return new WalletFieldDto
+        {
+            Name = name,
+            Label = label,
+            FieldType = type,
+            IsRequired = required,
+            IsEditable = true,
+            MappedCredentialField = mapping,
+            DisplayOrder = 0
+        };
     }
 
     private class CreateTemplateModel
@@ -613,7 +612,7 @@ public partial class WalletBuilder
         public string Name { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
         public WalletTemplateType Type { get; set; } = WalletTemplateType.Custom;
-        public List<string> SupportedCredentialTypes { get; set; } = new();
+        public List<string> SupportedCredentialTypes { get; set; } = [];
     }
 
     private class FieldModel
@@ -638,19 +637,19 @@ public partial class WalletBuilder
         public string LogoText { get; set; } = string.Empty;
 
         // iOS-specific
-        public List<string> HeaderFields { get; set; } = new();
-        public List<string> PrimaryFields { get; set; } = new();
-        public List<string> SecondaryFields { get; set; } = new();
-        public List<string> AuxiliaryFields { get; set; } = new();
-        public List<string> BackFields { get; set; } = new();
+        public List<string> HeaderFields { get; set; } = [];
+        public List<string> PrimaryFields { get; set; } = [];
+        public List<string> SecondaryFields { get; set; } = [];
+        public List<string> AuxiliaryFields { get; set; } = [];
+        public List<string> BackFields { get; set; } = [];
         public string BarcodeFormat { get; set; } = "PKBarcodeFormatQR";
 
         // Android-specific
         public string CardTitle { get; set; } = string.Empty;
         public string Header { get; set; } = string.Empty;
         public string Subheader { get; set; } = string.Empty;
-        public List<string> TextModules { get; set; } = new();
-        public List<string> InfoModules { get; set; } = new();
+        public List<string> TextModules { get; set; } = [];
+        public List<string> InfoModules { get; set; } = [];
 
         // Web-specific
         public string Theme { get; set; } = "light";

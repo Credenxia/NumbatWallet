@@ -1,7 +1,6 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using NumbatWallet.Application.Commands.Credentials.Handlers;
-using NumbatWallet.Domain.Interfaces;
 
 namespace NumbatWallet.Infrastructure.Services;
 

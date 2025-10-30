@@ -1,11 +1,11 @@
 @page "/certificates"
 @using Microsoft.AspNetCore.Authorization
-@using NumbatWallet.Domain.Entities
-@using NumbatWallet.Application.Interfaces
-@using NumbatWallet.Application.DTOs
+@using NumbatWallet.Web.Admin.Services
+@using NumbatWallet.Web.Admin.Models
 @using System.Security.Cryptography.X509Certificates
-@inject ITenantService TenantService
-@inject ICertificateManagementService CertificateService
+@* @inject ITenantService TenantService *@
+@* @inject ICertificateManagementService CertificateService *@
+@* TODO: Implement certificate management via API - currently disabled *@
 @inject ILogger<CertificateManagement> Logger
 @inject IJSRuntime JSRuntime
 @attribute [Authorize(Policy = "AdminOnly")]

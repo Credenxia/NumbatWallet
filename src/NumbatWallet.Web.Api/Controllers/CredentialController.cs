@@ -17,8 +17,8 @@ public class CredentialController : ControllerBase
     private readonly ICommandHandler<IssueCredentialCommand, CredentialDto> _issueCredentialHandler;
     private readonly ICommandHandler<VerifyCredentialCommand, VerificationResultDto> _verifyCredentialHandler;
     private readonly ICommandHandler<RevokeCredentialCommand, bool> _revokeCredentialHandler;
-    private readonly ICommandHandler<ShareCredentialCommand, Application.Commands.Credentials.ShareCredentialResult> _shareCredentialHandler;
-    private readonly ICommandHandler<RequestCredentialCommand, Application.Commands.Credentials.CredentialRequestDto> _requestCredentialHandler;
+    private readonly ICommandHandler<ShareCredentialCommand, ShareCredentialResult> _shareCredentialHandler;
+    private readonly ICommandHandler<RequestCredentialCommand, CredentialRequestDto> _requestCredentialHandler;
     private readonly IQueryHandler<GetCredentialByIdQuery, CredentialDto?> _getCredentialByIdHandler;
     private readonly IQueryHandler<GetCredentialsByWalletQuery, IEnumerable<CredentialDto>> _getCredentialsByWalletHandler;
     private readonly ICurrentTenantService _tenantService;
@@ -29,8 +29,8 @@ public class CredentialController : ControllerBase
         ICommandHandler<IssueCredentialCommand, CredentialDto> issueCredentialHandler,
         ICommandHandler<VerifyCredentialCommand, VerificationResultDto> verifyCredentialHandler,
         ICommandHandler<RevokeCredentialCommand, bool> revokeCredentialHandler,
-        ICommandHandler<ShareCredentialCommand, Application.Commands.Credentials.ShareCredentialResult> shareCredentialHandler,
-        ICommandHandler<RequestCredentialCommand, Application.Commands.Credentials.CredentialRequestDto> requestCredentialHandler,
+        ICommandHandler<ShareCredentialCommand, ShareCredentialResult> shareCredentialHandler,
+        ICommandHandler<RequestCredentialCommand, CredentialRequestDto> requestCredentialHandler,
         IQueryHandler<GetCredentialByIdQuery, CredentialDto?> getCredentialByIdHandler,
         IQueryHandler<GetCredentialsByWalletQuery, IEnumerable<CredentialDto>> getCredentialsByWalletHandler,
         ICurrentTenantService tenantService,
@@ -69,7 +69,7 @@ public class CredentialController : ControllerBase
             $"Credential issuance for wallet {request.WalletId}");
 
         // Parse credential type enum
-        if (!Enum.TryParse<NumbatWallet.Domain.Enums.CredentialType>(request.CredentialType, out var credentialType))
+        if (!Enum.TryParse<Domain.Enums.CredentialType>(request.CredentialType, out var credentialType))
         {
             return BadRequest($"Invalid credential type: {request.CredentialType}");
         }
@@ -150,7 +150,7 @@ public class CredentialController : ControllerBase
     /// </summary>
     [HttpPost("verify")]
     [Microsoft.AspNetCore.Authorization.AllowAnonymous]
-    [ProducesResponseType(typeof(NumbatWallet.Application.DTOs.VerificationResultDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(VerificationResultDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> VerifyCredential([FromBody] VerifyCredentialRequestDto request)
     {

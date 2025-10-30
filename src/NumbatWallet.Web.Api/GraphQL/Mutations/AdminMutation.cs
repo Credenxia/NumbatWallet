@@ -1,4 +1,3 @@
-using NumbatWallet.Application.Interfaces;
 using NumbatWallet.Web.Api.Security;
 using System.Security.Claims;
 
@@ -34,7 +33,7 @@ public class AdminMutation
     /// Create a new tenant
     /// </summary>
     [GraphQLDescription("Create a new tenant organization")]
-    [HotChocolate.Authorization.Authorize(Roles = new[] { "SuperAdmin" })]
+    [Authorize(Roles = new[] { "SuperAdmin" })]
     public async Task<TenantDto> CreateTenant(
         CreateTenantInput input,
         [Service] IHttpContextAccessor httpContextAccessor)
@@ -73,7 +72,7 @@ public class AdminMutation
     /// Update system configuration
     /// </summary>
     [GraphQLDescription("Update system-wide configuration settings")]
-    [HotChocolate.Authorization.Authorize(Roles = new[] { "Admin", "SuperAdmin" })]
+    [Authorize(Roles = new[] { "Admin", "SuperAdmin" })]
     public async Task<SystemConfigurationDto> UpdateSystemConfiguration(
         UpdateSystemConfigurationInput input,
         [Service] IHttpContextAccessor httpContextAccessor)
@@ -109,7 +108,7 @@ public class AdminMutation
     /// Trigger system backup
     /// </summary>
     [GraphQLDescription("Initiate a system-wide backup")]
-    [HotChocolate.Authorization.Authorize(Roles = new[] { "Admin", "SuperAdmin" })]
+    [Authorize(Roles = new[] { "Admin", "SuperAdmin" })]
     public async Task<BackupResultDto> TriggerBackup(
         BackupInput input,
         [Service] IHttpContextAccessor httpContextAccessor)
@@ -132,7 +131,7 @@ public class AdminMutation
         var backupPath = System.IO.Path.Combine("backups", DateTime.UtcNow.ToString("yyyyMMdd"), backupId.ToString());
 
         // Create backup directory
-        System.IO.Directory.CreateDirectory(backupPath);
+        Directory.CreateDirectory(backupPath);
 
         // Queue backup task (in production, use a background service)
         var backupTask = Task.Run(async () =>
@@ -163,7 +162,7 @@ public class AdminMutation
     /// Clear system cache
     /// </summary>
     [GraphQLDescription("Clear system cache by pattern")]
-    [HotChocolate.Authorization.Authorize(Roles = new[] { "Admin", "SuperAdmin" })]
+    [Authorize(Roles = new[] { "Admin", "SuperAdmin" })]
     public async Task<CacheClearResultDto> ClearCache(
         ClearCacheInput input,
         [Service] IHttpContextAccessor httpContextAccessor)
@@ -216,7 +215,7 @@ public class AdminMutation
     /// Update rate limits
     /// </summary>
     [GraphQLDescription("Update API rate limiting configuration")]
-    [HotChocolate.Authorization.Authorize(Roles = new[] { "Admin", "SuperAdmin" })]
+    [Authorize(Roles = new[] { "Admin", "SuperAdmin" })]
     public async Task<RateLimitConfigurationDto> UpdateRateLimits(
         UpdateRateLimitsInput input,
         [Service] IHttpContextAccessor httpContextAccessor)
@@ -254,7 +253,7 @@ public class AdminMutation
     /// Rotate encryption keys
     /// </summary>
     [GraphQLDescription("Rotate system encryption keys")]
-    [HotChocolate.Authorization.Authorize(Roles = new[] { "SuperAdmin" })]
+    [Authorize(Roles = new[] { "SuperAdmin" })]
     public async Task<KeyRotationResultDto> RotateKeys(
         KeyRotationInput input,
         [Service] IHttpContextAccessor httpContextAccessor)

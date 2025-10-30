@@ -1,0 +1,41 @@
+@page "/reports"
+@using Microsoft.AspNetCore.Components.Authorization
+
+<PageTitle>Reports - NumbatWallet Admin</PageTitle>
+
+<div class="page-header">
+    <h1>Reports</h1>
+    <div class="page-actions">
+        <button class="btn btn-secondary">
+            <i class="bi bi-calendar"></i> Schedule Report
+        </button>
+        <button class="btn btn-primary">
+            <i class="bi bi-file-earmark-plus"></i> New Report
+        </button>
+    </div>
+</div>
+
+<AuthorizeView>
+    <Authorized>
+        <div class="card">
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <i class="bi bi-file-earmark-bar-graph"></i>
+                    <div>
+                        <strong>Reports</strong>
+                        <p class="mb-0">Generate compliance reports, usage reports, and audit summaries.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </Authorized>
+    <NotAuthorized>
+        <div class="alert alert-warning">
+            <i class="bi bi-shield-exclamation"></i>
+            <div>
+                <strong>Authentication Required</strong>
+                <p class="mb-0">Please <a href="/login">sign in</a> to access reports.</p>
+            </div>
+        </div>
+    </NotAuthorized>
+</AuthorizeView>

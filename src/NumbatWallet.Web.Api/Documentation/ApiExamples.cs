@@ -68,7 +68,7 @@ public class BatchVerifyCredentialsRequestExample : IExamplesProvider<BatchVerif
                     BatchItemId = "verify-001",
                     CredentialId = "cred-123-456",
                     CredentialData = "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCJ9...",
-                    Options = new NumbatWallet.Application.DTOs.VerificationOptionsDto
+                    Options = new VerificationOptionsDto
                     {
                         CheckRevocation = true,
                         CheckExpiry = true,

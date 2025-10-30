@@ -1,7 +1,6 @@
 using Microsoft.Extensions.Logging;
 using NumbatWallet.Application.Interfaces;
 using System.Threading.Channels;
-using System.Text.Json;
 
 namespace NumbatWallet.Infrastructure.Services;
 

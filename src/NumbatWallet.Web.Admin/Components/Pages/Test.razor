@@ -1,0 +1,22 @@
+@page "/test"
+
+<PageTitle>Test Page</PageTitle>
+
+<h1>Admin Portal Test Page</h1>
+
+<p>Current time: @DateTime.Now.ToString("HH:mm:ss")</p>
+
+<p>If you can see this, Blazor is working correctly!</p>
+
+<button class="btn btn-primary" @onclick="Increment">
+    Click me (@currentCount)
+</button>
+
+@code {
+    private int currentCount = 0;
+
+    private void Increment()
+    {
+        currentCount++;
+    }
+}

@@ -1,4 +1,3 @@
-using FluentAssertions;
 using NumbatWallet.Application.DTOs;
 
 namespace NumbatWallet.Application.Tests.DTOs;

@@ -1,10 +1,8 @@
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
-using Moq;
 using NumbatWallet.Application.Interfaces;
 using NumbatWallet.Infrastructure.Services;
 using NumbatWallet.SharedKernel.Interfaces;
-using FluentAssertions;
 
 namespace NumbatWallet.Infrastructure.Tests.Services;
 

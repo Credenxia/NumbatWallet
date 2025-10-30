@@ -3,8 +3,6 @@ using NumbatWallet.Application.CQRS.Interfaces;
 using NumbatWallet.Application.DTOs;
 using NumbatWallet.Domain.Interfaces;
 using NumbatWallet.SharedKernel.Interfaces;
-using NumbatWallet.Application.Common.Exceptions;
-using NumbatWallet.SharedKernel.Exceptions;
 
 namespace NumbatWallet.Application.Commands.Wallets.Handlers;
 

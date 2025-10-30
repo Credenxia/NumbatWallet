@@ -1,4 +1,3 @@
-using FluentAssertions;
 using NumbatWallet.Domain.Credentials;
 
 namespace NumbatWallet.Domain.Tests.Credentials;
