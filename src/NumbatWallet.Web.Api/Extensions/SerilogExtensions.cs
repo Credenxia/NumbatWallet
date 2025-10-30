@@ -152,14 +152,14 @@ public static class SerilogExtensions
             {
                 diagnosticContext.Set("RequestHost", httpContext.Request.Host.Value ?? "Unknown");
                 diagnosticContext.Set("RequestScheme", httpContext.Request.Scheme);
-                diagnosticContext.Set("UserAgent", httpContext.Request.Headers.UserAgent.ToString() ?? "Unknown");
+                diagnosticContext.Set("UserAgent", httpContext.Request.Headers.UserAgent.ToString());
                 diagnosticContext.Set("ClientIP", httpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown");
                 diagnosticContext.Set("RequestId", httpContext.TraceIdentifier);
 
                 // Add tenant information if available
                 if (httpContext.Request.Headers.TryGetValue("X-Tenant-Id", out var tenantId))
                 {
-                    diagnosticContext.Set("TenantId", tenantId.ToString() ?? "Unknown");
+                    diagnosticContext.Set("TenantId", tenantId.ToString());
                 }
 
                 // Add user information if authenticated

@@ -45,7 +45,7 @@ public class DatabaseHealthCheck : IHealthCheck
 
             var data = new Dictionary<string, object>
             {
-                ["database"] = _dbContext.Database.GetDbConnection().Database ?? "unknown",
+                ["database"] = _dbContext.Database.GetDbConnection().Database,
                 ["provider"] = _dbContext.Database.ProviderName ?? "unknown",
                 ["pendingMigrations"] = hasPendingMigrations
             };
@@ -113,7 +113,7 @@ public class RedisCacheHealthCheck : IHealthCheck
                 ["latencyMs"] = latency.TotalMilliseconds,
                 ["connected"] = _connectionMultiplexer.IsConnected,
                 ["endpoints"] = endpoints.Length,
-                ["configuration"] = _connectionMultiplexer.Configuration ?? "unknown"
+                ["configuration"] = _connectionMultiplexer.Configuration
             };
 
             if (latency.TotalMilliseconds > 100)
