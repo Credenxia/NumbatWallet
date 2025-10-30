@@ -11,7 +11,6 @@ public class HmacSearchTokenServiceTests : IDisposable
     private readonly Mock<IKeyVaultService> _keyVaultServiceMock;
     private readonly Mock<ICurrentTenantService> _currentTenantServiceMock;
     private readonly MemoryCache _memoryCache;
-    private readonly Mock<ILogger<HmacSearchTokenService>> _loggerMock;
     private readonly HmacSearchTokenService _sut;
 
     public HmacSearchTokenServiceTests()
@@ -19,13 +18,13 @@ public class HmacSearchTokenServiceTests : IDisposable
         _keyVaultServiceMock = new Mock<IKeyVaultService>();
         _currentTenantServiceMock = new Mock<ICurrentTenantService>();
         _memoryCache = new MemoryCache(new MemoryCacheOptions());
-        _loggerMock = new Mock<ILogger<HmacSearchTokenService>>();
+        var loggerMock = new Mock<ILogger<HmacSearchTokenService>>();
 
         _sut = new HmacSearchTokenService(
             _keyVaultServiceMock.Object,
             _currentTenantServiceMock.Object,
             _memoryCache,
-            _loggerMock.Object);
+            loggerMock.Object);
     }
 
     [Fact]
