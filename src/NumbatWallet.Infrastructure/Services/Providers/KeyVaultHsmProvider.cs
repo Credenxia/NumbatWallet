@@ -17,10 +17,8 @@ namespace NumbatWallet.Infrastructure.Services.Providers;
 public class KeyVaultHsmProvider : IHsmProvider
 {
     private readonly KeyClient _keyClient;
-    private readonly SecretClient _secretClient;
     private readonly ILogger<KeyVaultHsmProvider> _logger;
     private readonly IConfiguration _configuration;
-    private readonly IMemoryCache _cache;
     private readonly Dictionary<string, AzureCrypto.CryptographyClient> _cryptoClients;
 
     public string ProviderType => "KeyVault";
@@ -34,7 +32,6 @@ public class KeyVaultHsmProvider : IHsmProvider
     {
         _configuration = configuration;
         _logger = logger;
-        _cache = cache;
         _cryptoClients = new Dictionary<string, AzureCrypto.CryptographyClient>();
 
         var keyVaultUri = configuration["KeyVault:Uri"]
@@ -48,7 +45,6 @@ public class KeyVaultHsmProvider : IHsmProvider
         });
 
         _keyClient = new KeyClient(new Uri(keyVaultUri), credential);
-        _secretClient = new SecretClient(new Uri(keyVaultUri), credential);
 
         _logger.LogInformation("Key Vault HSM Provider initialized with URI: {Uri}", keyVaultUri);
     }
