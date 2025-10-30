@@ -12,7 +12,7 @@ public class NotificationService : INotificationService
 
     public NotificationService(
         ILogger<NotificationService> logger,
-        IEmailService _)
+        IEmailService _emailService)
     {
         _logger = logger;
 

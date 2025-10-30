@@ -18,7 +18,7 @@ public class ProtectionService : IProtectionService
         ITenantPolicyService tenantPolicyService,
         ICurrentTenantService currentTenantService,
         IAuditService auditService,
-        ILogger<ProtectionService> _)
+        ILogger<ProtectionService> _logger)
     {
         _encryptionService = encryptionService;
         _tenantPolicyService = tenantPolicyService;

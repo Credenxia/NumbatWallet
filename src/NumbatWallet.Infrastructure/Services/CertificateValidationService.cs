@@ -14,7 +14,7 @@ public class CertificateValidationService : ICertificateValidationService
 
     public CertificateValidationService(
         ICertificateAuthorityRepository authorityRepository,
-        ICertificateTrustStoreRepository _,
+        ICertificateTrustStoreRepository _trustStoreRepository,
         ILogger<CertificateValidationService> logger,
         HttpClient httpClient)
     {
