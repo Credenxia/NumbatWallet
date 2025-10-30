@@ -363,8 +363,7 @@ public class MultiTenantIsolationTests : IntegrationTestBase
         var personId = await TestData.GetFirstPersonIdAsync();
         var wallet = Wallet.Create(
             personId,
-            "Test Wallet",
-            WalletType.Holder).Value;
+            "Test Wallet").Value;
         wallet.SetTenantId(tenant1);
 
         // Save wallet

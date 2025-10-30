@@ -55,7 +55,7 @@ public class AzureBlobStorageService : IBlobStorageService
         try
         {
             var containerClient = _blobServiceClient.GetBlobContainerClient(containerName);
-            await containerClient.CreateIfNotExistsAsync(PublicAccessType.None, cancellationToken: cancellationToken);
+            await containerClient.CreateIfNotExistsAsync(cancellationToken: cancellationToken);
 
             var blobName = GenerateBlobName(fileName);
             var blobClient = containerClient.GetBlobClient(blobName);
