@@ -119,7 +119,7 @@ public class TelemetryServiceTests : IDisposable
                 It.IsAny<PiiType>(),
                 It.IsAny<RedactionPattern>(),
                 It.IsAny<CancellationToken>()))
-            .ReturnsAsync((string value, PiiType _, RedactionPattern __, CancellationToken ___) =>
+            .ReturnsAsync((string value, PiiType _pii, RedactionPattern _pattern, CancellationToken _ct) =>
                 value.Contains('@') ? "***@example.com" : value);
 
         // Act
@@ -264,7 +264,7 @@ public class TelemetryServiceTests : IDisposable
                 PiiType.Email,
                 RedactionPattern.ShowDomain,
                 It.IsAny<CancellationToken>()))
-            .ReturnsAsync((string value, PiiType _, RedactionPattern __, CancellationToken ___) =>
+            .ReturnsAsync((string value, PiiType _pii, RedactionPattern _pattern, CancellationToken _ct) =>
                 value.Replace("john.doe", "***"));
 
         // Act
@@ -304,7 +304,7 @@ public class TelemetryServiceTests : IDisposable
                 It.IsAny<PiiType>(),
                 It.IsAny<RedactionPattern>(),
                 It.IsAny<CancellationToken>()))
-            .ReturnsAsync((string value, PiiType piiType, RedactionPattern pattern, CancellationToken _) =>
+            .ReturnsAsync((string value, PiiType piiType, RedactionPattern _pattern, CancellationToken _ct) =>
                 {
                     if (value.Contains('@'))
                     {

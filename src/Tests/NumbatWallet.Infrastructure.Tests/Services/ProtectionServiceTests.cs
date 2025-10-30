@@ -186,7 +186,7 @@ public class ProtectionServiceTests
 
         _currentTenantServiceMock.Setup(x => x.TenantId).Returns(tenantId);
         _encryptionServiceMock.Setup(x => x.GenerateHmacAsync(It.IsAny<string>(), It.IsAny<string>()))
-            .ReturnsAsync((string data, string _) => $"hmac_{data}");
+            .ReturnsAsync((string data, string _key) => $"hmac_{data}");
 
         // Act
         var result = await _sut.GenerateSearchTokensAsync(value, fieldName, strategy);

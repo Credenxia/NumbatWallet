@@ -74,7 +74,7 @@ public class CacheServiceTests
 
         _mockDistributedCache
             .Setup(x => x.SetAsync(key, It.IsAny<byte[]>(), It.IsAny<DistributedCacheEntryOptions>(), It.IsAny<CancellationToken>()))
-            .Callback<string, byte[], DistributedCacheEntryOptions, CancellationToken>((_, b, o, _) =>
+            .Callback<string, byte[], DistributedCacheEntryOptions, CancellationToken>((_k, b, o, _ct) =>
             {
                 capturedBytes = b;
                 capturedOptions = o;
