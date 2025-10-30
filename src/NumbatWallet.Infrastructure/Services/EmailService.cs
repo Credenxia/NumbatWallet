@@ -103,11 +103,12 @@ public class EmailService : IEmailService
         string body,
         CancellationToken cancellationToken = default)
     {
-        var tasks = recipients.Select(recipient =>
+        var recipientsList = recipients.ToList();
+        var tasks = recipientsList.Select(recipient =>
             SendEmailAsync(recipient, subject, body, true, cancellationToken));
 
         await Task.WhenAll(tasks);
-        _logger.LogInformation("Bulk email sent to {Count} recipients", recipients.Count());
+        _logger.LogInformation("Bulk email sent to {Count} recipients", recipientsList.Count);
     }
 
     private string GenerateWelcomeEmailHtml(string firstName)

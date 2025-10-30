@@ -173,9 +173,10 @@ public class NotificationService : INotificationService
         string message,
         CancellationToken cancellationToken = default)
     {
-        var tasks = userIds.Select(userId => SendNotificationAsync(userId, title, message, cancellationToken));
+        var userIdsList = userIds.ToList();
+        var tasks = userIdsList.Select(userId => SendNotificationAsync(userId, title, message, cancellationToken));
         await Task.WhenAll(tasks);
-        _logger.LogInformation("Bulk notification sent to {Count} users: {Title}", userIds.Count(), title);
+        _logger.LogInformation("Bulk notification sent to {Count} users: {Title}", userIdsList.Count, title);
     }
 
     /// <summary>

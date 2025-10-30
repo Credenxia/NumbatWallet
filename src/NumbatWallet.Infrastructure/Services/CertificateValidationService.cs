@@ -112,7 +112,8 @@ public class CertificateValidationService : ICertificateValidationService
             chain.ChainPolicy.VerificationFlags = X509VerificationFlags.AllowUnknownCertificateAuthority;
 
             // Add trusted authorities to the chain
-            foreach (var authority in authorities.Where(a => a.IsTrusted))
+            var authoritiesList = authorities.ToList();
+            foreach (var authority in authoritiesList.Where(a => a.IsTrusted))
             {
                 var authBytes = Convert.FromBase64String(authority.CertificateData);
                 using var authCert = X509CertificateLoader.LoadCertificate(authBytes);
@@ -132,7 +133,7 @@ public class CertificateValidationService : ICertificateValidationService
             // Verify that the chain ends with a trusted authority
             var rootCert = chain.ChainElements[^1].Certificate;
             var rootThumbprint = rootCert.Thumbprint;
-            var trustedRoot = authorities.Any(a => a.Thumbprint.Equals(rootThumbprint, StringComparison.OrdinalIgnoreCase) && a.IsTrusted);
+            var trustedRoot = authoritiesList.Any(a => a.Thumbprint.Equals(rootThumbprint, StringComparison.OrdinalIgnoreCase) && a.IsTrusted);
 
             if (!trustedRoot)
             {
