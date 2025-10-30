@@ -52,16 +52,6 @@ public class KeyRotationService : IKeyRotationService
 
             // Get current key metadata
             var currentKey = await _hsmProvider.GetKeyAsync(keyId, cancellationToken);
-            if (currentKey == null)
-            {
-                return new RotationResult
-                {
-                    Success = false,
-                    OldKeyId = keyId,
-                    ErrorMessage = "Key not found",
-                    Type = RotationType.Manual
-                };
-            }
 
             // Get rotation policy
             var policy = await GetRotationPolicyAsync(keyId, cancellationToken);
@@ -230,10 +220,7 @@ public class KeyRotationService : IKeyRotationService
         foreach (var policy in policies.Where(p => p.NextRotationDate <= _dateTimeService.UtcNow.AddDays(p.WarningDays)))
         {
             var status = await GetKeyRotationStatusAsync(policy.KeyId, cancellationToken);
-            if (status != null)
-            {
-                pendingRotations.Add(status);
-            }
+            pendingRotations.Add(status);
         }
 
         return pendingRotations;
@@ -431,7 +418,7 @@ public class KeyRotationService : IKeyRotationService
             NewKeyId = newKeyId,
             RotatedAt = _dateTimeService.UtcNow.DateTime,
             Type = type,
-            PerformedBy = _currentUserService.UserId ?? "System",
+            PerformedBy = _currentUserService.UserId,
             Success = true
         };
 
