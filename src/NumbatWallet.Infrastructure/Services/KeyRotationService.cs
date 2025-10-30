@@ -383,7 +383,7 @@ public class KeyRotationService : IKeyRotationService
         return warningDate <= _dateTimeService.UtcNow;
     }
 
-    private async Task StartGracePeriodAsync(string oldKeyId, string newKeyId, int gracePeriodDays, CancellationToken cancellationToken)
+    private async Task StartGracePeriodAsync(string oldKeyId, string _, int gracePeriodDays, CancellationToken cancellationToken)
     {
         // Both keys remain active during grace period
         // No explicit enable needed - keys are active by default
@@ -413,7 +413,7 @@ public class KeyRotationService : IKeyRotationService
         await ScheduleRotationAsync(keyId, archivalTime, cancellationToken);
     }
 
-    private async Task NotifyKeyRotationAsync(string oldKeyId, string newKeyId, RotationPolicy policy, CancellationToken cancellationToken)
+    private async Task NotifyKeyRotationAsync(string _, string _newKeyId, RotationPolicy policy, CancellationToken _ct)
     {
         if (!string.IsNullOrEmpty(policy.NotificationEmail))
         {
@@ -496,7 +496,7 @@ public class KeyRotationService : IKeyRotationService
         };
     }
 
-    private async Task<RotatableKeyType> DetermineKeyTypeAsync(string keyId, CancellationToken cancellationToken)
+    private async Task<RotatableKeyType> DetermineKeyTypeAsync(string keyId, CancellationToken _ct)
     {
         // Determine based on key naming convention or metadata
         if (keyId.Contains("sign", StringComparison.OrdinalIgnoreCase))
@@ -519,13 +519,13 @@ public class KeyRotationService : IKeyRotationService
         return RotatableKeyType.EncryptionKey; // Default
     }
 
-    private async Task SaveRotationPolicyAsync(RotationPolicy policy, CancellationToken cancellationToken)
+    private async Task SaveRotationPolicyAsync(RotationPolicy _, CancellationToken _ct)
     {
         // Save to database - implementation depends on your entity structure
         await Task.CompletedTask;
     }
 
-    private async Task<KeyRotationStatus> GetKeyRotationStatusAsync(string keyId, CancellationToken cancellationToken)
+    private async Task<KeyRotationStatus> GetKeyRotationStatusAsync(string keyId, CancellationToken _ct)
     {
         // Get key metadata and calculate status
         await Task.CompletedTask;
@@ -536,7 +536,7 @@ public class KeyRotationService : IKeyRotationService
         };
     }
 
-    private async Task SendRotationWarningAsync(RotationPolicy policy, CancellationToken cancellationToken)
+    private async Task SendRotationWarningAsync(RotationPolicy policy, CancellationToken _ct)
     {
         _logger.LogWarning("Key {KeyId} is due for rotation in {Days} days",
             policy.KeyId,
@@ -544,14 +544,14 @@ public class KeyRotationService : IKeyRotationService
         await Task.CompletedTask;
     }
 
-    private async Task SendEmergencyNotificationsAsync(string keyId, string reason, CancellationToken cancellationToken)
+    private async Task SendEmergencyNotificationsAsync(string keyId, string reason, CancellationToken _ct)
     {
         _logger.LogCritical("Emergency rotation performed for key {KeyId}: {Reason}", keyId, reason);
         // Send alerts to security team
         await Task.CompletedTask;
     }
 
-    private async Task AuditEmergencyRotationAsync(string keyId, string reason, CancellationToken cancellationToken)
+    private async Task AuditEmergencyRotationAsync(string _, string _reason, CancellationToken _ct)
     {
         // Record in audit log
         await Task.CompletedTask;
@@ -563,7 +563,7 @@ public class KeyRotationService : IKeyRotationService
             .FirstOrDefaultAsync(r => r.RotationId == rotationId, cancellationToken);
     }
 
-    private async Task RecordRollbackAsync(string rotationId, string reason, CancellationToken cancellationToken)
+    private async Task RecordRollbackAsync(string _, string _reason, CancellationToken _ct)
     {
         // Record rollback in audit log
         await Task.CompletedTask;
@@ -628,7 +628,7 @@ public class KeyRotationService : IKeyRotationService
         };
     }
 
-    private RotationType ConvertToRotationType(RotatableKeyType keyType)
+    private RotationType ConvertToRotationType(RotatableKeyType _)
     {
         // Map key types to rotation types - this is a simple mapping
         // In a real implementation, you'd track the actual rotation type
