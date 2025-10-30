@@ -139,9 +139,9 @@ public class ProtectionInterceptor : SaveChangesInterceptor
     }
 
     private async Task StoreSearchTokens(
-        EntityEntry entry,
-        string propertyName,
-        IEnumerable<string> tokens)
+        EntityEntry _entry,
+        string _propertyName,
+        IEnumerable<string> _tokens)
     {
         // Implementation would store search tokens for the field
         // This could be in a shadow property, separate table, or within the JSONB structure

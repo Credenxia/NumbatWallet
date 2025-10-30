@@ -27,7 +27,7 @@ public class KeyVaultHsmProvider : IHsmProvider
     public KeyVaultHsmProvider(
         IConfiguration configuration,
         ILogger<KeyVaultHsmProvider> logger,
-        IMemoryCache _)
+        IMemoryCache _cache)
     {
         _configuration = configuration;
         _logger = logger;

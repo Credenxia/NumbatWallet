@@ -185,8 +185,8 @@ public class NotificationService : INotificationService
     private async Task FallbackToEmailAsync(
         Guid userId,
         string title,
-        string message,
-        CancellationToken cancellationToken)
+        string _message,
+        CancellationToken _cancellationToken)
     {
         try
         {
