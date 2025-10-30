@@ -15,7 +15,6 @@ public class PresentCredentialCommandHandlerTests
     private readonly Mock<ICredentialRepository> _credentialRepositoryMock;
     private readonly Mock<IVerificationService> _verificationServiceMock;
     private readonly Mock<Application.Interfaces.IEventDispatcher> _eventDispatcherMock;
-    private readonly Mock<ILogger<PresentCredentialCommandHandler>> _loggerMock;
     private readonly PresentCredentialCommandHandler _handler;
 
     public PresentCredentialCommandHandlerTests()
@@ -23,12 +22,12 @@ public class PresentCredentialCommandHandlerTests
         _credentialRepositoryMock = new Mock<ICredentialRepository>();
         _verificationServiceMock = new Mock<IVerificationService>();
         _eventDispatcherMock = new Mock<Application.Interfaces.IEventDispatcher>();
-        _loggerMock = new Mock<ILogger<PresentCredentialCommandHandler>>();
+        var loggerMock = new Mock<ILogger<PresentCredentialCommandHandler>>();
         _handler = new PresentCredentialCommandHandler(
             _credentialRepositoryMock.Object,
             _verificationServiceMock.Object,
             _eventDispatcherMock.Object,
-            _loggerMock.Object);
+            loggerMock.Object);
     }
 
     [Fact]
@@ -283,7 +282,7 @@ public class PresentCredentialCommandHandlerTests
         _eventDispatcherMock.Setup(x => x.DispatchAsync(
                 It.IsAny<IDomainEvent>(),
                 It.IsAny<CancellationToken>()))
-            .Callback((IDomainEvent evt, CancellationToken ct) =>
+            .Callback((IDomainEvent evt, CancellationToken _) =>
             {
                 capturedEvent = evt as CredentialPresentedEvent;
             })

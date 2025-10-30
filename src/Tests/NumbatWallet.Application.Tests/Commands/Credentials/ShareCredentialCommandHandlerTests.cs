@@ -13,7 +13,6 @@ public class ShareCredentialCommandHandlerTests
     private readonly Mock<ICredentialRepository> _credentialRepositoryMock;
     private readonly Mock<ICredentialSharingService> _sharingServiceMock;
     private readonly Mock<IEmailService> _emailServiceMock;
-    private readonly Mock<ILogger<ShareCredentialCommandHandler>> _loggerMock;
     private readonly ShareCredentialCommandHandler _handler;
 
     public ShareCredentialCommandHandlerTests()
@@ -21,12 +20,12 @@ public class ShareCredentialCommandHandlerTests
         _credentialRepositoryMock = new Mock<ICredentialRepository>();
         _sharingServiceMock = new Mock<ICredentialSharingService>();
         _emailServiceMock = new Mock<IEmailService>();
-        _loggerMock = new Mock<ILogger<ShareCredentialCommandHandler>>();
+        var loggerMock = new Mock<ILogger<ShareCredentialCommandHandler>>();
         _handler = new ShareCredentialCommandHandler(
             _credentialRepositoryMock.Object,
             _sharingServiceMock.Object,
             _emailServiceMock.Object,
-            _loggerMock.Object);
+            loggerMock.Object);
     }
 
     [Fact]
@@ -218,7 +217,7 @@ public class ShareCredentialCommandHandlerTests
                 It.IsAny<string>(),
                 It.IsAny<bool>(),
                 It.IsAny<CancellationToken>()))
-            .Callback<string, string, string, bool, CancellationToken>((to, subject, body, isHtml, ct) =>
+            .Callback<string, string, string, bool, CancellationToken>((_, _, body, _, _) =>
             {
                 capturedEmailBody = body;
             })
