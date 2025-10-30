@@ -110,6 +110,7 @@ public class VerificationDomainService : IVerificationDomainService
         Guid verifierId,
         CancellationToken cancellationToken = default)
     {
+        var credentialsList = credentials.ToList();
         var result = new VerificationResult
         {
             VerifierId = verifierId,
@@ -117,7 +118,7 @@ public class VerificationDomainService : IVerificationDomainService
         };
 
         // Verify each credential
-        foreach (var credential in credentials)
+        foreach (var credential in credentialsList)
         {
             var credentialResult = await VerifyCredentialAsync(credential, verifierId, cancellationToken);
             if (!credentialResult.IsValid)
@@ -129,7 +130,7 @@ public class VerificationDomainService : IVerificationDomainService
         }
 
         // Check if all requested attributes are present
-        var allAttributes = credentials
+        var allAttributes = credentialsList
             .SelectMany(c => c.Claims.Keys)
             .Distinct()
             .ToArray();

@@ -31,9 +31,9 @@ public class GetAllTenantsQueryHandler : IQueryHandler<GetAllTenantsQuery, IEnum
             ? await _tenantRepository.GetActiveTenantsAsync(cancellationToken)
             : await _tenantRepository.GetAllAsync(cancellationToken);
 
-        var dtos = tenants.ToDtos();
+        var dtos = tenants.ToDtos().ToList();
 
-        _logger.LogInformation("Retrieved {Count} tenants", dtos.Count());
+        _logger.LogInformation("Retrieved {Count} tenants", dtos.Count);
 
         return dtos;
     }

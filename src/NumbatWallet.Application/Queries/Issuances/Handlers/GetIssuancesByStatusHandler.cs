@@ -75,10 +75,10 @@ public class GetIssuancesByStatusHandler : IQueryHandler<GetIssuancesByStatusQue
             CredentialId = issuance.CredentialId,
             CredentialData = issuance.Claims.ToDictionary(kvp => kvp.Key, kvp => kvp.Value),
             AdditionalData = issuance.Metadata.ToDictionary(kvp => kvp.Key, kvp => (object)kvp.Value)
-        });
+        }).ToList();
 
         _logger.LogInformation("Found {Count} issuances with status {Status}",
-            dtos.Count(), query.Status);
+            dtos.Count, query.Status);
 
         return dtos;
     }

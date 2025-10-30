@@ -77,7 +77,7 @@ public class ListWalletsQueryHandler : IQueryHandler<ListWalletsQuery, PagedResu
         }
 
         // Apply sorting
-        wallets = query.SortBy?.ToLowerInvariant() switch
+        var sortedWallets = (query.SortBy?.ToLowerInvariant() switch
         {
             "name" => query.SortDescending
                 ? wallets.OrderByDescending(w => w.Name)
@@ -88,13 +88,13 @@ public class ListWalletsQueryHandler : IQueryHandler<ListWalletsQuery, PagedResu
             _ => query.SortDescending
                 ? wallets.OrderByDescending(w => w.CreatedAt)
                 : wallets.OrderBy(w => w.CreatedAt)
-        };
+        }).ToList();
 
         // Get total count before pagination
-        var totalCount = wallets.Count();
+        var totalCount = sortedWallets.Count;
 
         // Apply pagination
-        var pagedWallets = wallets
+        var pagedWallets = sortedWallets
             .Skip((query.Page - 1) * query.PageSize)
             .Take(query.PageSize)
             .ToList();
