@@ -125,7 +125,6 @@ public class SecurityValidationTests : IntegrationTestBase
     public async Task API_ShouldRequire_CSRF_Token_ForStatefulOperations()
     {
         // Arrange - Attempt state-changing operation without CSRF token
-        var request = new { Action = "delete" };
 
         // Act
         var response = await Client.DeleteAsync("/api/v1/wallets/some-id");
@@ -200,7 +199,7 @@ public class SecurityValidationTests : IntegrationTestBase
         };
 
         // Act
-        var response = await Client.PostAsJsonAsync("/api/v1/authentication/login", request);
+        _ = await Client.PostAsJsonAsync("/api/v1/authentication/login", request);
 
         // Assert - Logs should not contain sensitive data (verified separately)
         // This test is a placeholder for log analysis
@@ -247,7 +246,7 @@ public class SecurityValidationTests : IntegrationTestBase
 
         // Act
         var responseV1 = await Client.GetAsync(endpointV1);
-        var responseV2 = await Client.GetAsync(endpointV2);
+        _ = await Client.GetAsync(endpointV2);
 
         // Assert - v1 should exist, v2 may not yet
         responseV1.StatusCode.Should().NotBe(HttpStatusCode.NotFound);
