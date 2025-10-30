@@ -400,7 +400,7 @@ public class KeyRotationService : IKeyRotationService
         await ScheduleRotationAsync(keyId, archivalTime, cancellationToken);
     }
 
-    private async Task NotifyKeyRotationAsync(string _, string _newKeyId, RotationPolicy policy, CancellationToken _ct)
+    private async Task NotifyKeyRotationAsync(string _oldKeyId, string _newKeyId, RotationPolicy policy, CancellationToken _cancellationToken)
     {
         if (!string.IsNullOrEmpty(policy.NotificationEmail))
         {
@@ -506,13 +506,13 @@ public class KeyRotationService : IKeyRotationService
         return RotatableKeyType.EncryptionKey; // Default
     }
 
-    private async Task SaveRotationPolicyAsync(RotationPolicy _, CancellationToken _ct)
+    private async Task SaveRotationPolicyAsync(RotationPolicy _policy, CancellationToken _cancellationToken)
     {
         // Save to database - implementation depends on your entity structure
         await Task.CompletedTask;
     }
 
-    private async Task<KeyRotationStatus> GetKeyRotationStatusAsync(string keyId, CancellationToken _ct)
+    private async Task<KeyRotationStatus> GetKeyRotationStatusAsync(string keyId, CancellationToken _cancellationToken)
     {
         // Get key metadata and calculate status
         await Task.CompletedTask;
@@ -523,7 +523,7 @@ public class KeyRotationService : IKeyRotationService
         };
     }
 
-    private async Task SendRotationWarningAsync(RotationPolicy policy, CancellationToken _ct)
+    private async Task SendRotationWarningAsync(RotationPolicy policy, CancellationToken _cancellationToken)
     {
         _logger.LogWarning("Key {KeyId} is due for rotation in {Days} days",
             policy.KeyId,
@@ -531,14 +531,14 @@ public class KeyRotationService : IKeyRotationService
         await Task.CompletedTask;
     }
 
-    private async Task SendEmergencyNotificationsAsync(string keyId, string reason, CancellationToken _ct)
+    private async Task SendEmergencyNotificationsAsync(string keyId, string reason, CancellationToken _cancellationToken)
     {
         _logger.LogCritical("Emergency rotation performed for key {KeyId}: {Reason}", keyId, reason);
         // Send alerts to security team
         await Task.CompletedTask;
     }
 
-    private async Task AuditEmergencyRotationAsync(string _, string _reason, CancellationToken _ct)
+    private async Task AuditEmergencyRotationAsync(string _keyId, string _reason, CancellationToken _cancellationToken)
     {
         // Record in audit log
         await Task.CompletedTask;
@@ -550,7 +550,7 @@ public class KeyRotationService : IKeyRotationService
             .FirstOrDefaultAsync(r => r.RotationId == rotationId, cancellationToken);
     }
 
-    private async Task RecordRollbackAsync(string _, string _reason, CancellationToken _ct)
+    private async Task RecordRollbackAsync(string _rotationId, string _reason, CancellationToken _cancellationToken)
     {
         // Record rollback in audit log
         await Task.CompletedTask;
