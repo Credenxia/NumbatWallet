@@ -219,7 +219,6 @@ public class DatabaseBackupService : IDatabaseBackupService
     private readonly ILogger<DatabaseBackupService> _logger;
 
     public DatabaseBackupService(
-        IConfiguration configuration,
         ILogger<DatabaseBackupService> logger)
     {
         _logger = logger;
