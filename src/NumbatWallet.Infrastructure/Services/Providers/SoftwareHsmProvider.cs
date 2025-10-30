@@ -15,7 +15,6 @@ namespace NumbatWallet.Infrastructure.Services.Providers;
 public class SoftwareHsmProvider : IHsmProvider
 {
     private readonly ILogger<SoftwareHsmProvider> _logger;
-    private readonly IConfiguration _configuration;
     private readonly ConcurrentDictionary<string, SoftwareKey> _keys;
     private readonly string _keyStorePath;
     private readonly byte[] _masterKey;
@@ -29,7 +28,6 @@ public class SoftwareHsmProvider : IHsmProvider
         IConfiguration configuration,
         ILogger<SoftwareHsmProvider> logger)
     {
-        _configuration = configuration;
         _logger = logger;
         _keys = new ConcurrentDictionary<string, SoftwareKey>();
 

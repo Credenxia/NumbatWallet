@@ -15,7 +15,6 @@ public class TelemetryService : ITelemetryService
     private readonly ICurrentTenantService _currentTenantService;
     private readonly ICurrentUserService _currentUserService;
     private readonly TelemetryClient _telemetryClient;
-    private readonly ILogger<TelemetryService> _logger;
 
     // Patterns for detecting PII in property names and values
     private static readonly Dictionary<string, PiiType> PiiPatterns = new()
@@ -69,7 +68,6 @@ public class TelemetryService : ITelemetryService
         _currentTenantService = currentTenantService;
         _currentUserService = currentUserService;
         _telemetryClient = telemetryClient;
-        _logger = logger;
     }
 
     public async Task LogEventAsync(

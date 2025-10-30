@@ -16,7 +16,6 @@ public class ServiceWAIdXService : IWAIdXService
 {
     private readonly HttpClient _httpClient;
     private readonly ILogger<ServiceWAIdXService> _logger;
-    private readonly IConfiguration _configuration;
     private readonly string _clientId;
     private readonly string _clientSecret;
     private readonly string _authority;
@@ -30,7 +29,6 @@ public class ServiceWAIdXService : IWAIdXService
     {
         _httpClient = httpClient;
         _logger = logger;
-        _configuration = configuration;
 
         // Load configuration
         _clientId = configuration["ServiceWA:ClientId"] ?? throw new InvalidOperationException("ServiceWA:ClientId not configured");

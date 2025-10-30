@@ -8,7 +8,6 @@ namespace NumbatWallet.Infrastructure.Services;
 
 public class RedisCacheService : ICacheService
 {
-    private readonly IDistributedCache _distributedCache;
     private readonly IConnectionMultiplexer _redis;
     private readonly IDatabase _database;
     private readonly ILogger<RedisCacheService> _logger;
@@ -19,7 +18,6 @@ public class RedisCacheService : ICacheService
         IConnectionMultiplexer redis,
         ILogger<RedisCacheService> logger)
     {
-        _distributedCache = distributedCache;
         _redis = redis;
         _database = redis.GetDatabase();
         _logger = logger;
