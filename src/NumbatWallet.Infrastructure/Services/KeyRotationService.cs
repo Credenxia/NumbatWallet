@@ -24,7 +24,6 @@ public class KeyRotationService : IKeyRotationService
     private readonly IDateTimeService _dateTimeService;
     private readonly ICurrentUserService _currentUserService;
     private readonly ILogger<KeyRotationService> _logger;
-    private readonly IConfiguration _configuration;
 
     public KeyRotationService(
         IHsmService hsmService,
@@ -34,8 +33,7 @@ public class KeyRotationService : IKeyRotationService
         ServiceBusClient serviceBusClient,
         IDateTimeService dateTimeService,
         ICurrentUserService currentUserService,
-        ILogger<KeyRotationService> logger,
-        IConfiguration configuration)
+        ILogger<KeyRotationService> logger)
     {
         _hsmService = hsmService;
         _hsmProvider = hsmProvider;
@@ -45,7 +43,6 @@ public class KeyRotationService : IKeyRotationService
         _dateTimeService = dateTimeService;
         _currentUserService = currentUserService;
         _logger = logger;
-        _configuration = configuration;
     }
 
     public async Task<RotationResult> RotateKeyAsync(string keyId, CancellationToken cancellationToken = default)
