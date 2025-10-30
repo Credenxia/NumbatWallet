@@ -62,7 +62,7 @@ public class TelemetryService : ITelemetryService
         ICurrentTenantService currentTenantService,
         ICurrentUserService currentUserService,
         TelemetryClient telemetryClient,
-        ILogger<TelemetryService> logger)
+        ILogger<TelemetryService> _)
     {
         _redactionService = redactionService;
         _currentTenantService = currentTenantService;

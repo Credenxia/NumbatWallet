@@ -200,7 +200,7 @@ public class MockAzureKeyVaultService : IAzureKeyVaultService
     private readonly Dictionary<string, string> _secrets = new();
     private readonly Dictionary<string, byte[]> _keys = new();
 
-    public MockAzureKeyVaultService(ILogger<MockAzureKeyVaultService> logger)
+    public MockAzureKeyVaultService(ILogger<MockAzureKeyVaultService> _)
     {
     }
 
