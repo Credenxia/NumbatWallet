@@ -1,5 +1,4 @@
 using System.Collections.Concurrent;
-using System.Security.Cryptography;
 using System.Text.Json;
 using NumbatWallet.Application.DTOs;
 using NumbatWallet.Application.Interfaces;
@@ -10,8 +9,8 @@ namespace NumbatWallet.Infrastructure.Services;
 // POA in-memory stub implementations backing the Admin GraphQL surface.
 //
 // These services return MOCK data held in process memory. They exist so the
-// Admin GraphQL fields (featureFlags, configurations, backups, reports, admin
-// users, key rotation, maintenance) are live and exercisable during the POA
+// Admin GraphQL fields (featureFlags, configurations, backups, reports,
+// key rotation, maintenance) are live and exercisable during the POA
 // phase. Real implementations (database/Key Vault/backup tooling) are a
 // separate epic. All classes are singletons with no scoped dependencies, so
 // they are safe to inject into HotChocolate resolvers via [Service].
@@ -449,180 +448,12 @@ public sealed class InMemoryReportingService : IReportingService
         Task.FromResult(_schedules.Values.OrderBy(s => s.Id, StringComparer.OrdinalIgnoreCase).ToList());
 }
 
-/// <summary>POA stub: in-memory admin user directory (mock data — no identity provider integration).</summary>
-public sealed class InMemoryUserManagementService : IUserManagementService
-{
-    private readonly ConcurrentDictionary<Guid, SystemUserDto> _users = new();
-
-    public InMemoryUserManagementService()
-    {
-        var seed = new SystemUserDto
-        {
-            Id = Guid.Parse("00000000-0000-0000-0000-0000000000ad"),
-            Email = "admin@example.gov.au",
-            FirstName = "POA",
-            LastName = "Administrator",
-            Roles = new List<string> { "Admin" },
-            IsActive = true,
-            CreatedAt = DateTime.UtcNow.AddMonths(-1)
-        };
-        _users[seed.Id] = seed;
-    }
-
-    public Task<SystemUserDto> CreateUserAsync(CreateSystemUserDto request, CancellationToken cancellationToken = default)
-    {
-        var user = new SystemUserDto
-        {
-            Id = Guid.NewGuid(),
-            Email = request.Email,
-            FirstName = request.FirstName,
-            LastName = request.LastName,
-            Roles = request.Roles,
-            IsActive = true,
-            CreatedAt = DateTime.UtcNow
-        };
-        _users[user.Id] = user;
-        return Task.FromResult(user);
-    }
-
-    public Task<SystemUserDto> UpdateUserAsync(Guid userId, UpdateSystemUserDto request, CancellationToken cancellationToken = default)
-    {
-        if (!_users.TryGetValue(userId, out var user))
-        {
-            throw new InvalidOperationException($"User '{userId}' not found");
-        }
-
-        user.FirstName = request.FirstName ?? user.FirstName;
-        user.LastName = request.LastName ?? user.LastName;
-        user.Email = request.Email ?? user.Email;
-        user.IsActive = request.IsActive ?? user.IsActive;
-        return Task.FromResult(user);
-    }
-
-    public Task<bool> DeleteUserAsync(Guid userId, CancellationToken cancellationToken = default) =>
-        Task.FromResult(_users.TryRemove(userId, out _));
-
-    public Task<SystemUserDto?> GetUserByIdAsync(Guid userId, CancellationToken cancellationToken = default) =>
-        Task.FromResult(_users.TryGetValue(userId, out var user) ? user : null);
-
-    public Task<SystemUserDto?> GetUserByEmailAsync(string email, CancellationToken cancellationToken = default) =>
-        Task.FromResult(_users.Values.FirstOrDefault(u => string.Equals(u.Email, email, StringComparison.OrdinalIgnoreCase)));
-
-    public Task<List<SystemUserDto>> GetAllUsersAsync(CancellationToken cancellationToken = default) =>
-        Task.FromResult(_users.Values.OrderBy(u => u.Email, StringComparer.OrdinalIgnoreCase).ToList());
-
-    public Task<bool> AssignRoleAsync(Guid userId, string roleName, CancellationToken cancellationToken = default)
-    {
-        if (!_users.TryGetValue(userId, out var user))
-        {
-            return Task.FromResult(false);
-        }
-
-        if (!user.Roles.Contains(roleName, StringComparer.OrdinalIgnoreCase))
-        {
-            user.Roles.Add(roleName);
-        }
-
-        return Task.FromResult(true);
-    }
-
-    public Task<bool> RemoveRoleAsync(Guid userId, string roleName, CancellationToken cancellationToken = default)
-    {
-        if (!_users.TryGetValue(userId, out var user))
-        {
-            return Task.FromResult(false);
-        }
-
-        user.Roles.RemoveAll(r => string.Equals(r, roleName, StringComparison.OrdinalIgnoreCase));
-        return Task.FromResult(true);
-    }
-
-    public Task<bool> ResetPasswordAsync(Guid userId, CancellationToken cancellationToken = default) =>
-        Task.FromResult(_users.ContainsKey(userId));
-
-    public Task<ResetPasswordResult> ResetPasswordAsync(string userId, CancellationToken cancellationToken = default)
-    {
-        var found = Guid.TryParse(userId, out var id) && _users.ContainsKey(id);
-        return Task.FromResult(new ResetPasswordResult
-        {
-            Success = found,
-            TemporaryPassword = found ? GenerateTemporaryPassword() : string.Empty,
-            ExpiresAt = DateTime.UtcNow.AddHours(24)
-        });
-    }
-
-    public async Task<AdminUserDto> CreateAdminUserAsync(CreateUserCommand command, CancellationToken cancellationToken = default)
-    {
-        var user = await CreateUserAsync(
-            new CreateSystemUserDto
-            {
-                Email = command.Email,
-                FirstName = command.FirstName,
-                LastName = command.LastName,
-                Roles = command.Roles
-            },
-            cancellationToken);
-
-        return ToAdminUser(user);
-    }
-
-    public Task<AdminUserDto> UpdateAdminUserAsync(string id, UpdateUserCommand command, CancellationToken cancellationToken = default)
-    {
-        if (!Guid.TryParse(id, out var userId) || !_users.TryGetValue(userId, out var user))
-        {
-            // The GraphQL resolver translates null into a "not found" error.
-            return Task.FromResult<AdminUserDto>(null!);
-        }
-
-        user.FirstName = command.FirstName ?? user.FirstName;
-        user.LastName = command.LastName ?? user.LastName;
-        user.Roles = command.Roles ?? user.Roles;
-        user.IsActive = command.IsActive ?? user.IsActive;
-        return Task.FromResult(ToAdminUser(user));
-    }
-
-    public Task<bool> LockUserAsync(Guid userId, string reason, CancellationToken cancellationToken = default)
-    {
-        if (!_users.TryGetValue(userId, out var user))
-        {
-            return Task.FromResult(false);
-        }
-
-        user.IsLocked = true;
-        return Task.FromResult(true);
-    }
-
-    public Task<bool> UnlockUserAsync(Guid userId, CancellationToken cancellationToken = default)
-    {
-        if (!_users.TryGetValue(userId, out var user))
-        {
-            return Task.FromResult(false);
-        }
-
-        user.IsLocked = false;
-        return Task.FromResult(true);
-    }
-
-    private static AdminUserDto ToAdminUser(SystemUserDto user) => new()
-    {
-        Id = user.Id.ToString(),
-        Email = user.Email,
-        FirstName = user.FirstName,
-        LastName = user.LastName,
-        Roles = user.Roles,
-        IsActive = user.IsActive,
-        CreatedAt = user.CreatedAt,
-        LastLoginAt = user.LastLoginAt
-    };
-
-    private static string GenerateTemporaryPassword()
-    {
-        // 18 random bytes -> 24 base64 chars; sufficient entropy for a temporary credential.
-        Span<byte> bytes = stackalloc byte[18];
-        RandomNumberGenerator.Fill(bytes);
-        return Convert.ToBase64String(bytes);
-    }
-}
+// InMemoryUserManagementService (IUserManagementService stub) was DELETED in the Credentry
+// federation cleanup: user/role management is owned by the Credentry platform
+// (see credentry/docs/integration/06-NUMBATWALLET-FEDERATION-CONTRACT.md). Admin users are
+// created/updated and have passwords reset in the Credentry portal; NumbatWallet consumes
+// identities via the CredentryJwt bearer scheme (NW.* role convention). The legacy
+// admin_users table remains readable through the adminUsers GraphQL query only.
 
 /// <summary>POA stub: in-memory key management (mock data — no Key Vault integration).</summary>
 public sealed class InMemoryKeyManagementService : IKeyManagementService

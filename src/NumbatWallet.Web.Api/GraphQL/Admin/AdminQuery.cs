@@ -165,9 +165,13 @@ public class AdminQuery
     }
 
     /// <summary>
-    /// Get admin users
+    /// Get admin users — READ-ONLY view over the LEGACY admin_users table.
+    /// The admin-user mutations (create/update/reset password) were deleted in the
+    /// Credentry federation cleanup: user/role management is owned by the Credentry
+    /// portal (credentry/docs/integration/06-NUMBATWALLET-FEDERATION-CONTRACT.md).
+    /// The table is no longer written to by this API.
     /// </summary>
-    [GraphQLDescription("Query admin users with filtering and pagination")]
+    [GraphQLDescription("Query admin users (read-only legacy table; user management lives in the Credentry portal)")]
     [UsePaging]
     [UseFiltering]
     [UseSorting]

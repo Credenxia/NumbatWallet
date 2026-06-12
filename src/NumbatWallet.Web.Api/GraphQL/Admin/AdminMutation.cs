@@ -144,64 +144,12 @@ public class AdminMutation
         return tenant;
     }
 
-    /// <summary>
-    /// Create admin user
-    /// </summary>
-    [GraphQLDescription("Create a new admin user")]
-    [Authorize(Policy = "SuperAdmin")]
-    public async Task<AdminUserDto> CreateAdminUser(
-        [Service] IUserManagementService userService,
-        CreateAdminUserInput input,
-        CancellationToken cancellationToken = default)
-    {
-        var user = await userService.CreateAdminUserAsync(
-            input.ToCreateUserCommand(),
-            cancellationToken);
-
-        if (user == null)
-        {
-            throw new GraphQLException("Failed to create admin user");
-        }
-
-        return user;
-    }
-
-    /// <summary>
-    /// Update admin user
-    /// </summary>
-    [GraphQLDescription("Update an existing admin user")]
-    [Authorize(Policy = "AdminOnly")]
-    public async Task<AdminUserDto> UpdateAdminUser(
-        [Service] IUserManagementService userService,
-        string id,
-        UpdateAdminUserInput input,
-        CancellationToken cancellationToken = default)
-    {
-        var user = await userService.UpdateAdminUserAsync(
-            id,
-            input.ToUpdateUserCommand(),
-            cancellationToken);
-
-        if (user == null)
-        {
-            throw new GraphQLException("Admin user not found");
-        }
-
-        return user;
-    }
-
-    /// <summary>
-    /// Reset admin password
-    /// </summary>
-    [GraphQLDescription("Reset an admin user's password")]
-    [Authorize(Policy = "SuperAdmin")]
-    public async Task<ResetPasswordResult> ResetAdminPassword(
-        [Service] IUserManagementService userService,
-        string id,
-        CancellationToken cancellationToken = default)
-    {
-        return await userService.ResetPasswordAsync(id, cancellationToken);
-    }
+    // The createAdminUser / updateAdminUser / resetAdminPassword mutations (and the
+    // IUserManagementService in-memory stub behind them) were DELETED in the Credentry
+    // federation cleanup: user/role management is owned by the Credentry platform.
+    // Create/update users, assign NW.* roles, and reset passwords in the Credentry portal
+    // (see credentry/docs/integration/06-NUMBATWALLET-FEDERATION-CONTRACT.md). The
+    // read-only adminUsers query (AdminQuery) over the legacy admin_users table remains.
 
     /// <summary>
     /// Initiate backup
@@ -487,43 +435,8 @@ public class UpdateTenantInput
     }
 }
 
-public class CreateAdminUserInput
-{
-    public string Email { get; set; } = string.Empty;
-    public string FirstName { get; set; } = string.Empty;
-    public string LastName { get; set; } = string.Empty;
-    public List<string> Roles { get; set; } = new();
-
-    public CreateUserCommand ToCreateUserCommand()
-    {
-        return new CreateUserCommand
-        {
-            Email = Email,
-            FirstName = FirstName,
-            LastName = LastName,
-            Roles = Roles
-        };
-    }
-}
-
-public class UpdateAdminUserInput
-{
-    public string? FirstName { get; set; }
-    public string? LastName { get; set; }
-    public List<string>? Roles { get; set; }
-    public bool? IsActive { get; set; }
-
-    public UpdateUserCommand ToUpdateUserCommand()
-    {
-        return new UpdateUserCommand
-        {
-            FirstName = FirstName,
-            LastName = LastName,
-            Roles = Roles,
-            IsActive = IsActive
-        };
-    }
-}
+// CreateAdminUserInput / UpdateAdminUserInput were deleted with the admin-user mutations:
+// user management happens in the Credentry portal (federation contract doc 06).
 
 public class BackupInput
 {

@@ -1,8 +1,12 @@
 namespace NumbatWallet.Domain.Entities;
 
 /// <summary>
-/// Admin user entity for system administrators
-/// Manages authentication and authorization for administrative access
+/// LEGACY admin user entity (table <c>admin_users</c>). User/role management is owned by
+/// the Credentry platform since the federation cleanup
+/// (credentry/docs/integration/06-NUMBATWALLET-FEDERATION-CONTRACT.md): admin identities
+/// are created/updated in the Credentry portal and arrive as CredentryJwt bearer tokens
+/// with NW.* roles. This table is no longer written to by the API; it remains readable
+/// via the read-only <c>adminUsers</c> GraphQL query.
 /// </summary>
 public class AdminUser
 {

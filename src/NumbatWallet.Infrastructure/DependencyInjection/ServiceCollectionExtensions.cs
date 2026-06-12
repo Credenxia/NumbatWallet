@@ -367,14 +367,15 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IHealthCheckService, HealthCheckService>();
 
         // POA: in-memory admin operation services (mock data) backing the Admin GraphQL
-        // surface (feature flags, configurations, backups, reports, admin users, key
-        // rotation, maintenance). Singletons with no scoped dependencies; replaced with
-        // real implementations in the admin-operations epic.
+        // surface (feature flags, configurations, backups, reports, key rotation,
+        // maintenance). Singletons with no scoped dependencies; replaced with real
+        // implementations in the admin-operations epic. NOTE: user management is NOT
+        // stubbed here anymore — identities/roles are owned by the Credentry platform
+        // (credentry/docs/integration/06-NUMBATWALLET-FEDERATION-CONTRACT.md).
         services.AddSingleton<IFeatureFlagService, InMemoryFeatureFlagService>();
         services.AddSingleton<IConfigurationService, InMemoryConfigurationService>();
         services.AddSingleton<IBackupService, InMemoryBackupService>();
         services.AddSingleton<IReportingService, InMemoryReportingService>();
-        services.AddSingleton<IUserManagementService, InMemoryUserManagementService>();
         services.AddSingleton<IKeyManagementService, InMemoryKeyManagementService>();
         services.AddSingleton<IMaintenanceService, InMemoryMaintenanceService>();
 
