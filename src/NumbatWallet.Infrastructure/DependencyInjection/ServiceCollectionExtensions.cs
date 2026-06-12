@@ -125,10 +125,17 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IRefreshTokenStore, Authentication.DistributedRefreshTokenStore>();
         services.AddSingleton<Application.Services.ITokenBlacklistService, Authentication.DistributedTokenBlacklistService>();
 
-        // Asymmetric RS256 access-token signing (opt-in). When Jwt:Signer = "KeyVaultRsa" this
-        // overrides the default HS256 signer so issued tokens are verifiable with a public key.
-        if (string.Equals(configuration["Jwt:Signer"], "KeyVaultRsa", StringComparison.OrdinalIgnoreCase))
+        // Access-token signing — explicit and fail-closed (see AccessTokenSignerSelector):
+        //   * Development/Testing default to HS256 (HmacAccessTokenSigner registered by AddApplication),
+        //     with Jwt:Signer=KeyVaultRsa available as an opt-in.
+        //   * Any other environment REQUIRES Jwt:Signer=KeyVaultRsa + a Key Vault URI; startup
+        //     throws otherwise so a misconfigured deployment can never silently mint HS256 tokens.
+        // JwtBearer validation in Program.cs reads the active signer's keys/algorithm from
+        // IAccessTokenSigner, so issuance and validation can never drift apart.
+        var signerKind = Authentication.AccessTokenSignerSelector.Select(passwordEnv, configuration);
+        if (signerKind == Authentication.AccessTokenSignerKind.KeyVaultRsa)
         {
+            // Overrides the HS256 default registered by AddApplication (last registration wins).
             services.AddSingleton<IAccessTokenSigner, Authentication.KeyVaultRsaAccessTokenSigner>();
         }
 

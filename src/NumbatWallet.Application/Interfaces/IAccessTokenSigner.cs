@@ -22,6 +22,12 @@ public interface IAccessTokenSigner
     /// <summary>Create a signed JWT for the given claims, expiring at <paramref name="expiresAt"/>.</summary>
     string CreateToken(IEnumerable<Claim> claims, DateTimeOffset expiresAt);
 
-    /// <summary>The key(s) a validator must use to verify tokens produced by <see cref="CreateToken"/>.</summary>
+    /// <summary>
+    /// The key(s) a validator must use to verify tokens produced by <see cref="CreateToken"/>.
+    /// KEY ROTATION: validators are configured from this list at startup, so during a key
+    /// rotation an implementation must return BOTH the new and the previous key (distinguished
+    /// by <c>kid</c>) for at least one access-token lifetime, then perform a rolling restart of
+    /// the API instances; otherwise tokens signed with the old key are rejected immediately.
+    /// </summary>
     IReadOnlyList<SecurityKey> GetValidationKeys();
 }
