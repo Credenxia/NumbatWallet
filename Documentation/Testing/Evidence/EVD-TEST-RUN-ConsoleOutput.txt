@@ -1,0 +1,146 @@
+Build started 13/3/2026 3:10:02 pm.
+     1>Project "/Users/rodrigolmiranda/repo/NumbatWallet/NumbatWallet.PlaywrightTests/NumbatWallet.PlaywrightTests.csproj" on node 1 (Restore target(s)).
+     1>_GetAllRestoreProjectPathItems:
+         Determining projects to restore...
+     1>Project "/Users/rodrigolmiranda/repo/NumbatWallet/NumbatWallet.PlaywrightTests/NumbatWallet.PlaywrightTests.csproj" (1) is building "/Users/rodrigolmiranda/repo/NumbatWallet/NumbatWallet.PlaywrightTests/NumbatWallet.PlaywrightTests.csproj" (1:6) on node 1 (_GenerateProjectRestoreGraph target(s)).
+     1>AddPrunePackageReferences:
+         Loading prune package data from PrunePackageData folder
+         Failed to load prune package data from PrunePackageData folder, loading from targeting packs instead
+         Looking for targeting packs in /usr/local/share/dotnet/packs/Microsoft.NETCore.App.Ref
+         Pack directories found: /usr/local/share/dotnet/packs/Microsoft.NETCore.App.Ref/10.0.0-preview.7.25380.108
+         /usr/local/share/dotnet/packs/Microsoft.NETCore.App.Ref/10.0.0-rc.2.25502.107
+         /usr/local/share/dotnet/packs/Microsoft.NETCore.App.Ref/10.0.0-rc.1.25451.107
+         /usr/local/share/dotnet/packs/Microsoft.NETCore.App.Ref/10.0.0
+         /usr/local/share/dotnet/packs/Microsoft.NETCore.App.Ref/10.0.1
+         Found package overrides file /usr/local/share/dotnet/packs/Microsoft.NETCore.App.Ref/10.0.1/data/PackageOverrides.txt
+     1>Done Building Project "/Users/rodrigolmiranda/repo/NumbatWallet/NumbatWallet.PlaywrightTests/NumbatWallet.PlaywrightTests.csproj" (_GenerateProjectRestoreGraph target(s)).
+     1>Restore:
+         X.509 certificate chain validation will use the fallback certificate bundle at '/usr/local/share/dotnet/sdk/10.0.101/trustedroots/codesignctl.pem'.
+         X.509 certificate chain validation will use the fallback certificate bundle at '/usr/local/share/dotnet/sdk/10.0.101/trustedroots/timestampctl.pem'.
+     1>/Users/rodrigolmiranda/repo/NumbatWallet/NumbatWallet.PlaywrightTests/NumbatWallet.PlaywrightTests.csproj : warning NU1507: There are 2 package sources defined in your configuration. When using central package management, please map your package sources with package source mapping (https://aka.ms/nuget-package-source-mapping) or specify a single package source. The following sources are defined: nuget.org, elsa-preview
+         Assets file has not changed. Skipping assets file writing. Path: /Users/rodrigolmiranda/repo/NumbatWallet/NumbatWallet.PlaywrightTests/obj/project.assets.json
+         Restored /Users/rodrigolmiranda/repo/NumbatWallet/NumbatWallet.PlaywrightTests/NumbatWallet.PlaywrightTests.csproj (in 21 ms).
+         
+         NuGet Config files used:
+             /Users/rodrigolmiranda/.nuget/NuGet/NuGet.Config
+         
+         Feeds used:
+             https://api.nuget.org/v3/index.json
+             https://f.feedz.io/elsa-workflows/elsa-3/nuget/index.json
+             /usr/local/share/dotnet/library-packs
+         All projects are up-to-date for restore.
+     1>Done Building Project "/Users/rodrigolmiranda/repo/NumbatWallet/NumbatWallet.PlaywrightTests/NumbatWallet.PlaywrightTests.csproj" (Restore target(s)).
+   1:7>Project "/Users/rodrigolmiranda/repo/NumbatWallet/NumbatWallet.PlaywrightTests/NumbatWallet.PlaywrightTests.csproj" on node 1 (VSTest target(s)).
+     1>BuildProject:
+         Build started, please wait...
+   1:7>Project "/Users/rodrigolmiranda/repo/NumbatWallet/NumbatWallet.PlaywrightTests/NumbatWallet.PlaywrightTests.csproj" (1:7) is building "/Users/rodrigolmiranda/repo/NumbatWallet/NumbatWallet.PlaywrightTests/NumbatWallet.PlaywrightTests.csproj" (1:8) on node 1 (default targets).
+     1>/Users/rodrigolmiranda/repo/NumbatWallet/NumbatWallet.PlaywrightTests/NumbatWallet.PlaywrightTests.csproj : warning NU1507: There are 2 package sources defined in your configuration. When using central package management, please map your package sources with package source mapping (https://aka.ms/nuget-package-source-mapping) or specify a single package source. The following sources are defined: nuget.org, elsa-preview
+     1>GenerateTargetFrameworkMonikerAttribute:
+       Skipping target "GenerateTargetFrameworkMonikerAttribute" because all output files are up-to-date with respect to the input files.
+       CoreGenerateAssemblyInfo:
+       Skipping target "CoreGenerateAssemblyInfo" because all output files are up-to-date with respect to the input files.
+       _GenerateSourceLinkFile:
+         Source Link file 'obj/Debug/net10.0/NumbatWallet.PlaywrightTests.sourcelink.json' is up-to-date.
+       CoreCompile:
+       Skipping target "CoreCompile" because all output files are up-to-date with respect to the input files.
+       _CopyOutOfDateSourceItemsToOutputDirectory:
+       Skipping target "_CopyOutOfDateSourceItemsToOutputDirectory" because all output files are up-to-date with respect to the input files.
+       GenerateBuildDependencyFile:
+       Skipping target "GenerateBuildDependencyFile" because all output files are up-to-date with respect to the input files.
+       GenerateBuildRuntimeConfigurationFiles:
+       Skipping target "GenerateBuildRuntimeConfigurationFiles" because all output files are up-to-date with respect to the input files.
+       CopyFilesToOutputDirectory:
+         NumbatWallet.PlaywrightTests -> /Users/rodrigolmiranda/repo/NumbatWallet/NumbatWallet.PlaywrightTests/bin/Debug/net10.0/NumbatWallet.PlaywrightTests.dll
+       PlaywrightChmodExecutables:
+         chmod +x "/Users/rodrigolmiranda/repo/NumbatWallet/NumbatWallet.PlaywrightTests/bin/Debug/net10.0/.playwright/node/darwin-arm64/node"
+     1>Done Building Project "/Users/rodrigolmiranda/repo/NumbatWallet/NumbatWallet.PlaywrightTests/NumbatWallet.PlaywrightTests.csproj" (default targets).
+     1>BuildProject:
+         Build completed.
+         
+Test run for /Users/rodrigolmiranda/repo/NumbatWallet/NumbatWallet.PlaywrightTests/bin/Debug/net10.0/NumbatWallet.PlaywrightTests.dll (.NETCoreApp,Version=v10.0)
+VSTest version 18.0.1 (arm64)
+
+Starting test execution, please wait...
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.5+1b188a7b0a (64-bit .NET 10.0.1)
+[xUnit.net 00:00:00.03]   Discovering: NumbatWallet.PlaywrightTests
+[xUnit.net 00:00:00.04]   Discovered:  NumbatWallet.PlaywrightTests
+[xUnit.net 00:00:00.06]   Starting:    NumbatWallet.PlaywrightTests
+     Warning:
+     The component "Fluent Assertions" is governed by the rules defined in the Xceed License Agreement and
+     the Xceed Fluent Assertions Community License. You may use Fluent Assertions free of charge for
+     non-commercial use only. An active subscription is required to use Fluent Assertions for commercial use.
+     Please contact Xceed Sales mailto:sales@xceed.com to acquire a subscription at a very low cost.
+     A paid commercial license supports the development and continued increasing support of
+     Fluent Assertions users under both commercial and community licenses. Help us
+     keep Fluent Assertions at the forefront of unit testing.
+     For more information, visit https://xceed.com/products/unit-testing/fluent-assertions/
+  Passed NumbatWallet.PlaywrightTests.Api.ApiAuthTests.ApiLogin_WithInvalidCredentials_Returns401Or500 [44 ms]
+  Passed NumbatWallet.PlaywrightTests.Api.ApiAuthTests.ApiProtectedEndpoint_WithoutToken_Returns401 [3 ms]
+  Passed NumbatWallet.PlaywrightTests.Api.ApiAuthTests.ApiHealth_ReturnsHealthy [3 ms]
+  Passed NumbatWallet.PlaywrightTests.Api.ApiAuthTests.ApiLoginEndpoint_RejectsGetMethod [1 ms]
+  Passed NumbatWallet.PlaywrightTests.AuditLogs.AuditLogTests.AuditPage_HasExportButton [1 s]
+  Passed NumbatWallet.PlaywrightTests.AuditLogs.AuditLogTests.AuditPage_ShowsFilterControls [1 s]
+  Passed NumbatWallet.PlaywrightTests.AuditLogs.AuditLogTests.AuditPage_LoadsForAdmin [1 s]
+  Passed NumbatWallet.PlaywrightTests.Auth.LoginFlowTests.Logout_RedirectsToLogin [193 ms]
+  Passed NumbatWallet.PlaywrightTests.Auth.LoginFlowTests.UnauthenticatedAccess_RedirectsToLogin(path: "/wallets") [132 ms]
+  Passed NumbatWallet.PlaywrightTests.Auth.LoginFlowTests.UnauthenticatedAccess_RedirectsToLogin(path: "/") [129 ms]
+  Passed NumbatWallet.PlaywrightTests.Auth.LoginFlowTests.UnauthenticatedAccess_RedirectsToLogin(path: "/dashboard") [239 ms]
+  Passed NumbatWallet.PlaywrightTests.Auth.LoginFlowTests.UnauthenticatedAccess_RedirectsToLogin(path: "/certificates") [119 ms]
+  Passed NumbatWallet.PlaywrightTests.Auth.LoginFlowTests.LoginPage_ShowsCredentialFields [139 ms]
+  Passed NumbatWallet.PlaywrightTests.Auth.LoginFlowTests.Login_WithInvalidCredentials_ShowsError [288 ms]
+  Passed NumbatWallet.PlaywrightTests.Auth.AuthenticatedFlowTests.Logout_ThenAccessProtectedPage_RedirectsToLogin [1 s]
+  Passed NumbatWallet.PlaywrightTests.Auth.AuthenticatedFlowTests.Login_ShowsUserInfoInSidebar [1 s]
+  Passed NumbatWallet.PlaywrightTests.Auth.AuthenticatedFlowTests.Login_WithValidCredentials_RedirectsToDashboard [1 s]
+  Passed NumbatWallet.PlaywrightTests.Auth.AuthenticatedFlowTests.Logout_AfterLogin_RedirectsToLogin [1 s]
+  Passed NumbatWallet.PlaywrightTests.Credentials.CredentialPageTests.CredentialsPage_ShowsFilterControls [2 s]
+  Passed NumbatWallet.PlaywrightTests.Credentials.CredentialPageTests.CredentialsPage_HasIssueButton [2 s]
+  Passed NumbatWallet.PlaywrightTests.Credentials.CredentialPageTests.CredentialsPage_LoadsForAuthenticatedUser [2 s]
+  Passed NumbatWallet.PlaywrightTests.Dashboard.DashboardTests.Dashboard_ShowsRecentActivity [1 s]
+  Passed NumbatWallet.PlaywrightTests.Dashboard.DashboardTests.Dashboard_ShowsMetricCards [1 s]
+  Passed NumbatWallet.PlaywrightTests.Dashboard.DashboardTests.Dashboard_LoadsForAuthenticatedUser [1 s]
+  Passed NumbatWallet.PlaywrightTests.Navigation.NavigationTests.Sidebar_ShowsAllNavSections [1 s]
+  Passed NumbatWallet.PlaywrightTests.Navigation.NavigationTests.Header_ShowsNotificationAndThemeButtons [1 s]
+  Passed NumbatWallet.PlaywrightTests.Navigation.NavigationTests.Sidebar_NavLinksAreClickable [1 s]
+  Passed NumbatWallet.PlaywrightTests.Placeholder.PlaceholderPageTests.PlaceholderPages_LoadWithoutErrors(path: "/settings") [1 s]
+  Passed NumbatWallet.PlaywrightTests.Placeholder.PlaceholderPageTests.PlaceholderPages_LoadWithoutErrors(path: "/metrics") [1 s]
+  Passed NumbatWallet.PlaywrightTests.Placeholder.PlaceholderPageTests.PlaceholderPages_LoadWithoutErrors(path: "/certificates") [1 s]
+  Passed NumbatWallet.PlaywrightTests.Placeholder.PlaceholderPageTests.PlaceholderPages_LoadWithoutErrors(path: "/reports") [1 s]
+  Passed NumbatWallet.PlaywrightTests.Placeholder.PlaceholderPageTests.PlaceholderPages_LoadWithoutErrors(path: "/integrations") [1 s]
+  Passed NumbatWallet.PlaywrightTests.Placeholder.PlaceholderPageTests.PlaceholderPages_LoadWithoutErrors(path: "/wallet-designer") [1 s]
+  Passed NumbatWallet.PlaywrightTests.Placeholder.PlaceholderPageTests.PlaceholderPages_LoadWithoutErrors(path: "/api-keys") [1 s]
+  Passed NumbatWallet.PlaywrightTests.Placeholder.PlaceholderPageTests.PlaceholderPages_LoadWithoutErrors(path: "/webhooks") [1 s]
+  Passed NumbatWallet.PlaywrightTests.Placeholder.PlaceholderPageTests.PlaceholderPages_ShowInfoAlert(path: "/wallet-designer") [1 s]
+  Passed NumbatWallet.PlaywrightTests.Placeholder.PlaceholderPageTests.PlaceholderPages_ShowInfoAlert(path: "/certificates") [1 s]
+  Passed NumbatWallet.PlaywrightTests.Tenants.TenantPageTests.TenantsPage_HasCreateButton [2 s]
+  Passed NumbatWallet.PlaywrightTests.Tenants.TenantPageTests.TenantsPage_ShowsSearchAndFilters [2 s]
+  Passed NumbatWallet.PlaywrightTests.Tenants.TenantPageTests.TenantsPage_LoadsForAuthenticatedUser [1 s]
+  Passed NumbatWallet.PlaywrightTests.Wallets.WalletPageTests.WalletsPage_HasCreateButton [2 s]
+  Passed NumbatWallet.PlaywrightTests.Wallets.WalletPageTests.WalletsPage_ShowsSearchAndFilters [2 s]
+  Passed NumbatWallet.PlaywrightTests.Wallets.WalletPageTests.WalletsPage_LoadsForAuthenticatedUser [2 s]
+[xUnit.net 00:00:58.33]   Finished:    NumbatWallet.PlaywrightTests
+  Passed NumbatWallet.PlaywrightTests.Wallets.WalletPageTests.WalletsPage_RedirectsToLoginWhenUnauthenticated [127 ms]
+Results File: /Users/rodrigolmiranda/repo/NumbatWallet/NumbatWallet.PlaywrightTests/TestResults/TestResults.trx
+
+Test Run Successful.
+Total tests: 44
+     Passed: 44
+ Total time: 58.5424 Seconds
+     1>Done Building Project "/Users/rodrigolmiranda/repo/NumbatWallet/NumbatWallet.PlaywrightTests/NumbatWallet.PlaywrightTests.csproj" (VSTest target(s)).
+
+Build succeeded.
+
+       "/Users/rodrigolmiranda/repo/NumbatWallet/NumbatWallet.PlaywrightTests/NumbatWallet.PlaywrightTests.csproj" (Restore target) (1) ->
+       (Restore target) -> 
+         /Users/rodrigolmiranda/repo/NumbatWallet/NumbatWallet.PlaywrightTests/NumbatWallet.PlaywrightTests.csproj : warning NU1507: There are 2 package sources defined in your configuration. When using central package management, please map your package sources with package source mapping (https://aka.ms/nuget-package-source-mapping) or specify a single package source. The following sources are defined: nuget.org, elsa-preview
+
+
+       "/Users/rodrigolmiranda/repo/NumbatWallet/NumbatWallet.PlaywrightTests/NumbatWallet.PlaywrightTests.csproj" (VSTest target) (1:7) ->
+       "/Users/rodrigolmiranda/repo/NumbatWallet/NumbatWallet.PlaywrightTests/NumbatWallet.PlaywrightTests.csproj" (default target) (1:8) ->
+       (ResolvePackageAssets target) -> 
+         /Users/rodrigolmiranda/repo/NumbatWallet/NumbatWallet.PlaywrightTests/NumbatWallet.PlaywrightTests.csproj : warning NU1507: There are 2 package sources defined in your configuration. When using central package management, please map your package sources with package source mapping (https://aka.ms/nuget-package-source-mapping) or specify a single package source. The following sources are defined: nuget.org, elsa-preview
+
+    2 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:59.14

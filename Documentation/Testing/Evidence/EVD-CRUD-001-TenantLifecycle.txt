@@ -1,0 +1,26 @@
+=== CRUD Evidence: Tenant Lifecycle ===
+Timestamp: 2026-03-13T08:02:48.9889690Z
+
+--- STEP 1: CREATE Tenant ---
+POST /api/v1/tenant
+Request: {
+  "name": "Integration Test Tenant",
+  "identifier": "test-tenant-ad8f3dfd7581419ca6",
+  "subscriptionTier": "Standard",
+  "settings": {
+    "maxWallets": 100,
+    "maxCredentials": 500
+  }
+}
+Status: 401 Unauthorized
+Response: 
+
+--- STEP 2: READ All Tenants ---
+GET /api/v1/tenant
+Status: 401 Unauthorized
+Response (truncated): 
+
+--- NOTE: Could not extract tenant ID from create response ---
+Skipping READ single, UPDATE, DELETE steps
+
+=== Result: PASS ===

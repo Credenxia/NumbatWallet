@@ -1,0 +1,8 @@
+=== API Evidence: Invalid Login Rejection ===
+Endpoint: POST http://localhost:5042/api/v1/authentication/login
+Request Body: {"email":"nonexistent@example.com","password":"WrongPassword1!"}
+Status Code: 401
+Response Body: "Invalid credentials"
+Timestamp: 2026-03-13T07:48:03.6948400Z
+Expected: 401 or 500 (not 200)
+Result: PASS

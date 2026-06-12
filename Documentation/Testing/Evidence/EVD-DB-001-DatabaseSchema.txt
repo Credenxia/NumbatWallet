@@ -1,0 +1,284 @@
+============================================================
+DATABASE EVIDENCE - NumbatWallet PostgreSQL
+Captured: 2026-03-13
+Database: numbatwallet
+Host: localhost:59671 (Docker/Aspire managed)
+============================================================
+
+=== 1. ALL TABLES ===
+                  List of relations
+ Schema |           Name           | Type  |  Owner   
+--------+--------------------------+-------+----------
+ public | CertificateAuthorities   | table | postgres
+ public | CertificateRevocations   | table | postgres
+ public | CertificateTrustStores   | table | postgres
+ public | CredentialSchemas        | table | postgres
+ public | Credentials              | table | postgres
+ public | EventSnapshots           | table | postgres
+ public | EventStore               | table | postgres
+ public | Issuers                  | table | postgres
+ public | Organizations            | table | postgres
+ public | Persons                  | table | postgres
+ public | RevocationRegistries     | table | postgres
+ public | SupportedCredentialTypes | table | postgres
+ public | TenantCertificates       | table | postgres
+ public | Tenants                  | table | postgres
+ public | WalletTemplateFields     | table | postgres
+ public | WalletTemplates          | table | postgres
+ public | Wallets                  | table | postgres
+ public | __EFMigrationsHistory    | table | postgres
+ public | admin_users              | table | postgres
+ public | audit_logs               | table | postgres
+ public | issuances                | table | postgres
+ public | unmask_audits            | table | postgres
+(22 rows)
+
+
+=== 2. ROW COUNTS PER TABLE ===
+        table_name        | row_count 
+--------------------------+-----------
+ "admin_users"            |         0
+ "audit_logs"             |         0
+ "CertificateAuthorities" |         0
+ "Credentials"            |         0
+ "CredentialSchemas"      |         0
+ "EventStore"             |         0
+ "Issuers"                |         0
+ "Organizations"          |         0
+ "Persons"                |         0
+ "Tenants"                |         0
+ "Wallets"                |         0
+ "WalletTemplates"        |         0
+(12 rows)
+
+
+=== 3. PERSONS TABLE SCHEMA ===
+                                Table "public.Persons"
+          Column           |           Type           | Collation | Nullable | Default 
+---------------------------+--------------------------+-----------+----------+---------
+ id                        | uuid                     |           | not null | 
+ Email                     | jsonb                    |           | not null | 
+ PhoneNumberValue          | character varying(500)   |           | not null | 
+ PhoneNumberCountryCode    | character varying(5)     |           |          | 
+ first_name                | jsonb                    |           | not null | 
+ last_name                 | jsonb                    |           | not null | 
+ date_of_birth             | jsonb                    |           | not null | 
+ external_id               | text                     |           | not null | 
+ mobile_number             | text                     |           |          | 
+ email_verified_at         | timestamp with time zone |           |          | 
+ email_verification_status | integer                  |           | not null | 
+ phone_verification_status | integer                  |           | not null | 
+ verified_at               | timestamp with time zone |           |          | 
+ verification_level        | character varying(50)    |           |          | 
+ status                    | integer                  |           | not null | 
+ tenant_id                 | text                     |           | not null | 
+ pin_hash                  | character varying(500)   |           |          | 
+ failed_pin_attempts       | integer                  |           | not null | 0
+ pin_locked_until          | timestamp with time zone |           |          | 
+ last_pin_attempt_at       | timestamp with time zone |           |          | 
+ created_at                | timestamp with time zone |           | not null | 
+ created_by                | character varying(256)   |           | not null | 
+ modified_at               | timestamp with time zone |           |          | 
+ modified_by               | character varying(256)   |           |          | 
+Indexes:
+    "pk_persons" PRIMARY KEY, btree (id)
+    "ix_persons_email" btree ("Email")
+    "ix_persons_phone_number_value" btree ("PhoneNumberValue")
+    "ix_persons_tenant_id" btree (tenant_id)
+Referenced by:
+    TABLE ""Wallets"" CONSTRAINT "fk_wallets_persons_person_id" FOREIGN KEY (person_id) REFERENCES "Persons"(id) ON DELETE RESTRICT
+    TABLE ""Wallets"" CONSTRAINT "fk_wallets_persons_person_id1" FOREIGN KEY (person_id1) REFERENCES "Persons"(id)
+
+
+=== 4. TENANTS TABLE SCHEMA ===
+                            Table "public.Tenants"
+      Column       |           Type           | Collation | Nullable | Default 
+-------------------+--------------------------+-----------+----------+---------
+ id                | uuid                     |           | not null | 
+ name              | character varying(200)   |           | not null | 
+ identifier        | character varying(100)   |           | not null | 
+ is_active         | boolean                  |           | not null | 
+ subscription_tier | text                     |           | not null | 
+ settings          | jsonb                    |           | not null | 
+ created_at        | timestamp with time zone |           | not null | 
+ updated_at        | timestamp with time zone |           | not null | 
+ created_by        | text                     |           |          | 
+ updated_by        | text                     |           |          | 
+Indexes:
+    "pk_tenants" PRIMARY KEY, btree (id)
+    "ix_tenants_identifier" UNIQUE, btree (identifier)
+
+
+=== 5. WALLETS TABLE SCHEMA ===
+                            Table "public.Wallets"
+      Column       |           Type           | Collation | Nullable | Default 
+-------------------+--------------------------+-----------+----------+---------
+ id                | uuid                     |           | not null | 
+ person_id         | uuid                     |           | not null | 
+ tenant_id         | text                     |           | not null | 
+ wallet_name       | character varying(256)   |           | not null | 
+ wallet_did        | character varying(512)   |           | not null | 
+ type              | integer                  |           | not null | 
+ status            | character varying(50)    |           | not null | 
+ suspension_reason | character varying(1000)  |           |          | 
+ lock_reason       | character varying(1000)  |           |          | 
+ external_id       | character varying(256)   |           |          | 
+ expires_at        | timestamp with time zone |           |          | 
+ person_id1        | uuid                     |           |          | 
+ created_at        | timestamp with time zone |           | not null | 
+ created_by        | character varying(256)   |           | not null | 
+ modified_at       | timestamp with time zone |           |          | 
+ modified_by       | character varying(256)   |           |          | 
+Indexes:
+    "pk_wallets" PRIMARY KEY, btree (id)
+    "ix_wallets_person_id" btree (person_id)
+    "ix_wallets_person_id1" btree (person_id1)
+    "ix_wallets_status" btree (status)
+    "ix_wallets_tenant_id" btree (tenant_id)
+    "ix_wallets_tenant_id_person_id" btree (tenant_id, person_id)
+    "ix_wallets_wallet_did" UNIQUE, btree (wallet_did)
+Foreign-key constraints:
+    "fk_wallets_persons_person_id" FOREIGN KEY (person_id) REFERENCES "Persons"(id) ON DELETE RESTRICT
+    "fk_wallets_persons_person_id1" FOREIGN KEY (person_id1) REFERENCES "Persons"(id)
+Referenced by:
+    TABLE ""Credentials"" CONSTRAINT "fk_credentials_wallets_wallet_id" FOREIGN KEY (wallet_id) REFERENCES "Wallets"(id) ON DELETE CASCADE
+
+
+=== 6. CREDENTIALS TABLE SCHEMA ===
+                          Table "public.Credentials"
+      Column       |           Type           | Collation | Nullable | Default 
+-------------------+--------------------------+-----------+----------+---------
+ id                | uuid                     |           | not null | 
+ wallet_id         | uuid                     |           | not null | 
+ issuer_id         | uuid                     |           | not null | 
+ credential_id     | text                     |           | not null | 
+ credential_type   | character varying(128)   |           | not null | 
+ credential_data   | jsonb                    |           | not null | 
+ schema_id         | character varying(512)   |           | not null | 
+ status            | character varying(50)    |           | not null | 
+ issued_at         | timestamp with time zone |           | not null | 
+ expires_at        | timestamp with time zone |           |          | 
+ revoked_at        | timestamp with time zone |           |          | 
+ revocation_reason | character varying(500)   |           |          | 
+ suspension_reason | character varying(500)   |           |          | 
+ tenant_id         | text                     |           | not null | 
+ created_at        | timestamp with time zone |           | not null | 
+ created_by        | character varying(256)   |           | not null | 
+ modified_at       | timestamp with time zone |           |          | 
+ modified_by       | character varying(256)   |           |          | 
+Indexes:
+    "pk_credentials" PRIMARY KEY, btree (id)
+    "ix_credentials_issuer_id" btree (issuer_id)
+    "ix_credentials_status" btree (status)
+    "ix_credentials_tenant_id" btree (tenant_id)
+    "ix_credentials_tenant_id_status" btree (tenant_id, status)
+    "ix_credentials_tenant_id_wallet_id" btree (tenant_id, wallet_id)
+    "ix_credentials_wallet_id" btree (wallet_id)
+    "ix_credentials_wallet_id_status" btree (wallet_id, status)
+Foreign-key constraints:
+    "fk_credentials_issuers_issuer_id" FOREIGN KEY (issuer_id) REFERENCES "Issuers"(id) ON DELETE RESTRICT
+    "fk_credentials_wallets_wallet_id" FOREIGN KEY (wallet_id) REFERENCES "Wallets"(id) ON DELETE CASCADE
+
+
+=== 7. ISSUERS TABLE SCHEMA ===
+                               Table "public.Issuers"
+         Column         |           Type           | Collation | Nullable | Default 
+------------------------+--------------------------+-----------+----------+---------
+ id                     | uuid                     |           | not null | 
+ tenant_id              | text                     |           | not null | 
+ external_id            | text                     |           |          | 
+ name                   | character varying(256)   |           | not null | 
+ code                   | character varying(64)    |           | not null | 
+ description            | character varying(1000)  |           | not null | 
+ issuer_did             | character varying(512)   |           | not null | 
+ public_key             | character varying(4000)  |           | not null | 
+ endpoint               | text                     |           | not null | 
+ trusted_domain         | character varying(256)   |           | not null | 
+ is_active              | boolean                  |           | not null | 
+ deactivation_reason    | character varying(500)   |           |          | 
+ status                 | integer                  |           | not null | 
+ is_trusted             | boolean                  |           | not null | 
+ trust_level            | integer                  |           | not null | 
+ jurisdiction           | text                     |           |          | 
+ website_url            | text                     |           |          | 
+ certificate_expires_at | timestamp with time zone |           |          | 
+ created_at             | timestamp with time zone |           | not null | 
+ created_by             | character varying(256)   |           | not null | 
+ modified_at            | timestamp with time zone |           |          | 
+ modified_by            | character varying(256)   |           |          | 
+Indexes:
+    "pk_issuers" PRIMARY KEY, btree (id)
+    "ix_issuers_code" UNIQUE, btree (code)
+    "ix_issuers_is_active" btree (is_active)
+    "ix_issuers_tenant_id" btree (tenant_id)
+    "ix_issuers_tenant_id_is_active" btree (tenant_id, is_active)
+    "ix_issuers_trusted_domain" UNIQUE, btree (trusted_domain)
+Referenced by:
+    TABLE ""Credentials"" CONSTRAINT "fk_credentials_issuers_issuer_id" FOREIGN KEY (issuer_id) REFERENCES "Issuers"(id) ON DELETE RESTRICT
+    TABLE ""RevocationRegistries"" CONSTRAINT "fk_revocation_registries_issuers_issuer_id" FOREIGN KEY (issuer_id) REFERENCES "Issuers"(id) ON DELETE CASCADE
+    TABLE ""SupportedCredentialTypes"" CONSTRAINT "fk_supported_credential_types_issuers_issuer_id" FOREIGN KEY (issuer_id) REFERENCES "Issuers"(id) ON DELETE CASCADE
+
+
+=== 8. AUDIT_LOGS TABLE SCHEMA ===
+                           Table "public.audit_logs"
+       Column       |           Type           | Collation | Nullable | Default 
+--------------------+--------------------------+-----------+----------+---------
+ id                 | uuid                     |           | not null | 
+ user_id            | character varying(200)   |           | not null | 
+ action             | character varying(200)   |           | not null | 
+ entity_type        | character varying(200)   |           |          | 
+ entity_id          | character varying(200)   |           |          | 
+ old_values         | text                     |           |          | 
+ new_values         | text                     |           |          | 
+ ip_address         | character varying(45)    |           |          | 
+ user_agent         | character varying(500)   |           |          | 
+ tenant_id          | uuid                     |           | not null | 
+ event_type         | text                     |           | not null | 
+ max_classification | text                     |           | not null | 
+ created_at         | timestamp with time zone |           | not null | 
+Indexes:
+    "pk_audit_logs" PRIMARY KEY, btree (id)
+    "ix_audit_logs_created_at" btree (created_at)
+    "ix_audit_logs_entity_id" btree (entity_id)
+    "ix_audit_logs_entity_type" btree (entity_type)
+    "ix_audit_logs_entity_type_entity_id" btree (entity_type, entity_id)
+    "ix_audit_logs_tenant_id" btree (tenant_id)
+    "ix_audit_logs_tenant_id_created_at" btree (tenant_id, created_at)
+    "ix_audit_logs_user_id" btree (user_id)
+
+
+=== 9. ADMIN_USERS TABLE SCHEMA ===
+                             Table "public.admin_users"
+         Column          |           Type           | Collation | Nullable | Default 
+-------------------------+--------------------------+-----------+----------+---------
+ id                      | uuid                     |           | not null | 
+ email                   | character varying(256)   |           | not null | 
+ first_name              | character varying(100)   |           | not null | 
+ last_name               | character varying(100)   |           | not null | 
+ is_active               | boolean                  |           | not null | 
+ is_locked               | boolean                  |           | not null | 
+ lock_reason             | character varying(500)   |           |          | 
+ created_at              | timestamp with time zone |           | not null | 
+ last_login_at           | timestamp with time zone |           |          | 
+ last_password_change_at | timestamp with time zone |           |          | 
+ tenant_id               | uuid                     |           | not null | 
+ roles                   | jsonb                    |           | not null | 
+Indexes:
+    "pk_admin_users" PRIMARY KEY, btree (id)
+    "ix_admin_users_email" UNIQUE, btree (email)
+    "ix_admin_users_is_active" btree (is_active)
+    "ix_admin_users_last_name_first_name" btree (last_name, first_name)
+    "ix_admin_users_tenant_id" btree (tenant_id)
+
+
+=== 10. EF MIGRATIONS HISTORY ===
+         migration_id         | product_version 
+------------------------------+-----------------
+ 20251030023343_InitialCreate | 10.0.5
+(1 row)
+
+
+=== NOTES ===
+Tables are created via EF Core EnsureCreatedAsync() in Development mode.
+No seeded data present - tests use /auth/test-login bypass endpoint.
+Database schema validated: 22 tables created matching EF Core model.
