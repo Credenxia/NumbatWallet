@@ -75,8 +75,10 @@ public static class TelemetryExtensions
                     })
                     .AddEntityFrameworkCoreInstrumentation(options =>
                     {
-                        options.SetDbStatementForText = true;
-                        options.SetDbStatementForStoredProcedure = true;
+                        // 1.15.x: SetDbStatementForText/SetDbStatementForStoredProcedure were
+                        // removed — query text is recorded per semantic conventions. We leave
+                        // SetDbQueryParameters at its default (false): parameter values can
+                        // contain PII and must never be exported.
                         options.EnrichWithIDbCommand = (activity, command) =>
                         {
                             activity.SetTag("db.command.timeout", command.CommandTimeout);
