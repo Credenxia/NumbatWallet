@@ -27,9 +27,10 @@ public class PersonService : IPersonService
 
     public async Task<PersonDto?> GetByEmailAsync(string email, CancellationToken cancellationToken = default)
     {
-        var specification = new PersonByEmailSpecification(email);
-        var persons = await _personRepository.FindAsync(specification, cancellationToken);
-        var person = persons.FirstOrDefault();
+        // Must go through the repository: email is encrypted at rest and only queryable via its
+        // deterministic search token. A specification on Email.Value would translate to SQL
+        // equality against ciphertext and never match.
+        var person = await _personRepository.GetByEmailAsync(email, cancellationToken);
         return person != null ? MapToDto(person) : null;
     }
 

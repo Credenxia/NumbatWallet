@@ -1,6 +1,8 @@
 using Microsoft.EntityFrameworkCore;
+using NumbatWallet.Application.Interfaces;
 using NumbatWallet.Domain.Aggregates;
 using NumbatWallet.Domain.Interfaces;
+using NumbatWallet.Infrastructure.Data.Interceptors;
 using NumbatWallet.SharedKernel.Enums;
 using NumbatWallet.SharedKernel.Models;
 using NumbatWallet.SharedKernel.Specifications;
@@ -9,8 +11,12 @@ namespace NumbatWallet.Infrastructure.Data.Repositories;
 
 public class PersonRepository : RepositoryBase<Person, Guid>, IPersonRepository
 {
-    public PersonRepository(NumbatWalletDbContext context) : base(context)
+    private readonly IHmacSearchTokenService _searchTokenService;
+
+    public PersonRepository(NumbatWalletDbContext context, IHmacSearchTokenService searchTokenService)
+        : base(context)
     {
+        _searchTokenService = searchTokenService;
     }
 
     public async Task<Person?> GetByExternalIdAsync(string externalId, CancellationToken cancellationToken = default)
@@ -18,14 +24,33 @@ public class PersonRepository : RepositoryBase<Person, Guid>, IPersonRepository
         return await DbSet.FirstOrDefaultAsync(p => p.ExternalId == externalId, cancellationToken);
     }
 
+    // Email/Phone are encrypted at rest (non-deterministic AES-GCM ciphertext), so equality on
+    // the column can never match. Exact-match lookups compute the deterministic HMAC search
+    // token of the input and query the token shadow columns populated by SearchTokenInterceptor.
     public async Task<Person?> GetByEmailAsync(string email, CancellationToken cancellationToken = default)
     {
-        return await DbSet.FirstOrDefaultAsync(p => p.Email.Value == email, cancellationToken);
+        var token = await _searchTokenService.GenerateEmailTokenAsync(email);
+        if (token is null)
+        {
+            return null;
+        }
+
+        return await DbSet.FirstOrDefaultAsync(
+            p => EF.Property<string?>(p, SearchTokenInterceptor.EmailSearchTokenProperty) == token,
+            cancellationToken);
     }
 
     public async Task<Person?> GetByMobileNumberAsync(string mobileNumber, CancellationToken cancellationToken = default)
     {
-        return await DbSet.FirstOrDefaultAsync(p => p.PhoneNumber.Value == mobileNumber, cancellationToken);
+        var token = await _searchTokenService.GeneratePhoneTokenAsync(mobileNumber);
+        if (token is null)
+        {
+            return null;
+        }
+
+        return await DbSet.FirstOrDefaultAsync(
+            p => EF.Property<string?>(p, SearchTokenInterceptor.PhoneSearchTokenProperty) == token,
+            cancellationToken);
     }
 
     public async Task<IReadOnlyList<Person>> GetByStatusAsync(PersonStatus status, CancellationToken cancellationToken = default)
@@ -72,6 +97,9 @@ public class PersonRepository : RepositoryBase<Person, Guid>, IPersonRepository
         return await DbSet.Where(p => p.CreatedAt >= since).ToListAsync(cancellationToken);
     }
 
+    // NOTE: substring search over FirstName/LastName/Email cannot match once field encryption is
+    // enabled (the columns hold ciphertext JSON) — a pre-existing limitation of this fuzzy search,
+    // now also true for email. Exact lookups must use GetByEmailAsync/GetByMobileNumberAsync.
     public async Task<IReadOnlyList<Person>> SearchAsync(string searchTerm, CancellationToken cancellationToken = default)
     {
         var lowerSearchTerm = searchTerm.ToLowerInvariant();
@@ -123,7 +151,14 @@ public class PersonRepository : RepositoryBase<Person, Guid>, IPersonRepository
 
     public async Task<bool> IsEmailUniqueAsync(string email, Guid? excludeId = null, CancellationToken cancellationToken = default)
     {
-        var query = DbSet.Where(p => p.Email.Value == email);
+        var token = await _searchTokenService.GenerateEmailTokenAsync(email);
+        if (token is null)
+        {
+            return true;
+        }
+
+        var query = DbSet.Where(
+            p => EF.Property<string?>(p, SearchTokenInterceptor.EmailSearchTokenProperty) == token);
         if (excludeId.HasValue)
         {
             query = query.Where(p => p.Id != excludeId.Value);
@@ -133,7 +168,14 @@ public class PersonRepository : RepositoryBase<Person, Guid>, IPersonRepository
 
     public async Task<bool> IsMobileNumberUniqueAsync(string mobileNumber, Guid? excludeId = null, CancellationToken cancellationToken = default)
     {
-        var query = DbSet.Where(p => p.PhoneNumber.Value == mobileNumber);
+        var token = await _searchTokenService.GeneratePhoneTokenAsync(mobileNumber);
+        if (token is null)
+        {
+            return true;
+        }
+
+        var query = DbSet.Where(
+            p => EF.Property<string?>(p, SearchTokenInterceptor.PhoneSearchTokenProperty) == token);
         if (excludeId.HasValue)
         {
             query = query.Where(p => p.Id != excludeId.Value);

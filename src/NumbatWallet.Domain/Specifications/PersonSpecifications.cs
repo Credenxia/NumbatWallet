@@ -28,6 +28,11 @@ public class UnverifiedPersonSpecification : Specification<Person>
     }
 }
 
+/// <summary>
+/// IN-MEMORY USE ONLY: Email is encrypted at rest, so this criteria cannot be translated to a
+/// database query (it would compare against ciphertext and never match). For database lookups
+/// use IPersonRepository.GetByEmailAsync, which queries the deterministic email search token.
+/// </summary>
 public class PersonByEmailSpecification : Specification<Person>
 {
     public PersonByEmailSpecification(string email)

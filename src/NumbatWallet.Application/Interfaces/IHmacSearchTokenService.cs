@@ -20,11 +20,23 @@ public interface IHmacSearchTokenService
     Task<List<string>> GenerateNameSearchTokensAsync(string searchTerm);
 
     /// <summary>
-    /// Generates a search token for an email address
+    /// Generates a deterministic search token for an email address: HMAC-SHA256 of the
+    /// normalized (trimmed, lowercased) value, keyed by the deployment-wide identifier pepper
+    /// (config <c>Search:TokenPepper</c>, else Key Vault). Deterministic so encrypted email
+    /// columns stay queryable by exact match (login, uniqueness checks).
     /// </summary>
     /// <param name="email">The email address to tokenize</param>
     /// <returns>HMAC token for the normalized email</returns>
     Task<string?> GenerateEmailTokenAsync(string email);
+
+    /// <summary>
+    /// Generates a deterministic search token for a phone number: HMAC-SHA256 of the digits-only
+    /// normalized value, keyed like <see cref="GenerateEmailTokenAsync"/>. Lets encrypted phone
+    /// columns stay queryable by exact match.
+    /// </summary>
+    /// <param name="phoneNumber">The phone number to tokenize</param>
+    /// <returns>HMAC token for the normalized phone number</returns>
+    Task<string?> GeneratePhoneTokenAsync(string phoneNumber);
 
     /// <summary>
     /// Generates a search token for a date with specified granularity

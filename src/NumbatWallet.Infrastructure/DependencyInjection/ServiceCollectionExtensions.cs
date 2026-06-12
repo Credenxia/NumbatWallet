@@ -33,6 +33,10 @@ public static class ServiceCollectionExtensions
         services.AddScoped<AuditInterceptor>();
         services.AddScoped<TenantInterceptor>();
         services.AddScoped<SoftDeleteInterceptor>();
+        services.AddScoped<SearchTokenInterceptor>();
+
+        // Deterministic HMAC search tokens for encrypted PII (email/phone lookup columns).
+        services.AddScoped<IHmacSearchTokenService, Services.HmacSearchTokenService>();
 
         // Add DbContext
         services.AddDbContext<NumbatWalletDbContext>((serviceProvider, options) =>
@@ -65,7 +69,8 @@ public static class ServiceCollectionExtensions
             options.AddInterceptors(
                 serviceProvider.GetRequiredService<AuditInterceptor>(),
                 serviceProvider.GetRequiredService<TenantInterceptor>(),
-                serviceProvider.GetRequiredService<SoftDeleteInterceptor>());
+                serviceProvider.GetRequiredService<SoftDeleteInterceptor>(),
+                serviceProvider.GetRequiredService<SearchTokenInterceptor>());
 
             // Enable sensitive data logging only in development
             if (configuration["EnableSensitiveDataLogging"] == "true")
