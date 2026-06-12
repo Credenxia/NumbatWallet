@@ -338,6 +338,38 @@ public class AdminQuery
     }
 
     /// <summary>
+    /// Get wallets for admin management views.
+    /// Tenant scoping: the wallet repository goes through the DbContext global query filter,
+    /// which is bound to the ambient SharedKernel.ITenantService tenant — admins only ever
+    /// see wallets belonging to their own tenant (no cross-tenant leakage).
+    /// NOTE: IWalletService is SCOPED and must stay a [Service] resolver parameter
+    /// (HotChocolate type extensions are singletons — captive-dependency rule).
+    /// </summary>
+    [GraphQLDescription("Query wallets in the current tenant for admin management views")]
+    public async Task<List<WalletDto>> GetAdminWallets(
+        [Service] IWalletService walletService,
+        string? search = null,
+        int? first = null,
+        CancellationToken cancellationToken = default)
+    {
+        var wallets = await walletService.GetAllAsync(cancellationToken);
+
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            wallets = wallets.Where(w =>
+                w.Id.Contains(search, StringComparison.OrdinalIgnoreCase) ||
+                w.Name.Contains(search, StringComparison.OrdinalIgnoreCase) ||
+                w.PersonName.Contains(search, StringComparison.OrdinalIgnoreCase));
+        }
+
+        var take = first is > 0 ? Math.Min(first.Value, 200) : 100;
+        return wallets
+            .OrderByDescending(w => w.CreatedAt)
+            .Take(take)
+            .ToList();
+    }
+
+    /// <summary>
     /// Get database statistics
     /// </summary>
     [GraphQLDescription("Get database usage and performance statistics")]

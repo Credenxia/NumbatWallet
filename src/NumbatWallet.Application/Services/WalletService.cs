@@ -68,7 +68,16 @@ public class WalletService : IWalletService
     public async Task<IEnumerable<WalletDto>> GetAllAsync(CancellationToken cancellationToken = default)
     {
         var wallets = await _walletRepository.GetAllAsync(cancellationToken);
-        return wallets.Select(MapToDto);
+
+        // Detailed mapping (person name + credential count) — consumed by the admin portal
+        // wallet list. N+1 lookups are acceptable at POA scale; use a projection if it grows.
+        var walletDtos = new List<WalletDto>();
+        foreach (var wallet in wallets)
+        {
+            walletDtos.Add(await MapToDtoWithDetailsAsync(wallet, cancellationToken));
+        }
+
+        return walletDtos;
     }
 
     public async Task<WalletDto> CreateAsync(CreateWalletDto dto, CancellationToken cancellationToken = default)

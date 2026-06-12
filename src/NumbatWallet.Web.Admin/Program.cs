@@ -140,8 +140,30 @@ try
     .AddPolicyHandler(GetRetryPolicy())
     .AddPolicyHandler(GetCircuitBreakerPolicy());
 
-    // Configure GraphQL client for primary data operations (uses service discovery)
-    // Note: GraphQL client will be configured after Strawberry Shake code generation
+    // Typed GraphQL client for primary data operations (Dashboard/Tenants/Wallets/Credentials).
+    // Uses Aspire service discovery for the base address and a configurable service-to-service
+    // API key (AdminApi:ApiKey / AdminApi:TenantId in appsettings — never hardcoded).
+    builder.Services.AddHttpClient<IAdminGraphQLClient, AdminGraphQLClient>(client =>
+    {
+        var apiUrl = builder.Configuration["services:webapi:https:0"]
+                    ?? builder.Configuration["services:webapi:http:0"]
+                    ?? "http://localhost:5042";
+        client.BaseAddress = new Uri(apiUrl);
+        client.Timeout = TimeSpan.FromSeconds(10);
+
+        var apiKey = builder.Configuration["AdminApi:ApiKey"];
+        if (!string.IsNullOrEmpty(apiKey))
+        {
+            client.DefaultRequestHeaders.Add("X-API-Key", apiKey);
+        }
+
+        var tenantId = builder.Configuration["AdminApi:TenantId"];
+        if (!string.IsNullOrEmpty(tenantId))
+        {
+            client.DefaultRequestHeaders.Add("X-Tenant-Id", tenantId);
+        }
+    })
+    .AddPolicyHandler(GetRetryPolicy());
 
     // Add file API client for file operations only
     builder.Services.AddHttpClient<IFileApiClient, FileApiClient>(client =>

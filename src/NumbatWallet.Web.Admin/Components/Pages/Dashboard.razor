@@ -4,7 +4,7 @@
 @using NumbatWallet.Web.Admin.Components.Common
 @using NumbatWallet.Web.Admin.Services
 @attribute [Authorize]
-@inject IApiClient ApiClient
+@inject IAdminGraphQLClient GraphQLClient
 @inject IAuthService AuthService
 @inject ILogger<Dashboard> Logger
 
@@ -47,10 +47,7 @@
                     </div>
                     <div class="metric-content">
                         <div class="metric-label">Total Users</div>
-                        <div class="metric-value">@(Stats?.TotalPersons ?? 0)</div>
-                        <div class="metric-change positive">
-                            <i class="bi bi-arrow-up"></i> 12% from last month
-                        </div>
+                        <div class="metric-value">@(Data?.DatabaseStats?.TotalPersons ?? 0)</div>
                     </div>
                 </div>
 
@@ -60,10 +57,7 @@
                     </div>
                     <div class="metric-content">
                         <div class="metric-label">Active Wallets</div>
-                        <div class="metric-value">@(Stats?.TotalWallets ?? 0)</div>
-                        <div class="metric-change positive">
-                            <i class="bi bi-arrow-up"></i> 8% from last week
-                        </div>
+                        <div class="metric-value">@(Data?.DashboardStatistics?.ActiveWallets ?? 0)</div>
                     </div>
                 </div>
 
@@ -73,10 +67,7 @@
                     </div>
                     <div class="metric-content">
                         <div class="metric-label">Total Credentials</div>
-                        <div class="metric-value">@(Stats?.TotalCredentials ?? 0)</div>
-                        <div class="metric-change negative">
-                            <i class="bi bi-arrow-down"></i> 3% from last week
-                        </div>
+                        <div class="metric-value">@(Data?.DashboardStatistics?.TotalCredentials ?? 0)</div>
                     </div>
                 </div>
 
@@ -86,10 +77,7 @@
                     </div>
                     <div class="metric-content">
                         <div class="metric-label">Active Credentials</div>
-                        <div class="metric-value">@(Stats?.ActiveCredentials ?? 0)</div>
-                        <div class="metric-change positive">
-                            <i class="bi bi-arrow-up"></i> 15% from last month
-                        </div>
+                        <div class="metric-value">@(Data?.CredentialStatistics?.ActiveCredentials ?? 0)</div>
                     </div>
                 </div>
             </div>
@@ -101,15 +89,22 @@
                             <h5 class="card-title mb-0">Recent Activity</h5>
                         </div>
                         <div class="card-body">
-                            <p class="text-muted">Recent activity will be displayed here.</p>
                             <ul class="list-group list-group-flush">
                                 <li class="list-group-item d-flex justify-content-between">
                                     <span>Credentials Issued Today</span>
-                                    <strong>@Stats?.IssuedToday</strong>
+                                    <strong>@(Data?.DashboardStatistics?.CredentialsIssuedToday ?? 0)</strong>
                                 </li>
                                 <li class="list-group-item d-flex justify-content-between">
                                     <span>Expiring This Week</span>
-                                    <strong class="text-warning">@Stats?.ExpiringThisWeek</strong>
+                                    <strong class="text-warning">@(Data?.DashboardStatistics?.CredentialsExpiringThisWeek ?? 0)</strong>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span>Revoked Credentials</span>
+                                    <strong>@(Data?.CredentialStatistics?.RevokedCredentials ?? 0)</strong>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span>Database Size</span>
+                                    <strong>@($"{Data?.DatabaseStats?.DatabaseSizeMB ?? 0:N1} MB")</strong>
                                 </li>
                             </ul>
                         </div>
@@ -122,14 +117,18 @@
                             <h5 class="card-title mb-0">System Health</h5>
                         </div>
                         <div class="card-body">
+                            @{
+                                var healthStatus = Data?.SystemHealth?.Status ?? "Unknown";
+                                var isHealthy = string.Equals(healthStatus, "Healthy", StringComparison.OrdinalIgnoreCase);
+                            }
                             <div class="d-flex align-items-center mb-3">
-                                <span class="badge bg-success me-2">Healthy</span>
-                                <span>All systems operational</span>
+                                <span class="badge @(isHealthy ? "bg-success" : "bg-warning") me-2">@healthStatus</span>
+                                <span>@(isHealthy ? "All systems operational" : "Some components are degraded")</span>
                             </div>
                             <div class="progress mb-2">
-                                <div class="progress-bar bg-success" role="progressbar" style="width: 100%" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"></div>
+                                <div class="progress-bar @(isHealthy ? "bg-success" : "bg-warning")" role="progressbar" style="width: 100%" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"></div>
                             </div>
-                            <small class="text-muted">Last checked: @DateTime.Now.ToString("g")</small>
+                            <small class="text-muted">Last checked: @(Data?.SystemHealth?.CheckedAt.ToLocalTime().ToString("g") ?? "—")</small>
                         </div>
                     </div>
                 </div>
@@ -149,7 +148,7 @@
 @code {
     private bool IsLoading { get; set; } = true;
     private string? ErrorMessage { get; set; }
-    private DashboardStats? Stats { get; set; }
+    private AdminDashboardData? Data { get; set; }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -167,44 +166,25 @@
             IsLoading = true;
             ErrorMessage = null;
 
-            // Create cancellation token with 3-second timeout to prevent infinite waits
-            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(3));
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
 
-            // Fetch dashboard statistics from API with timeout protection
-            try
-            {
-                Stats = await ApiClient.GetAsync<DashboardStats>("/api/admin/statistics/dashboard", cts.Token);
-            }
-            catch (Exception ex) when (ex is TaskCanceledException or HttpRequestException)
-            {
-                Logger.LogWarning("Dashboard API call failed: {Message}", ex.Message);
-            }
-            catch (Exception ex)
-            {
-                Logger.LogWarning(ex, "Dashboard API error");
-            }
+            // Live data from the admin GraphQL API (dashboardStatistics, credentialStatistics,
+            // systemHealth, databaseStats) — no mock fallback: failures are shown honestly.
+            Data = await GraphQLClient.GetDashboardDataAsync(cts.Token);
 
-            // Always fall back to default stats if API returned nothing
-            Stats ??= new DashboardStats();
+            if (Data is null)
+            {
+                ErrorMessage = "Failed to load dashboard statistics from the API.";
+            }
         }
         catch (Exception ex)
         {
             Logger.LogError(ex, "Unexpected error loading dashboard");
-            Stats = new DashboardStats();
+            ErrorMessage = "Failed to load dashboard statistics from the API.";
         }
         finally
         {
             IsLoading = false;
         }
-    }
-
-    private class DashboardStats
-    {
-        public int TotalPersons { get; set; }
-        public int TotalWallets { get; set; }
-        public int TotalCredentials { get; set; }
-        public int ActiveCredentials { get; set; }
-        public int IssuedToday { get; set; }
-        public int ExpiringThisWeek { get; set; }
     }
 }

@@ -3,7 +3,7 @@
 @using NumbatWallet.Web.Admin.Components.Common
 @using NumbatWallet.Web.Admin.Services
 @attribute [Authorize]
-@inject IApiClient ApiClient
+@inject IAdminGraphQLClient GraphQLClient
 @inject IAuthService AuthService
 @inject IJSRuntime JS
 @inject ILogger<Tenants> Logger
@@ -50,15 +50,7 @@
                     <select @bind="StatusFilter" @bind:event="onchange" @bind:after="OnFilterChanged" class="form-control">
                         <option value="">All Status</option>
                         <option value="Active">Active</option>
-                        <option value="Suspended">Suspended</option>
                         <option value="Inactive">Inactive</option>
-                    </select>
-                    <select @bind="TypeFilter" @bind:event="onchange" @bind:after="OnFilterChanged" class="form-control">
-                        <option value="">All Types</option>
-                        <option value="Government">Government</option>
-                        <option value="Healthcare">Healthcare</option>
-                        <option value="Education">Education</option>
-                        <option value="Enterprise">Enterprise</option>
                     </select>
                 </div>
             </div>
@@ -88,7 +80,8 @@
                                     </div>
                                 </td>
                                 <td>
-                                    <span class="badge badge-info">@tenant.Type</span>
+                                    @* POA: tenant type has no backend field yet *@
+                                    <span class="text-muted">@(string.IsNullOrEmpty(tenant.Type) ? "—" : tenant.Type)</span>
                                 </td>
                                 <td>
                                     @if (tenant.Status == "Active")
@@ -104,8 +97,9 @@
                                         <span class="badge badge-secondary">Inactive</span>
                                     }
                                 </td>
-                                <td>@tenant.UserCount</td>
-                                <td>@tenant.WalletCount</td>
+                                @* POA: per-tenant user/wallet counts have no backend endpoint yet *@
+                                <td>@(tenant.UserCount?.ToString() ?? "—")</td>
+                                <td>@(tenant.WalletCount?.ToString() ?? "—")</td>
                                 <td>@tenant.CreatedAt.ToString("MMM d, yyyy")</td>
                                 <td>
                                     <div class="action-buttons">
@@ -376,7 +370,6 @@
 
     private string SearchTerm = "";
     private string StatusFilter = "";
-    private string TypeFilter = "";
 
     private int CurrentPage = 1;
     private int PageSize = 10;
@@ -399,12 +392,23 @@
             IsLoading = true;
             ErrorMessage = null;
 
-            // Simulate API call - replace with actual API
-            await Task.Delay(500);
+            // Live data from the admin GraphQL `tenants` query.
+            // The backend TenantDto exposes a connection string — it is never selected by the client.
+            var tenants = await GraphQLClient.GetTenantsAsync();
 
-            TenantsList = GenerateSampleTenants();
+            TenantsList = tenants.Select(t => new TenantDto
+            {
+                TenantId = t.Identifier,
+                Name = t.Name,
+                Status = t.IsActive ? "Active" : "Inactive",
+                CreatedAt = t.CreatedAt.ToLocalTime(),
+                // POA: type/contact details and per-tenant counts have no backend fields yet
+                Type = "",
+                UserCount = null,
+                WalletCount = null
+            }).ToList();
+
             ApplyFilters();
-            TotalCount = FilteredTenants.Count;
         }
         catch (Exception ex)
         {
@@ -433,11 +437,7 @@
             filtered = filtered.Where(t => t.Status == StatusFilter);
         }
 
-        if (!string.IsNullOrWhiteSpace(TypeFilter))
-        {
-            filtered = filtered.Where(t => t.Type == TypeFilter);
-        }
-
+        TotalCount = filtered.Count();
         FilteredTenants = filtered
             .Skip((CurrentPage - 1) * PageSize)
             .Take(PageSize)
@@ -500,7 +500,7 @@
     {
         try
         {
-            // Save tenant via API
+            // POA: mock action — backend admin tenant mutations are cache-only stubs (no persistence yet)
             await Task.Delay(500);
 
             CloseModal();
@@ -527,32 +527,24 @@
 
     private async Task SuspendTenant(TenantDto tenant)
     {
+        // POA: mock action — suspend/activate tenant has no persistent backend mutation yet (local UI state only)
         tenant.Status = "Suspended";
         ApplyFilters();
+        await Task.CompletedTask;
     }
 
     private async Task ActivateTenant(TenantDto tenant)
     {
+        // POA: mock action — suspend/activate tenant has no persistent backend mutation yet (local UI state only)
         tenant.Status = "Active";
         ApplyFilters();
+        await Task.CompletedTask;
     }
 
     private async Task ExportTenants()
     {
+        // POA: mock action — no backend export endpoint yet
         await JS.InvokeVoidAsync("console.log", "Exporting tenants...");
-    }
-
-    private List<TenantDto> GenerateSampleTenants()
-    {
-        return new List<TenantDto>
-        {
-            new() { TenantId = "wa-health", Name = "WA Department of Health", Type = "Government", Status = "Active", UserCount = 250, WalletCount = 180, CreatedAt = DateTime.Now.AddMonths(-6) },
-            new() { TenantId = "wa-transport", Name = "WA Department of Transport", Type = "Government", Status = "Active", UserCount = 450, WalletCount = 320, CreatedAt = DateTime.Now.AddMonths(-5) },
-            new() { TenantId = "curtin-uni", Name = "Curtin University", Type = "Education", Status = "Active", UserCount = 12000, WalletCount = 8500, CreatedAt = DateTime.Now.AddMonths(-4) },
-            new() { TenantId = "royal-perth", Name = "Royal Perth Hospital", Type = "Healthcare", Status = "Active", UserCount = 3200, WalletCount = 2800, CreatedAt = DateTime.Now.AddMonths(-3) },
-            new() { TenantId = "wa-police", Name = "WA Police Force", Type = "Government", Status = "Active", UserCount = 6500, WalletCount = 5200, CreatedAt = DateTime.Now.AddMonths(-2) },
-            new() { TenantId = "uwa", Name = "University of Western Australia", Type = "Education", Status = "Suspended", UserCount = 15000, WalletCount = 11000, CreatedAt = DateTime.Now.AddMonths(-1) }
-        };
     }
 
     private class TenantDto
@@ -561,8 +553,8 @@
         public string Name { get; set; } = "";
         public string Type { get; set; } = "";
         public string Status { get; set; } = "Active";
-        public int UserCount { get; set; }
-        public int WalletCount { get; set; }
+        public int? UserCount { get; set; }
+        public int? WalletCount { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.Now;
         public string ContactEmail { get; set; } = "";
         public string ContactPhone { get; set; } = "";
