@@ -1,9 +1,11 @@
 # CLAUDE.md - NumbatWallet Backend
 
 ## Quick Start
-- **Language**: C# 13 / .NET 9 (LTS)
+> **State (2026-06)**: full credential lifecycle incl. W3C VP-JWT presentations + OID4VP; citizen Bearer + Credentry SSO federation; PII encrypted w/ search tokens; deployed to shared nonprod AKS (`numbatwallet-test`, tst.numbatwallet.credentry.com.au); 3 SDKs contract-verified live. Unit suites 794+/0, integration 84/0/2. Details: session memory + docs.
+
+- **Language**: C# 14 / .NET 10
 - **Architecture**: Clean Architecture + DDD + CQRS (Custom, NO MediatR)
-- **Database**: PostgreSQL with EF Core 9
+- **Database**: PostgreSQL 17 with EF Core 10 (real migrations; dev uses EnsureCreated)
 - **Testing**: TDD mandatory (85% coverage minimum)
 - **GitHub Project**: #18 (NumbatWallet POA Phase)
 - **Wiki**: `/repo/NumbatWallet.wiki/` (separate clone)
@@ -258,14 +260,14 @@ git status                 # Clean or committed
 ## Technology Stack
 
 ### Core
-- **.NET 9.0** (LTS) - Runtime
-- **C# 13** - Language
-- **ASP.NET Core 9** - Web framework
-- **Entity Framework Core 9** - ORM
-- **PostgreSQL 16** - Database
+- **.NET 10** - Runtime
+- **C# 14** - Language
+- **ASP.NET Core 10** - Web framework
+- **Entity Framework Core 10** - ORM
+- **PostgreSQL 17** - Database
 
 ### Libraries
-- **HotChocolate 13** - GraphQL
+- **HotChocolate 15** - GraphQL (⚠️ types are singletons: scoped services ONLY via [Service] resolver params, never ctor)
 - **FluentValidation 11** - Validation
 - **Serilog** - Structured logging
 - **AutoMapper 13** - Object mapping
@@ -303,4 +305,4 @@ git status                 # Clean or committed
 - Session Guide: `SESSION_START_PROMPT.md` - Development workflow
 
 ---
-*Last Updated: September 2025 | Version: 2.0 | Optimized for AI Context*
+*Last Updated: June 2026 | Version: 2.1 | milestone table above is HISTORICAL (Sep 2025) — trust the State note + session memory*
