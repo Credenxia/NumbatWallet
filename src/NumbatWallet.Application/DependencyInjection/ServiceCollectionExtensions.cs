@@ -53,7 +53,8 @@ public static class ServiceCollectionExtensions
         services.AddScoped<SharedKernel.Interfaces.IEventDispatcher, EventDispatcher>();
 
         // Register Mock Services for Development
-        services.AddScoped<Commands.Credentials.Handlers.IVerificationService, Commands.Credentials.Handlers.MockVerificationService>();
+        // NOTE: IVerificationService (presentation tokens) is registered in Infrastructure DI
+        // with the real JwtPresentationTokenService — no mock in the production path.
         services.AddScoped<Commands.Credentials.Handlers.ICredentialSharingService, Commands.Credentials.Handlers.MockCredentialSharingService>();
 
         // Register Domain Event Handlers

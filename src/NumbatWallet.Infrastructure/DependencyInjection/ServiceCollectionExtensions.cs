@@ -85,6 +85,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IPersonRepository, PersonRepository>();
         services.AddScoped<IWalletRepository, WalletRepository>();
         services.AddScoped<ICredentialRepository, CredentialRepository>();
+        services.AddScoped<IPresentationRepository, PresentationRepository>();
         services.AddScoped<IIssuerRepository, IssuerRepository>();
         services.AddScoped<IOrganizationRepository, OrganizationRepository>();
         services.AddScoped<ITenantCertificateRepository, TenantCertificateRepository>();
@@ -133,6 +134,9 @@ public static class ServiceCollectionExtensions
 
         // Register Credential Services
         services.AddScoped<Application.Commands.Credentials.Handlers.ICredentialSharingService, CredentialSharingService>();
+
+        // Presentation token service — REAL signed JWTs (no mock in the production path).
+        services.AddScoped<IVerificationService, JwtPresentationTokenService>();
 
         // Register HSM Providers (required by HsmService)
         services.AddSingleton<Services.Providers.SoftwareHsmProvider>();

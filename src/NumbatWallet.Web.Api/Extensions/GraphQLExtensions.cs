@@ -29,6 +29,9 @@ public static class GraphQLExtensions
             // Register credential queries and mutations
             .AddTypeExtension<CredentialQuery>()
             .AddTypeExtension<CredentialMutation>()
+            // Register presentation queries and mutations (present → verify flow)
+            .AddTypeExtension<PresentationQuery>()
+            .AddTypeExtension<PresentationMutation>()
             .AddProjections()
             .AddFiltering()
             .AddSorting()
