@@ -1,4 +1,4 @@
-using Microsoft.OpenApi.Models;
+using Microsoft.OpenApi;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using Swashbuckle.AspNetCore.Filters;
 using System.Reflection;
@@ -91,18 +91,11 @@ public static class ApiVersioningExtensions
             });
 
             // Add security requirements
-            options.AddSecurityRequirement(new OpenApiSecurityRequirement
+            options.AddSecurityRequirement(_ => new OpenApiSecurityRequirement
             {
                 {
-                    new OpenApiSecurityScheme
-                    {
-                        Reference = new OpenApiReference
-                        {
-                            Type = ReferenceType.SecurityScheme,
-                            Id = "Bearer"
-                        }
-                    },
-                    Array.Empty<string>()
+                    new OpenApiSecuritySchemeReference("Bearer"),
+                    new List<string>()
                 }
             });
 
@@ -208,10 +201,8 @@ public class ApiVersionOperationFilter : IOperationFilter
             .OfType<Asp.Versioning.ApiVersionAttribute>()
             .FirstOrDefault();
 
-        if (apiVersion != null)
+        if (apiVersion is not null)
         {
-            operation.Parameters ??= new List<OpenApiParameter>();
-
             // Add deprecated warning
             if (apiVersion.Versions.Any(v => v.Status == "Deprecated"))
             {
@@ -219,22 +210,6 @@ public class ApiVersionOperationFilter : IOperationFilter
                 operation.Description = "**DEPRECATED:** " + operation.Description;
             }
         }
-
-        // Add response headers
-        operation.Responses.ToList().ForEach(response =>
-        {
-            response.Value.Headers ??= new Dictionary<string, OpenApiHeader>();
-            response.Value.Headers.Add("X-API-Version", new OpenApiHeader
-            {
-                Description = "API version used",
-                Schema = new OpenApiSchema { Type = "string" }
-            });
-            response.Value.Headers.Add("X-Deprecation-Warning", new OpenApiHeader
-            {
-                Description = "Deprecation warning if applicable",
-                Schema = new OpenApiSchema { Type = "string" }
-            });
-        });
     }
 }
 
@@ -243,15 +218,14 @@ public class ApiVersionOperationFilter : IOperationFilter
 /// </summary>
 public class DeprecatedSchemaFilter : ISchemaFilter
 {
-    public void Apply(OpenApiSchema schema, SchemaFilterContext context)
+    public void Apply(IOpenApiSchema schema, SchemaFilterContext context)
     {
         var obsoleteAttribute = context.Type
             .GetCustomAttributes(typeof(ObsoleteAttribute), false)
             .FirstOrDefault() as ObsoleteAttribute;
 
-        if (obsoleteAttribute != null)
+        if (obsoleteAttribute is not null)
         {
-            schema.Deprecated = true;
             schema.Description = $"**DEPRECATED:** {obsoleteAttribute.Message}\n\n{schema.Description}";
         }
     }

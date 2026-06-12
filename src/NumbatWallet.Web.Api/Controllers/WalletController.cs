@@ -81,6 +81,12 @@ public class WalletController : ControllerBase
             _logger.LogWarning("Invalid argument for wallet creation: {Error}", ex.Message);
             return BadRequest(new { error = ex.Message });
         }
+        catch (Application.Common.Exceptions.ConflictException ex)
+        {
+            // Business conflict (e.g. person already has a wallet) is a 409, not a 500.
+            _logger.LogWarning("Wallet creation conflict: {Error}", ex.Message);
+            return Conflict(new { error = ex.Message });
+        }
         catch (InvalidOperationException ex)
         {
             _logger.LogWarning("Wallet creation failed: {Error}", ex.Message);
@@ -133,6 +139,15 @@ public class WalletController : ControllerBase
             return NotFound(new { error = $"Wallet {id} not found" });
         }
 
+        // SECURITY: prevent IDOR — a non-privileged caller may only read their own wallet.
+        // Return 404 (not 403) so wallet existence isn't disclosed to non-owners.
+        if (!IsAdminOrOfficer() && !OwnsPerson(wallet.PersonId))
+        {
+            _logger.LogWarning("Blocked cross-user wallet access: caller {Caller} requested wallet {WalletId} owned by {Owner}",
+                GetCallerPersonId(), id, wallet.PersonId);
+            return NotFound(new { error = $"Wallet {id} not found" });
+        }
+
         return Ok(wallet);
     }
 
@@ -146,6 +161,14 @@ public class WalletController : ControllerBase
         [FromQuery] bool includeInactive,
         CancellationToken cancellationToken)
     {
+        // SECURITY: prevent IDOR — only Admin/Officer may list another person's wallets.
+        if (!IsAdminOrOfficer() && !OwnsPerson(personId.ToString()))
+        {
+            _logger.LogWarning("Blocked cross-user wallet listing: caller {Caller} requested wallets for person {PersonId}",
+                GetCallerPersonId(), personId);
+            return Forbid();
+        }
+
         _logger.LogInformation("Getting wallets for person {PersonId}", personId);
 
         var query = new GetWalletsByPersonQuery(personId, includeInactive);
@@ -214,18 +237,39 @@ public class WalletController : ControllerBase
         }
     }
 
+    /// <summary>The authenticated caller's person id (from the NameIdentifier claim), if any.</summary>
+    private Guid? GetCallerPersonId()
+    {
+        var id = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        return Guid.TryParse(id, out var g) ? g : null;
+    }
+
+    /// <summary>True when the caller holds a privileged role allowed to access any person's resources.</summary>
+    private bool IsAdminOrOfficer()
+        => User.IsInRole("Admin") || User.IsInRole("Officer") || User.IsInRole("TenantAdmin");
+
+    /// <summary>True when the supplied person id matches the authenticated caller's person id.</summary>
+    private bool OwnsPerson(string? personId)
+    {
+        var caller = GetCallerPersonId();
+        return caller is not null
+            && !string.IsNullOrEmpty(personId)
+            && string.Equals(personId, caller.Value.ToString(), StringComparison.OrdinalIgnoreCase);
+    }
+
     private Guid GetTenantId()
     {
-        var tenantClaim = User.FindFirst("TenantId")?.Value
-            ?? User.FindFirst("tenant_id")?.Value
+        var tenantClaim = User.FindFirst("tenant_id")?.Value
+            ?? User.FindFirst("TenantId")?.Value
             ?? User.FindFirst("tid")?.Value;
         if (Guid.TryParse(tenantClaim, out var tenantId))
         {
             return tenantId;
         }
 
-        // Default for development
-        return Guid.Parse("a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11");
+        // SECURITY: fail closed. Never fall back to a hardcoded tenant — that would let an
+        // authenticated request with a missing/invalid tenant claim write into another tenant.
+        throw new InvalidOperationException("A valid tenant context (tenant_id claim) is required.");
     }
 }
 

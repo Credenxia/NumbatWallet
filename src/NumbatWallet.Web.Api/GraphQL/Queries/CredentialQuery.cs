@@ -12,37 +12,18 @@ namespace NumbatWallet.Web.Api.GraphQL.Queries;
 [ExtendObjectType("Query")]
 public class CredentialQuery
 {
-    private readonly IQueryHandler<GetCredentialByIdQuery, CredentialDto?> _getCredentialByIdHandler;
-    private readonly IQueryHandler<GetCredentialsByWalletQuery, IEnumerable<CredentialDto>> _getCredentialsByWalletHandler;
-    private readonly IQueryHandler<GetCredentialsByIssuerQuery, IEnumerable<CredentialDto>> _getCredentialsByIssuerHandler;
-    private readonly IQueryHandler<SearchCredentialsQuery, PagedResultDto<CredentialDto>> _searchCredentialsHandler;
-    private readonly IQueryHandler<GetIssuanceByIdQuery, IssuanceDto?> _getIssuanceByIdHandler;
-    private readonly IQueryHandler<GetIssuancesByStatusQuery, IEnumerable<IssuanceDto>> _getIssuancesByStatusHandler;
-    private readonly ICredentialRepository? _credentialRepository;
-    private readonly IIssuanceRepository? _issuanceRepository;
     private readonly ISecurityAuditService _auditService;
     private readonly ILogger<CredentialQuery> _logger;
 
+    // NOTE: query handlers and repositories are SCOPED (they depend on the scoped DbContext)
+    // and must be resolved per-resolver via [Service] parameters. HotChocolate object types
+    // are singletons, so constructor-injecting a scoped dependency captures a DbContext that
+    // is disposed after the first request (captive dependency → ObjectDisposedException).
+    // Only singletons (audit service, logger) may live in the constructor.
     public CredentialQuery(
-        IQueryHandler<GetCredentialByIdQuery, CredentialDto?> getCredentialByIdHandler,
-        IQueryHandler<GetCredentialsByWalletQuery, IEnumerable<CredentialDto>> getCredentialsByWalletHandler,
-        IQueryHandler<GetCredentialsByIssuerQuery, IEnumerable<CredentialDto>> getCredentialsByIssuerHandler,
-        IQueryHandler<SearchCredentialsQuery, PagedResultDto<CredentialDto>> searchCredentialsHandler,
-        IQueryHandler<GetIssuanceByIdQuery, IssuanceDto?> getIssuanceByIdHandler,
-        IQueryHandler<GetIssuancesByStatusQuery, IEnumerable<IssuanceDto>> getIssuancesByStatusHandler,
         ISecurityAuditService auditService,
-        ILogger<CredentialQuery> logger,
-        ICredentialRepository? credentialRepository = null,
-        IIssuanceRepository? issuanceRepository = null)
+        ILogger<CredentialQuery> logger)
     {
-        _getCredentialByIdHandler = getCredentialByIdHandler;
-        _getCredentialsByWalletHandler = getCredentialsByWalletHandler;
-        _getCredentialsByIssuerHandler = getCredentialsByIssuerHandler;
-        _searchCredentialsHandler = searchCredentialsHandler;
-        _getIssuanceByIdHandler = getIssuanceByIdHandler;
-        _getIssuancesByStatusHandler = getIssuancesByStatusHandler;
-        _credentialRepository = credentialRepository;
-        _issuanceRepository = issuanceRepository;
         _auditService = auditService;
         _logger = logger;
     }
@@ -54,7 +35,9 @@ public class CredentialQuery
     [Authorize]
     public async Task<CredentialDto?> GetCredential(
         string id,
-        [Service] IHttpContextAccessor httpContextAccessor)
+        [Service] IHttpContextAccessor httpContextAccessor,
+        [Service] NumbatWallet.SharedKernel.Interfaces.ITenantService tenantService,
+        [Service] IQueryHandler<GetCredentialByIdQuery, CredentialDto?> getCredentialByIdHandler)
     {
         var httpContext = httpContextAccessor.HttpContext;
 
@@ -68,8 +51,10 @@ public class CredentialQuery
                 $"Credential access: {id}");
         }
 
-        var query = new GetCredentialByIdQuery(Guid.Empty, Guid.Parse(id)); // TenantId would come from context
-        var credential = await _getCredentialByIdHandler.HandleAsync(query);
+        // The handler rejects credentials whose TenantId differs from the query's, so the
+        // ambient tenant must be passed (Guid.Empty matched nothing).
+        var query = new GetCredentialByIdQuery(tenantService.TenantId, Guid.Parse(id));
+        var credential = await getCredentialByIdHandler.HandleAsync(query);
         return credential;
     }
 
@@ -83,7 +68,9 @@ public class CredentialQuery
     [UseSorting]
     public async Task<IQueryable<CredentialDto>> GetCredentialsByWallet(
         Guid walletId,
-        [Service] IHttpContextAccessor httpContextAccessor)
+        [Service] IHttpContextAccessor httpContextAccessor,
+        [Service] NumbatWallet.SharedKernel.Interfaces.ITenantService tenantService,
+        [Service] IQueryHandler<GetCredentialsByWalletQuery, IEnumerable<CredentialDto>> getCredentialsByWalletHandler)
     {
         var httpContext = httpContextAccessor.HttpContext;
 
@@ -97,8 +84,10 @@ public class CredentialQuery
                 $"Wallet credentials access: {walletId}");
         }
 
-        var query = new GetCredentialsByWalletQuery(Guid.Empty, walletId, false); // TenantId would come from context
-        var credentials = await _getCredentialsByWalletHandler.HandleAsync(query);
+        // Resolve the tenant from the ambient request context (was hardcoded to Guid.Empty,
+        // which filtered out every credential because no wallet belongs to the empty tenant).
+        var query = new GetCredentialsByWalletQuery(tenantService.TenantId, walletId, false);
+        var credentials = await getCredentialsByWalletHandler.HandleAsync(query);
         return credentials.AsQueryable();
     }
 
@@ -112,7 +101,8 @@ public class CredentialQuery
     [UseSorting]
     public async Task<IQueryable<CredentialDto>> GetCredentialsByIssuer(
         string issuerId,
-        [Service] IHttpContextAccessor httpContextAccessor)
+        [Service] IHttpContextAccessor httpContextAccessor,
+        [Service] IQueryHandler<GetCredentialsByIssuerQuery, IEnumerable<CredentialDto>> getCredentialsByIssuerHandler)
     {
         var httpContext = httpContextAccessor.HttpContext;
 
@@ -127,7 +117,7 @@ public class CredentialQuery
         }
 
         var query = new GetCredentialsByIssuerQuery { IssuerId = Guid.Parse(issuerId) };
-        var credentials = await _getCredentialsByIssuerHandler.HandleAsync(query);
+        var credentials = await getCredentialsByIssuerHandler.HandleAsync(query);
         return credentials.AsQueryable();
     }
 
@@ -139,12 +129,15 @@ public class CredentialQuery
     [UsePaging]
     [UseFiltering]
     [UseSorting]
-    public async Task<IQueryable<CredentialDto>> GetCredentialsByType(string type)
+    public async Task<IQueryable<CredentialDto>> GetCredentialsByType(
+        string type,
+        [Service] NumbatWallet.SharedKernel.Interfaces.ITenantService tenantService,
+        [Service] IQueryHandler<SearchCredentialsQuery, PagedResultDto<CredentialDto>> searchCredentialsHandler)
     {
         _logger.LogInformation("Fetching credentials of type {Type}", type);
 
         var query = new SearchCredentialsQuery(
-            TenantId: Guid.Empty, // TenantId would come from context
+            TenantId: tenantService.TenantId,
             SearchTerm: null,
             CredentialType: type,
             Status: null,
@@ -153,7 +146,7 @@ public class CredentialQuery
             SortBy: null,
             SortDescending: false);
 
-        var result = await _searchCredentialsHandler.HandleAsync(query);
+        var result = await searchCredentialsHandler.HandleAsync(query);
         return result.Items.AsQueryable();
     }
 
@@ -166,6 +159,8 @@ public class CredentialQuery
     [UseFiltering]
     [UseSorting]
     public async Task<IQueryable<CredentialDto>> SearchCredentials(
+        [Service] NumbatWallet.SharedKernel.Interfaces.ITenantService tenantService,
+        [Service] IQueryHandler<SearchCredentialsQuery, PagedResultDto<CredentialDto>> searchCredentialsHandler,
         string? holderId = null,
         string? issuerId = null,
         string? type = null,
@@ -181,7 +176,7 @@ public class CredentialQuery
         var searchTerm = string.IsNullOrEmpty(type) ? null : type;
 
         var query = new SearchCredentialsQuery(
-            TenantId: Guid.Empty, // TenantId would come from context
+            TenantId: tenantService.TenantId,
             SearchTerm: searchTerm,
             CredentialType: type,
             Status: status,
@@ -190,7 +185,7 @@ public class CredentialQuery
             SortBy: null,
             SortDescending: false);
 
-        var result = await _searchCredentialsHandler.HandleAsync(query);
+        var result = await searchCredentialsHandler.HandleAsync(query);
         return result.Items.AsQueryable();
     }
 
@@ -201,7 +196,8 @@ public class CredentialQuery
     [Authorize]
     public async Task<IssuanceDto?> GetIssuance(
         Guid id,
-        [Service] IHttpContextAccessor httpContextAccessor)
+        [Service] IHttpContextAccessor httpContextAccessor,
+        [Service] IQueryHandler<GetIssuanceByIdQuery, IssuanceDto?> getIssuanceByIdHandler)
     {
         var httpContext = httpContextAccessor.HttpContext;
 
@@ -216,7 +212,7 @@ public class CredentialQuery
         }
 
         var query = new GetIssuanceByIdQuery(id);
-        var issuance = await _getIssuanceByIdHandler.HandleAsync(query);
+        var issuance = await getIssuanceByIdHandler.HandleAsync(query);
         return issuance;
     }
 
@@ -228,12 +224,14 @@ public class CredentialQuery
     [UsePaging]
     [UseFiltering]
     [UseSorting]
-    public async Task<IQueryable<IssuanceDto>> GetIssuancesByStatus(string status)
+    public async Task<IQueryable<IssuanceDto>> GetIssuancesByStatus(
+        string status,
+        [Service] IQueryHandler<GetIssuancesByStatusQuery, IEnumerable<IssuanceDto>> getIssuancesByStatusHandler)
     {
         _logger.LogInformation("Fetching issuances with status {Status}", status);
 
         var query = new GetIssuancesByStatusQuery(status, null, null, null, null);
-        var issuances = await _getIssuancesByStatusHandler.HandleAsync(query);
+        var issuances = await getIssuancesByStatusHandler.HandleAsync(query);
         return issuances.AsQueryable();
     }
 
@@ -245,12 +243,13 @@ public class CredentialQuery
     [UsePaging]
     [UseFiltering]
     [UseSorting]
-    public async Task<IQueryable<IssuanceDto>> GetPendingIssuances()
+    public async Task<IQueryable<IssuanceDto>> GetPendingIssuances(
+        [Service] IQueryHandler<GetIssuancesByStatusQuery, IEnumerable<IssuanceDto>> getIssuancesByStatusHandler)
     {
         _logger.LogInformation("Fetching pending issuances");
 
         var query = new GetIssuancesByStatusQuery("Pending", null, null, null, null);
-        var issuances = await _getIssuancesByStatusHandler.HandleAsync(query);
+        var issuances = await getIssuancesByStatusHandler.HandleAsync(query);
         return issuances.AsQueryable();
     }
 
@@ -262,18 +261,14 @@ public class CredentialQuery
     [UsePaging]
     [UseFiltering]
     [UseSorting]
-    public async Task<IQueryable<IssuanceDto>> GetIssuancesByWallet(Guid walletId)
+    public async Task<IQueryable<IssuanceDto>> GetIssuancesByWallet(
+        Guid walletId,
+        [Service] IIssuanceRepository issuanceRepository)
     {
         _logger.LogInformation("Fetching issuances for wallet {WalletId}", walletId);
 
         // Use repository directly since we don't have a specific query handler for this
-        if (_issuanceRepository == null)
-        {
-            _logger.LogWarning("IssuanceRepository not available, returning empty result");
-            return new List<IssuanceDto>().AsQueryable();
-        }
-
-        var issuances = await _issuanceRepository.GetByWalletIdAsync(walletId);
+        var issuances = await issuanceRepository.GetByWalletIdAsync(walletId);
 
         // Map to DTOs
         var issuanceDtos = issuances.Select(i => new IssuanceDto
@@ -316,6 +311,8 @@ public class CredentialQuery
     [GraphQLDescription("Get statistical information about credentials")]
     [Authorize(Roles = new[] { "Admin" })]
     public async Task<CredentialStatistics> GetCredentialStatistics(
+        [Service] NumbatWallet.SharedKernel.Interfaces.ITenantService tenantService,
+        [Service] IQueryHandler<SearchCredentialsQuery, PagedResultDto<CredentialDto>> searchCredentialsHandler,
         DateTime? startDate = null,
         DateTime? endDate = null)
     {
@@ -330,7 +327,7 @@ public class CredentialQuery
 
         // Fetch real credentials from database using SearchCredentialsQuery
         var query = new SearchCredentialsQuery(
-            TenantId: Guid.Empty, // TenantId would come from context
+            TenantId: tenantService.TenantId,
             SearchTerm: null,
             CredentialType: null,
             Status: null,
@@ -339,7 +336,7 @@ public class CredentialQuery
             SortBy: null,
             SortDescending: false);
 
-        var searchResult = await _searchCredentialsHandler.HandleAsync(query);
+        var searchResult = await searchCredentialsHandler.HandleAsync(query);
         var allCredentials = searchResult.Items.ToList();
 
         // Calculate statistics from real data
@@ -368,6 +365,7 @@ public class CredentialQuery
     [GraphQLDescription("Get statistical information about issuances")]
     [Authorize(Roles = new[] { "Admin" })]
     public async Task<IssuanceProcessStatistics> GetIssuanceStatistics(
+        [Service] IQueryHandler<GetIssuancesByStatusQuery, IEnumerable<IssuanceDto>> getIssuancesByStatusHandler,
         DateTime? startDate = null,
         DateTime? endDate = null)
     {
@@ -379,19 +377,19 @@ public class CredentialQuery
 
         // Fetch issuances by different statuses
         var allIssuancesQuery = new GetIssuancesByStatusQuery(null, start, end, null, null);
-        var allIssuances = (await _getIssuancesByStatusHandler.HandleAsync(allIssuancesQuery)).ToList();
+        var allIssuances = (await getIssuancesByStatusHandler.HandleAsync(allIssuancesQuery)).ToList();
 
         var pendingQuery = new GetIssuancesByStatusQuery("Pending", start, end, null, null);
-        var pendingIssuances = (await _getIssuancesByStatusHandler.HandleAsync(pendingQuery)).ToList();
+        var pendingIssuances = (await getIssuancesByStatusHandler.HandleAsync(pendingQuery)).ToList();
 
         var approvedQuery = new GetIssuancesByStatusQuery("Approved", start, end, null, null);
-        var approvedIssuances = (await _getIssuancesByStatusHandler.HandleAsync(approvedQuery)).ToList();
+        var approvedIssuances = (await getIssuancesByStatusHandler.HandleAsync(approvedQuery)).ToList();
 
         var rejectedQuery = new GetIssuancesByStatusQuery("Rejected", start, end, null, null);
-        var rejectedIssuances = (await _getIssuancesByStatusHandler.HandleAsync(rejectedQuery)).ToList();
+        var rejectedIssuances = (await getIssuancesByStatusHandler.HandleAsync(rejectedQuery)).ToList();
 
         var completedQuery = new GetIssuancesByStatusQuery("Completed", start, end, null, null);
-        var completedIssuances = (await _getIssuancesByStatusHandler.HandleAsync(completedQuery)).ToList();
+        var completedIssuances = (await getIssuancesByStatusHandler.HandleAsync(completedQuery)).ToList();
 
         // Calculate average processing time
         var processedIssuances = allIssuances.Where(i => i.CompletedAt.HasValue && i.CreatedAt != default);

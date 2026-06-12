@@ -116,9 +116,9 @@ public static class HealthCheckExtensions
         {
             Summary = "Liveness probe for container orchestration",
             Description = "Returns 200 if the application is alive",
-            Tags = new List<Microsoft.OpenApi.Models.OpenApiTag>
+            Tags = new HashSet<Microsoft.OpenApi.OpenApiTagReference>
             {
-                new() { Name = "Health" }
+                new("Health")
             }
         });
 
@@ -132,9 +132,9 @@ public static class HealthCheckExtensions
         {
             Summary = "Readiness probe for container orchestration",
             Description = "Returns 200 if the application is ready to accept traffic",
-            Tags = new List<Microsoft.OpenApi.Models.OpenApiTag>
+            Tags = new HashSet<Microsoft.OpenApi.OpenApiTagReference>
             {
-                new() { Name = "Health" }
+                new("Health")
             }
         });
 
@@ -148,9 +148,9 @@ public static class HealthCheckExtensions
         {
             Summary = "Startup probe for container orchestration",
             Description = "Returns 200 if the application has completed startup",
-            Tags = new List<Microsoft.OpenApi.Models.OpenApiTag>
+            Tags = new HashSet<Microsoft.OpenApi.OpenApiTagReference>
             {
-                new() { Name = "Health" }
+                new("Health")
             }
         });
 
@@ -163,9 +163,9 @@ public static class HealthCheckExtensions
         {
             Summary = "Detailed health check",
             Description = "Returns detailed health status of all components",
-            Tags = new List<Microsoft.OpenApi.Models.OpenApiTag>
+            Tags = new HashSet<Microsoft.OpenApi.OpenApiTagReference>
             {
-                new() { Name = "Health" }
+                new("Health")
             }
         });
 

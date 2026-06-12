@@ -1,3 +1,4 @@
+using Carter;
 using NumbatWallet.Application.DependencyInjection;
 using NumbatWallet.Infrastructure.DependencyInjection;
 using NumbatWallet.Web.Api.Extensions;
@@ -110,6 +111,11 @@ try
             options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
         });
 
+    // Carter minimal-API modules. The duplicate Wallet/Credential/BulkOperation Carter modules
+    // were removed in favour of the canonical MVC controllers; PersonEndpoints (no controller
+    // equivalent) is the one mapped module. WalletPassEndpoints remains unmapped pending design.
+    builder.Services.AddCarter(configurator: c => c.WithModule<NumbatWallet.Web.Api.Endpoints.PersonEndpoints>());
+
     // Add minimal API versioning (required for WalletGenerationController route constraints)
     builder.Services.AddApiVersioning(options =>
     {
@@ -170,20 +176,26 @@ try
     }
     else
     {
-        // Production/Staging: Use real JWT Bearer authentication
+        // Production/Staging: validate the self-issued JWTs using the configured access-token
+        // signer (HS256 or RS256-from-KeyVault). Configured via the options pattern so the
+        // signer (and, for RS256, its Key Vault public key) is resolved from DI.
         builder.Services.AddAuthentication(Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerDefaults.AuthenticationScheme)
-            .AddJwtBearer(options =>
+            .AddJwtBearer();
+        builder.Services.AddOptions<Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerOptions>(
+                Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerDefaults.AuthenticationScheme)
+            .Configure<NumbatWallet.Application.Interfaces.IAccessTokenSigner>((options, signer) =>
             {
-                options.Authority = builder.Configuration["Jwt:Authority"];
-                options.Audience = builder.Configuration["Jwt:Audience"];
                 options.RequireHttpsMetadata = true;
-
                 options.TokenValidationParameters = new Microsoft.IdentityModel.Tokens.TokenValidationParameters
                 {
-                    ValidateIssuer = true,
-                    ValidateAudience = true,
-                    ValidateLifetime = true,
                     ValidateIssuerSigningKey = true,
+                    IssuerSigningKeys = signer.GetValidationKeys(),
+                    ValidAlgorithms = new[] { signer.Algorithm },
+                    ValidateIssuer = true,
+                    ValidIssuer = signer.Issuer,
+                    ValidateAudience = true,
+                    ValidAudience = signer.Audience,
+                    ValidateLifetime = true,
                     ClockSkew = TimeSpan.FromMinutes(5)
                 };
             });
@@ -205,11 +217,35 @@ try
             policy.RequireRole("Admin");
         });
 
+        // Super-admin policy for high-risk admin GraphQL mutations
+        // (tenant lifecycle, key rotation, restore). Referenced by
+        // [Authorize(Policy = "SuperAdmin")] on AdminMutation fields — an
+        // unregistered policy would throw at execution time.
+        options.AddPolicy("SuperAdmin", policy =>
+        {
+            policy.RequireAuthenticatedUser();
+            policy.RequireRole("SuperAdmin");
+        });
+
         // Officer policy for service delivery endpoints
         options.AddPolicy("OfficerOnly", policy =>
         {
             policy.RequireAuthenticatedUser();
             policy.RequireRole("Officer", "Admin");
+        });
+
+        // Admin-or-Officer policy (referenced by PersonEndpoints and other minimal-API modules)
+        options.AddPolicy("AdminOrOfficer", policy =>
+        {
+            policy.RequireAuthenticatedUser();
+            policy.RequireRole("Admin", "Officer");
+        });
+
+        // Admin policy alias (referenced by name in some endpoints)
+        options.AddPolicy("Admin", policy =>
+        {
+            policy.RequireAuthenticatedUser();
+            policy.RequireRole("Admin");
         });
 
         // Allow anonymous for endpoints without [Authorize] or with [AllowAnonymous]
@@ -220,7 +256,7 @@ try
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddSwaggerGen(c =>
     {
-        c.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo
+        c.SwaggerDoc("v1", new Microsoft.OpenApi.OpenApiInfo
         {
             Title = "NumbatWallet API (Minimal)",
             Version = "v1.0"
@@ -244,8 +280,14 @@ try
     // Add output caching (ASP.NET Core 9 feature)
     builder.Services.AddOutputCache(options =>
     {
-        // Default policy - 60 seconds cache
+        // Default policy - 60 seconds cache.
+        // SECURITY: only cache UNAUTHENTICATED requests. Caching per-user/authenticated responses
+        // by URL alone could serve one caller's data (or a cached 200) to another caller — the
+        // built-in rule skips Authorization-header requests, but API-key (X-API-Key) requests must
+        // be excluded too.
         options.AddBasePolicy(builder => builder
+            .With(c => !c.HttpContext.Request.Headers.ContainsKey("Authorization")
+                       && !c.HttpContext.Request.Headers.ContainsKey("X-API-Key"))
             .Expire(TimeSpan.FromSeconds(60))
             .Tag("default"));
 
@@ -295,14 +337,14 @@ try
         });
 
         // Authentication endpoints: Stricter limits (5 attempts per 15 minutes)
-        // Testing environment: Higher limits for integration tests
+        // Development/Testing: Higher limits for local dev and integration tests
         options.AddPolicy("Authentication", context =>
         {
             var ipAddress = context.Connection.RemoteIpAddress?.ToString() ?? "unknown";
 
-            // Testing: 100 requests/min for integration tests
+            // Development/Testing: 100 requests/min for local dev and integration tests
             // Production: 5 requests/15min to prevent brute force
-            var (permitLimit, window) = builder.Environment.IsEnvironment("Testing")
+            var (permitLimit, window) = builder.Environment.IsDevelopment() || builder.Environment.IsEnvironment("Testing")
                 ? (100, TimeSpan.FromMinutes(1))
                 : (5, TimeSpan.FromMinutes(15));
 
@@ -403,13 +445,19 @@ try
     app.UseOutputCache();
 
     app.UseAuthentication();
-    app.UseAuthorization();
 
-    // SDK: API Key authentication for service accounts (after authorization)
+    // SDK: API key authentication for service accounts. MUST run before UseAuthorization so the
+    // API-key principal is established before endpoint authorization is evaluated (otherwise
+    // [Authorize] endpoints reject the request before the key is ever inspected).
     app.UseApiKeyAuthentication();
+
+    app.UseAuthorization();
 
     // Map controllers
     app.MapControllers();
+
+    // Map Carter modules (only those registered above via WithModule)
+    app.MapCarter();
 
     // GRAPHQL: Map GraphQL endpoint
     app.MapGraphQL();

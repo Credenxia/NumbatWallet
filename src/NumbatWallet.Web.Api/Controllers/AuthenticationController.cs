@@ -163,7 +163,7 @@ public class AuthenticationController : ControllerBase
     [HttpPost("logout")]
     [Microsoft.AspNetCore.Authorization.Authorize]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
-    public async Task<IActionResult> Logout()
+    public async Task<IActionResult> Logout([FromBody] LogoutRequestDto? request = null)
     {
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
@@ -177,7 +177,8 @@ public class AuthenticationController : ControllerBase
             SecurityEventType.LogoutSuccess,
             $"User logged out: {userId}");
 
-        var command = new LogoutCommand(userId ?? string.Empty, accessToken);
+        // The refresh token (optional body) is revoked so it can't mint new access tokens.
+        var command = new LogoutCommand(userId ?? string.Empty, accessToken, request?.RefreshToken);
         await _logoutHandler.HandleAsync(command);
 
         return NoContent();
@@ -269,8 +270,13 @@ public class AuthenticationController : ControllerBase
 
     private string GenerateJwtToken(string email, string role, string userId)
     {
-        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(
-            _configuration["Jwt:SecretKey"] ?? "ThisIsADevelopmentSecretKeyThatIs256BitsLong!!"));
+        var secret = _configuration["Jwt:SecretKey"];
+        if (string.IsNullOrEmpty(secret))
+        {
+            throw new InvalidOperationException(
+                "JWT signing key is not configured. Set 'Jwt:SecretKey' (sourced from Key Vault in production).");
+        }
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secret));
         var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
         var claims = new[]
@@ -324,6 +330,12 @@ public class AuthenticationResponseDto
 public class RefreshTokenRequestDto
 {
     public required string RefreshToken { get; set; }
+}
+
+public class LogoutRequestDto
+{
+    /// <summary>Optional refresh token to revoke on logout (in addition to blacklisting the access token).</summary>
+    public string? RefreshToken { get; set; }
 }
 
 public class ChangePasswordRequestDto

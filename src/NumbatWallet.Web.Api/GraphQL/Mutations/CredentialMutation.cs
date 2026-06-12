@@ -13,28 +13,17 @@ namespace NumbatWallet.Web.Api.GraphQL.Mutations;
 [ExtendObjectType("Mutation")]
 public class CredentialMutation
 {
-    private readonly ICommandHandler<VerifyCredentialCommand, VerificationResultDto> _verifyCredentialHandler;
-    private readonly ICommandHandler<RevokeCredentialCommand, bool> _revokeCredentialHandler;
-    private readonly ICommandHandler<CreateIssuanceCommand, IssuanceDto> _createIssuanceHandler;
-    private readonly ICommandHandler<ApproveIssuanceCommand, IssuanceDto> _approveIssuanceHandler;
-    private readonly ICommandHandler<RejectIssuanceCommand, IssuanceDto> _rejectIssuanceHandler;
     private readonly ISecurityAuditService _auditService;
     private readonly ILogger<CredentialMutation> _logger;
 
+    // NOTE: command handlers are scoped (they depend on the scoped DbContext) and MUST be
+    // resolved per-resolver via [Service] parameters, NOT injected into this constructor —
+    // HotChocolate object types are singletons, so constructor-injecting a scoped handler
+    // captures (and then reuses) a DbContext that is disposed after the first request.
     public CredentialMutation(
-        ICommandHandler<VerifyCredentialCommand, VerificationResultDto> verifyCredentialHandler,
-        ICommandHandler<RevokeCredentialCommand, bool> revokeCredentialHandler,
-        ICommandHandler<CreateIssuanceCommand, IssuanceDto> createIssuanceHandler,
-        ICommandHandler<ApproveIssuanceCommand, IssuanceDto> approveIssuanceHandler,
-        ICommandHandler<RejectIssuanceCommand, IssuanceDto> rejectIssuanceHandler,
         ISecurityAuditService auditService,
         ILogger<CredentialMutation> logger)
     {
-        _verifyCredentialHandler = verifyCredentialHandler;
-        _revokeCredentialHandler = revokeCredentialHandler;
-        _createIssuanceHandler = createIssuanceHandler;
-        _approveIssuanceHandler = approveIssuanceHandler;
-        _rejectIssuanceHandler = rejectIssuanceHandler;
         _auditService = auditService;
         _logger = logger;
     }
@@ -46,7 +35,8 @@ public class CredentialMutation
     [AllowAnonymous]
     public async Task<VerificationResultDto> VerifyCredential(
         VerifyCredentialInput input,
-        [Service] IHttpContextAccessor httpContextAccessor)
+        [Service] IHttpContextAccessor httpContextAccessor,
+        [Service] ICommandHandler<VerifyCredentialCommand, VerificationResultDto> verifyCredentialHandler)
     {
         _logger.LogInformation("Verifying credential {CredentialId}", input.CredentialId);
 
@@ -66,7 +56,7 @@ public class CredentialMutation
             VerificationOptions = verificationOptions
         };
 
-        var result = await _verifyCredentialHandler.HandleAsync(command);
+        var result = await verifyCredentialHandler.HandleAsync(command);
         return result;
     }
 
@@ -77,7 +67,8 @@ public class CredentialMutation
     [Authorize(Roles = new[] { "Issuer", "Admin" })]
     public async Task<bool> RevokeCredential(
         RevokeCredentialInput input,
-        [Service] IHttpContextAccessor httpContextAccessor)
+        [Service] IHttpContextAccessor httpContextAccessor,
+        [Service] ICommandHandler<RevokeCredentialCommand, bool> revokeCredentialHandler)
     {
         var httpContext = httpContextAccessor.HttpContext;
         var userId = httpContext?.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -98,7 +89,7 @@ public class CredentialMutation
             Reason: input.Reason,
             RevokerId: userId ?? "system");
 
-        var result = await _revokeCredentialHandler.HandleAsync(command);
+        var result = await revokeCredentialHandler.HandleAsync(command);
         return result;
     }
 
@@ -109,7 +100,8 @@ public class CredentialMutation
     [Authorize]
     public async Task<IssuanceDto> CreateIssuance(
         CreateIssuanceInput input,
-        [Service] IHttpContextAccessor httpContextAccessor)
+        [Service] IHttpContextAccessor httpContextAccessor,
+        [Service] ICommandHandler<CreateIssuanceCommand, IssuanceDto> createIssuanceHandler)
     {
         var httpContext = httpContextAccessor.HttpContext;
         var userId = httpContext?.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -140,7 +132,7 @@ public class CredentialMutation
                 ? new Dictionary<string, string> { ["required_documents"] = string.Join(",", input.RequiredDocuments) }
                 : new Dictionary<string, string>());
 
-        var issuance = await _createIssuanceHandler.HandleAsync(command);
+        var issuance = await createIssuanceHandler.HandleAsync(command);
         return issuance;
     }
 
@@ -151,7 +143,8 @@ public class CredentialMutation
     [Authorize(Roles = new[] { "Issuer", "Admin" })]
     public async Task<IssuanceDto> ApproveIssuance(
         ApproveIssuanceInput input,
-        [Service] IHttpContextAccessor httpContextAccessor)
+        [Service] IHttpContextAccessor httpContextAccessor,
+        [Service] ICommandHandler<ApproveIssuanceCommand, IssuanceDto> approveIssuanceHandler)
     {
         var httpContext = httpContextAccessor.HttpContext;
         var userId = httpContext?.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -171,7 +164,7 @@ public class CredentialMutation
             ApprovedBy: userId ?? "system",
             Comments: input.Comments);
 
-        var issuance = await _approveIssuanceHandler.HandleAsync(command);
+        var issuance = await approveIssuanceHandler.HandleAsync(command);
         return issuance;
     }
 
@@ -182,7 +175,8 @@ public class CredentialMutation
     [Authorize(Roles = new[] { "Issuer", "Admin" })]
     public async Task<IssuanceDto> RejectIssuance(
         RejectIssuanceInput input,
-        [Service] IHttpContextAccessor httpContextAccessor)
+        [Service] IHttpContextAccessor httpContextAccessor,
+        [Service] ICommandHandler<RejectIssuanceCommand, IssuanceDto> rejectIssuanceHandler)
     {
         var httpContext = httpContextAccessor.HttpContext;
         var userId = httpContext?.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -204,7 +198,7 @@ public class CredentialMutation
             Reason: input.Reason,
             Comments: null);
 
-        var issuance = await _rejectIssuanceHandler.HandleAsync(command);
+        var issuance = await rejectIssuanceHandler.HandleAsync(command);
         return issuance;
     }
 }

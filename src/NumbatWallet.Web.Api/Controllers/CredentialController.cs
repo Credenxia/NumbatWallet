@@ -1,6 +1,7 @@
 using NumbatWallet.Application.Commands.Credentials;
 using NumbatWallet.Application.DTOs;
 using NumbatWallet.Application.Queries.Credentials;
+using NumbatWallet.Application.Queries.Wallets;
 using NumbatWallet.SharedKernel.Interfaces;
 using NumbatWallet.Web.Api.Security;
 using System.Security.Claims;
@@ -10,6 +11,7 @@ namespace NumbatWallet.Web.Api.Controllers;
 [ApiController]
 [Asp.Versioning.ApiVersion("1.0")]
 [Route("api/v{version:apiVersion}/[controller]")]
+[Route("api/v1/credentials")] // plural alias for SDK clients (mirrors WalletController)
 [Microsoft.AspNetCore.Authorization.Authorize]
 [Produces("application/json")]
 public class CredentialController : ControllerBase
@@ -21,6 +23,7 @@ public class CredentialController : ControllerBase
     private readonly ICommandHandler<RequestCredentialCommand, CredentialRequestDto> _requestCredentialHandler;
     private readonly IQueryHandler<GetCredentialByIdQuery, CredentialDto?> _getCredentialByIdHandler;
     private readonly IQueryHandler<GetCredentialsByWalletQuery, IEnumerable<CredentialDto>> _getCredentialsByWalletHandler;
+    private readonly IQueryHandler<GetWalletByIdQuery, WalletDto?> _getWalletByIdHandler;
     private readonly ISecurityAuditService _auditService;
     private readonly ILogger<CredentialController> _logger;
 
@@ -32,6 +35,7 @@ public class CredentialController : ControllerBase
         ICommandHandler<RequestCredentialCommand, CredentialRequestDto> requestCredentialHandler,
         IQueryHandler<GetCredentialByIdQuery, CredentialDto?> getCredentialByIdHandler,
         IQueryHandler<GetCredentialsByWalletQuery, IEnumerable<CredentialDto>> getCredentialsByWalletHandler,
+        IQueryHandler<GetWalletByIdQuery, WalletDto?> getWalletByIdHandler,
         ISecurityAuditService auditService,
         ILogger<CredentialController> logger)
     {
@@ -42,8 +46,54 @@ public class CredentialController : ControllerBase
         _requestCredentialHandler = requestCredentialHandler;
         _getCredentialByIdHandler = getCredentialByIdHandler;
         _getCredentialsByWalletHandler = getCredentialsByWalletHandler;
+        _getWalletByIdHandler = getWalletByIdHandler;
         _auditService = auditService;
         _logger = logger;
+    }
+
+    /// <summary>The authenticated caller's person id (from the NameIdentifier claim), if any.</summary>
+    private Guid? GetCallerPersonId()
+    {
+        var id = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        return Guid.TryParse(id, out var g) ? g : null;
+    }
+
+    /// <summary>Roles allowed to access any holder's credentials (issuance/administration).</summary>
+    private bool IsPrivileged()
+        => User.IsInRole("Admin") || User.IsInRole("Officer") || User.IsInRole("Issuer") || User.IsInRole("TenantAdmin");
+
+    /// <summary>True when the caller's person owns the given wallet (tenant filter already applied).</summary>
+    private async Task<bool> CallerOwnsWalletAsync(Guid walletId)
+    {
+        var caller = GetCallerPersonId();
+        if (caller is null)
+        {
+            return false;
+        }
+
+        var wallet = await _getWalletByIdHandler.HandleAsync(new GetWalletByIdQuery(walletId));
+        return wallet is not null
+            && string.Equals(wallet.PersonId, caller.Value.ToString(), StringComparison.OrdinalIgnoreCase);
+    }
+
+    /// <summary>
+    /// Ownership check for a credential whose holder is identified by <paramref name="holderId"/>.
+    /// HolderId may be a wallet id or a person id, so both interpretations are accepted.
+    /// </summary>
+    private async Task<bool> CallerOwnsCredentialAsync(string? holderId)
+    {
+        var caller = GetCallerPersonId();
+        if (caller is null || string.IsNullOrEmpty(holderId))
+        {
+            return false;
+        }
+
+        if (string.Equals(holderId, caller.Value.ToString(), StringComparison.OrdinalIgnoreCase))
+        {
+            return true; // holder is the caller's person id
+        }
+
+        return Guid.TryParse(holderId, out var walletId) && await CallerOwnsWalletAsync(walletId);
     }
 
     /// <summary>
@@ -71,11 +121,9 @@ public class CredentialController : ControllerBase
             return BadRequest($"Invalid credential type: {request.CredentialType}");
         }
 
-        // Get organization from tenant context - use a well-known GUID
-        // In multi-tenant scenarios, this would map tenant to organization
-        // For now, use Guid.Empty as a placeholder (not currently used by handler)
-        var organizationId = Guid.Empty;
-
+        // The handler resolves the Issuer ENTITY by IssuerOrganizationId — the request's
+        // IssuerId is that organisation's id. The command's IssuerId carries the issuing
+        // PRINCIPAL (authenticated user) for provenance.
         var command = new IssueCredentialCommand(
             WalletId: request.WalletId,
             CredentialType: credentialType,
@@ -83,8 +131,8 @@ public class CredentialController : ControllerBase
             Claims: request.Claims,
             ValidFrom: DateTime.UtcNow,
             ValidUntil: request.ExpiryDate,
-            IssuerId: request.IssuerId.ToString(), // Application DTO has Guid IssuerId
-            IssuerOrganizationId: organizationId);
+            IssuerId: userId ?? "system",
+            IssuerOrganizationId: request.IssuerId);
 
         var result = await _issueCredentialHandler.HandleAsync(command);
 
@@ -115,6 +163,15 @@ public class CredentialController : ControllerBase
             return NotFound($"Credential {id} not found");
         }
 
+        // SECURITY: a non-privileged caller may only read credentials they hold.
+        // 404 (not 403) so credential existence isn't disclosed to non-owners.
+        if (!IsPrivileged() && !await CallerOwnsCredentialAsync(result.HolderId))
+        {
+            _logger.LogWarning("Blocked cross-holder credential access: caller {Caller} requested credential {CredentialId}",
+                GetCallerPersonId(), id);
+            return NotFound($"Credential {id} not found");
+        }
+
         return Ok(result);
     }
 
@@ -129,6 +186,14 @@ public class CredentialController : ControllerBase
             HttpContext,
             SecurityEventType.DataAccess,
             $"Wallet credentials access: {walletId}");
+
+        // SECURITY: only privileged roles may list another holder's wallet credentials.
+        if (!IsPrivileged() && !await CallerOwnsWalletAsync(walletId))
+        {
+            _logger.LogWarning("Blocked cross-holder credential listing: caller {Caller} requested wallet {WalletId}",
+                GetCallerPersonId(), walletId);
+            return Forbid();
+        }
 
         // Extract tenant ID from JWT claims
         var tenantIdClaim = User.FindFirst("tenant_id")?.Value;

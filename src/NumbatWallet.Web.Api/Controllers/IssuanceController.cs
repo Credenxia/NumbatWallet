@@ -262,7 +262,9 @@ public class IssuanceController : ControllerBase
     /// Upload documents for an issuance request
     /// </summary>
     [HttpPost("{id:guid}/documents")]
+    [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Issuer,Admin,Officer")]
     [ProducesResponseType(typeof(DocumentUploadResponseDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> UploadDocuments(Guid id, [FromForm] IFormFileCollection files)
     {
@@ -275,6 +277,27 @@ public class IssuanceController : ControllerBase
         if (issuance == null)
         {
             return NotFound($"Issuance {id} not found");
+        }
+
+        // SECURITY: validate uploads — allowlist content types/extensions and cap size. Identity
+        // documents are untrusted input; reject anything that isn't an expected document/image.
+        const long maxFileBytes = 10 * 1024 * 1024; // 10 MB per file
+        var allowedExtensions = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+            { ".pdf", ".jpg", ".jpeg", ".png", ".tiff", ".tif" };
+        var allowedContentTypes = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+            { "application/pdf", "image/jpeg", "image/png", "image/tiff" };
+
+        foreach (var file in files)
+        {
+            if (file.Length > maxFileBytes)
+            {
+                return BadRequest(new { error = $"File '{file.FileName}' exceeds the 10 MB limit." });
+            }
+            var ext = System.IO.Path.GetExtension(file.FileName);
+            if (!allowedExtensions.Contains(ext) || !allowedContentTypes.Contains(file.ContentType))
+            {
+                return BadRequest(new { error = $"File '{file.FileName}' has an unsupported type. Allowed: PDF, JPEG, PNG, TIFF." });
+            }
         }
 
         var uploadedDocuments = new List<UploadedDocumentDto>();

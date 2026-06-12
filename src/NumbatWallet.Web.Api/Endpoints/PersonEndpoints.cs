@@ -218,3 +218,12 @@ public record IdentityVerificationResult(
     string? VerificationMethod,
     DateTime VerifiedAt,
     Dictionary<string, object> Details);
+
+/// <summary>Credential/identity verification result (OpenAPI response shape).</summary>
+public record VerificationResult(
+    bool IsValid,
+    string? Issuer,
+    DateTime? IssuedAt,
+    DateTime? ExpiresAt,
+    List<string> Errors,
+    Dictionary<string, object> Claims);

@@ -1,6 +1,8 @@
 using NumbatWallet.Application.Wallets.Commands.CreateWallet;
 using NumbatWallet.Application.DTOs;
 using NumbatWallet.Web.Api.GraphQL.Subscriptions;
+using NumbatWallet.Web.Api.Security;
+using System.Security.Claims;
 
 namespace NumbatWallet.Web.Api.GraphQL.Admin;
 
@@ -307,6 +309,49 @@ public class AdminMutation
     }
 
     /// <summary>
+    /// Update rate limits
+    /// </summary>
+    /// <remarks>
+    /// POA: persists the configuration to cache only — it does not reconfigure the live
+    /// rate limiter middleware. Merged from the former GraphQL/Mutations/AdminMutation.
+    /// </remarks>
+    [GraphQLDescription("Update API rate limiting configuration")]
+    public async Task<RateLimitConfigurationDto> UpdateRateLimits(
+        [Service] ICacheService cacheService,
+        [Service] ISecurityAuditService auditService,
+        [Service] IHttpContextAccessor httpContextAccessor,
+        UpdateRateLimitsInput input,
+        CancellationToken cancellationToken = default)
+    {
+        var httpContext = httpContextAccessor.HttpContext;
+        var userId = httpContext?.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        if (httpContext != null)
+        {
+            // Fully qualified: the GraphQL.Admin namespace also defines a SecurityEventType (subscriptions).
+            await auditService.LogSecurityEventAsync(
+                httpContext,
+                Security.SecurityEventType.ConfigurationChange,
+                $"Rate limits updated: {input.PolicyName}");
+        }
+
+        var config = new RateLimitConfigurationDto
+        {
+            PolicyName = input.PolicyName,
+            RequestsPerMinute = input.RequestsPerMinute,
+            RequestsPerHour = input.RequestsPerHour ?? input.RequestsPerMinute * 60,
+            BurstSize = input.BurstSize ?? input.RequestsPerMinute * 2,
+            IsEnabled = input.IsEnabled ?? true,
+            UpdatedAt = DateTime.UtcNow,
+            UpdatedBy = userId ?? "system"
+        };
+
+        await cacheService.SetAsync($"ratelimit:{config.PolicyName}", config, TimeSpan.FromDays(1), cancellationToken);
+
+        return config;
+    }
+
+    /// <summary>
     /// Schedule a report
     /// </summary>
     [GraphQLDescription("Schedule a recurring report")]
@@ -530,13 +575,35 @@ public class ScheduleReportInput
     }
 }
 
+public class UpdateRateLimitsInput
+{
+    public required string PolicyName { get; set; }
+    public required int RequestsPerMinute { get; set; }
+    public int? RequestsPerHour { get; set; }
+    public int? BurstSize { get; set; }
+    public bool? IsEnabled { get; set; }
+}
+
+public class RateLimitConfigurationDto
+{
+    public required string PolicyName { get; set; }
+    public int RequestsPerMinute { get; set; }
+    public int RequestsPerHour { get; set; }
+    public int BurstSize { get; set; }
+    public bool IsEnabled { get; set; }
+    public DateTime UpdatedAt { get; set; }
+    public required string UpdatedBy { get; set; }
+}
+
 public class BatchCreateWalletsInput
 {
-    public List<CreateWalletInput> Wallets { get; set; } = new();
+    public List<BatchWalletInput> Wallets { get; set; } = new();
     public bool ContinueOnError { get; set; } = true;
 }
 
-public class CreateWalletInput
+// Named BatchWalletInput (not CreateWalletInput) to avoid a GraphQL type-name
+// collision with Schema.CreateWalletInput used by the root createWallet mutation.
+public class BatchWalletInput
 {
     public string PersonId { get; set; } = string.Empty;
     public string Name { get; set; } = string.Empty;

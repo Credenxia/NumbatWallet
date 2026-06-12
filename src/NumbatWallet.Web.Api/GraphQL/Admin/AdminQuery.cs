@@ -352,7 +352,10 @@ public class AdminQuery
             TotalPersons = await context.Persons.CountAsync(cancellationToken),
             TotalOrganizations = 0, // Organizations entity not yet implemented
             DatabaseSizeMB = await GetDatabaseSizeAsync(context, cancellationToken),
-            LastBackup = await GetLastBackupTimeAsync(context, cancellationToken)
+            // POA: no backup metadata table exists in the EF model yet, so this is honestly null.
+            // (Previously queried context.Set<BackupMetadata>() which threw at runtime because
+            // BackupMetadata is not a mapped entity.)
+            LastBackup = null
         };
 
         return stats;
@@ -374,16 +377,6 @@ public class AdminQuery
         return result != null ? Convert.ToDecimal(result) : 0;
     }
 
-    private async Task<DateTime?> GetLastBackupTimeAsync(
-        NumbatWalletDbContext context,
-        CancellationToken cancellationToken)
-    {
-        // Query backup metadata table if it exists
-        return await context.Set<BackupMetadata>()
-            .OrderByDescending(b => b.CreatedAt)
-            .Select(b => b.CreatedAt)
-            .FirstOrDefaultAsync(cancellationToken);
-    }
 }
 
 // Input types
@@ -550,10 +543,3 @@ public enum TenantStatus
 }
 
 // ReportParameters moved to AdminMutation.cs to avoid duplication
-
-// Entity for backup metadata
-public class BackupMetadata
-{
-    public string Id { get; set; } = string.Empty;
-    public DateTime CreatedAt { get; set; }
-}

@@ -307,13 +307,34 @@ public class ApiKeyAuthenticationMiddleware
                 var keyName = validApiKeys.FirstOrDefault(x => x.Value == apiKey).Key;
 
                 // Create claims for API key authentication
+                // A service key has a stable subject identity. Both ClaimTypes.NameIdentifier
+                // and the OIDC-style "sub" claim are populated so resolvers that read either
+                // (e.g. GraphQL mutations gating on "sub") treat the key as an authenticated principal.
+                var subject = $"apikey:{keyName}";
                 var claims = new List<Claim>
                 {
                     new Claim(ClaimTypes.Name, keyName),
                     new Claim(ClaimTypes.AuthenticationMethod, "ApiKey"),
                     new Claim("api_key_name", keyName),
-                    new Claim(ClaimTypes.Role, "Service")
+                    new Claim(ClaimTypes.NameIdentifier, subject),
+                    new Claim("sub", subject)
                 };
+
+                // Roles for service/SDK clients are configurable via ApiKey:Roles (CSV).
+                var roles = (_configuration["ApiKey:Roles"] ?? "Service")
+                    .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+                foreach (var role in roles)
+                {
+                    claims.Add(new Claim(ClaimTypes.Role, role));
+                }
+
+                // A service key acts on behalf of a tenant it declares via X-Tenant-Id. This is
+                // trusted only because the key itself is the credential (held by the agency/SDK).
+                if (context.Request.Headers.TryGetValue("X-Tenant-Id", out var tenantHeader)
+                    && !string.IsNullOrWhiteSpace(tenantHeader))
+                {
+                    claims.Add(new Claim("tenant_id", tenantHeader.ToString()));
+                }
 
                 var identity = new ClaimsIdentity(claims, "ApiKey");
                 context.User = new ClaimsPrincipal(identity);

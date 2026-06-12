@@ -14,19 +14,19 @@ namespace NumbatWallet.Web.Api.Authentication;
 /// </summary>
 public class TestAuthenticationHandler : AuthenticationHandler<AuthenticationSchemeOptions>
 {
-    private readonly IConfiguration _configuration;
     private readonly ITokenBlacklistService _tokenBlacklistService;
+    private readonly NumbatWallet.Application.Interfaces.IAccessTokenSigner _accessTokenSigner;
 
     public TestAuthenticationHandler(
         IOptionsMonitor<AuthenticationSchemeOptions> options,
         ILoggerFactory logger,
         UrlEncoder encoder,
-        IConfiguration configuration,
-        ITokenBlacklistService tokenBlacklistService)
+        ITokenBlacklistService tokenBlacklistService,
+        NumbatWallet.Application.Interfaces.IAccessTokenSigner accessTokenSigner)
         : base(options, logger, encoder)
     {
-        _configuration = configuration;
         _tokenBlacklistService = tokenBlacklistService;
+        _accessTokenSigner = accessTokenSigner;
     }
 
     protected override Task<AuthenticateResult> HandleAuthenticateAsync()
@@ -52,13 +52,13 @@ public class TestAuthenticationHandler : AuthenticationHandler<AuthenticationSch
                     {
                         MapInboundClaims = false // Preserve original JWT claim names (sub, email, etc)
                     };
-                    var key = System.Text.Encoding.UTF8.GetBytes(
-                        _configuration["Jwt:SecretKey"] ?? "TestSecretKey123456789012345678901234567890");
-
+                    // Validate against whatever the configured signer produced (HS256 or RS256),
+                    // so this dev handler works regardless of the signing mode.
                     var validationParameters = new TokenValidationParameters
                     {
                         ValidateIssuerSigningKey = true,
-                        IssuerSigningKey = new SymmetricSecurityKey(key),
+                        IssuerSigningKeys = _accessTokenSigner.GetValidationKeys(),
+                        ValidAlgorithms = new[] { _accessTokenSigner.Algorithm },
                         ValidateIssuer = false, // Allow any issuer for testing
                         ValidateAudience = false, // Allow any audience for testing
                         ValidateLifetime = true,

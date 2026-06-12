@@ -2,6 +2,8 @@ using HotChocolate.AspNetCore;
 using NumbatWallet.Web.Api.GraphQL.Schema;
 using NumbatWallet.Web.Api.GraphQL.Queries;
 using NumbatWallet.Web.Api.GraphQL.Mutations;
+using NumbatWallet.Web.Api.GraphQL.Admin;
+using NumbatWallet.Web.Api.GraphQL.Subscriptions;
 
 namespace NumbatWallet.Web.Api.Extensions;
 
@@ -18,12 +20,12 @@ public static class GraphQLExtensions
             .BindRuntimeType<Dictionary<string, object>, AnyType>()
             .AddQueryType<Query>()
             .AddMutationType<Mutation>()
-            // TODO: Re-enable subscriptions after fixing type registration issues
-            // .AddSubscriptionType<Subscription>()
-            // Register credential types (auto-discovery will find these via query/mutation return types)
-            // .AddType<CredentialType>()
-            // .AddType<IssuanceType>()
-            // .AddType<VerificationResultType>()
+            .AddSubscriptionType<Subscription>()
+            // Register Admin GraphQL extensions
+            .AddTypeExtension<AdminQuery>()
+            .AddTypeExtension<AdminMutation>()
+            .AddTypeExtension<AdminSubscription>()
+            .AddTypeExtension<BulkOperationSubscriptions>()
             // Register credential queries and mutations
             .AddTypeExtension<CredentialQuery>()
             .AddTypeExtension<CredentialMutation>()
@@ -86,9 +88,8 @@ public static class GraphQLExtensions
         //     app.UseGraphQLVoyager("/graphql-voyager");
         // }
 
-        // Map WebSocket for subscriptions (separate path to avoid conflict with HTTP)
-        // TODO: Re-enable when subscriptions are needed
-        // app.MapGraphQLWebSocket("/graphql/ws");
+        // Map WebSocket for subscriptions
+        app.MapGraphQLWebSocket("/graphql/ws");
 
         return app;
     }
