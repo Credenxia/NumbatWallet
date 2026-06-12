@@ -35,6 +35,7 @@ public class NumbatWalletDbContext : DbContext, IUnitOfWork
     public DbSet<Wallet> Wallets => Set<Wallet>();
     public DbSet<Credential> Credentials => Set<Credential>();
     public DbSet<Presentation> Presentations => Set<Presentation>();
+    public DbSet<PresentationRequest> PresentationRequests => Set<PresentationRequest>();
     public DbSet<Person> Persons => Set<Person>();
     public DbSet<Issuer> Issuers => Set<Issuer>();
     public DbSet<TenantCertificate> TenantCertificates => Set<TenantCertificate>();
@@ -79,6 +80,7 @@ public class NumbatWalletDbContext : DbContext, IUnitOfWork
         modelBuilder.Entity<Wallet>().HasQueryFilter(w => w.TenantId == _tenantService.TenantId.ToString());
         modelBuilder.Entity<Credential>().HasQueryFilter(c => c.TenantId == _tenantService.TenantId.ToString());
         modelBuilder.Entity<Presentation>().HasQueryFilter(p => p.TenantId == _tenantService.TenantId.ToString());
+        modelBuilder.Entity<PresentationRequest>().HasQueryFilter(p => p.TenantId == _tenantService.TenantId.ToString());
         modelBuilder.Entity<Person>().HasQueryFilter(p => p.TenantId == _tenantService.TenantId.ToString());
         modelBuilder.Entity<Issuer>().HasQueryFilter(i => i.TenantId == _tenantService.TenantId.ToString());
         modelBuilder.Entity<WalletTemplate>().HasQueryFilter(wt => wt.TenantId == _tenantService.TenantId);

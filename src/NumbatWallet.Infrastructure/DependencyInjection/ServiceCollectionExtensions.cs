@@ -91,6 +91,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IWalletRepository, WalletRepository>();
         services.AddScoped<ICredentialRepository, CredentialRepository>();
         services.AddScoped<IPresentationRepository, PresentationRepository>();
+        services.AddScoped<IPresentationRequestRepository, PresentationRequestRepository>();
         services.AddScoped<IIssuerRepository, IssuerRepository>();
         services.AddScoped<IOrganizationRepository, OrganizationRepository>();
         services.AddScoped<ITenantCertificateRepository, TenantCertificateRepository>();

@@ -57,9 +57,72 @@ public class PresentationMutation
             CredentialId: input.CredentialId,
             VerifierId: input.VerifierId,
             Purpose: input.Purpose,
-            SelectiveDisclosure: input.SelectiveClaims);
+            SelectiveDisclosure: input.SelectiveClaims,
+            Nonce: input.Nonce);
 
         return await presentCredentialHandler.HandleAsync(command);
+    }
+
+    /// <summary>
+    /// EXPERIMENTAL (minimal OID4VP subset): create a presentation request stating the
+    /// credential type and claims a verifier requires. Returns a DIF Presentation Exchange v2
+    /// presentation_definition, a request URI and the one-time nonce the holder's VP must carry.
+    /// </summary>
+    [GraphQLDescription("EXPERIMENTAL: Create an OID4VP-style presentation request (DIF Presentation Exchange v2 definition + one-time nonce)")]
+    [Authorize]
+    public async Task<PresentationRequestResult> CreatePresentationRequest(
+        CreatePresentationRequestInput input,
+        [Service] IHttpContextAccessor httpContextAccessor,
+        [Service] ICommandHandler<CreatePresentationRequestCommand, PresentationRequestResult> createRequestHandler)
+    {
+        _logger.LogInformation(
+            "Creating presentation request for verifier {VerifierId} (type {CredentialType})",
+            input.VerifierId, input.RequestedCredentialType);
+
+        var httpContext = httpContextAccessor.HttpContext;
+        if (httpContext != null)
+        {
+            await _auditService.LogSecurityEventAsync(
+                httpContext,
+                SecurityEventType.DataAccess,
+                $"Presentation request created for verifier {input.VerifierId}");
+        }
+
+        var command = new CreatePresentationRequestCommand(
+            VerifierId: input.VerifierId,
+            Purpose: input.Purpose,
+            RequestedCredentialType: input.RequestedCredentialType,
+            RequestedClaims: input.RequestedClaims);
+
+        return await createRequestHandler.HandleAsync(command);
+    }
+
+    /// <summary>
+    /// EXPERIMENTAL (minimal OID4VP subset): submit a VP-JWT against a pending presentation
+    /// request. One-shot: replays are rejected. Anonymous by design (mirrors verifyPresentation):
+    /// the submitter is the wallet/holder side of the exchange holding only the token.
+    /// </summary>
+    [GraphQLDescription("EXPERIMENTAL: Submit a VP-JWT against an OID4VP-style presentation request (one-shot; replays rejected)")]
+    [AllowAnonymous]
+    public async Task<PresentationVerificationResultDto> SubmitPresentation(
+        Guid requestId,
+        string vpToken,
+        [Service] IHttpContextAccessor httpContextAccessor,
+        [Service] ICommandHandler<SubmitPresentationCommand, PresentationVerificationResultDto> submitPresentationHandler)
+    {
+        _logger.LogInformation("Submitting presentation for request {RequestId}", requestId);
+
+        var httpContext = httpContextAccessor.HttpContext;
+        if (httpContext != null)
+        {
+            await _auditService.LogSecurityEventAsync(
+                httpContext,
+                SecurityEventType.DataAccess,
+                $"Presentation submitted for request {requestId}");
+        }
+
+        var command = new SubmitPresentationCommand(requestId, vpToken);
+        return await submitPresentationHandler.HandleAsync(command);
     }
 
     /// <summary>
@@ -102,4 +165,22 @@ public class PresentCredentialInput
 
     [GraphQLDescription("Names of the claims to disclose; null/empty discloses all claims")]
     public List<string>? SelectiveClaims { get; set; }
+
+    [GraphQLDescription("EXPERIMENTAL: nonce from an OID4VP presentation request; the VP-JWT will carry it so submitPresentation can bind the token to the request. Omit for ad-hoc presentations (a random nonce is generated).")]
+    public string? Nonce { get; set; }
+}
+
+/// <summary>
+/// Input for the createPresentationRequest mutation (EXPERIMENTAL minimal OID4VP subset).
+/// </summary>
+public class CreatePresentationRequestInput
+{
+    public required string VerifierId { get; set; }
+    public required string Purpose { get; set; }
+
+    [GraphQLDescription("Credential type the verifier requires, e.g. ProofOfAge")]
+    public required string RequestedCredentialType { get; set; }
+
+    [GraphQLDescription("Claim names the holder must disclose")]
+    public required List<string> RequestedClaims { get; set; }
 }

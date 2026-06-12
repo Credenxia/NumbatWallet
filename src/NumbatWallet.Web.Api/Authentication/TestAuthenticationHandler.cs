@@ -83,11 +83,15 @@ public class TestAuthenticationHandler : AuthenticationHandler<AuthenticationSch
 
             if (allowAnonymous)
             {
-                // For anonymous endpoints, return default test claims
+                // For anonymous endpoints, return default test claims.
+                // NOTE: deliberately NO tenant_id claim — anonymous callers (e.g. verifiers
+                // hitting verifyPresentation / presentations/requests/{id}/submit) have no
+                // tenant. A fabricated tenant here used to poison ICurrentTenantService and
+                // made the TenantInterceptor reject the verification bookkeeping write
+                // ("Cannot modify entity from different tenant ... 'test-tenant'").
                 var claims = new[]
                 {
                     new Claim("user_id", "test-user"),
-                    new Claim("tenant_id", "test-tenant"),
                     new Claim(ClaimTypes.Role, "User"),
                     new Claim(ClaimTypes.Name, "Test User"),
                     new Claim(ClaimTypes.NameIdentifier, "test-user")
