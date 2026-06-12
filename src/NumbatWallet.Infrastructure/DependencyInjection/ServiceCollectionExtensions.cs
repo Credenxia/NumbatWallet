@@ -303,28 +303,34 @@ public static class ServiceCollectionExtensions
         // services.AddScoped<ISearchTokenService, SearchTokenService>();
         // services.AddScoped<ISearchIndexingService, SearchIndexingService>();
 
-        // Caching - use Aspire service discovery.
-        // In Development we deliberately use the in-process memory cache: the local Redis
-        // (e.g. Aspire's, whose connection string sets ssl=true against a non-TLS container)
-        // is unreliable for local dev and would otherwise break the token stores.
+        // Caching. Backend selection is centralised in CacheRegistrationPolicy (unit-tested):
+        // Redis ONLY when a non-empty ConnectionStrings:Redis (or Aspire "redis") is
+        // configured — in any environment; Development always stays in-memory (the local
+        // Aspire Redis connection string sets ssl=true against a non-TLS container).
+        // There is deliberately NO localhost default in appsettings: an unconfigured
+        // deployment must degrade to the in-memory distributed cache, not stall on a
+        // nonexistent Redis (perf defect 2026-06-12 — 5s syncTimeout on every Bearer
+        // request). The selected backend is logged at startup via CacheBackendSelection.
         var cacheEnv = ResolveEnvironmentName(services);
-        var useRedis = !cacheEnv.Equals("Development", StringComparison.OrdinalIgnoreCase);
         var redisConnectionString = configuration.GetConnectionString("redis")
             ?? configuration.GetConnectionString("Redis");
-        if (useRedis && !string.IsNullOrEmpty(redisConnectionString))
+        services.AddSingleton(Caching.CacheRegistrationPolicy.DescribeSelection(cacheEnv, redisConnectionString));
+        if (Caching.CacheRegistrationPolicy.UseRedis(cacheEnv, redisConnectionString))
         {
-            // Add StackExchange.Redis IConnectionMultiplexer
+            // Bounded timeouts (abortConnect=false, connectTimeout<=1000ms, syncTimeout<=500ms
+            // unless the connection string overrides them): the token blacklist runs an HMGET
+            // on EVERY authenticated request (fail-open), so a dead Redis must cost
+            // sub-second, never the 5000ms StackExchange.Redis default.
             services.AddSingleton<IConnectionMultiplexer>(_ =>
-            {
-                var config = ConfigurationOptions.Parse(redisConnectionString);
-                config.AbortOnConnectFail = false; // Allow retry on initial connection failure
-                return ConnectionMultiplexer.Connect(config);
-            });
+                ConnectionMultiplexer.Connect(
+                    Caching.CacheRegistrationPolicy.BuildRedisOptions(redisConnectionString!)));
 
-            // Add distributed cache
+            // Add distributed cache (builds its own multiplexer — give it its own options
+            // instance with the same bounded timeouts)
             services.AddStackExchangeRedisCache(options =>
             {
-                options.Configuration = redisConnectionString;
+                options.ConfigurationOptions =
+                    Caching.CacheRegistrationPolicy.BuildRedisOptions(redisConnectionString!);
                 options.InstanceName = "NumbatWallet";
             });
 
@@ -333,7 +339,8 @@ public static class ServiceCollectionExtensions
         }
         else
         {
-            // Use in-memory cache as fallback
+            // In-memory distributed cache (single-replica safe; Testing on AKS runs without
+            // Redis until the shared-services network policy admits this namespace)
             services.AddDistributedMemoryCache();
             services.AddSingleton<ICacheService, CacheService>();
         }

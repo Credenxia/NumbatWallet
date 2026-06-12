@@ -50,12 +50,13 @@ public class IntegrationTestFixture : WebApplicationFactory<Program>, IAsyncLife
             ["Jwt:SecretKey"] = "TestSecretKey123456789012345678901234567890",
             ["Jwt:Issuer"] = "https://test.numbatwallet.wa.gov.au",
             ["Serilog:MinimumLevel:Default"] = "Warning",
-            // HERMETIC CACHE: blank out the Redis connection string inherited from
-            // appsettings.json (localhost:6379). The test harness provisions PostgreSQL but NOT
-            // Redis, and outside Development the host wires the refresh-token store and logout
-            // blacklist to Redis when a connection string is present. Against an unreachable
-            // Redis those stores fail safe (reads -> null), which made refresh return 401 and
-            // logout a no-op. Blank string selects the in-memory distributed cache instead.
+            // HERMETIC CACHE: keep the Redis connection string blank. The base
+            // appsettings.json no longer ships a localhost:6379 default (removed with the
+            // CacheRegistrationPolicy fix — unconfigured deployments now fall back to the
+            // in-memory distributed cache), but the harness pins the blank value anyway so a
+            // future config default can never reintroduce a Redis dependency here. The
+            // refresh-token store and logout blacklist fail safe (reads -> null) against an
+            // unreachable Redis, which surfaced as refresh 401 / logout no-op historically.
             ["ConnectionStrings:Redis"] = ""
         };
     }
@@ -136,12 +137,13 @@ public class IntegrationTestFixture : WebApplicationFactory<Program>, IAsyncLife
                 options.ConfigureWarnings(w => w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
             });
 
-            // HERMETIC CACHE: the host (Testing env + Redis connection string from
-            // appsettings.json) wires IDistributedCache to Redis at localhost:6379, which this
-            // harness does NOT provision. The refresh-token store and logout blacklist sit on
-            // IDistributedCache and fail safe when the cache is unreachable (reads -> null), so
-            // refresh returned 401 and logout was a no-op. Replace with the in-memory
-            // distributed cache so token flows are testable without a Redis container.
+            // HERMETIC CACHE: belt-and-braces alongside the blank ConnectionStrings:Redis
+            // above. With CacheRegistrationPolicy the host only wires Redis when a non-empty
+            // connection string is configured, so this normally re-registers the same
+            // in-memory cache — but it guarantees the harness can never depend on a Redis
+            // container regardless of host configuration. The refresh-token store and logout
+            // blacklist sit on IDistributedCache and fail safe (reads -> null) when a cache
+            // is unreachable, which historically surfaced as refresh 401 / logout no-op.
             services.RemoveAll<Microsoft.Extensions.Caching.Distributed.IDistributedCache>();
             services.AddDistributedMemoryCache();
 
