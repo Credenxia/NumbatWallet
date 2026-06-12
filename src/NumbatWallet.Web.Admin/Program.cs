@@ -63,6 +63,118 @@ try
             .AddMicrosoftIdentityUI();
     }
 
+    // Credentry SSO federation (config-gated): adds a "Sign in with Credentry" OIDC option
+    // (authorization code + PKCE against the Credentry IdP, client numbatwallet-admin) that
+    // signs in to the SAME cookie session the existing logins use — the rest of the app is
+    // unaffected. The existing dev cookie login remains the default path.
+    // Contract: credentry/docs/integration/06-NUMBATWALLET-FEDERATION-CONTRACT.md.
+    var credentryEnabled = builder.Configuration.GetValue<bool>("Credentry:Enabled");
+    if (credentryEnabled)
+    {
+        var credentryCfg = builder.Configuration.GetSection("Credentry");
+        var credentrySignInScheme = builder.Environment.IsDevelopment()
+            ? "NumbatWalletAuth"
+            : Microsoft.AspNetCore.Authentication.Cookies.CookieAuthenticationDefaults.AuthenticationScheme;
+
+        builder.Services.AddAuthentication()
+            .AddOpenIdConnect("Credentry", "Sign in with Credentry", options =>
+            {
+                options.Authority = credentryCfg["Authority"];
+                options.RequireHttpsMetadata = credentryCfg.GetValue("RequireHttpsMetadata", true);
+                options.ClientId = credentryCfg["ClientId"] ?? "numbatwallet-admin";
+                options.ClientSecret = credentryCfg["ClientSecret"];
+                options.ResponseType = "code";
+                options.UsePkce = true; // mandatory at the Credentry IdP
+                options.CallbackPath = credentryCfg["CallbackPath"] ?? "/signin-credentry";
+                options.SignedOutCallbackPath = credentryCfg["SignedOutCallbackPath"] ?? "/signout-callback-credentry";
+                options.SaveTokens = true;
+                options.GetClaimsFromUserInfoEndpoint = false;
+                options.MapInboundClaims = false;
+                // Reuse the app's existing cookie session — do NOT introduce a second cookie scheme.
+                options.SignInScheme = credentrySignInScheme;
+
+                options.Scope.Clear();
+                var scopes = credentryCfg.GetSection("Scopes").Get<string[]>()
+                    ?? ["openid", "profile", "email", "offline_access", "credentry.api", "credentry.roles", "numbatwallet.api"];
+                foreach (var scope in scopes)
+                {
+                    options.Scope.Add(scope);
+                }
+
+                options.TokenValidationParameters.NameClaimType = "name";
+                options.TokenValidationParameters.RoleClaimType = ClaimTypes.Role;
+
+                options.Events = new OpenIdConnectEvents
+                {
+                    OnTokenValidated = context =>
+                    {
+                        if (context.Principal?.Identity is not ClaimsIdentity identity)
+                        {
+                            return Task.CompletedTask;
+                        }
+
+                        // Credentry sends role/tid/product claims in the ACCESS token only
+                        // (the id_token carries core identity). The access token came straight
+                        // from the token endpoint over this TLS exchange, so its claims are
+                        // trustworthy here without re-validation.
+                        var accessToken = context.TokenEndpointResponse?.AccessToken;
+                        if (!string.IsNullOrEmpty(accessToken))
+                        {
+                            var jwt = new JwtSecurityTokenHandler().ReadJwtToken(accessToken);
+                            foreach (var claim in jwt.Claims.Where(c =>
+                                         c.Type is "role" or "tid" or "product" or "amr" or "email" or "name"))
+                            {
+                                if (!identity.HasClaim(claim.Type, claim.Value))
+                                {
+                                    identity.AddClaim(new Claim(claim.Type, claim.Value));
+                                }
+                            }
+
+                            // Parity with the dev cookie login, which stores tokens as claims
+                            // for downstream API calls.
+                            identity.AddClaim(new Claim("access_token", accessToken));
+                            var refreshToken = context.TokenEndpointResponse?.RefreshToken;
+                            if (!string.IsNullOrEmpty(refreshToken))
+                            {
+                                identity.AddClaim(new Claim("refresh_token", refreshToken));
+                            }
+                        }
+
+                        // NW.* convention → ASP.NET role claims (NW.Admin → Admin etc.), so the
+                        // existing AdminOnly/OfficerOrAdmin policies apply. Credentry platform
+                        // roles (SuperAdmin, TenantAdmin, …) are deliberately not mapped.
+                        foreach (var nwRole in identity.FindAll("role")
+                                     .Select(c => c.Value)
+                                     .Where(v => v.StartsWith("NW.", StringComparison.Ordinal))
+                                     .Select(v => v[3..])
+                                     .Where(v => v.Length > 0)
+                                     .Distinct(StringComparer.Ordinal)
+                                     .ToList())
+                        {
+                            if (!identity.HasClaim(ClaimTypes.Role, nwRole))
+                            {
+                                identity.AddClaim(new Claim(ClaimTypes.Role, nwRole));
+                            }
+                        }
+
+                        // Tenant translation table (Credentry tid → NumbatWallet tenant id);
+                        // unmapped tenants fail closed (no tenant_id claim).
+                        var tid = identity.FindFirst("tid")?.Value;
+                        if (tid is not null && Guid.TryParse(tid, out var tidGuid))
+                        {
+                            var mapped = credentryCfg.GetSection("TenantMap")[tidGuid.ToString("D")];
+                            if (!string.IsNullOrWhiteSpace(mapped) && identity.FindFirst("tenant_id") is null)
+                            {
+                                identity.AddClaim(new Claim("tenant_id", mapped));
+                            }
+                        }
+
+                        return Task.CompletedTask;
+                    }
+                };
+            });
+    }
+
     builder.Services.AddAuthorizationCore(options =>
     {
         options.FallbackPolicy = options.DefaultPolicy;
@@ -225,6 +337,29 @@ try
     // NOTE: Prerendering disabled to avoid session storage / JS interop issues during initial render
     app.MapRazorComponents<App>()
         .AddInteractiveServerRenderMode(options => options.DisableWebSocketCompression = false);
+
+    // Credentry SSO: challenge endpoint for the "Sign in with Credentry" button. The OIDC
+    // handler completes at CallbackPath and persists the session in the existing cookie scheme.
+    if (credentryEnabled)
+    {
+        app.MapGet("/login/credentry", (string? returnUrl) =>
+            Results.Challenge(
+                new AuthenticationProperties { RedirectUri = returnUrl ?? "/dashboard" },
+                ["Credentry"]))
+            .AllowAnonymous();
+
+        // Single logout: clears the local cookie session AND the Credentry IdP session
+        // (RP-initiated logout with id_token_hint).
+        app.MapGet("/logout/credentry", (HttpContext context) =>
+        {
+            var cookieScheme = app.Environment.IsDevelopment()
+                ? "NumbatWalletAuth"
+                : Microsoft.AspNetCore.Authentication.Cookies.CookieAuthenticationDefaults.AuthenticationScheme;
+            return Results.SignOut(
+                new AuthenticationProperties { RedirectUri = "/login" },
+                [cookieScheme, "Credentry"]);
+        }).AllowAnonymous();
+    }
 
     // Server-side auth endpoints for cookie management (development mode)
     if (app.Environment.IsDevelopment())

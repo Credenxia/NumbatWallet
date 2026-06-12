@@ -1,5 +1,6 @@
 using Carter;
 using NumbatWallet.Application.DependencyInjection;
+using NumbatWallet.Web.Api.Authentication;
 using NumbatWallet.Infrastructure.DependencyInjection;
 using NumbatWallet.Web.Api.Extensions;
 using NumbatWallet.Web.Api.Security;
@@ -164,13 +165,32 @@ try
         });
     });
 
-    // AUTHENTICATION: Environment-specific configuration
+    // AUTHENTICATION: Environment-specific configuration.
+    // Credentry SSO federation (Credentry:Enabled=true) adds the "CredentryJwt" bearer scheme
+    // and swaps the DEFAULT scheme for a selector that probes the bearer token's issuer:
+    // Credentry-issued tokens go to CredentryJwt, everything else keeps flowing to the
+    // pre-existing default scheme — self-issued JWTs, the API-key middleware and the
+    // (dead-code) Azure AD/ServiceWA schemes are untouched (integrate-first, delete-later).
+    var credentryEnabled = builder.Configuration.GetValue<bool>("Credentry:Enabled");
     if (builder.Environment.IsDevelopment() || builder.Environment.IsEnvironment("Testing"))
     {
         // Development/Testing: Use test handler for easier testing
-        builder.Services.AddAuthentication("Test")
+        var devAuthBuilder = builder.Services.AddAuthentication(
+                credentryEnabled
+                    ? NumbatWallet.Web.Api.Authentication.CredentryAuthenticationDefaults.SelectorScheme
+                    : "Test")
             .AddScheme<Microsoft.AspNetCore.Authentication.AuthenticationSchemeOptions, NumbatWallet.Web.Api.Authentication.TestAuthenticationHandler>(
                 "Test", options => { });
+
+        if (credentryEnabled)
+        {
+            devAuthBuilder
+                .AddCredentryJwt(builder.Configuration)
+                .AddCredentrySelector(builder.Configuration, fallbackScheme: "Test");
+            Log.Information(
+                "Credentry SSO federation ENABLED (issuer {Authority})",
+                builder.Configuration["Credentry:Authority"]);
+        }
 
         Log.Information("Using TEST authentication handler (Development/Testing only)");
     }
@@ -179,8 +199,23 @@ try
         // Production/Staging: validate the self-issued JWTs using the configured access-token
         // signer (HS256 or RS256-from-KeyVault). Configured via the options pattern so the
         // signer (and, for RS256, its Key Vault public key) is resolved from DI.
-        builder.Services.AddAuthentication(Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerDefaults.AuthenticationScheme)
+        var prodAuthBuilder = builder.Services.AddAuthentication(
+                credentryEnabled
+                    ? NumbatWallet.Web.Api.Authentication.CredentryAuthenticationDefaults.SelectorScheme
+                    : Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerDefaults.AuthenticationScheme)
             .AddJwtBearer();
+
+        if (credentryEnabled)
+        {
+            prodAuthBuilder
+                .AddCredentryJwt(builder.Configuration)
+                .AddCredentrySelector(
+                    builder.Configuration,
+                    fallbackScheme: Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerDefaults.AuthenticationScheme);
+            Log.Information(
+                "Credentry SSO federation ENABLED (issuer {Authority})",
+                builder.Configuration["Credentry:Authority"]);
+        }
         builder.Services.AddOptions<Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerOptions>(
                 Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerDefaults.AuthenticationScheme)
             .Configure<NumbatWallet.Application.Interfaces.IAccessTokenSigner>((options, signer) =>

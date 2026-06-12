@@ -1,8 +1,10 @@
 @page "/login"
 @using Microsoft.AspNetCore.Authorization
+@using Microsoft.Extensions.Configuration
 @attribute [AllowAnonymous]
 @layout NumbatWallet.Web.Admin.Components.Layout.LoginLayout
 @inject NavigationManager Navigation
+@inject IConfiguration Configuration
 
 <PageTitle>Sign In - NumbatWallet Admin</PageTitle>
 
@@ -48,6 +50,15 @@
                 <span>Sign In</span>
             </button>
         </form>
+
+        @if (Configuration.GetValue<bool>("Credentry:Enabled"))
+        {
+            <div class="text-center my-3 text-muted">or</div>
+            <a href="/login/credentry" class="btn btn-outline-secondary w-100" data-testid="credentry-login">
+                <i class="bi bi-shield-lock me-2"></i>
+                <span>Sign in with Credentry</span>
+            </a>
+        }
 
         <div class="login-footer">
             <p class="text-muted">Government of Western Australia</p>

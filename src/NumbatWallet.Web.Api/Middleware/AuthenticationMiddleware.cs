@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
+using NumbatWallet.Web.Api.Authentication;
 using System.Security.Claims;
 using System.Text;
 
@@ -147,6 +148,16 @@ public static class AuthenticationMiddleware
             });
         }
 
+        // Credentry SSO federation: register the CredentryJwt bearer scheme (config-gated)
+        // so the MultiAuth selector below can route Credentry-issued tokens to it. All other
+        // schemes (AzureAD, ServiceWA, Internal) are unchanged — migration-period coexistence.
+        var credentryEnabled = configuration.GetValue<bool>("Credentry:Enabled");
+        var credentryAuthority = configuration["Credentry:Authority"];
+        if (credentryEnabled)
+        {
+            authBuilder.AddCredentryJwt(configuration);
+        }
+
         authBuilder.AddJwtBearer("Internal", options =>
         {
             // Configure internal JWT for service-to-service authentication
@@ -175,6 +186,15 @@ public static class AuthenticationMiddleware
                 if (string.IsNullOrEmpty(authHeader))
                 {
                     return JwtBearerDefaults.AuthenticationScheme;
+                }
+
+                // Credentry federation: issuer-based selection — decode the JWT issuer
+                // WITHOUT validating and forward to CredentryJwt when it matches the
+                // configured Credentry issuer (full validation happens in that scheme).
+                if (credentryEnabled &&
+                    Authentication.CredentryTokenInspector.IsCredentryToken(authHeader, credentryAuthority))
+                {
+                    return Authentication.CredentryAuthenticationDefaults.AuthenticationScheme;
                 }
 
                 // Check issuer to determine scheme. Never forward to ServiceWA unless the
