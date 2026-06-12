@@ -114,11 +114,9 @@ public class NumbatWalletDbContext : DbContext, IUnitOfWork
 
         // WalletTemplate configuration moved to WalletTemplateConfiguration.cs
 
-        // Configure JSONB for PostgreSQL only
-        if (!Database.IsSqlite())
-        {
-            modelBuilder.HasPostgresExtension("pgcrypto"); // For encryption functions if needed
-        }
+        // NOTE: no Postgres extensions are declared. Field-level encryption is performed
+        // app-side (AES-256-GCM); pgcrypto was a speculative declaration and is not
+        // allow-listed on Azure Database for PostgreSQL flexible servers by default.
 
         // Configure event sourcing entities
         EventSourcingConfiguration.ConfigureEventSourcing(modelBuilder);

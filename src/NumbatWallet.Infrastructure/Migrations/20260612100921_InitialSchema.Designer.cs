@@ -12,7 +12,7 @@ using NumbatWallet.Infrastructure.Data;
 namespace NumbatWallet.Infrastructure.Migrations
 {
     [DbContext(typeof(NumbatWalletDbContext))]
-    [Migration("20260612092937_InitialSchema")]
+    [Migration("20260612100921_InitialSchema")]
     partial class InitialSchema
     {
         /// <inheritdoc />
@@ -23,7 +23,6 @@ namespace NumbatWallet.Infrastructure.Migrations
                 .HasAnnotation("ProductVersion", "10.0.5")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
-            NpgsqlModelBuilderExtensions.HasPostgresExtension(modelBuilder, "pgcrypto");
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
             modelBuilder.Entity("NumbatWallet.Domain.Aggregates.Credential", b =>
