@@ -1,0 +1,112 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: numbatwallet-api
+  labels:
+    app: numbatwallet-api
+    component: api
+    app.kubernetes.io/part-of: numbatwallet
+spec:
+  replicas: {{ .Values.api.replicas }}
+  selector:
+    matchLabels:
+      app: numbatwallet-api
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  template:
+    metadata:
+      labels:
+        app: numbatwallet-api
+        component: api
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1654
+        runAsGroup: 1654
+        fsGroup: 1654
+      containers:
+        - name: numbatwallet-api
+          image: "{{ .Values.image.registry }}/{{ .Values.image.api }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - containerPort: 8080
+              name: http
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+          env:
+            # Runtime
+            - name: ASPNETCORE_ENVIRONMENT
+              value: {{ .Values.api.environment | quote }}
+            - name: ASPNETCORE_URLS
+              value: "http://+:8080"
+            # Honour X-Forwarded-Proto from the shared NGINX ingress so
+            # UseHttpsRedirection does not loop behind TLS-terminating ingress.
+            - name: ASPNETCORE_FORWARDEDHEADERS_ENABLED
+              value: "true"
+
+            # PostgreSQL (shared psql-shared-nonprod-aue, database numbatwallet_test)
+            - name: ConnectionStrings__numbatwallet
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secretName }}
+                  key: connection-string
+
+            {{- if .Values.api.redisConnectionString }}
+            # Shared Redis (requires the shared-services allow-from network policy
+            # to include numbatwallet-test)
+            - name: ConnectionStrings__Redis
+              value: {{ .Values.api.redisConnectionString | quote }}
+            {{- end }}
+
+            # Self-issued JWT signing (HS256)
+            - name: Jwt__SecretKey
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secretName }}
+                  key: jwt-secret-key
+
+            # Field-level PII encryption at rest (AES-256-GCM, base64 32-byte key)
+            - name: FieldEncryption__Key
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secretName }}
+                  key: field-encryption-key
+
+            # Service-to-service API key auth (Admin portal + SDK clients)
+            - name: ApiKey__Enabled
+              value: "true"
+            - name: ApiKey__Roles
+              value: "Admin,Officer,Issuer,User"
+            - name: ApiKey__Keys__AdminPortal
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secretName }}
+                  key: admin-api-key
+
+          resources:
+            {{- toYaml .Values.api.resources | nindent 12 }}
+          startupProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            failureThreshold: 24
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            periodSeconds: 30
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            periodSeconds: 10
+            failureThreshold: 3

@@ -1,0 +1,59 @@
+# Single host, path-routed like the credentry portal:
+#   /api, /graphql, /health → API
+#   /                        → Admin portal (Blazor Server)
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: numbatwallet
+  labels:
+    app.kubernetes.io/part-of: numbatwallet
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/proxy-body-size: "20m"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "120"
+    # Blazor Server uses WebSockets (SignalR) — NGINX Ingress handles
+    # Upgrade/Connection headers automatically with HTTP/1.1
+    nginx.ingress.kubernetes.io/proxy-http-version: "1.1"
+    # Sticky sessions required for Blazor Server (SignalR circuit affinity)
+    nginx.ingress.kubernetes.io/affinity: "cookie"
+    nginx.ingress.kubernetes.io/session-cookie-name: "numbatwallet-affinity"
+    nginx.ingress.kubernetes.io/session-cookie-expires: "172800"
+    nginx.ingress.kubernetes.io/session-cookie-max-age: "172800"
+spec:
+  ingressClassName: {{ .Values.ingress.className }}
+  rules:
+    - host: {{ .Values.ingress.host }}
+      http:
+        paths:
+          # REST API
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: numbatwallet-api
+                port:
+                  number: 80
+          # GraphQL
+          - path: /graphql
+            pathType: Prefix
+            backend:
+              service:
+                name: numbatwallet-api
+                port:
+                  number: 80
+          # API health (smoke tests / external monitors)
+          - path: /health
+            pathType: Prefix
+            backend:
+              service:
+                name: numbatwallet-api
+                port:
+                  number: 80
+          # Admin portal (Blazor Server — catch-all)
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: numbatwallet-admin
+                port:
+                  number: 80

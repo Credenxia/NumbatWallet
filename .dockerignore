@@ -117,3 +117,22 @@ Thumbs.db
 .env.local
 appsettings.Development.json
 appsettings.Local.json
+# Repo-specific: keep the build context small
+TestResults/
+TestResults2/
+coverage/
+coverage-report/
+temp/
+Tests/
+Documentation/
+NumbatWallet.PlaywrightTests/
+infra/
+infrastructure/
+deploy/
+src/NumbatWallet.AppHost/
+*.db
+
+# Nested build outputs (the bracket patterns above are root-anchored only)
+**/bin/
+**/obj/
+**/TestResults/

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -8,7 +7,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace NumbatWallet.Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialCreate : Migration
+    public partial class InitialSchema : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -31,7 +30,7 @@ namespace NumbatWallet.Infrastructure.Migrations
                     last_login_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     last_password_change_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     tenant_id = table.Column<Guid>(type: "uuid", nullable: false),
-                    roles = table.Column<List<string>>(type: "jsonb", nullable: false)
+                    roles = table.Column<string>(type: "jsonb", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -180,7 +179,7 @@ namespace NumbatWallet.Infrastructure.Migrations
                     tenant_id = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
                     version = table.Column<int>(type: "integer", nullable: false),
                     correlation_id = table.Column<Guid>(type: "uuid", nullable: false),
-                    causation_id = table.Column<string>(type: "text", nullable: true)
+                    causation_id = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true)
                 },
                 constraints: table =>
                 {
@@ -556,6 +555,38 @@ namespace NumbatWallet.Infrastructure.Migrations
                         onDelete: ReferentialAction.Cascade);
                 });
 
+            migrationBuilder.CreateTable(
+                name: "Presentations",
+                columns: table => new
+                {
+                    id = table.Column<Guid>(type: "uuid", nullable: false),
+                    credential_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    wallet_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    tenant_id = table.Column<string>(type: "text", nullable: false),
+                    verifier_id = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: false),
+                    purpose = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: false),
+                    disclosed_claims_json = table.Column<string>(type: "jsonb", nullable: false),
+                    status = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
+                    presented_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    expires_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    verified_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
+                    verification_count = table.Column<int>(type: "integer", nullable: false),
+                    created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    created_by = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: false),
+                    modified_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
+                    modified_by = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("pk_presentations", x => x.id);
+                    table.ForeignKey(
+                        name: "fk_presentations_credentials_credential_id",
+                        column: x => x.credential_id,
+                        principalTable: "Credentials",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
             migrationBuilder.CreateIndex(
                 name: "ix_admin_users_email",
                 table: "admin_users",
@@ -828,6 +859,31 @@ namespace NumbatWallet.Infrastructure.Migrations
                 column: "tenant_id");
 
             migrationBuilder.CreateIndex(
+                name: "ix_presentations_credential_id",
+                table: "Presentations",
+                column: "credential_id");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_presentations_status",
+                table: "Presentations",
+                column: "status");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_presentations_tenant_id",
+                table: "Presentations",
+                column: "tenant_id");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_presentations_tenant_id_wallet_id",
+                table: "Presentations",
+                columns: new[] { "tenant_id", "wallet_id" });
+
+            migrationBuilder.CreateIndex(
+                name: "ix_presentations_wallet_id",
+                table: "Presentations",
+                column: "wallet_id");
+
+            migrationBuilder.CreateIndex(
                 name: "ix_revocation_registries_is_active",
                 table: "RevocationRegistries",
                 column: "is_active");
@@ -1011,9 +1067,6 @@ namespace NumbatWallet.Infrastructure.Migrations
                 name: "CertificateTrustStores");
 
             migrationBuilder.DropTable(
-                name: "Credentials");
-
-            migrationBuilder.DropTable(
                 name: "CredentialSchemas");
 
             migrationBuilder.DropTable(
@@ -1027,6 +1080,9 @@ namespace NumbatWallet.Infrastructure.Migrations
 
             migrationBuilder.DropTable(
                 name: "Organizations");
+
+            migrationBuilder.DropTable(
+                name: "Presentations");
 
             migrationBuilder.DropTable(
                 name: "RevocationRegistries");
@@ -1047,13 +1103,16 @@ namespace NumbatWallet.Infrastructure.Migrations
                 name: "WalletTemplateFields");
 
             migrationBuilder.DropTable(
-                name: "Wallets");
+                name: "Credentials");
+
+            migrationBuilder.DropTable(
+                name: "WalletTemplates");
 
             migrationBuilder.DropTable(
                 name: "Issuers");
 
             migrationBuilder.DropTable(
-                name: "WalletTemplates");
+                name: "Wallets");
 
             migrationBuilder.DropTable(
                 name: "Persons");

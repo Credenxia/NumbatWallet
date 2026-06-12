@@ -1,0 +1,48 @@
+# EF Core migrations — Helm pre-install/pre-upgrade hook.
+# Runs the migrations bundle (dotnet ef migrations bundle baked into the
+# numbatwallet-migrations image) against the shared PostgreSQL flexible server
+# BEFORE the new API/Admin pods roll out. Fails the release on migration failure.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: numbatwallet-migrate
+  labels:
+    app: numbatwallet-migrate
+    app.kubernetes.io/part-of: numbatwallet
+  annotations:
+    "helm.sh/hook": pre-install,pre-upgrade
+    "helm.sh/hook-weight": "0"
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+spec:
+  backoffLimit: 2
+  activeDeadlineSeconds: 600
+  template:
+    metadata:
+      labels:
+        app: numbatwallet-migrate
+    spec:
+      restartPolicy: Never
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1654
+        runAsGroup: 1654
+      containers:
+        - name: migrate
+          image: "{{ .Values.image.registry }}/{{ .Values.image.migrations }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          args:
+            - "--connection"
+            - "$(CONNECTION_STRING)"
+          env:
+            - name: CONNECTION_STRING
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secretName }}
+                  key: connection-string
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+          resources:
+            {{- toYaml .Values.migrations.resources | nindent 12 }}

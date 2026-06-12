@@ -1,0 +1,70 @@
+# NumbatWallet — Helm values for the shared nonprod AKS cluster (namespace numbatwallet-test).
+# Mirrors the credentry-infrastructure product conventions:
+#   - shared ACR cxausvmcontainerregistry
+#   - shared NGINX ingress (class "nginx"), host tst.numbatwallet.credentry.com.au
+#   - secrets provided as a pipeline-managed K8s Secret (sourced from kv-numbatwallet-test-aue)
+#   - small burstable resource footprint (test stage)
+
+image:
+  registry: cxausvmcontainerregistry.azurecr.io
+  api: numbatwallet-api
+  admin: numbatwallet-admin
+  migrations: numbatwallet-migrations
+  tag: test-latest
+  pullPolicy: Always
+
+# Pipeline-managed secret (created by deploy/scripts/bootstrap-namespace.sh from Key Vault
+# kv-numbatwallet-test-aue). Keys: connection-string, jwt-secret-key, field-encryption-key,
+# admin-api-key.
+secretName: numbatwallet-secrets
+
+api:
+  replicas: 1
+  # Testing: enables the seeded test accounts (TestPasswordValidator) and the test auth
+  # handler — appropriate for the test stage only. Production deployments must use
+  # "Production" (JWT bearer + real identity providers).
+  environment: Testing
+  resources:
+    requests:
+      memory: "256Mi"
+      cpu: "25m"
+    limits:
+      memory: "512Mi"
+      cpu: "300m"
+  # Shared Redis (redis-master.shared-services.svc.cluster.local:6379).
+  # Leave empty until the shared-services allow-from network policy includes
+  # numbatwallet-test (credentry-infrastructure k8s-shared/network-policies) —
+  # the API falls back to its in-memory distributed cache when unset.
+  redisConnectionString: ""
+
+admin:
+  replicas: 1
+  # Development: the Admin portal's cookie/login UI only exists in Development;
+  # outside Development it requires an Azure AD (Entra) app registration which the
+  # test stage does not have yet. Swap to "Production" + AzureAd__* config once the
+  # Entra app exists.
+  environment: Development
+  resources:
+    requests:
+      memory: "192Mi"
+      cpu: "15m"
+    limits:
+      memory: "384Mi"
+      cpu: "200m"
+  # Ambient tenant used at seed time when no HTTP context exists (Guid.Empty
+  # fail-closed value) — the Admin portal must address the same tenant.
+  tenantId: "00000000-0000-0000-0000-000000000000"
+
+migrations:
+  # Helm pre-install/pre-upgrade hook Job (EF Core migrations bundle)
+  resources:
+    requests:
+      memory: "128Mi"
+      cpu: "25m"
+    limits:
+      memory: "256Mi"
+      cpu: "500m"
+
+ingress:
+  className: nginx
+  host: tst.numbatwallet.credentry.com.au
