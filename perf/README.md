@@ -88,11 +88,14 @@ PROFILE=ramp k6 run perf/citizen-journey.js
 
 ## Known constraints baked into the harness
 
-- **Global rate limiter (100 req/min per remote IP).** The deployed API enforces a
-  hardcoded fixed-window limiter and does **not** call `UseForwardedHeaders`, so behind
-  the NGINX ingress all clients share one bucket keyed on the ingress pod IP. The
-  `steady` profile stays under this cap to measure app latency; the `ramp` profile
-  demonstrates the ceiling. See `RESULTS-2026-06-12.md`.
+- **Global rate limiter.** FIXED 2026-06-12: the limiter is now proxy-aware
+  (X-Forwarded-For partition key via `RateLimitPartitionKeyResolver`, explicit
+  `UseForwardedHeaders` before the limiter) and configurable
+  (`RateLimiting:PermitLimit`/`Window`/`QueueLimit`, code defaults 100/min queue 10).
+  The test namespace runs 100,000/min (Helm `api.rateLimiting`) so load tests measure
+  the app, not the limiter. The original defect (one shared 100/min bucket behind the
+  ingress, 99.6% 429s) is documented in `RESULTS-2026-06-12.md` §4B and the Post-fix
+  section.
 - **Issuer ids are not exposed by any API** (introspection disabled; no issuers query;
   `createOrganization`/`organizations` are broken). So the credential-ops **issue
   write-mix** and the **real presentation happy-path** are only exercisable where the

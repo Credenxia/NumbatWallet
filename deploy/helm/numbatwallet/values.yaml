@@ -48,6 +48,21 @@ api:
     permitLimit: 100000
     window: "00:01:00"
     queueLimit: 10
+  # Deployment-wide HMAC pepper for the deterministic email/phone search tokens
+  # (Search:TokenPepper, base64 >=16 bytes). REQUIRED since the searchable-PII
+  # change (10e97f9): person lookup on the login path goes through
+  # email_search_token, and without a configured pepper the app falls back to the
+  # in-memory mock Key Vault — a RANDOM pepper per pod start, making every
+  # existing row unmatchable after a restart. Set at deploy time
+  # (--set api.searchTokenPepper="$(openssl rand -base64 32)"); never commit a
+  # value here. Follow-up: move to KV kv-numbatwallet-test-aue secret
+  # 'search-token-pepper' sourced via the pipeline-managed K8s secret
+  # (bootstrap-namespace.sh) once provisioned.
+  searchTokenPepper: ""
+  # Ad-hoc additional env vars for the API container (list of {name,value} maps),
+  # for deploy-time-only configuration (e.g. an ephemeral extra ApiKey:Keys entry
+  # for smoke/perf tooling). Keep empty in committed values.
+  extraEnv: []
 
 admin:
   replicas: 1

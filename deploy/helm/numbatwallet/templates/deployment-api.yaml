@@ -90,6 +90,13 @@ spec:
                   name: {{ .Values.secretName }}
                   key: field-encryption-key
 
+            {{- if .Values.api.searchTokenPepper }}
+            # Deterministic search-token pepper (login resolves persons by
+            # email_search_token; must stay stable across restarts — see values.yaml).
+            - name: Search__TokenPepper
+              value: {{ .Values.api.searchTokenPepper | quote }}
+            {{- end }}
+
             # Service-to-service API key auth (Admin portal + SDK clients)
             - name: ApiKey__Enabled
               value: "true"
@@ -100,6 +107,11 @@ spec:
                 secretKeyRef:
                   name: {{ .Values.secretName }}
                   key: admin-api-key
+
+            {{- with .Values.api.extraEnv }}
+            # Ad-hoc environment (set at deploy time, e.g. --set-json api.extraEnv=...)
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
 
           resources:
             {{- toYaml .Values.api.resources | nindent 12 }}
