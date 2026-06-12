@@ -35,31 +35,29 @@ try
     builder.Services.AddGraphQLServer(builder.Configuration);
     Log.Information("GraphQL server configured at /graphql endpoint");
 
-    // PERFORMANCE: Add distributed caching with Redis (fallback to in-memory for development)
-    var redisConnectionString = builder.Configuration.GetConnectionString("Redis");
-    if (!string.IsNullOrEmpty(redisConnectionString) && !builder.Environment.IsDevelopment())
+    // PERFORMANCE: Distributed caching is registered by AddInfrastructure above via
+    // CacheRegistrationPolicy (Redis only with a non-empty ConnectionStrings:Redis,
+    // bounded fail-open timeouts; otherwise in-memory). Do NOT add a second
+    // AddStackExchangeRedisCache here — a later IDistributedCache registration would
+    // silently override the policy-selected backend (that duplicate caused the 5s
+    // Redis stall on every Bearer request in the 2026-06-12 perf baseline).
+    // The selected backend is logged after Build() below.
+
+    // PROXY: the API always runs behind a TLS-terminating reverse proxy (NGINX ingress
+    // on AKS, Front Door at the edge). Honour X-Forwarded-For/X-Forwarded-Proto so
+    // RemoteIpAddress/scheme reflect the client, not the ingress pod. KnownNetworks/
+    // KnownProxies are cleared (trust-all): acceptable because the pod Service is only
+    // reachable through the ingress (NetworkPolicy) and NGINX replaces client-supplied
+    // X-Forwarded-For — see RateLimitPartitionKeyResolver for the full tradeoff note.
+    // Registered explicitly (and applied first in the pipeline, before the rate
+    // limiter) instead of relying on ASPNETCORE_FORWARDEDHEADERS_ENABLED.
+    builder.Services.Configure<Microsoft.AspNetCore.Builder.ForwardedHeadersOptions>(options =>
     {
-        try
-        {
-            builder.Services.AddStackExchangeRedisCache(options =>
-            {
-                options.Configuration = redisConnectionString;
-                options.InstanceName = "NumbatWallet_";
-            });
-            Log.Information("Using Redis distributed cache: {ConnectionString}", redisConnectionString);
-        }
-        catch (Exception ex)
-        {
-            Log.Warning(ex, "Failed to connect to Redis. Falling back to in-memory cache.");
-            builder.Services.AddDistributedMemoryCache();
-        }
-    }
-    else
-    {
-        // Development: Use in-memory cache
-        builder.Services.AddDistributedMemoryCache();
-        Log.Information("Using in-memory distributed cache (Development mode)");
-    }
+        options.ForwardedHeaders = Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedFor
+            | Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedProto;
+        options.KnownNetworks.Clear();
+        options.KnownProxies.Clear();
+    });
 
     // Add Web API specific services
     builder.Services.AddSingleton<ISecurityAuditService, SecurityAuditService>();
@@ -354,20 +352,30 @@ try
     });
 
     // SECURITY: Rate Limiting (ASP.NET Core 9)
+    // Partitioned per CLIENT via RateLimitPartitionKeyResolver (X-Forwarded-For aware —
+    // keying on RemoteIpAddress alone collapses all traffic behind the ingress into one
+    // bucket; see the 2026-06-12 perf baseline). Limits are configurable so test stages
+    // can raise them for load testing without code changes; defaults preserve the
+    // original hardcoded values (100 req/min, queue 10).
+    var rateLimitPermitLimit = builder.Configuration.GetValue("RateLimiting:PermitLimit", 100);
+    var rateLimitWindow = builder.Configuration.GetValue("RateLimiting:Window", TimeSpan.FromMinutes(1));
+    var rateLimitQueueLimit = builder.Configuration.GetValue("RateLimiting:QueueLimit", 10);
+    Log.Information(
+        "Global rate limiter: {PermitLimit} requests per {Window} per client (queue {QueueLimit})",
+        rateLimitPermitLimit, rateLimitWindow, rateLimitQueueLimit);
     builder.Services.AddRateLimiter(options =>
     {
-        // Global rate limit: 100 requests per minute per IP
         options.GlobalLimiter = System.Threading.RateLimiting.PartitionedRateLimiter.Create<HttpContext, string>(context =>
         {
-            var ipAddress = context.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+            var partitionKey = NumbatWallet.Web.Api.Security.RateLimitPartitionKeyResolver.Resolve(context);
 
-            return System.Threading.RateLimiting.RateLimitPartition.GetFixedWindowLimiter(ipAddress, partition =>
+            return System.Threading.RateLimiting.RateLimitPartition.GetFixedWindowLimiter(partitionKey, partition =>
                 new System.Threading.RateLimiting.FixedWindowRateLimiterOptions
                 {
-                    PermitLimit = 100,
-                    Window = TimeSpan.FromMinutes(1),
+                    PermitLimit = rateLimitPermitLimit,
+                    Window = rateLimitWindow,
                     QueueProcessingOrder = System.Threading.RateLimiting.QueueProcessingOrder.OldestFirst,
-                    QueueLimit = 10
+                    QueueLimit = rateLimitQueueLimit
                 });
         });
 
@@ -375,7 +383,7 @@ try
         // Development/Testing: Higher limits for local dev and integration tests
         options.AddPolicy("Authentication", context =>
         {
-            var ipAddress = context.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+            var ipAddress = NumbatWallet.Web.Api.Security.RateLimitPartitionKeyResolver.Resolve(context);
 
             // Development/Testing: 100 requests/min for local dev and integration tests
             // Production: 5 requests/15min to prevent brute force
@@ -432,6 +440,17 @@ try
     });
 
     var app = builder.Build();
+
+    // Log which distributed-cache backend the Infrastructure layer selected (Redis vs
+    // in-memory) — misconfiguration here caused the 5s-per-request perf defect, so the
+    // choice must be visible at startup.
+    var cacheBackend = app.Services.GetRequiredService<NumbatWallet.Infrastructure.Caching.CacheBackendSelection>();
+    Log.Information("Distributed cache backend: {CacheBackend}", cacheBackend.Description);
+
+    // PROXY: consume X-Forwarded-For/X-Forwarded-Proto FIRST so everything downstream
+    // (https redirection, rate limiter partitioning, audit logging) sees the real
+    // client address and scheme.
+    app.UseForwardedHeaders();
 
     // Configure minimal pipeline with security hardening
     app.UseExceptionHandler(); // Global exception handling with ProblemDetails

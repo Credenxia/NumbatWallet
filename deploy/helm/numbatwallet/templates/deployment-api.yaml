@@ -45,10 +45,22 @@ spec:
               value: {{ .Values.api.environment | quote }}
             - name: ASPNETCORE_URLS
               value: "http://+:8080"
-            # Honour X-Forwarded-Proto from the shared NGINX ingress so
-            # UseHttpsRedirection does not loop behind TLS-terminating ingress.
-            - name: ASPNETCORE_FORWARDEDHEADERS_ENABLED
-              value: "true"
+            # NOTE: forwarded headers (X-Forwarded-For/X-Forwarded-Proto) are now
+            # configured explicitly in Program.cs (app.UseForwardedHeaders, trust-all
+            # within the cluster) so they run exactly once and BEFORE the rate limiter.
+            # ASPNETCORE_FORWARDEDHEADERS_ENABLED was removed to avoid the middleware
+            # running twice and consuming an extra X-Forwarded-For hop.
+
+            {{- with .Values.api.rateLimiting }}
+            # Global rate limiter (per client, X-Forwarded-For aware). Raised for the
+            # test stage so load tests measure the app, not the limiter.
+            - name: RateLimiting__PermitLimit
+              value: {{ .permitLimit | quote }}
+            - name: RateLimiting__Window
+              value: {{ .window | quote }}
+            - name: RateLimiting__QueueLimit
+              value: {{ .queueLimit | quote }}
+            {{- end }}
 
             # PostgreSQL (shared psql-shared-nonprod-aue, database numbatwallet_test)
             - name: ConnectionStrings__numbatwallet

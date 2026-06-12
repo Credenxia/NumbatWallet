@@ -34,8 +34,20 @@ api:
   # Shared Redis (redis-master.shared-services.svc.cluster.local:6379).
   # Leave empty until the shared-services allow-from network policy includes
   # numbatwallet-test (credentry-infrastructure k8s-shared/network-policies) —
-  # the API falls back to its in-memory distributed cache when unset.
+  # the API falls back to its in-memory distributed cache when unset (logged at
+  # startup as "Distributed cache backend: ..."). When set, the app bounds the
+  # Redis timeouts (abortConnect=false, connectTimeout 1000ms, syncTimeout 500ms)
+  # unless the connection string overrides them.
   redisConnectionString: ""
+  # Global rate limiter (per client IP, X-Forwarded-For aware). Test stage runs a
+  # deliberately high permit limit so k6 load tests measure the APPLICATION, not the
+  # limiter (the 2026-06-12 baseline showed 99.6% 429s at the code default of
+  # 100/min). Production should NOT copy these values — omit to use the app
+  # defaults (100 per minute, queue 10).
+  rateLimiting:
+    permitLimit: 100000
+    window: "00:01:00"
+    queueLimit: 10
 
 admin:
   replicas: 1
