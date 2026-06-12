@@ -10,10 +10,10 @@ namespace NumbatWallet.Domain.Aggregates;
 /// <summary>
 /// A credential presentation: the holder sharing (selectively disclosed) claims from a
 /// credential with a verifier. The aggregate Id doubles as the <c>jti</c> of the signed
-/// presentation token handed to the verifier, so a presentation can be looked up from the
-/// token during the verify-by-token flow.
-/// NOTE: POA scope — this models the signed-JWT presentation flow; the W3C VP / OID4VP
-/// standards-grade envelope is out of scope for the pilot.
+/// W3C VP-JWT presentation token handed to the verifier, so a presentation can be looked up
+/// from the token during the verify-by-token flow.
+/// Selective disclosure is full-redisclosure-style (the platform embeds a derived VC carrying
+/// only the disclosed claims); SD-JWT is out of scope for the pilot.
 /// </summary>
 public sealed class Presentation : AuditableEntity<Guid>, ITenantAware
 {

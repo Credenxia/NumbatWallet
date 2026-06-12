@@ -99,14 +99,24 @@ public class PresentCredentialCommandHandler : ICommandHandler<PresentCredential
             presentation.SetTenantId(credential.TenantId);
         }
 
-        // Create presentation token (jti = presentation.Id)
+        // Create the W3C VP-JWT presentation token (jti = presentation.Id). The nonce binds
+        // the token to one exchange: callers may supply one (OID4VP request flow); otherwise
+        // a cryptographically random nonce is generated.
+        var nonce = string.IsNullOrWhiteSpace(command.Nonce) ? GenerateNonce() : command.Nonce;
         var presentationToken = await _verificationService.CreatePresentationTokenAsync(
-            presentation.Id,
-            credential.Id,
-            command.VerifierId,
-            command.Purpose,
-            disclosedClaims,
-            expiresAt,
+            new PresentationTokenRequest(
+                PresentationId: presentation.Id,
+                CredentialId: credential.Id,
+                WalletId: credential.WalletId,
+                IssuerId: credential.IssuerId,
+                CredentialType: credential.CredentialType,
+                CredentialIssuedAt: credential.IssuedAt,
+                CredentialExpiresAt: credential.ExpiresAt,
+                VerifierId: command.VerifierId,
+                Purpose: command.Purpose,
+                DisclosedClaims: disclosedClaims,
+                Nonce: nonce,
+                ExpiresAt: expiresAt),
             cancellationToken);
 
         // Generate verification URL
@@ -135,6 +145,16 @@ public class PresentCredentialCommandHandler : ICommandHandler<PresentCredential
             verificationUrl,
             presentation.PresentedAt.UtcDateTime,
             disclosedClaims);
+    }
+
+    private static string GenerateNonce()
+    {
+        // 128-bit random nonce, base64url (no padding) so it is JWT/URL-safe.
+        var bytes = System.Security.Cryptography.RandomNumberGenerator.GetBytes(16);
+        return Convert.ToBase64String(bytes)
+            .TrimEnd('=')
+            .Replace('+', '-')
+            .Replace('/', '_');
     }
 
     private int GetTokenLifetimeMinutes()

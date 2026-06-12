@@ -7,6 +7,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using NumbatWallet.Application.Commands.Presentations;
 using NumbatWallet.Application.Commands.Presentations.Handlers;
+using NumbatWallet.Application.Services;
 using NumbatWallet.Domain.Aggregates;
 using NumbatWallet.Domain.Events;
 using NumbatWallet.Domain.Interfaces;
@@ -18,8 +19,7 @@ namespace NumbatWallet.Application.Tests.Commands.Presentations;
 public class VerifyPresentationCommandHandlerTests
 {
     private const string Secret = "TestPresentationSecretKeyThatIs256BitsLong!!";
-    private const string Issuer = "https://numbatwallet.wa.gov.au";
-    private const string Audience = "https://api.numbatwallet.wa.gov.au";
+    private const string W3cContext = "https://www.w3.org/2018/credentials/v1";
 
     private readonly Mock<IPresentationRepository> _presentationRepositoryMock;
     private readonly Mock<ICredentialRepository> _credentialRepositoryMock;
@@ -42,39 +42,99 @@ public class VerifyPresentationCommandHandlerTests
             _credentialRepositoryMock.Object,
             _unitOfWorkMock.Object,
             _eventDispatcherMock.Object,
-            _configurationMock.Object,
+            new HmacAccessTokenSigner(_configurationMock.Object),
             new Mock<ILogger<VerifyPresentationCommandHandler>>().Object);
     }
 
-    private static string CreateToken(
+    /// <summary>
+    /// Mints a W3C VP-JWT mirroring Infrastructure.JwtPresentationTokenService, with knobs to
+    /// corrupt each layer so every verification failure mode can be exercised.
+    /// </summary>
+    private static string CreateVpToken(
         Guid presentationId,
         Guid credentialId,
+        Guid? walletId = null,
+        string verifierId = "verifier_123",
         string secret = Secret,
+        string vcSecret = Secret,
         DateTimeOffset? expiresAt = null,
-        string typ = "presentation",
+        string? nonce = "nonce-abc",
+        bool omitVpClaim = false,
+        string vpContext = W3cContext,
+        string vpType = "VerifiablePresentation",
+        bool emptyVcArray = false,
+        bool omitVcClaim = false,
+        string vcType = "VerifiableCredential",
+        Guid? vcJtiOverride = null,
         Dictionary<string, object>? disclosedClaims = null)
     {
-        var claims = new List<Claim>
+        var holder = $"urn:uuid:{walletId ?? Guid.NewGuid()}";
+        disclosedClaims ??= new Dictionary<string, object> { { "dateOfBirth", "1990-01-01" } };
+
+        // --- Embedded VC-JWT ---
+        var credentialSubject = new Dictionary<string, object>(disclosedClaims) { ["id"] = holder };
+        var vc = new Dictionary<string, object>
         {
-            new(JwtRegisteredClaimNames.Jti, presentationId.ToString()),
-            new("typ", typ),
-            new("credential_id", credentialId.ToString()),
-            new("verifier_id", "verifier_123"),
-            new("purpose", "Age verification"),
-            new("disclosed_claims", JsonSerializer.Serialize(disclosedClaims ?? new Dictionary<string, object>()), JsonClaimValueTypes.Json)
+            ["@context"] = new[] { W3cContext },
+            ["type"] = new[] { vcType, "ProofOfAge" },
+            ["credentialSubject"] = credentialSubject
         };
 
-        var expiry = (expiresAt ?? DateTimeOffset.UtcNow.AddMinutes(15)).UtcDateTime;
+        var vcClaims = new List<Claim>
+        {
+            new(JwtRegisteredClaimNames.Jti, $"urn:uuid:{vcJtiOverride ?? credentialId}"),
+            new(JwtRegisteredClaimNames.Sub, holder)
+        };
+        if (!omitVcClaim)
+        {
+            vcClaims.Add(new Claim("vc", JsonSerializer.Serialize(vc), JsonClaimValueTypes.Json));
+        }
+
+        var vcJwt = Sign(vcClaims, issuer: $"urn:uuid:{Guid.NewGuid()}", audience: null,
+            notBefore: DateTimeOffset.UtcNow.AddDays(-1), expiresAt: DateTimeOffset.UtcNow.AddYears(1),
+            secret: vcSecret);
+
+        // --- VP-JWT ---
+        var vp = new Dictionary<string, object>
+        {
+            ["@context"] = new[] { vpContext },
+            ["type"] = new[] { vpType },
+            ["verifiableCredential"] = emptyVcArray ? Array.Empty<string>() : new[] { vcJwt }
+        };
+
+        var vpClaims = new List<Claim>
+        {
+            new(JwtRegisteredClaimNames.Jti, presentationId.ToString()),
+            new(JwtRegisteredClaimNames.Sub, holder),
+            new("purpose", "Age verification")
+        };
+        if (nonce is not null)
+        {
+            vpClaims.Add(new Claim("nonce", nonce));
+        }
+        if (!omitVpClaim)
+        {
+            vpClaims.Add(new Claim("vp", JsonSerializer.Serialize(vp), JsonClaimValueTypes.Json));
+        }
+
+        var expiry = expiresAt ?? DateTimeOffset.UtcNow.AddMinutes(15);
+        return Sign(vpClaims, issuer: holder, audience: verifierId,
+            notBefore: expiry.AddMinutes(-30), expiresAt: expiry, secret: secret);
+    }
+
+    private static string Sign(
+        IEnumerable<Claim> claims, string issuer, string? audience,
+        DateTimeOffset notBefore, DateTimeOffset expiresAt, string secret)
+    {
         var token = new JwtSecurityToken(
-            issuer: Issuer,
-            audience: Audience,
+            issuer: issuer,
+            audience: audience,
             claims: claims,
-            notBefore: expiry.AddMinutes(-30),
-            expires: expiry,
+            notBefore: notBefore.UtcDateTime,
+            expires: expiresAt.UtcDateTime,
             signingCredentials: new SigningCredentials(
                 new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secret)),
                 SecurityAlgorithms.HmacSha256));
-
         return new JwtSecurityTokenHandler().WriteToken(token);
     }
 
@@ -119,7 +179,8 @@ public class VerifyPresentationCommandHandlerTests
             { "fullName", "John Doe" }
         };
         var (presentation, credential) = SetupValidPresentation(disclosedClaims);
-        var token = CreateToken(presentation.Id, credential.Id, disclosedClaims: disclosedClaims);
+        var token = CreateVpToken(presentation.Id, credential.Id,
+            walletId: credential.WalletId, disclosedClaims: disclosedClaims);
 
         // Act
         var result = await _handler.HandleAsync(new VerifyPresentationCommand(token));
@@ -150,7 +211,7 @@ public class VerifyPresentationCommandHandlerTests
     {
         // Arrange
         var (presentation, credential) = SetupValidPresentation();
-        var token = CreateToken(presentation.Id, credential.Id);
+        var token = CreateVpToken(presentation.Id, credential.Id);
 
         // Act
         var first = await _handler.HandleAsync(new VerifyPresentationCommand(token));
@@ -185,9 +246,9 @@ public class VerifyPresentationCommandHandlerTests
     [Fact]
     public async Task HandleAsync_BadSignature_ReturnsInvalid()
     {
-        // Arrange — token signed with a DIFFERENT key
+        // Arrange — VP signed with a DIFFERENT key
         var (presentation, credential) = SetupValidPresentation();
-        var token = CreateToken(presentation.Id, credential.Id,
+        var token = CreateVpToken(presentation.Id, credential.Id,
             secret: "ADifferentSecretKeyThatIsAlso256BitsLong!!!!");
 
         // Act
@@ -204,7 +265,7 @@ public class VerifyPresentationCommandHandlerTests
     {
         // Arrange — token expired 5 minutes ago (beyond clock skew)
         var (presentation, credential) = SetupValidPresentation();
-        var token = CreateToken(presentation.Id, credential.Id,
+        var token = CreateVpToken(presentation.Id, credential.Id,
             expiresAt: DateTimeOffset.UtcNow.AddMinutes(-5));
 
         // Act
@@ -216,25 +277,74 @@ public class VerifyPresentationCommandHandlerTests
     }
 
     [Fact]
-    public async Task HandleAsync_NonPresentationToken_ReturnsInvalid()
+    public async Task HandleAsync_TokenWithoutVpClaim_ReturnsInvalid()
     {
-        // Arrange — valid signature but typ != presentation (e.g. an access token)
+        // Arrange — well-signed JWT that is NOT a VP (e.g. an access token)
         var (presentation, credential) = SetupValidPresentation();
-        var token = CreateToken(presentation.Id, credential.Id, typ: "access");
+        var token = CreateVpToken(presentation.Id, credential.Id, omitVpClaim: true);
 
         // Act
         var result = await _handler.HandleAsync(new VerifyPresentationCommand(token));
 
         // Assert
         result.IsValid.Should().BeFalse();
-        result.Reason.Should().Contain("not a presentation token");
+        result.Reason.Should().Contain("missing vp claim");
+    }
+
+    [Fact]
+    public async Task HandleAsync_WrongVpContext_ReturnsInvalid()
+    {
+        var (presentation, credential) = SetupValidPresentation();
+        var token = CreateVpToken(presentation.Id, credential.Id,
+            vpContext: "https://example.com/not-the-w3c-context");
+
+        var result = await _handler.HandleAsync(new VerifyPresentationCommand(token));
+
+        result.IsValid.Should().BeFalse();
+        result.Reason.Should().Contain("@context");
+    }
+
+    [Fact]
+    public async Task HandleAsync_WrongVpType_ReturnsInvalid()
+    {
+        var (presentation, credential) = SetupValidPresentation();
+        var token = CreateVpToken(presentation.Id, credential.Id, vpType: "SomethingElse");
+
+        var result = await _handler.HandleAsync(new VerifyPresentationCommand(token));
+
+        result.IsValid.Should().BeFalse();
+        result.Reason.Should().Contain("VerifiablePresentation");
+    }
+
+    [Fact]
+    public async Task HandleAsync_NoEmbeddedCredential_ReturnsInvalid()
+    {
+        var (presentation, credential) = SetupValidPresentation();
+        var token = CreateVpToken(presentation.Id, credential.Id, emptyVcArray: true);
+
+        var result = await _handler.HandleAsync(new VerifyPresentationCommand(token));
+
+        result.IsValid.Should().BeFalse();
+        result.Reason.Should().Contain("no verifiable credential");
+    }
+
+    [Fact]
+    public async Task HandleAsync_MissingNonce_ReturnsInvalid()
+    {
+        var (presentation, credential) = SetupValidPresentation();
+        var token = CreateVpToken(presentation.Id, credential.Id, nonce: null);
+
+        var result = await _handler.HandleAsync(new VerifyPresentationCommand(token));
+
+        result.IsValid.Should().BeFalse();
+        result.Reason.Should().Contain("nonce");
     }
 
     [Fact]
     public async Task HandleAsync_UnknownJti_ReturnsInvalid()
     {
         // Arrange — well-signed token but no presentation record for the jti
-        var token = CreateToken(Guid.NewGuid(), Guid.NewGuid());
+        var token = CreateVpToken(Guid.NewGuid(), Guid.NewGuid());
         _presentationRepositoryMock.Setup(x => x.GetByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((Presentation?)null);
 
@@ -247,12 +357,83 @@ public class VerifyPresentationCommandHandlerTests
     }
 
     [Fact]
+    public async Task HandleAsync_AudienceMismatch_ReturnsInvalid()
+    {
+        // Arrange — token minted for a different verifier than the persisted presentation
+        var (presentation, credential) = SetupValidPresentation();
+        var token = CreateVpToken(presentation.Id, credential.Id, verifierId: "someone_else");
+
+        // Act
+        var result = await _handler.HandleAsync(new VerifyPresentationCommand(token));
+
+        // Assert
+        result.IsValid.Should().BeFalse();
+        result.Reason.Should().Contain("audience");
+    }
+
+    [Fact]
+    public async Task HandleAsync_EmbeddedVcBadSignature_ReturnsInvalid()
+    {
+        // Arrange — VP fine, but embedded VC signed with a different key
+        var (presentation, credential) = SetupValidPresentation();
+        var token = CreateVpToken(presentation.Id, credential.Id,
+            vcSecret: "ADifferentSecretKeyThatIsAlso256BitsLong!!!!");
+
+        // Act
+        var result = await _handler.HandleAsync(new VerifyPresentationCommand(token));
+
+        // Assert
+        result.IsValid.Should().BeFalse();
+        result.Reason.Should().Contain("Embedded credential");
+        result.Reason.Should().Contain("invalid");
+    }
+
+    [Fact]
+    public async Task HandleAsync_EmbeddedTokenWithoutVcClaim_ReturnsInvalid()
+    {
+        var (presentation, credential) = SetupValidPresentation();
+        var token = CreateVpToken(presentation.Id, credential.Id, omitVcClaim: true);
+
+        var result = await _handler.HandleAsync(new VerifyPresentationCommand(token));
+
+        result.IsValid.Should().BeFalse();
+        result.Reason.Should().Contain("missing vc claim");
+    }
+
+    [Fact]
+    public async Task HandleAsync_WrongVcType_ReturnsInvalid()
+    {
+        var (presentation, credential) = SetupValidPresentation();
+        var token = CreateVpToken(presentation.Id, credential.Id, vcType: "NotACredential");
+
+        var result = await _handler.HandleAsync(new VerifyPresentationCommand(token));
+
+        result.IsValid.Should().BeFalse();
+        result.Reason.Should().Contain("VerifiableCredential");
+    }
+
+    [Fact]
+    public async Task HandleAsync_EmbeddedVcForDifferentCredential_ReturnsInvalid()
+    {
+        // Arrange — VC↔presentation consistency: embedded VC carries another credential's id
+        var (presentation, credential) = SetupValidPresentation();
+        var token = CreateVpToken(presentation.Id, credential.Id, vcJtiOverride: Guid.NewGuid());
+
+        // Act
+        var result = await _handler.HandleAsync(new VerifyPresentationCommand(token));
+
+        // Assert
+        result.IsValid.Should().BeFalse();
+        result.Reason.Should().Contain("does not match the presented credential");
+    }
+
+    [Fact]
     public async Task HandleAsync_RevokedCredential_ReturnsInvalid()
     {
         // Arrange — credential revoked AFTER the presentation was created
         var (presentation, credential) = SetupValidPresentation();
         credential.Revoke("Compromised");
-        var token = CreateToken(presentation.Id, credential.Id);
+        var token = CreateVpToken(presentation.Id, credential.Id);
 
         // Act
         var result = await _handler.HandleAsync(new VerifyPresentationCommand(token));
@@ -271,7 +452,7 @@ public class VerifyPresentationCommandHandlerTests
         // Arrange — credential expired AFTER the presentation was created
         var (presentation, credential) = SetupValidPresentation();
         credential.SetExpiry(DateTimeOffset.UtcNow.AddMilliseconds(-1));
-        var token = CreateToken(presentation.Id, credential.Id);
+        var token = CreateVpToken(presentation.Id, credential.Id);
 
         // Act
         var result = await _handler.HandleAsync(new VerifyPresentationCommand(token));
@@ -288,7 +469,7 @@ public class VerifyPresentationCommandHandlerTests
         var (presentation, credential) = SetupValidPresentation();
         _credentialRepositoryMock.Setup(x => x.GetByIdAsync(credential.Id, It.IsAny<CancellationToken>()))
             .ReturnsAsync((Credential?)null);
-        var token = CreateToken(presentation.Id, credential.Id);
+        var token = CreateVpToken(presentation.Id, credential.Id);
 
         // Act
         var result = await _handler.HandleAsync(new VerifyPresentationCommand(token));
@@ -302,8 +483,9 @@ public class VerifyPresentationCommandHandlerTests
     public async Task HandleAsync_MissingSecret_ThrowsInvalidOperation()
     {
         // Arrange — configuration error is NOT a normal verification failure
+        var token = CreateVpToken(Guid.NewGuid(), Guid.NewGuid());
         _configurationMock.Setup(c => c["Jwt:SecretKey"]).Returns((string?)null);
-        var token = CreateToken(Guid.NewGuid(), Guid.NewGuid());
+        _configurationMock.Setup(c => c["Jwt:Key"]).Returns((string?)null);
 
         // Act & Assert
         await Assert.ThrowsAsync<InvalidOperationException>(

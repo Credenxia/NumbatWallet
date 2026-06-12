@@ -8,7 +8,8 @@ namespace NumbatWallet.Web.Api.GraphQL.Mutations;
 
 /// <summary>
 /// GraphQL mutations for credential presentations (present → verify flow).
-/// POA scope: signed-JWT presentation tokens, not W3C VP / OID4VP envelopes.
+/// Presentation tokens are W3C JWT-VPs embedding the presented credential as a JWT-VC;
+/// the API surface treats them as opaque strings.
 /// </summary>
 [ExtendObjectType("Mutation")]
 public class PresentationMutation

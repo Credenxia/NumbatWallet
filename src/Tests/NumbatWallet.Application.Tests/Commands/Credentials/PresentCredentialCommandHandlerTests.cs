@@ -44,12 +44,7 @@ public class PresentCredentialCommandHandlerTests
     private void SetupTokenService(string presentationToken = "token", string verificationUrl = "url")
     {
         _verificationServiceMock.Setup(x => x.CreatePresentationTokenAsync(
-                It.IsAny<Guid>(),
-                It.IsAny<Guid>(),
-                It.IsAny<string>(),
-                It.IsAny<string>(),
-                It.IsAny<Dictionary<string, object>>(),
-                It.IsAny<DateTimeOffset>(),
+                It.IsAny<PresentationTokenRequest>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(presentationToken);
 
@@ -133,21 +128,11 @@ public class PresentCredentialCommandHandlerTests
         _credentialRepositoryMock.Setup(x => x.GetByIdAsync(credentialId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(credential);
 
-        Guid tokenPresentationId = Guid.Empty;
-        DateTimeOffset tokenExpiresAt = default;
+        PresentationTokenRequest? tokenRequest = null;
         _verificationServiceMock.Setup(x => x.CreatePresentationTokenAsync(
-                It.IsAny<Guid>(),
-                It.IsAny<Guid>(),
-                It.IsAny<string>(),
-                It.IsAny<string>(),
-                It.IsAny<Dictionary<string, object>>(),
-                It.IsAny<DateTimeOffset>(),
+                It.IsAny<PresentationTokenRequest>(),
                 It.IsAny<CancellationToken>()))
-            .Callback((Guid pid, Guid _, string _, string _, Dictionary<string, object> _, DateTimeOffset exp, CancellationToken _) =>
-            {
-                tokenPresentationId = pid;
-                tokenExpiresAt = exp;
-            })
+            .Callback((PresentationTokenRequest req, CancellationToken _) => tokenRequest = req)
             .ReturnsAsync("token");
         _verificationServiceMock.Setup(x => x.CreateVerificationUrlAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync("url");
@@ -162,19 +147,53 @@ public class PresentCredentialCommandHandlerTests
 
         // Assert — the persisted presentation IS the token's jti
         persisted.Should().NotBeNull();
-        persisted!.Id.Should().Be(tokenPresentationId);
+        tokenRequest.Should().NotBeNull();
+        persisted!.Id.Should().Be(tokenRequest!.PresentationId);
         persisted.CredentialId.Should().Be(credential.Id);
         persisted.WalletId.Should().Be(credential.WalletId);
         persisted.VerifierId.Should().Be("verifier_123");
         persisted.Purpose.Should().Be("Age Verification");
-        persisted.ExpiresAt.Should().Be(tokenExpiresAt);
+        persisted.ExpiresAt.Should().Be(tokenRequest.ExpiresAt);
         persisted.DisclosedClaimsJson.Should().Contain("dateOfBirth");
         persisted.DisclosedClaimsJson.Should().NotContain("fullName");
+
+        // The token request carries the credential context for the embedded VC plus a nonce.
+        tokenRequest.CredentialId.Should().Be(credential.Id);
+        tokenRequest.WalletId.Should().Be(credential.WalletId);
+        tokenRequest.IssuerId.Should().Be(credential.IssuerId);
+        tokenRequest.CredentialType.Should().Be("Custom");
+        tokenRequest.Nonce.Should().NotBeNullOrWhiteSpace();
+        tokenRequest.DisclosedClaims.Keys.Should().BeEquivalentTo("dateOfBirth");
 
         // Default lifetime is 15 minutes when not configured
         persisted.ExpiresAt.Should().BeCloseTo(DateTimeOffset.UtcNow.AddMinutes(15), TimeSpan.FromMinutes(1));
 
         _unitOfWorkMock.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task HandleAsync_CallerSuppliedNonce_IsUsedInTokenRequest()
+    {
+        // Arrange — OID4VP flow: the verifier's request nonce must end up in the VP
+        var credentialId = Guid.NewGuid();
+        var credential = CreateActiveCredential(new Dictionary<string, object> { { "a", "b" } });
+        _credentialRepositoryMock.Setup(x => x.GetByIdAsync(credentialId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(credential);
+
+        PresentationTokenRequest? tokenRequest = null;
+        _verificationServiceMock.Setup(x => x.CreatePresentationTokenAsync(
+                It.IsAny<PresentationTokenRequest>(), It.IsAny<CancellationToken>()))
+            .Callback((PresentationTokenRequest req, CancellationToken _) => tokenRequest = req)
+            .ReturnsAsync("token");
+        _verificationServiceMock.Setup(x => x.CreateVerificationUrlAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync("url");
+
+        // Act
+        await _handler.HandleAsync(new PresentCredentialCommand(
+            credentialId, "v", "purpose", null, Nonce: "request-nonce-42"));
+
+        // Assert
+        tokenRequest!.Nonce.Should().Be("request-nonce-42");
     }
 
     [Fact]

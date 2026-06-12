@@ -35,6 +35,32 @@ public sealed class HmacAccessTokenSigner : IAccessTokenSigner
         return new JwtSecurityTokenHandler().WriteToken(token);
     }
 
+    public string CreateToken(
+        IEnumerable<Claim> claims,
+        string issuer,
+        string? audience,
+        DateTimeOffset notBefore,
+        DateTimeOffset? expiresAt)
+    {
+        var creds = new SigningCredentials(GetKey(), Algorithm);
+        // QUIRK: JwtSecurityToken silently drops nbf when expires is null, so for tokens
+        // without an expiry (e.g. a VC for a never-expiring credential) nbf is added explicitly.
+        var allClaims = expiresAt is null
+            ? claims.Append(new Claim(
+                JwtRegisteredClaimNames.Nbf,
+                EpochTime.GetIntDate(notBefore.UtcDateTime).ToString(System.Globalization.CultureInfo.InvariantCulture),
+                ClaimValueTypes.Integer64))
+            : claims;
+        var token = new JwtSecurityToken(
+            issuer: issuer,
+            audience: audience,
+            claims: allClaims,
+            notBefore: expiresAt is null ? null : notBefore.UtcDateTime,
+            expires: expiresAt?.UtcDateTime,
+            signingCredentials: creds);
+        return new JwtSecurityTokenHandler().WriteToken(token);
+    }
+
     public IReadOnlyList<SecurityKey> GetValidationKeys() => new SecurityKey[] { GetKey() };
 
     private SymmetricSecurityKey GetKey()
