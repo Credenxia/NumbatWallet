@@ -52,9 +52,11 @@ public class IssueCredentialCommandHandler : ICommandHandler<IssueCredentialComm
             throw new BusinessRuleException("Cannot issue credential to inactive wallet");
         }
 
-        // Get issuer
-        var issuer = await _issuerRepository.GetByIdAsync(Guid.Parse(command.IssuerId), cancellationToken)
-            ?? throw new NotFoundException($"Issuer with ID {command.IssuerId} not found");
+        // Get issuer organisation. The issuing PRINCIPAL is command.IssuerId (the authenticated
+        // user's "sub", which is not a Guid for API-key/service callers); the issuer ENTITY is
+        // identified by command.IssuerOrganizationId.
+        var issuer = await _issuerRepository.GetByIdAsync(command.IssuerOrganizationId, cancellationToken)
+            ?? throw new NotFoundException($"Issuer with ID {command.IssuerOrganizationId} not found");
 
         // Serialize claims data
         var credentialData = JsonSerializer.Serialize(command.Claims);

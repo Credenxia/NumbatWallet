@@ -16,19 +16,22 @@ namespace NumbatWallet.Application.Commands.Authentication.Handlers;
 public class LoginCommandHandler : ICommandHandler<LoginCommand, AuthenticationResultDto>
 {
     private readonly IPersonRepository _personRepository;
-    private readonly IConfiguration _configuration;
     private readonly IEnumerable<IPasswordValidator> _passwordValidators;
+    private readonly IRefreshTokenStore _refreshTokenStore;
+    private readonly IAccessTokenSigner _accessTokenSigner;
     private readonly ILogger<LoginCommandHandler> _logger;
 
     public LoginCommandHandler(
         IPersonRepository personRepository,
-        IConfiguration configuration,
         IEnumerable<IPasswordValidator> passwordValidators,
+        IRefreshTokenStore refreshTokenStore,
+        IAccessTokenSigner accessTokenSigner,
         ILogger<LoginCommandHandler> logger)
     {
         _personRepository = personRepository;
-        _configuration = configuration;
         _passwordValidators = passwordValidators;
+        _refreshTokenStore = refreshTokenStore;
+        _accessTokenSigner = accessTokenSigner;
         _logger = logger;
     }
 
@@ -83,17 +86,18 @@ public class LoginCommandHandler : ICommandHandler<LoginCommand, AuthenticationR
             throw new UnauthorizedException("Invalid credentials");
         }
 
-        // Generate JWT token with tenant context
-        var token = GenerateJwtToken(person.Id.ToString(), command.Email, roles, person.TenantId);
+        // Generate the signed access token (HS256 or RS256 depending on the configured signer).
+        var expiresAt = DateTime.UtcNow.AddHours(1);
+        var token = _accessTokenSigner.CreateToken(
+            BuildClaims(person.Id.ToString(), command.Email, roles, person.TenantId),
+            expiresAt);
         var refreshToken = GenerateRefreshToken();
 
-        // Store refresh token for validation (POA implementation)
+        // Store refresh token for validation (rotated on refresh, revoked on logout).
         var refreshTokenExpiry = DateTime.UtcNow.AddDays(30); // 30 days expiry
-        RefreshTokenCommandHandler.StoreRefreshToken(refreshToken, person.Id.ToString(), refreshTokenExpiry);
+        _refreshTokenStore.Store(refreshToken, person.Id.ToString(), roles, refreshTokenExpiry);
 
         _logger.LogInformation("Login successful for: {Email}", command.Email);
-
-        var expiresAt = DateTime.UtcNow.AddHours(1);
 
         return new AuthenticationResultDto
         {
@@ -116,12 +120,8 @@ public class LoginCommandHandler : ICommandHandler<LoginCommand, AuthenticationR
         };
     }
 
-    private string GenerateJwtToken(string userId, string email, string[] roles, string tenantId)
+    private static List<Claim> BuildClaims(string userId, string email, string[] roles, string tenantId)
     {
-        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(
-            _configuration["Jwt:Key"] ?? _configuration["Jwt:SecretKey"] ?? "ThisIsADevelopmentSecretKeyThatIs256BitsLong!!"));
-        var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-
         var claims = new List<Claim>
         {
             new Claim(ClaimTypes.NameIdentifier, userId),
@@ -131,23 +131,11 @@ public class LoginCommandHandler : ICommandHandler<LoginCommand, AuthenticationR
             new Claim("tenant_id", tenantId),
             new Claim("user_id", userId)
         };
-
-        foreach (var role in roles)
-        {
-            claims.Add(new Claim(ClaimTypes.Role, role));
-        }
-
-        var token = new JwtSecurityToken(
-            issuer: _configuration["Jwt:Issuer"] ?? "https://numbatwallet.wa.gov.au",
-            audience: _configuration["Jwt:Audience"] ?? "https://api.numbatwallet.wa.gov.au",
-            claims: claims,
-            expires: DateTime.UtcNow.AddHours(1),
-            signingCredentials: creds);
-
-        return new JwtSecurityTokenHandler().WriteToken(token);
+        claims.AddRange(roles.Select(role => new Claim(ClaimTypes.Role, role)));
+        return claims;
     }
 
-    private string GenerateRefreshToken()
+    private static string GenerateRefreshToken()
     {
         var randomNumber = new byte[32];
         using var rng = RandomNumberGenerator.Create();

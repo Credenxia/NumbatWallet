@@ -58,6 +58,11 @@ public class NumbatWalletDbContext : DbContext, IUnitOfWork
         // Apply snake_case naming convention for PostgreSQL
         optionsBuilder.UseSnakeCaseNamingConvention();
 
+        // Suppress PendingModelChangesWarning to allow EF migrations in development
+        // when the model has changes not yet captured in a migration
+        optionsBuilder.ConfigureWarnings(w =>
+            w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
+
         base.OnConfiguring(optionsBuilder);
     }
 
@@ -129,7 +134,12 @@ public class NumbatWalletDbContext : DbContext, IUnitOfWork
             if (entry.State == EntityState.Added)
             {
                 entry.Entity.CreatedAt = _dateTimeService.UtcNow;
-                entry.Entity.CreatedBy = _currentUserService.UserId;
+                // Preserve a caller-set value (e.g. seeding/system writes); use the
+                // current user when authenticated, otherwise fall back to "system".
+                // Never overwrite with null — created_by is NOT NULL in the database.
+                entry.Entity.CreatedBy = !string.IsNullOrEmpty(_currentUserService.UserId)
+                    ? _currentUserService.UserId
+                    : entry.Entity.CreatedBy ?? "system";
 
                 // NOTE: Tenant ID setting is handled by TenantInterceptor using ICurrentTenantService
                 // Removed duplicate logic here to avoid conflicts with string-based tenant IDs
@@ -145,7 +155,9 @@ public class NumbatWalletDbContext : DbContext, IUnitOfWork
             else if (entry.State == EntityState.Modified)
             {
                 entry.Entity.ModifiedAt = _dateTimeService.UtcNow;
-                entry.Entity.ModifiedBy = _currentUserService.UserId;
+                entry.Entity.ModifiedBy = !string.IsNullOrEmpty(_currentUserService.UserId)
+                    ? _currentUserService.UserId
+                    : entry.Entity.ModifiedBy ?? "system";
             }
         }
 

@@ -10,12 +10,16 @@ namespace NumbatWallet.Application.Interfaces;
 public interface IPasswordValidator
 {
     /// <summary>
-    /// Validates user credentials and returns roles if successful
+    /// Validates user credentials against the identity provider
     /// </summary>
     /// <param name="email">User email</param>
     /// <param name="password">Password to validate</param>
     /// <param name="cancellationToken">Cancellation token</param>
-    /// <returns>Roles if authenticated, empty array if failed</returns>
+    /// <returns>
+    /// The authenticated user's roles when validation SUCCEEDS (a non-empty array signals success).
+    /// An EMPTY array when validation fails. Implementations must never return a non-empty array on failure,
+    /// because <c>LoginCommandHandler</c> treats any non-empty result as a successful authentication.
+    /// </returns>
     Task<string[]> ValidateAsync(string email, string password, CancellationToken cancellationToken = default);
 
     /// <summary>

@@ -40,7 +40,7 @@ public class RedisCacheService : ICacheService
             }
 
             _logger.LogDebug("Cache hit for key: {Key}", key);
-            return JsonSerializer.Deserialize<T>(value!, _jsonOptions);
+            return JsonSerializer.Deserialize<T>((string)value!, _jsonOptions);
         }
         catch (Exception ex)
         {
@@ -209,7 +209,7 @@ public class RedisCacheService : ICacheService
             {
                 if (!values[i].IsNullOrEmpty)
                 {
-                    result[keyArray[i]] = JsonSerializer.Deserialize<T>(values[i]!, _jsonOptions);
+                    result[keyArray[i]] = JsonSerializer.Deserialize<T>((string)values[i]!, _jsonOptions);
                 }
                 else
                 {

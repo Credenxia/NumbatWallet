@@ -31,28 +31,28 @@ public class DatabaseSeeder : IDatabaseSeeder
 
         try
         {
-            // Don't use both EnsureCreated and Migrate - they conflict
-            // Try migrations first (production), fall back to EnsureCreated (tests)
-            if (context.Database.IsRelational())
+            // Ensure schema exists (skip if already created by MigrationHelper)
+            var canConnect = await context.Database.CanConnectAsync(cancellationToken);
+            if (!canConnect)
             {
-                try
+                _logger.LogWarning("Cannot connect to database, skipping seeding");
+                return;
+            }
+
+            // Only create/migrate if tables don't exist yet
+            try
+            {
+                var hasAnyTables = context.Database.IsRelational() &&
+                    (await context.Database.GetAppliedMigrationsAsync(cancellationToken)).Any();
+                if (!hasAnyTables)
                 {
-                    var pendingMigrations = await context.Database.GetPendingMigrationsAsync(cancellationToken);
-                    if (pendingMigrations.Any())
-                    {
-                        await context.Database.MigrateAsync(cancellationToken);
-                        _logger.LogInformation("Database migrations applied successfully");
-                    }
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogWarning(ex, "Migrations failed, using EnsureCreated for tests");
+                    // Try EnsureCreated as a safe fallback (no-op if tables already exist)
                     await context.Database.EnsureCreatedAsync(cancellationToken);
                 }
             }
-            else
+            catch
             {
-                await context.Database.EnsureCreatedAsync(cancellationToken);
+                // Tables may already exist via MigrationHelper.EnsureCreated - continue to seeding
             }
 
             // Seed data

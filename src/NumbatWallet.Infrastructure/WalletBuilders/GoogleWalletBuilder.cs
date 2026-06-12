@@ -1,6 +1,8 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Security.Cryptography;
 using System.Text;
+using System.Text.Json;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
@@ -11,7 +13,8 @@ using NumbatWallet.Domain.Entities;
 namespace NumbatWallet.Infrastructure.WalletBuilders;
 
 /// <summary>
-/// Implementation of Google Wallet pass builder
+/// Implementation of Google Wallet pass builder.
+/// Uses RSA (RS256) signing with Google Service Account credentials.
 /// </summary>
 public class GoogleWalletBuilder : IGoogleWalletBuilder
 {
@@ -56,56 +59,93 @@ public class GoogleWalletBuilder : IGoogleWalletBuilder
 
     public Task<string> CreateJwtAsync(GoogleWalletPassDto pass)
     {
-        // Create JWT payload
-        var payload = new Dictionary<string, object>
+        var serviceAccountEmail = _configuration["GoogleWallet:ServiceAccountEmail"]
+            ?? throw new InvalidOperationException(
+                "GoogleWallet:ServiceAccountEmail must be configured. " +
+                "Set it to the service account email from your Google Cloud Console.");
+
+        var issuerId = _configuration["GoogleWallet:IssuerId"]
+            ?? throw new InvalidOperationException(
+                "GoogleWallet:IssuerId must be configured. " +
+                "Set it to the issuer ID from Google Pay & Wallet Console.");
+
+        // Build the JWT payload with pass data
+        var genericObject = new Dictionary<string, object>
         {
-            ["iss"] = _configuration["GoogleWallet:ServiceAccountEmail"] ?? "dummy@example.com",
-            ["aud"] = "google",
-            ["typ"] = "savetowallet",
-            ["iat"] = DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
-            ["origins"] = new[] { "https://numbatwallet.wa.gov.au" }
+            ["id"] = $"{pass.ClassId}.{pass.Id}",
+            ["classId"] = pass.ClassId,
+            ["genericType"] = "GENERIC_TYPE_UNSPECIFIED",
+            ["state"] = pass.State,
+            ["header"] = pass.ObjectData.GetValueOrDefault("header", new Dictionary<string, string>()),
+            ["textModulesData"] = pass.ObjectData.GetValueOrDefault("textModulesData", new List<object>()),
+            ["barcode"] = pass.ObjectData.GetValueOrDefault("barcode", new Dictionary<string, string>())
         };
 
-        // Add pass object and class
-        payload["payload"] = new Dictionary<string, object>
-        {
-            ["genericObjects"] = new[]
-            {
-                new Dictionary<string, object>
-                {
-                    ["id"] = $"{pass.ClassId}.{pass.Id}",
-                    ["classId"] = pass.ClassId,
-                    ["genericType"] = "GENERIC_TYPE_UNSPECIFIED",
-                    ["state"] = pass.State,
-                    ["header"] = pass.ObjectData.GetValueOrDefault("header", new Dictionary<string, string>()),
-                    ["textModulesData"] = pass.ObjectData.GetValueOrDefault("textModulesData", new List<object>()),
-                    ["barcode"] = pass.ObjectData.GetValueOrDefault("barcode", new Dictionary<string, string>())
-                }
-            }
-        };
+        // Load RSA private key from service account JSON or PEM
+        var rsaKey = LoadRsaPrivateKey();
+        var securityKey = new RsaSecurityKey(rsaKey);
+        var signingCredentials = new SigningCredentials(securityKey, SecurityAlgorithms.RsaSha256);
 
-        // In production, this would use the actual service account private key
-        // For now, we'll create a dummy JWT
         var tokenHandler = new JwtSecurityTokenHandler();
-        var key = Encoding.ASCII.GetBytes(_configuration["GoogleWallet:PrivateKey"] ?? "dummy_key_for_development");
-
         var tokenDescriptor = new SecurityTokenDescriptor
         {
-            Subject = new ClaimsIdentity(new[]
-            {
-                new Claim("iss", payload["iss"].ToString()!),
-                new Claim("aud", payload["aud"].ToString()!),
-                new Claim("typ", payload["typ"].ToString()!)
-            }),
+            Issuer = serviceAccountEmail,
+            Audience = "google",
+            IssuedAt = DateTime.UtcNow,
             Expires = DateTime.UtcNow.AddHours(1),
-            SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
+            SigningCredentials = signingCredentials,
+            Claims = new Dictionary<string, object>
+            {
+                ["typ"] = "savetowallet",
+                ["origins"] = new[] { "https://numbatwallet.wa.gov.au" },
+                ["payload"] = new Dictionary<string, object>
+                {
+                    ["genericObjects"] = new[] { genericObject }
+                }
+            }
         };
 
         var token = tokenHandler.CreateToken(tokenDescriptor);
         var jwt = tokenHandler.WriteToken(token);
 
-        _logger.LogDebug("Generated JWT for Google Wallet pass");
+        _logger.LogDebug("Generated RS256 JWT for Google Wallet pass {PassId}", pass.Id);
         return Task.FromResult(jwt);
+    }
+
+    private RSA LoadRsaPrivateKey()
+    {
+        // Option 1: Load from Google Service Account JSON file
+        var serviceAccountKeyPath = _configuration["GoogleWallet:ServiceAccountKeyPath"];
+        if (!string.IsNullOrEmpty(serviceAccountKeyPath) && File.Exists(serviceAccountKeyPath))
+        {
+            var json = File.ReadAllText(serviceAccountKeyPath);
+            var keyData = JsonSerializer.Deserialize<JsonElement>(json);
+
+            if (keyData.TryGetProperty("private_key", out var privateKeyElement))
+            {
+                var privateKeyPem = privateKeyElement.GetString()
+                    ?? throw new InvalidOperationException("Service account JSON 'private_key' is empty.");
+
+                var rsa = RSA.Create();
+                rsa.ImportFromPem(privateKeyPem);
+                return rsa;
+            }
+
+            throw new InvalidOperationException("Service account JSON does not contain 'private_key'.");
+        }
+
+        // Option 2: Load from PEM string in config (e.g., from Azure Key Vault)
+        var privateKey = _configuration["GoogleWallet:PrivateKeyPem"];
+        if (!string.IsNullOrEmpty(privateKey))
+        {
+            var rsa = RSA.Create();
+            rsa.ImportFromPem(privateKey);
+            return rsa;
+        }
+
+        throw new InvalidOperationException(
+            "Google Wallet RSA private key not configured. " +
+            "Set either GoogleWallet:ServiceAccountKeyPath (path to JSON) or GoogleWallet:PrivateKeyPem (PEM string).");
     }
 
     public string GetAddToWalletLink(string jwt)

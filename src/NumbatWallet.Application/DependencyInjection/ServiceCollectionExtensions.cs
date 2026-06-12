@@ -23,6 +23,10 @@ public static class ServiceCollectionExtensions
         // Register custom CQRS implementation (no MediatR as per issue #154)
         services.AddScoped<IDispatcher, Dispatcher>();
 
+        // Default access-token signer (symmetric HS256). Infrastructure overrides this with the
+        // Key Vault RSA signer when Jwt:Signer = "KeyVaultRsa".
+        services.AddSingleton<IAccessTokenSigner, HmacAccessTokenSigner>();
+
         // Auto-register all command handlers
         services.Scan(scan => scan
             .FromAssemblies(assembly)
@@ -81,14 +85,14 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IBulkOperationStatusService, BulkOperationStatusService>();
         services.AddHostedService<BulkOperationCleanupService>();
 
-        // TODO: Register Background Jobs after fixing them
-        // services.AddHostedService<BackgroundJobs.CredentialExpiryCheckJob>();
-        // services.AddHostedService<BackgroundJobs.StatisticsAggregationJob>();
-        // services.AddHostedService<BackgroundJobs.DatabaseCleanupJob>();
-        // services.AddHostedService<BackgroundJobs.NotificationProcessorJob>();
+        // Background Jobs
+        services.AddHostedService<BackgroundJobs.CredentialExpiryCheckJob>();
+        services.AddHostedService<BackgroundJobs.StatisticsAggregationJob>();
+        services.AddHostedService<BackgroundJobs.DatabaseCleanupJob>();
+        services.AddHostedService<BackgroundJobs.NotificationProcessorJob>();
 
-        // TODO: Register notification channel for async processing
-        // services.AddSingleton(System.Threading.Channels.Channel.CreateUnbounded<BackgroundJobs.NotificationMessage>());
+        // Notification channel for async processing
+        services.AddSingleton(System.Threading.Channels.Channel.CreateUnbounded<BackgroundJobs.NotificationMessage>());
 
         return services;
     }

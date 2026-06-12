@@ -64,7 +64,8 @@ public class PersonConfiguration : IEntityTypeConfiguration<Person>
                 .HasColumnName("Email")
                 .IsRequired()
                 .HasColumnType("jsonb")
-                .HasConversion(new ProtectedFieldConverter());
+                // Email is the login/lookup key — must stay queryable, so NOT encrypted.
+                .HasConversion(new ProtectedFieldConverter(encrypt: false));
 
             // Index on the searchable token (will be added via interceptor)
             email.HasIndex(e => e.Value);
@@ -76,7 +77,8 @@ public class PersonConfiguration : IEntityTypeConfiguration<Person>
                 .HasColumnName("PhoneNumberValue")
                 .IsRequired()
                 .HasMaxLength(500) // Increased to accommodate encrypted data
-                .HasConversion(new ProtectedFieldConverter());
+                // Phone is a lookup identifier — keep queryable, not encrypted.
+                .HasConversion(new ProtectedFieldConverter(encrypt: false));
 
             phone.Property(ph => ph.CountryCode)
                 .HasColumnName("PhoneNumberCountryCode")

@@ -39,6 +39,15 @@ public class PersonService : IPersonService
         return persons.Select(MapToDto);
     }
 
+    public async Task<IEnumerable<PersonDto>> GetPagedAsync(int page, int pageSize, CancellationToken cancellationToken = default)
+    {
+        // Paging is pushed to the database (Skip/Take) rather than materialising all rows.
+        var result = await _personRepository.GetPagedAsync(
+            new SharedKernel.Models.PagedRequest { PageNumber = page, PageSize = pageSize },
+            cancellationToken: cancellationToken);
+        return result.Items.Select(MapToDto);
+    }
+
     public async Task<PersonDto> CreateAsync(CreatePersonDto dto, CancellationToken cancellationToken = default)
     {
         // Convert DateTime to DateOnly if provided

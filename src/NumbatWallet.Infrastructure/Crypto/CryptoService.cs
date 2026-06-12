@@ -101,9 +101,9 @@ public class CryptoService : ICryptoService
         Buffer.BlockCopy(tag, 0, result, 1 + nonce.Length, tag.Length);
         Buffer.BlockCopy(cipherBytes, 0, result, 1 + nonce.Length + tag.Length, cipherBytes.Length);
 
-        // Clear sensitive data from memory
-        CryptographicOperations.ZeroMemory(dek);
-
+        // NOTE: do NOT zero `dek` here — it is the shared cached DEK reference. Zeroing it would
+        // corrupt the cache so every subsequent operation would use an all-zero key. The cache's
+        // eviction callback securely zeroes the DEK when it expires.
         return result;
     }
 
@@ -145,9 +145,7 @@ public class CryptoService : ICryptoService
             aesGcm.Decrypt(nonce, cipherData, tag, plainBytes);
         }
 
-        // Clear sensitive data from memory
-        CryptographicOperations.ZeroMemory(dek);
-
+        // NOTE: do NOT zero `dek` here — it is the shared cached DEK reference (see EncryptBytesAsync).
         return plainBytes;
     }
 

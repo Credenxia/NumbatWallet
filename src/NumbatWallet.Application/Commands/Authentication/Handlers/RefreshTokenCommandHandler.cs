@@ -4,6 +4,7 @@ using Microsoft.IdentityModel.Tokens;
 using NumbatWallet.Application.Common.Exceptions;
 using NumbatWallet.Application.CQRS.Interfaces;
 using NumbatWallet.Application.DTOs;
+using NumbatWallet.Application.Interfaces;
 using NumbatWallet.Domain.Interfaces;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -15,36 +16,20 @@ namespace NumbatWallet.Application.Commands.Authentication.Handlers;
 public class RefreshTokenCommandHandler : ICommandHandler<RefreshTokenCommand, AuthenticationResultDto>
 {
     private readonly IPersonRepository _personRepository;
-    private readonly IConfiguration _configuration;
+    private readonly IRefreshTokenStore _refreshTokenStore;
+    private readonly IAccessTokenSigner _accessTokenSigner;
     private readonly ILogger<RefreshTokenCommandHandler> _logger;
-    // In production, we'd store refresh tokens in cache or database
-    private static readonly Dictionary<string, (string UserId, DateTime Expiry)> _refreshTokens = new();
 
     public RefreshTokenCommandHandler(
         IPersonRepository personRepository,
-        IConfiguration configuration,
+        IRefreshTokenStore refreshTokenStore,
+        IAccessTokenSigner accessTokenSigner,
         ILogger<RefreshTokenCommandHandler> logger)
     {
         _personRepository = personRepository;
-        _configuration = configuration;
+        _refreshTokenStore = refreshTokenStore;
+        _accessTokenSigner = accessTokenSigner;
         _logger = logger;
-    }
-
-    /// <summary>
-    /// Store a refresh token for later validation (POA implementation)
-    /// In production, this would be stored in Redis/database
-    /// </summary>
-    public static void StoreRefreshToken(string refreshToken, string userId, DateTime expiry)
-    {
-        _refreshTokens[refreshToken] = (userId, expiry);
-    }
-
-    /// <summary>
-    /// Remove a refresh token (used during logout)
-    /// </summary>
-    public static void RevokeRefreshToken(string refreshToken)
-    {
-        _refreshTokens.Remove(refreshToken);
     }
 
     public async Task<AuthenticationResultDto> HandleAsync(
@@ -60,24 +45,15 @@ public class RefreshTokenCommandHandler : ICommandHandler<RefreshTokenCommand, A
             throw new UnauthorizedException("Invalid refresh token");
         }
 
-        // Validate refresh token exists in our store
-        if (!_refreshTokens.TryGetValue(command.RefreshToken, out var tokenData))
+        // Validate the refresh token exists in our store (the store enforces expiry/TTL).
+        var tokenData = _refreshTokenStore.Get(command.RefreshToken);
+        if (tokenData is null)
         {
-            _logger.LogWarning("Token refresh failed - refresh token not found");
+            _logger.LogWarning("Token refresh failed - refresh token not found or expired");
             throw new UnauthorizedException("Invalid refresh token");
         }
 
-        // Check if token has expired
-        if (tokenData.Expiry < DateTime.UtcNow)
-        {
-            // Remove expired token
-            _refreshTokens.Remove(command.RefreshToken);
-            _logger.LogWarning("Token refresh failed - refresh token expired for user: {UserId}", tokenData.UserId);
-            throw new UnauthorizedException("Refresh token has expired");
-        }
-
-        // Get user from the stored token data
-        string userId = tokenData.UserId;
+        var userId = tokenData.UserId;
 
         // Try to get person
         Domain.Aggregates.Person? person = null;
@@ -91,17 +67,25 @@ public class RefreshTokenCommandHandler : ICommandHandler<RefreshTokenCommand, A
             }
         }
 
-        // Default values for POA
+        // Preserve the roles captured at login so refresh doesn't silently drop privileges.
         var email = person?.Email.Value ?? "user@numbatwallet.wa.gov.au";
-        var roles = new[] { "User" };
+        var roles = tokenData.Roles.Count > 0 ? tokenData.Roles.ToArray() : new[] { "User" };
 
-        // Generate new tokens
-        var newAccessToken = GenerateJwtToken(userId, email, roles);
+        // Generate new tokens via the configured signer (HS256 or RS256).
+        var claims = new List<Claim>
+        {
+            new Claim(ClaimTypes.NameIdentifier, userId),
+            new Claim(ClaimTypes.Email, email),
+            new Claim(JwtRegisteredClaimNames.Sub, email),
+            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+        };
+        claims.AddRange(roles.Select(role => new Claim(ClaimTypes.Role, role)));
+        var newAccessToken = _accessTokenSigner.CreateToken(claims, DateTimeOffset.UtcNow.AddHours(1));
         var newRefreshToken = GenerateRefreshToken();
 
-        // Remove old refresh token and store new one (refresh token rotation)
-        _refreshTokens.Remove(command.RefreshToken);
-        _refreshTokens[newRefreshToken] = (userId, DateTime.UtcNow.AddDays(30));
+        // Refresh-token rotation: revoke the used token, persist the new one (with roles).
+        _refreshTokenStore.Revoke(command.RefreshToken);
+        _refreshTokenStore.Store(newRefreshToken, userId, roles, DateTime.UtcNow.AddDays(30));
 
         _logger.LogInformation("Token refreshed successfully for user: {UserId}", userId);
 
@@ -123,36 +107,7 @@ public class RefreshTokenCommandHandler : ICommandHandler<RefreshTokenCommand, A
         };
     }
 
-    private string GenerateJwtToken(string userId, string email, string[] roles)
-    {
-        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(
-            _configuration["Jwt:Key"] ?? _configuration["Jwt:SecretKey"] ?? "ThisIsADevelopmentSecretKeyThatIs256BitsLong!!"));
-        var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-
-        var claims = new List<Claim>
-        {
-            new Claim(ClaimTypes.NameIdentifier, userId),
-            new Claim(ClaimTypes.Email, email),
-            new Claim(JwtRegisteredClaimNames.Sub, email),
-            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
-        };
-
-        foreach (var role in roles)
-        {
-            claims.Add(new Claim(ClaimTypes.Role, role));
-        }
-
-        var token = new JwtSecurityToken(
-            issuer: _configuration["Jwt:Issuer"] ?? "https://numbatwallet.wa.gov.au",
-            audience: _configuration["Jwt:Audience"] ?? "https://api.numbatwallet.wa.gov.au",
-            claims: claims,
-            expires: DateTime.UtcNow.AddHours(1),
-            signingCredentials: creds);
-
-        return new JwtSecurityTokenHandler().WriteToken(token);
-    }
-
-    private string GenerateRefreshToken()
+    private static string GenerateRefreshToken()
     {
         var randomNumber = new byte[32];
         using var rng = RandomNumberGenerator.Create();

@@ -1,4 +1,6 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -24,11 +26,44 @@ public class MigrationHelper : IHostedService
 
         using var scope = _serviceProvider.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<NumbatWalletDbContext>();
+        var services = scope.ServiceProvider;
 
-        // For now, run SQL script directly instead of EF migrations
+        // In Development, use EnsureCreated to build schema from the model
+        // (avoids migration issues with pending model changes and seed data JSON errors)
         if (IsDevelopment())
         {
-            await RunSqlScriptAsync(context, cancellationToken);
+            try
+            {
+                var created = await context.Database.EnsureCreatedAsync(cancellationToken);
+                if (created)
+                {
+                    _logger.LogInformation("Database schema created via EnsureCreated (Development mode)");
+                }
+                else
+                {
+                    // EnsureCreated is a no-op when the database already exists — but an
+                    // orchestrator (e.g. Aspire) may provision an EMPTY database, leaving no tables.
+                    // Create the schema explicitly in that case so Development starts cleanly.
+                    var creator = context.Database.GetService<IRelationalDatabaseCreator>();
+                    if (!await creator.HasTablesAsync(cancellationToken))
+                    {
+                        await creator.CreateTablesAsync(cancellationToken);
+                        _logger.LogInformation("Database existed but was empty; schema created via CreateTables (Development mode)");
+                    }
+                    else
+                    {
+                        _logger.LogInformation("Database schema already present (Development mode)");
+                    }
+                }
+
+                // Seed data
+                var seeder = services.GetRequiredService<DatabaseSeeder>();
+                await seeder.SeedAsync(cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error creating/seeding database in Development mode");
+            }
             return;
         }
 
@@ -100,6 +135,19 @@ public class MigrationHelper : IHostedService
             }
 
             throw;
+        }
+
+        // Seed data after successful migration
+        try
+        {
+            var seeder = services.GetRequiredService<DatabaseSeeder>();
+            await seeder.SeedAsync(cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "An error occurred while seeding the database");
+            if (!IsDevelopment())
+                throw;
         }
     }
 

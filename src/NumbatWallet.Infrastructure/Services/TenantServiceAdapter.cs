@@ -11,19 +11,28 @@ public class TenantServiceAdapter : SharedKernel.Interfaces.ITenantService
         _applicationTenantService = applicationTenantService;
     }
 
+    // Local development convenience tenant. Only used when no tenant can be resolved
+    // AND the app is running in Development. In any other environment an unresolved
+    // tenant fails CLOSED (Guid.Empty) so EF query filters match no rows rather than
+    // silently exposing a default tenant's data.
+    private static readonly Guid DevDefaultTenantId = Guid.Parse("00000000-0000-0000-0000-000000000001");
+
+    private static bool IsDevelopment => string.Equals(
+        Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT"),
+        "Development", StringComparison.OrdinalIgnoreCase);
+
     public Guid TenantId
     {
         get
         {
             var tenantIdString = _applicationTenantService.GetCurrentTenantId();
-            if (string.IsNullOrEmpty(tenantIdString))
+            if (!string.IsNullOrEmpty(tenantIdString) && Guid.TryParse(tenantIdString, out var tenantId))
             {
-                // Return default tenant for development
-                return Guid.Parse("00000000-0000-0000-0000-000000000001");
+                return tenantId;
             }
-            return Guid.TryParse(tenantIdString, out var tenantId)
-                ? tenantId
-                : Guid.Parse("00000000-0000-0000-0000-000000000001");
+
+            // Unresolved tenant: fail closed outside Development.
+            return IsDevelopment ? DevDefaultTenantId : Guid.Empty;
         }
     }
 

@@ -104,10 +104,32 @@ public static class ServiceCollectionExtensions
         services.AddScoped<ISessionService, DistributedSessionService>();
 
         // Register Password Validators
-        // Multiple validators registered - LoginCommandHandler uses all that support the email domain
-        services.AddScoped<IPasswordValidator, Authentication.TestPasswordValidator>();
+        // Multiple validators registered - LoginCommandHandler uses all that support the email domain.
+        // SECURITY: TestPasswordValidator contains hardcoded test accounts and must NEVER run outside
+        // Development/Testing — otherwise it is a production authentication backdoor.
+        // Use the same environment resolution as ValidateMockServices (IHostEnvironment-aware)
+        // so the guard is consistent and not fooled by a stray env var.
+        var passwordEnv = ResolveEnvironmentName(services);
+        var isDevOrTest = passwordEnv.Equals("Development", StringComparison.OrdinalIgnoreCase)
+            || passwordEnv.Equals("Testing", StringComparison.OrdinalIgnoreCase);
+        if (isDevOrTest)
+        {
+            services.AddScoped<IPasswordValidator, Authentication.TestPasswordValidator>();
+        }
         services.AddScoped<IPasswordValidator, Authentication.AzureAdPasswordValidator>();
         services.AddScoped<IPasswordValidator, Authentication.ServiceWaPasswordValidator>();
+
+        // Distributed (Redis-backed) token stores — override the in-memory POA implementations
+        // so refresh tokens and the logout blacklist survive restarts and work across instances.
+        services.AddSingleton<IRefreshTokenStore, Authentication.DistributedRefreshTokenStore>();
+        services.AddSingleton<Application.Services.ITokenBlacklistService, Authentication.DistributedTokenBlacklistService>();
+
+        // Asymmetric RS256 access-token signing (opt-in). When Jwt:Signer = "KeyVaultRsa" this
+        // overrides the default HS256 signer so issued tokens are verifiable with a public key.
+        if (string.Equals(configuration["Jwt:Signer"], "KeyVaultRsa", StringComparison.OrdinalIgnoreCase))
+        {
+            services.AddSingleton<IAccessTokenSigner, Authentication.KeyVaultRsaAccessTokenSigner>();
+        }
 
         // Register Credential Services
         services.AddScoped<Application.Commands.Credentials.Handlers.ICredentialSharingService, CredentialSharingService>();
@@ -238,7 +260,21 @@ public static class ServiceCollectionExtensions
         // Protection and Security Services
         services.AddScoped<IAuditService, AuditService>();
         services.AddScoped<INotificationService, NotificationService>();
-        services.AddScoped<IEmailService, EmailService>();
+
+        // Email: the SMTP sender requires a configured host. In Development/Testing with no
+        // Email:SmtpHost configured, register a log-only sender so email-dependent flows
+        // (e.g. shareCredential) work without a mail server. Production always gets the real
+        // sender — an unconfigured host there should fail loudly, not silently log.
+        var smtpConfigured = !string.IsNullOrEmpty(configuration["Email:SmtpHost"]);
+        var emailEnvironment = ResolveEnvironmentName(services);
+        if (!smtpConfigured && emailEnvironment is "Development" or "Testing")
+        {
+            services.AddScoped<IEmailService, LoggingEmailService>();
+        }
+        else
+        {
+            services.AddScoped<IEmailService, EmailService>();
+        }
 
         // Verifiable Credentials Services
         services.AddScoped<Application.Services.IJsonLdService, Application.Services.JsonLdService>();
@@ -250,10 +286,15 @@ public static class ServiceCollectionExtensions
         // services.AddScoped<ISearchTokenService, SearchTokenService>();
         // services.AddScoped<ISearchIndexingService, SearchIndexingService>();
 
-        // Caching - use Aspire service discovery
+        // Caching - use Aspire service discovery.
+        // In Development we deliberately use the in-process memory cache: the local Redis
+        // (e.g. Aspire's, whose connection string sets ssl=true against a non-TLS container)
+        // is unreliable for local dev and would otherwise break the token stores.
+        var cacheEnv = ResolveEnvironmentName(services);
+        var useRedis = !cacheEnv.Equals("Development", StringComparison.OrdinalIgnoreCase);
         var redisConnectionString = configuration.GetConnectionString("redis")
             ?? configuration.GetConnectionString("Redis");
-        if (!string.IsNullOrEmpty(redisConnectionString))
+        if (useRedis && !string.IsNullOrEmpty(redisConnectionString))
         {
             // Add StackExchange.Redis IConnectionMultiplexer
             services.AddSingleton<IConnectionMultiplexer>(_ =>
@@ -296,8 +337,29 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<Crypto.Interfaces.IKeyWrapProvider, Crypto.KeyVaultWrapProvider>();
         services.AddScoped<ICryptoService, Crypto.CryptoService>();
 
+        // Field-level PII encryption at rest (AES-256-GCM). Built eagerly so the key is loaded
+        // and the static accessor used by ProtectedFieldConverter (an EF value converter that
+        // cannot take scoped DI) is set before the first DbContext model is built.
+        var fieldEncryptor = new Crypto.AesGcmFieldEncryptor(
+            configuration,
+            Microsoft.Extensions.Logging.Abstractions.NullLogger<Crypto.AesGcmFieldEncryptor>.Instance);
+        services.AddSingleton<IFieldEncryptor>(fieldEncryptor);
+        Data.Converters.ProtectedFieldConverter.FieldEncryptor = fieldEncryptor;
+
         // Health Check Service
         services.AddScoped<IHealthCheckService, HealthCheckService>();
+
+        // POA: in-memory admin operation services (mock data) backing the Admin GraphQL
+        // surface (feature flags, configurations, backups, reports, admin users, key
+        // rotation, maintenance). Singletons with no scoped dependencies; replaced with
+        // real implementations in the admin-operations epic.
+        services.AddSingleton<IFeatureFlagService, InMemoryFeatureFlagService>();
+        services.AddSingleton<IConfigurationService, InMemoryConfigurationService>();
+        services.AddSingleton<IBackupService, InMemoryBackupService>();
+        services.AddSingleton<IReportingService, InMemoryReportingService>();
+        services.AddSingleton<IUserManagementService, InMemoryUserManagementService>();
+        services.AddSingleton<IKeyManagementService, InMemoryKeyManagementService>();
+        services.AddSingleton<IMaintenanceService, InMemoryMaintenanceService>();
 
         // System Metrics Service
         services.AddScoped<ISystemMetricsService, SystemMetricsService>();
@@ -352,7 +414,102 @@ public static class ServiceCollectionExtensions
             services.AddHostedService<MigrationHelper>();
         }
 
+        // SECURITY: Mock service guards - prevent mock services in production
+        ValidateMockServices(services, configuration);
+
         return services;
+    }
+
+    /// <summary>
+    /// Validates that mock services are not registered in production environments.
+    /// In production, throws if mock is registered and AllowMocks is not explicitly enabled.
+    /// In development/testing, logs warnings when mock services are active.
+    /// </summary>
+    private static void ValidateMockServices(IServiceCollection services, IConfiguration configuration)
+    {
+        var allowMocks = configuration.GetValue<bool>("Services:AllowMocks");
+
+        // Resolve the environment name from IHostEnvironment (set by WebApplicationFactory in tests)
+        // to avoid the raw env var defaulting to "Production" in test runners.
+        var environmentName = ResolveEnvironmentName(services);
+        var isProduction = environmentName.Equals("Production", StringComparison.OrdinalIgnoreCase) ||
+                          environmentName.Equals("Staging", StringComparison.OrdinalIgnoreCase);
+
+        // Check for known mock service registrations
+        var mockTypes = new[]
+        {
+            typeof(MockKeyVaultService).FullName,
+            typeof(MockWAIdXService).FullName,
+            typeof(Services.Mocks.MockBlobStorageService).FullName
+        };
+
+        var registeredMocks = services
+            .Where(s => s.ImplementationType is not null &&
+                        mockTypes.Contains(s.ImplementationType.FullName))
+            .Select(s => s.ImplementationType!.Name)
+            .ToList();
+
+        if (registeredMocks.Count == 0) return;
+
+        if (isProduction && !allowMocks)
+        {
+            throw new InvalidOperationException(
+                $"Mock services detected in {environmentName} environment: {string.Join(", ", registeredMocks)}. " +
+                "Configure the required external services or set Services:AllowMocks=true to override (NOT recommended for production).");
+        }
+
+        // Development/Testing: log warnings via console
+        Console.ForegroundColor = ConsoleColor.Yellow;
+        Console.WriteLine(
+            $"[WARNING] Mock services are active in {environmentName}: {string.Join(", ", registeredMocks)}. " +
+            "Ensure real services are configured before deploying to production.");
+        Console.ResetColor();
+    }
+
+    /// <summary>
+    /// Resolves the environment name from IHostEnvironment in the service collection,
+    /// falling back to the ASPNETCORE_ENVIRONMENT/DOTNET_ENVIRONMENT env vars, then to "Production".
+    /// This ensures test runners using WebApplicationFactory get the correct environment.
+    /// </summary>
+    private static string ResolveEnvironmentName(IServiceCollection services)
+    {
+        // Try to resolve IHostEnvironment from the service collection.
+        // WebApplicationFactory registers it as a singleton instance.
+        var hostEnvDescriptor = services.FirstOrDefault(s =>
+            s.ServiceType == typeof(Microsoft.Extensions.Hosting.IHostEnvironment));
+
+        if (hostEnvDescriptor is not null)
+        {
+            // Check ImplementationInstance first (most common for IHostEnvironment)
+            if (hostEnvDescriptor.ImplementationInstance is Microsoft.Extensions.Hosting.IHostEnvironment hostEnv)
+            {
+                return hostEnv.EnvironmentName;
+            }
+
+            // If registered via factory, build a temporary provider to resolve it
+            if (hostEnvDescriptor.ImplementationFactory is not null ||
+                hostEnvDescriptor.ImplementationType is not null)
+            {
+                try
+                {
+                    using var tempProvider = services.BuildServiceProvider();
+                    var resolved = tempProvider.GetService<Microsoft.Extensions.Hosting.IHostEnvironment>();
+                    if (resolved is not null)
+                    {
+                        return resolved.EnvironmentName;
+                    }
+                }
+                catch
+                {
+                    // If building a temp provider fails, fall through to env var check
+                }
+            }
+        }
+
+        // Fallback to env vars, then default to Production
+        return Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT")
+            ?? Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT")
+            ?? "Production";
     }
 
     public static IServiceCollection AddInfrastructureHealthChecks(

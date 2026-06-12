@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Configuration;
 using NumbatWallet.Application.DTOs;
 using NumbatWallet.Application.Interfaces;
 using NumbatWallet.Domain.Aggregates;
@@ -15,17 +16,20 @@ public class PlatformWalletBuilder : IPlatformWalletBuilder
     private readonly IGoogleWalletBuilder _googleWalletBuilder;
     private readonly IWebWalletBuilder _webWalletBuilder;
     private readonly ILogger<PlatformWalletBuilder> _logger;
+    private readonly IConfiguration _configuration;
 
     public PlatformWalletBuilder(
         IAppleWalletBuilder appleWalletBuilder,
         IGoogleWalletBuilder googleWalletBuilder,
         IWebWalletBuilder webWalletBuilder,
-        ILogger<PlatformWalletBuilder> logger)
+        ILogger<PlatformWalletBuilder> logger,
+        IConfiguration configuration)
     {
         _appleWalletBuilder = appleWalletBuilder;
         _googleWalletBuilder = googleWalletBuilder;
         _webWalletBuilder = webWalletBuilder;
         _logger = logger;
+        _configuration = configuration;
     }
 
     public async Task<WalletPackageDto> BuildWalletPackageAsync(
@@ -235,7 +239,8 @@ public class PlatformWalletBuilder : IPlatformWalletBuilder
         {
             OrganizationName = "Western Australia Government",
             Description = walletTemplate.Description,
-            TeamIdentifier = "WA_TEAM_ID", // Should come from configuration
+            TeamIdentifier = _configuration["AppleWallet:TeamIdentifier"]
+                ?? throw new InvalidOperationException("AppleWallet:TeamIdentifier must be configured."),
             PassTypeIdentifier = $"pass.au.gov.wa.{walletTemplate.Type.ToString().ToLowerInvariant()}",
             BackgroundColor = "#003087", // WA Government blue
             ForegroundColor = "#FFFFFF",

@@ -337,7 +337,8 @@ public class AppleWalletBuilder : IAppleWalletBuilder
     {
         return new AppleWalletOptions
         {
-            TeamIdentifier = _configuration["AppleWallet:TeamIdentifier"] ?? "DEVELOPMENT",
+            TeamIdentifier = _configuration["AppleWallet:TeamIdentifier"]
+                ?? throw new InvalidOperationException("AppleWallet:TeamIdentifier must be configured."),
             PassTypeIdentifier = $"pass.au.gov.wa.numbatwallet.{walletTemplate.Type.ToString().ToLowerInvariant()}",
             OrganizationName = "Government of Western Australia",
             Description = walletTemplate.Description,

@@ -4,6 +4,7 @@ using NumbatWallet.Application.Interfaces;
 using NumbatWallet.Domain.Entities;
 using NumbatWallet.Infrastructure.Data;
 using NumbatWallet.SharedKernel.Enums;
+using NumbatWallet.SharedKernel.Interfaces;
 using System.Text.Json;
 
 namespace NumbatWallet.Infrastructure.Services;
@@ -12,13 +13,16 @@ public class AuditService : IAuditService
 {
     private readonly ILogger<AuditService> _logger;
     private readonly NumbatWalletDbContext _dbContext;
+    private readonly ICurrentTenantService _currentTenantService;
 
     public AuditService(
         ILogger<AuditService> logger,
-        NumbatWalletDbContext dbContext)
+        NumbatWalletDbContext dbContext,
+        ICurrentTenantService currentTenantService)
     {
         _logger = logger;
         _dbContext = dbContext;
+        _currentTenantService = currentTenantService;
     }
 
     public async Task LogAccessAsync(object auditEntry, CancellationToken cancellationToken = default)
@@ -70,9 +74,12 @@ public class AuditService : IAuditService
     {
         try
         {
-            // Extract tenant ID from userId (assuming format: tenantId|userId or similar)
-            // For now, use empty Guid - this should be extracted from current context
-            var tenantId = Guid.Empty; // TODO: Get from ICurrentTenantService
+            // Get tenant ID from the current tenant context
+            if (!Guid.TryParse(_currentTenantService.TenantId, out var tenantId) || tenantId == Guid.Empty)
+            {
+                _logger.LogWarning("Cannot create audit record without a valid tenant ID");
+                throw new InvalidOperationException("A valid tenant ID is required for audit logging.");
+            }
 
             // Create unmask audit record
             var unmaskAudit = new UnmaskAudit(
