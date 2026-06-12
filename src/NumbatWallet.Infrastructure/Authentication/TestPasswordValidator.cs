@@ -25,7 +25,7 @@ public class TestPasswordValidator : IPasswordValidator
             ["admin@example.com"] = ("Test123!@#", new[] { "Admin", "Officer", "User" }),
             ["multirole@example.com"] = ("Test123!@#", new[] { "Admin", "Issuer", "User" }),
             ["officer@example.com"] = ("Test123!@#", new[] { "Officer", "User" }),
-            ["citizen@example.com"] = ("Test123!@#", new[] { "User" }),
+            ["citizen@example.com"] = ("Test123!@#", new[] { "Citizen", "User" }),
             ["test@example.com"] = ("Test123!@#", new[] { "User" }),
             ["tenant1@example.com"] = ("Test123!@#", new[] { "User" }),
             ["tenanta@example.com"] = ("Test123!@#", new[] { "User" }),

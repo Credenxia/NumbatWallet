@@ -11,7 +11,6 @@ namespace NumbatWallet.Web.Api.GraphQL.Admin;
 /// POA: Issue #153 - Admin GraphQL API
 /// </summary>
 [ExtendObjectType("Mutation")]
-[Authorize(Policy = "AdminOnly")]
 public class AdminMutation
 {
     /// <summary>
@@ -35,6 +34,7 @@ public class AdminMutation
     /// Toggle feature flag
     /// </summary>
     [GraphQLDescription("Enable or disable a feature flag")]
+    [Authorize(Policy = "AdminOnly")]
     public async Task<FeatureFlagDto> ToggleFeatureFlag(
         [Service] IFeatureFlagService featureFlagService,
         string id,
@@ -70,6 +70,7 @@ public class AdminMutation
     /// Update tenant configuration
     /// </summary>
     [GraphQLDescription("Update an existing tenant's configuration")]
+    [Authorize(Policy = "AdminOnly")]
     public async Task<TenantDto> UpdateTenant(
         [Service] ITenantService tenantService,
         string id,
@@ -169,6 +170,7 @@ public class AdminMutation
     /// Update admin user
     /// </summary>
     [GraphQLDescription("Update an existing admin user")]
+    [Authorize(Policy = "AdminOnly")]
     public async Task<AdminUserDto> UpdateAdminUser(
         [Service] IUserManagementService userService,
         string id,
@@ -205,6 +207,7 @@ public class AdminMutation
     /// Initiate backup
     /// </summary>
     [GraphQLDescription("Start a backup operation")]
+    [Authorize(Policy = "AdminOnly")]
     public async Task<BackupJobDto> InitiateBackup(
         [Service] IBackupService backupService,
         BackupInput input,
@@ -273,6 +276,7 @@ public class AdminMutation
     /// Run database maintenance
     /// </summary>
     [GraphQLDescription("Run database maintenance operations")]
+    [Authorize(Policy = "AdminOnly")]
     public async Task<MaintenanceResult> RunDatabaseMaintenance(
         [Service] IMaintenanceService maintenanceService,
         CancellationToken cancellationToken = default)
@@ -293,6 +297,7 @@ public class AdminMutation
     /// Clear cache
     /// </summary>
     [GraphQLDescription("Clear system cache")]
+    [Authorize(Policy = "AdminOnly")]
     public async Task<ClearCacheResult> ClearCache(
         [Service] ICacheService cacheService,
         CacheType? cacheType,
@@ -316,6 +321,7 @@ public class AdminMutation
     /// rate limiter middleware. Merged from the former GraphQL/Mutations/AdminMutation.
     /// </remarks>
     [GraphQLDescription("Update API rate limiting configuration")]
+    [Authorize(Policy = "AdminOnly")]
     public async Task<RateLimitConfigurationDto> UpdateRateLimits(
         [Service] ICacheService cacheService,
         [Service] ISecurityAuditService auditService,
@@ -355,6 +361,7 @@ public class AdminMutation
     /// Schedule a report
     /// </summary>
     [GraphQLDescription("Schedule a recurring report")]
+    [Authorize(Policy = "AdminOnly")]
     public async Task<ScheduledReportDto> ScheduleReport(
         [Service] IReportingService reportingService,
         ScheduleReportInput input,
@@ -382,6 +389,7 @@ public class AdminMutation
     /// Cancel scheduled report
     /// </summary>
     [GraphQLDescription("Cancel a scheduled report")]
+    [Authorize(Policy = "AdminOnly")]
     public async Task<bool> CancelScheduledReport(
         [Service] IReportingService reportingService,
         string id,
@@ -394,6 +402,7 @@ public class AdminMutation
     /// Batch create wallets
     /// </summary>
     [GraphQLDescription("Create multiple wallets in a single operation")]
+    [Authorize(Policy = "AdminOnly")]
     public async Task<BatchOperationResultDto> BatchCreateWallets(
         [Service] IDispatcher dispatcher,
         BatchCreateWalletsInput input,

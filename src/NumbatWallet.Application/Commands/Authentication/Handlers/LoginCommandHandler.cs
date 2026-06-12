@@ -122,11 +122,15 @@ public class LoginCommandHandler : ICommandHandler<LoginCommand, AuthenticationR
 
     private static List<Claim> BuildClaims(string userId, string email, string[] roles, string tenantId)
     {
+        // CLAIM CONTRACT: the subject claims (NameIdentifier + OIDC "sub") MUST both carry the
+        // PERSON's Guid — REST GetMyWallets, GraphQL myWallets and the wallet/credential
+        // ownership (IDOR) checks all resolve the caller's person by parsing them as a Guid.
+        // The email is carried separately in ClaimTypes.Email. Pinned by LoginCommandHandlerTests.
         var claims = new List<Claim>
         {
             new Claim(ClaimTypes.NameIdentifier, userId),
             new Claim(ClaimTypes.Email, email),
-            new Claim(JwtRegisteredClaimNames.Sub, email),
+            new Claim(JwtRegisteredClaimNames.Sub, userId),
             new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
             new Claim("tenant_id", tenantId),
             new Claim("user_id", userId)

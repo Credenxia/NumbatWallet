@@ -71,8 +71,9 @@ public class ServiceWaPasswordValidator(
                     "ServiceWA authentication successful for: {Email}. VerificationLevel: {Level}",
                     email, verificationLevel ?? "unknown");
 
-                // Validation succeeded — return the citizen role (non-empty signals success).
-                return ["User"];
+                // Validation succeeded — return the citizen roles (non-empty signals success).
+                // "Citizen" marks ServiceWA-authenticated persons; "User" is the baseline role.
+                return ["Citizen", "User"];
             }
 
             logger.LogWarning("ServiceWA returned success but no access_token for: {Email}", email);

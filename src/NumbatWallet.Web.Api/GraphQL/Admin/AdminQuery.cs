@@ -9,13 +9,13 @@ namespace NumbatWallet.Web.Api.GraphQL.Admin;
 /// POA: Issue #153 - Admin GraphQL API
 /// </summary>
 [ExtendObjectType("Query")]
-[Authorize(Policy = "AdminOnly")]
 public class AdminQuery
 {
     /// <summary>
     /// Get system health status
     /// </summary>
     [GraphQLDescription("Get current system health and component status")]
+    [Authorize(Policy = "AdminOnly")]
     public async Task<SystemHealthDto> GetSystemHealth(
         [Service] IHealthCheckService healthService,
         CancellationToken cancellationToken = default)
@@ -27,6 +27,7 @@ public class AdminQuery
     /// Get system metrics snapshot
     /// </summary>
     [GraphQLDescription("Get system metrics for the specified time range")]
+    [Authorize(Policy = "AdminOnly")]
     public async Task<MetricsSnapshotDto> GetMetrics(
         [Service] IStatisticsService statisticsService,
         TimeRangeInput timeRange,
@@ -59,6 +60,7 @@ public class AdminQuery
     [UsePaging]
     [UseFiltering]
     [UseSorting]
+    [Authorize(Policy = "AdminOnly")]
     public IQueryable<AuditLogDto> GetAuditLogs(
         [Service] NumbatWalletDbContext context,
         AuditLogFilterInput? filter = null)
@@ -117,6 +119,7 @@ public class AdminQuery
     [UsePaging]
     [UseFiltering]
     [UseSorting]
+    [Authorize(Policy = "AdminOnly")]
     public async Task<IQueryable<TenantDto>> GetTenants(
         [Service] ITenantService tenantService,
         TenantFilterInput? filter = null,
@@ -152,6 +155,7 @@ public class AdminQuery
     /// Get tenant by ID
     /// </summary>
     [GraphQLDescription("Get detailed information about a specific tenant")]
+    [Authorize(Policy = "AdminOnly")]
     public async Task<TenantDto?> GetTenant(
         [Service] ITenantService tenantService,
         string id,
@@ -167,6 +171,7 @@ public class AdminQuery
     [UsePaging]
     [UseFiltering]
     [UseSorting]
+    [Authorize(Policy = "AdminOnly")]
     public IQueryable<AdminUserDto> GetAdminUsers(
         [Service] NumbatWalletDbContext context,
         UserFilterInput? filter = null)
@@ -211,6 +216,7 @@ public class AdminQuery
     [GraphQLDescription("Query backup history with pagination")]
     [UsePaging]
     [UseSorting]
+    [Authorize(Policy = "AdminOnly")]
     public async Task<IQueryable<BackupDto>> GetBackups(
         [Service] IBackupService backupService,
         CancellationToken cancellationToken = default)
@@ -234,6 +240,7 @@ public class AdminQuery
     /// Get backup status
     /// </summary>
     [GraphQLDescription("Get the status of a specific backup operation")]
+    [Authorize(Policy = "AdminOnly")]
     public async Task<BackupStatusDto?> GetBackupStatus(
         [Service] IBackupService backupService,
         string id,
@@ -261,6 +268,7 @@ public class AdminQuery
     /// Get feature flags
     /// </summary>
     [GraphQLDescription("Get all feature flags and their current states")]
+    [Authorize(Policy = "AdminOnly")]
     public async Task<List<FeatureFlagDto>> GetFeatureFlags(
         [Service] IFeatureFlagService featureFlagService,
         CancellationToken cancellationToken = default)
@@ -272,6 +280,7 @@ public class AdminQuery
     /// Get system configurations
     /// </summary>
     [GraphQLDescription("Get system configurations for the specified environment")]
+    [Authorize(Policy = "AdminOnly")]
     public async Task<List<ConfigurationDto>> GetConfigurations(
         [Service] IConfigurationService configService,
         string environment,
@@ -284,6 +293,7 @@ public class AdminQuery
     /// Generate a report
     /// </summary>
     [GraphQLDescription("Generate a system report of the specified type")]
+    [Authorize(Policy = "AdminOnly")]
     public async Task<ReportDto> GenerateReport(
         [Service] IReportingService reportingService,
         ReportType type,
@@ -318,6 +328,7 @@ public class AdminQuery
     /// Get scheduled reports
     /// </summary>
     [GraphQLDescription("Get all scheduled reports")]
+    [Authorize(Policy = "AdminOnly")]
     public async Task<List<ScheduledReportDto>> GetScheduledReports(
         [Service] IReportingService reportingService,
         CancellationToken cancellationToken = default)
@@ -346,6 +357,7 @@ public class AdminQuery
     /// (HotChocolate type extensions are singletons — captive-dependency rule).
     /// </summary>
     [GraphQLDescription("Query wallets in the current tenant for admin management views")]
+    [Authorize(Policy = "AdminOnly")]
     public async Task<List<WalletDto>> GetAdminWallets(
         [Service] IWalletService walletService,
         string? search = null,
@@ -373,6 +385,7 @@ public class AdminQuery
     /// Get database statistics
     /// </summary>
     [GraphQLDescription("Get database usage and performance statistics")]
+    [Authorize(Policy = "AdminOnly")]
     public async Task<DatabaseStatsDto> GetDatabaseStats(
         [Service] NumbatWalletDbContext context,
         CancellationToken cancellationToken = default)

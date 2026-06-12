@@ -47,7 +47,19 @@ public class WalletService : IWalletService
 
     public async Task<IEnumerable<WalletDto>> GetByUserIdAsync(string userId, CancellationToken cancellationToken = default)
     {
-        // Find person by external ID (which is the user's authentication ID)
+        // Primary path: self-issued tokens carry the PERSON's Guid in the subject claims
+        // (see LoginCommandHandler.BuildClaims claim contract).
+        if (Guid.TryParse(userId, out var personIdFromSubject))
+        {
+            var personById = await _personRepository.GetByIdAsync(personIdFromSubject, cancellationToken);
+            if (personById != null)
+            {
+                return await GetByPersonIdAsync(personById.Id, cancellationToken);
+            }
+        }
+
+        // Fallbacks for externally-issued identities: external ID (e.g. ServiceWA subject),
+        // then email.
         var person = await _personRepository.GetByExternalIdAsync(userId, cancellationToken);
 
         if (person == null)

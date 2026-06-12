@@ -72,13 +72,21 @@ public class RefreshTokenCommandHandler : ICommandHandler<RefreshTokenCommand, A
         var roles = tokenData.Roles.Count > 0 ? tokenData.Roles.ToArray() : new[] { "User" };
 
         // Generate new tokens via the configured signer (HS256 or RS256).
+        // CLAIM CONTRACT (same as LoginCommandHandler.BuildClaims): subject claims carry the
+        // PERSON's Guid, and tenant_id MUST be preserved or the refreshed token loses tenant
+        // context (CurrentTenantService resolves the tenant from the validated claim only).
         var claims = new List<Claim>
         {
             new Claim(ClaimTypes.NameIdentifier, userId),
             new Claim(ClaimTypes.Email, email),
-            new Claim(JwtRegisteredClaimNames.Sub, email),
-            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+            new Claim(JwtRegisteredClaimNames.Sub, userId),
+            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+            new Claim("user_id", userId)
         };
+        if (person != null)
+        {
+            claims.Add(new Claim("tenant_id", person.TenantId));
+        }
         claims.AddRange(roles.Select(role => new Claim(ClaimTypes.Role, role)));
         var newAccessToken = _accessTokenSigner.CreateToken(claims, DateTimeOffset.UtcNow.AddHours(1));
         var newRefreshToken = GenerateRefreshToken();

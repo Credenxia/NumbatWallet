@@ -8,7 +8,6 @@ namespace NumbatWallet.Web.Api.GraphQL.Admin;
 /// POA: Issue #153 - Admin GraphQL API
 /// </summary>
 [ExtendObjectType("Subscription")]
-[Authorize(Policy = "AdminOnly")]
 public class AdminSubscription
 {
     /// <summary>
@@ -16,8 +15,10 @@ public class AdminSubscription
     /// </summary>
     [Subscribe(With = nameof(SubscribeToSystemMetrics))]
     [GraphQLDescription("Real-time system metrics updates")]
+    [Authorize(Policy = "AdminOnly")]
     public MetricsUpdateDto SystemMetrics([EventMessage] MetricsUpdateDto metrics) => metrics;
 
+    [Authorize(Policy = "AdminOnly")]
     public async IAsyncEnumerable<MetricsUpdateDto> SubscribeToSystemMetrics(
         [Service] ITopicEventReceiver eventReceiver,
         [EnumeratorCancellation] CancellationToken cancellationToken)
@@ -37,8 +38,10 @@ public class AdminSubscription
     /// </summary>
     [Subscribe(With = nameof(SubscribeToAuditLogAdded))]
     [GraphQLDescription("Real-time audit log entries")]
+    [Authorize(Policy = "AdminOnly")]
     public AuditLogEntryDto AuditLogAdded([EventMessage] AuditLogEntryDto entry) => entry;
 
+    [Authorize(Policy = "AdminOnly")]
     public async IAsyncEnumerable<AuditLogEntryDto> SubscribeToAuditLogAdded(
         [Service] ITopicEventReceiver eventReceiver,
         [EnumeratorCancellation] CancellationToken cancellationToken)
@@ -59,6 +62,7 @@ public class AdminSubscription
     [Subscribe]
     [Topic("BatchOperation_{jobId}")]
     [GraphQLDescription("Track progress of a specific batch operation")]
+    [Authorize(Policy = "AdminOnly")]
     public BatchOperationProgressDto BatchOperationProgress(
         [EventMessage] BatchOperationProgressDto progress,
         string jobId)
@@ -72,6 +76,7 @@ public class AdminSubscription
     [Subscribe]
     [Topic("BackupProgress_{jobId}")]
     [GraphQLDescription("Track progress of a backup operation")]
+    [Authorize(Policy = "AdminOnly")]
     public BackupProgressDto BackupProgress(
         [EventMessage] BackupProgressDto progress,
         string jobId)
@@ -85,6 +90,7 @@ public class AdminSubscription
     [Subscribe]
     [Topic("RestoreProgress_{jobId}")]
     [GraphQLDescription("Track progress of a restore operation")]
+    [Authorize(Policy = "AdminOnly")]
     public RestoreProgressDto RestoreProgress(
         [EventMessage] RestoreProgressDto progress,
         string jobId)
@@ -97,8 +103,10 @@ public class AdminSubscription
     /// </summary>
     [Subscribe(With = nameof(SubscribeToSystemAlert))]
     [GraphQLDescription("Real-time system alerts and warnings")]
+    [Authorize(Policy = "AdminOnly")]
     public SystemAlertDto SystemAlert([EventMessage] SystemAlertDto alert) => alert;
 
+    [Authorize(Policy = "AdminOnly")]
     public async IAsyncEnumerable<SystemAlertDto> SubscribeToSystemAlert(
         [Service] ITopicEventReceiver eventReceiver,
         AlertSeverity? minSeverity,
@@ -122,8 +130,10 @@ public class AdminSubscription
     /// </summary>
     [Subscribe(With = nameof(SubscribeToTenantActivity))]
     [GraphQLDescription("Monitor tenant activity in real-time")]
+    [Authorize(Policy = "AdminOnly")]
     public TenantActivityDto TenantActivity([EventMessage] TenantActivityDto activity) => activity;
 
+    [Authorize(Policy = "AdminOnly")]
     public async IAsyncEnumerable<TenantActivityDto> SubscribeToTenantActivity(
         [Service] ITopicEventReceiver eventReceiver,
         string? tenantId,
@@ -148,8 +158,10 @@ public class AdminSubscription
     /// </summary>
     [Subscribe(With = nameof(SubscribeToDatabaseMetrics))]
     [GraphQLDescription("Real-time database performance metrics")]
+    [Authorize(Policy = "AdminOnly")]
     public DatabaseMetricsDto DatabaseMetrics([EventMessage] DatabaseMetricsDto metrics) => metrics;
 
+    [Authorize(Policy = "AdminOnly")]
     public async IAsyncEnumerable<DatabaseMetricsDto> SubscribeToDatabaseMetrics(
         [Service] ITopicEventReceiver eventReceiver,
         [EnumeratorCancellation] CancellationToken cancellationToken)
@@ -169,8 +181,10 @@ public class AdminSubscription
     /// </summary>
     [Subscribe(With = nameof(SubscribeToApiUsageMetrics))]
     [GraphQLDescription("Real-time API usage statistics")]
+    [Authorize(Policy = "AdminOnly")]
     public ApiUsageMetricsDto ApiUsageMetrics([EventMessage] ApiUsageMetricsDto usage) => usage;
 
+    [Authorize(Policy = "AdminOnly")]
     public async IAsyncEnumerable<ApiUsageMetricsDto> SubscribeToApiUsageMetrics(
         [Service] ITopicEventReceiver eventReceiver,
         [EnumeratorCancellation] CancellationToken cancellationToken)
@@ -193,6 +207,7 @@ public class AdminSubscription
     [Authorize(Policy = "SuperAdmin")]
     public SecurityEventDto SecurityEvents([EventMessage] SecurityEventDto securityEvent) => securityEvent;
 
+    [Authorize(Policy = "AdminOnly")]
     public async IAsyncEnumerable<SecurityEventDto> SubscribeToSecurityEvents(
         [Service] ITopicEventReceiver eventReceiver,
         SecurityEventType? eventType,

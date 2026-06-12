@@ -14,8 +14,25 @@ public static class AuthenticationMiddleware
         this IServiceCollection services,
         IConfiguration configuration)
     {
+        // ServiceWA OIDC: the Authority/Audience values shipped in appsettings are PLACEHOLDERS —
+        // a real integration requires the actual authority, audience and client registration from
+        // the ServiceWA identity team. The scheme is therefore registered only when explicitly
+        // enabled (`ServiceWA:OidcEnabled=true`), and fails fast at startup if enabled without
+        // real configuration. Until then citizens authenticate via POST /api/v1/auth/login
+        // (ServiceWaPasswordValidator / TestPasswordValidator) and receive self-issued JWTs.
+        var serviceWaOidcEnabled = configuration.GetValue<bool>("ServiceWA:OidcEnabled");
+        if (serviceWaOidcEnabled &&
+            (string.IsNullOrWhiteSpace(configuration["ServiceWA:Authority"]) ||
+             string.IsNullOrWhiteSpace(configuration["ServiceWA:Audience"])))
+        {
+            throw new InvalidOperationException(
+                "ServiceWA OIDC is enabled (ServiceWA:OidcEnabled=true) but ServiceWA:Authority and/or " +
+                "ServiceWA:Audience are not configured. Production requires the real ServiceWA " +
+                "authority/audience — set them (from Key Vault) or disable ServiceWA:OidcEnabled.");
+        }
+
         // Add authentication services
-        services.AddAuthentication(options =>
+        var authBuilder = services.AddAuthentication(options =>
         {
             options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
             options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -86,9 +103,13 @@ public static class AuthenticationMiddleware
                     return Task.CompletedTask;
                 }
             };
-        })
-        .AddJwtBearer("ServiceWA", options =>
+        });
+
+        // Registered only when real ServiceWA OIDC config is present (see fail-fast above).
+        if (serviceWaOidcEnabled)
         {
+            authBuilder.AddJwtBearer("ServiceWA", options =>
+            {
             // Configure ServiceWA authentication for citizens
             options.Authority = configuration["ServiceWA:Authority"];
             options.Audience = configuration["ServiceWA:Audience"];
@@ -123,8 +144,10 @@ public static class AuthenticationMiddleware
                     return Task.CompletedTask;
                 }
             };
-        })
-        .AddJwtBearer("Internal", options =>
+            });
+        }
+
+        authBuilder.AddJwtBearer("Internal", options =>
         {
             // Configure internal JWT for service-to-service authentication
             var key = Encoding.UTF8.GetBytes(configuration["Jwt:SecretKey"]
@@ -154,8 +177,11 @@ public static class AuthenticationMiddleware
                     return JwtBearerDefaults.AuthenticationScheme;
                 }
 
-                // Check issuer to determine scheme
-                if (authHeader.Contains("servicewa", StringComparison.OrdinalIgnoreCase))
+                // Check issuer to determine scheme. Never forward to ServiceWA unless the
+                // scheme was actually registered (real OIDC config present) — forwarding to
+                // an unregistered scheme throws at request time.
+                if (serviceWaOidcEnabled &&
+                    authHeader.Contains("servicewa", StringComparison.OrdinalIgnoreCase))
                 {
                     return "ServiceWA";
                 }
