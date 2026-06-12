@@ -1,7 +1,7 @@
 # CLAUDE.md - NumbatWallet Backend
 
 ## Quick Start
-> **State (2026-06)**: full credential lifecycle incl. W3C VP-JWT presentations + OID4VP; citizen Bearer + Credentry SSO federation; PII encrypted w/ search tokens; deployed to shared nonprod AKS (`numbatwallet-test`, tst.numbatwallet.credentry.com.au); 3 SDKs contract-verified live. Unit suites 794+/0, integration 84/0/2. Details: session memory + docs.
+> **State (2026-06)**: full credential lifecycle incl. W3C VP-JWT presentations + OID4VP; citizen Bearer + Credentry SSO federation; PII encrypted w/ search tokens; deployed to shared nonprod AKS (`numbatwallet-test`, https://tst.numbatwallet.credentry.com.au); 3 SDKs contract-verified live. Unit suites **835/0** (Domain 202, SK 52, App 147, Infra 326, WebApi 108), integration **84/0/2** (2 documented skips). As-built docs: `docs/ARCHITECTURE-CURRENT.md` + `docs/OPERATIONS.md` + root `README.md`.
 
 - **Language**: C# 14 / .NET 10
 - **Architecture**: Clean Architecture + DDD + CQRS (Custom, NO MediatR)
@@ -53,12 +53,12 @@
 
 ## Quality Checklist
 
-### Zero Tolerance Standards
+### Zero Tolerance Standards (goals; current honest deltas in parentheses)
 - ✅ **ZERO** compilation errors
-- ✅ **ZERO** warnings (CS/CA/NU)
-- ✅ **ALL** tests passing (no skipped)
+- ✅ **ZERO** warnings (CS/CA/NU) — *goal not currently met; remaining advisories are transitive-only (MessagePack via Aspire AppHost; DataProtection, test-only)*
+- ✅ **ALL** tests passing — *current: 835/0 unit; integration 84/0 with 2 deliberate, documented skips*
 - ✅ **85%+** test coverage
-- ✅ **NO** vulnerable packages
+- ✅ **NO** vulnerable packages (direct) — *transitive exceptions above*
 - ✅ **NO** debugging artifacts in code
 
 ### Build Verification Commands
@@ -122,9 +122,25 @@ Fixes #XXX
 
 ### Multi-tenancy Requirements
 - **Complete isolation** at all layers
-- **Per-tenant database** (Option A for pilot)
-- **Tenant context** in every operation
+- **Shared database** (user decision 2026-06: shared DB for now; a per-tenant-DB-on-same-server provisioning POC exists and can be productionised later)
+- **Tenant context** in every operation — resolved from the validated JWT claim (NOT the `X-Tenant-Id` header, except dev/unauthenticated + API-key principals which declare their tenant via the header)
 - **No cross-tenant data access**
+
+### Running locally (verified facts)
+- Docker Desktop must be running; Aspire DCP needs docker on PATH:
+  `env PATH="/Applications/Docker.app/Contents/Resources/bin:$PATH" ASPIRE_ALLOW_UNSECURED_TRANSPORT=true dotnet run --project src/NumbatWallet.AppHost --launch-profile http`
+- Login route is **`POST /api/v1/Authentication/login`** (controller-name route, NOT `/auth/login`). Dev logins: `admin@example.com` / `citizen@example.com`, password `Test123!@#`.
+- Dev service auth: `X-API-Key: test-api-key-development-only` + `X-Tenant-Id: 00000000-0000-0000-0000-000000000001` (local dev seed tenant; the AKS Testing env seeds tenant `00000000-0000-0000-0000-000000000000`).
+- Dev cache is in-memory; Redis only when `ConnectionStrings:Redis` is non-empty (backend logged at startup).
+- Changing `FieldEncryption:Key` or `Search:TokenPepper` in dev requires resetting the postgres data volume (`numbatwallet.apphost-*-postgres-data`).
+
+### Deployment (current)
+- Shared nonprod AKS `aks-shared-nonprod-aue` (subscription "Credenxia AU"), namespace `numbatwallet-test`; Helm chart `deploy/helm/numbatwallet` (api/admin/migrations-bundle Job); images via `az acr build` to `cxausvmcontainerregistry`; ingress/Front Door host `tst.numbatwallet.credentry.com.au`.
+- CI: `.github/workflows/deploy-numbatwallet.yml` (5 unit suites gate). Needs GitHub `AZURE_CREDENTIALS` secret + `nonprod` environment (pending user step).
+- This SUPERSEDES the old Container-Apps/Bicep direction in `infrastructure/`.
+
+### Credentry federation
+- Credentry (the Credenxia platform, `/repo/credentry`) is the SSO/IdP: `CredentryJwt` bearer scheme + `CredentrySelector` policy scheme in Web.Api; "Sign in with Credentry" (PKCE) in Web.Admin; `NW.*` roles; fail-closed `Credentry:TenantMap`. Normative contract: `credentry/docs/integration/06-NUMBATWALLET-FEDERATION-CONTRACT.md`. Admin user management was deleted in favour of Credentry.
 
 ## Active Milestones (GitHub Project #18)
 
@@ -150,9 +166,9 @@ Fixes #XXX
 - ✅ **POA-200**: Wallet template builder with preset templates
 - ✅ **All compilation errors fixed**: 0 errors, 14 warnings remaining
 
-### Remaining Items
-- **POA-181**: GraphQL implementation currently returns mock data
-- **Azure deployment**: App Service, Application Gateway, Log Analytics
+### Remaining Items (HISTORICAL — superseded; GraphQL is real and AKS deployment is live)
+- ~~POA-181: GraphQL implementation currently returns mock data~~ (admin GraphQL + credential/presentation GraphQL are live)
+- ~~Azure deployment: App Service, Application Gateway, Log Analytics~~ (deployed to shared AKS via Helm — see Deployment section)
 
 ### Issue Workflow
 1. Check blocking dependencies in GitHub
@@ -198,9 +214,11 @@ Tests/
 ## Security & Compliance
 
 ### Authentication & Authorization
-- Azure Entra ID for officers
-- ServiceWA for citizens
-- Policy-based authorization with claims
+- Credentry SSO federation (`CredentryJwt` scheme; NW.* roles; primary direction)
+- Citizen Bearer JWT via `POST /api/v1/Authentication/login` (refresh rotation; logout revokes)
+- API keys (`X-API-Key` + `X-Tenant-Id`) for service-to-service/SDKs
+- ServiceWA OIDC scheme exists but is opt-in + unconfigured (placeholders; fails fast if enabled unconfigured)
+- Policy-based authorization with claims; HS256 default, RS256 via Key Vault REQUIRED outside Dev/Testing (`Jwt:Signer=KeyVaultRsa`)
 
 ### Data Protection
 - AES-256 encryption at rest
@@ -282,8 +300,8 @@ git status                 # Clean or committed
 ### Infrastructure
 - **Azure** - Cloud platform (AU regions)
 - **Docker** - Containerization
-- **Bicep** - Infrastructure as Code
-- **GitHub Actions** - CI/CD
+- **Helm on shared AKS** - Deployment (per credentry-infrastructure conventions; old Bicep/Container-Apps direction superseded)
+- **GitHub Actions** - CI/CD (`deploy-numbatwallet.yml`)
 
 ## Performance Requirements
 - Response time: <500ms p95

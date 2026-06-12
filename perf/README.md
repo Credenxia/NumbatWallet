@@ -60,7 +60,8 @@ ISSUER_ID=<local-issuer-guid> PROFILE=steady \
 k6 run --summary-trend-stats "avg,min,med,p(90),p(95),p(99),max" perf/citizen-journey.js
 
 # 2. AKS nonprod — hit the ingress IP directly with a Host override
-#    (public DNS currently points at Front Door, which has no route yet → 404).
+#    (bypasses Front Door; the public edge https://tst.numbatwallet.credentry.com.au
+#    is live and adds ~120ms/request — see RESULTS §6b).
 #    Read the admin API key:  kubectl get secret numbatwallet-secrets -n numbatwallet-test \
 #      -o jsonpath='{.data.admin-api-key}' | base64 -d
 export BASE_URL=http://20.92.192.89
@@ -74,9 +75,10 @@ kubectl/kubelogin need Docker's bin on PATH:
 `export PATH="/Applications/Docker.app/Contents/Resources/bin:$PATH"`.
 Watch resources during a run: `kubectl top pods -n numbatwallet-test`.
 
-### Edge re-run (once the Front Door route is live)
+### Edge re-run (Front Door route is live; load run still requires authorization)
 
-The public hostname will route through Front Door to the ingress. Re-run the **same
+The public hostname routes through Front Door to the ingress (low-volume probes taken —
+RESULTS §6b; a full edge load run remains user-authorization-gated). Re-run the **same
 scripts** with no Host override:
 
 ```bash
