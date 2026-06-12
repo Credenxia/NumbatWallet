@@ -4,14 +4,7 @@
     <Found Context="routeData">
         <AuthorizeRouteView RouteData="routeData" DefaultLayout="typeof(Layout.MainLayout)">
             <NotAuthorized>
-                <LayoutView Layout="typeof(Layout.MainLayout)">
-                    <div class="alert alert-warning" role="alert">
-                        <h4 class="alert-heading">Authentication Required</h4>
-                        <p>You must be logged in to view this page.</p>
-                        <hr>
-                        <p class="mb-0">Please <a href="/login" class="alert-link">sign in</a> to continue.</p>
-                    </div>
-                </LayoutView>
+                <RedirectToLogin />
             </NotAuthorized>
             <Authorizing>
                 <LayoutView Layout="typeof(Layout.MainLayout)">

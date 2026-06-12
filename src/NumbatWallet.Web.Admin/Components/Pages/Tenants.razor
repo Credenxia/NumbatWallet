@@ -2,6 +2,7 @@
 @using Microsoft.AspNetCore.Components.Authorization
 @using NumbatWallet.Web.Admin.Components.Common
 @using NumbatWallet.Web.Admin.Services
+@attribute [Authorize]
 @inject IApiClient ApiClient
 @inject IAuthService AuthService
 @inject IJSRuntime JS

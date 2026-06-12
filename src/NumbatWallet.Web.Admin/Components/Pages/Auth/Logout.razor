@@ -1,0 +1,78 @@
+@page "/logout"
+@using Microsoft.AspNetCore.Authorization
+@using NumbatWallet.Web.Admin.Services
+@using NumbatWallet.Web.Admin.Authentication
+@using Microsoft.AspNetCore.Components.Authorization
+@attribute [AllowAnonymous]
+@layout NumbatWallet.Web.Admin.Components.Layout.LoginLayout
+@inject IAuthService AuthService
+@inject NavigationManager Navigation
+@inject AuthenticationStateProvider AuthStateProvider
+@inject ILogger<Logout> Logger
+
+<PageTitle>Signing Out - NumbatWallet Admin</PageTitle>
+
+<div class="login-container">
+    <div class="login-card text-center">
+        <div class="login-header">
+            <div class="login-logo">
+                <i class="bi bi-wallet2"></i>
+            </div>
+            <h1>Numbat<span>Wallet</span></h1>
+        </div>
+
+        @if (_isSigningOut)
+        {
+            <div class="p-4">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Signing out...</span>
+                </div>
+                <p class="mt-3 text-muted">Signing you out...</p>
+            </div>
+        }
+        else
+        {
+            <div class="p-4">
+                <i class="bi bi-check-circle text-success" style="font-size: 3rem;"></i>
+                <h4 class="mt-3">You have been signed out</h4>
+                <p class="text-muted">Thank you for using NumbatWallet Admin Portal.</p>
+                <a href="/login" class="btn btn-primary mt-2">
+                    <i class="bi bi-box-arrow-in-right me-2"></i>Sign In Again
+                </a>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    private bool _isSigningOut = true;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            try
+            {
+                Logger.LogInformation("User signing out");
+
+                // Clear auth state
+                await AuthService.SignOutAsync();
+
+                // Notify the auth state provider
+                if (AuthStateProvider is CustomAuthenticationStateProvider customProvider)
+                {
+                    customProvider.NotifyUserLogout();
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "Error during sign out");
+            }
+            finally
+            {
+                _isSigningOut = false;
+                StateHasChanged();
+            }
+        }
+    }
+}
