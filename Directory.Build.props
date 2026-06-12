@@ -2,8 +2,8 @@
   <!-- Shared properties for all projects in the solution -->
   <PropertyGroup>
     <!-- .NET Version -->
-    <TargetFramework>net9.0</TargetFramework>
-    <LangVersion>13.0</LangVersion>
+    <TargetFramework>net10.0</TargetFramework>
+    <LangVersion>14.0</LangVersion>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
@@ -37,6 +37,11 @@
     <EnableNETAnalyzers>true</EnableNETAnalyzers>
     <AnalysisLevel>latest-recommended</AnalysisLevel>
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+
+    <!-- Never let bin/obj be picked up by default item globs. Prevents the recursive
+         bin/Debug/net10.0/bin/... static-web-assets copy loop that grows until the path
+         length exceeds the OS limit and the build fails (MSB3021). -->
+    <DefaultItemExcludes>$(DefaultItemExcludes);bin/**;obj/**</DefaultItemExcludes>
   </PropertyGroup>
 
   <!-- Central Package Version Management -->
