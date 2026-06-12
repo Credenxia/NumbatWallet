@@ -74,7 +74,7 @@ public class AuthorizationPolicyTests : IntegrationTestBase
         Client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", authResult!.AccessToken);
 
         // Act - Try to access admin endpoints
-        var response = await Client.GetAsync("/api/v1/admin/tenants");
+        var response = await Client.GetAsync("/api/Admin/tenants");
 
         // Assert
         response.StatusCode.Should().NotBe(HttpStatusCode.Forbidden);
@@ -95,7 +95,7 @@ public class AuthorizationPolicyTests : IntegrationTestBase
         Client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", authResult!.AccessToken);
 
         // Act - Try to access admin endpoints
-        var response = await Client.GetAsync("/api/v1/admin/tenants");
+        var response = await Client.GetAsync("/api/Admin/tenants");
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Forbidden);

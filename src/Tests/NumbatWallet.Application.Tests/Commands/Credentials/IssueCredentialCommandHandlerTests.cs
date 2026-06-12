@@ -75,7 +75,7 @@ public class IssueCredentialCommandHandlerTests
             .ReturnsAsync(wallet);
 
         _issuerRepositoryMock
-            .Setup(x => x.GetByIdAsync(issuerId, It.IsAny<CancellationToken>()))
+            .Setup(x => x.GetByIdAsync(organizationId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(issuer);
 
         _credentialRepositoryMock
@@ -154,6 +154,7 @@ public class IssueCredentialCommandHandlerTests
         var walletId = Guid.NewGuid();
         var personId = Guid.NewGuid();
         var issuerId = Guid.NewGuid();
+        var organizationId = Guid.NewGuid();
 
         var command = new IssueCredentialCommand(
             walletId,
@@ -167,7 +168,7 @@ public class IssueCredentialCommandHandlerTests
             DateTime.UtcNow,
             DateTime.UtcNow.AddYears(4),
             issuerId.ToString(),
-            Guid.NewGuid());
+            organizationId);
 
         var walletResult = Wallet.Create(personId, "Test Wallet");
         var wallet = walletResult.Value;
@@ -179,7 +180,7 @@ public class IssueCredentialCommandHandlerTests
             .ReturnsAsync(wallet);
 
         _issuerRepositoryMock
-            .Setup(x => x.GetByIdAsync(issuerId, It.IsAny<CancellationToken>()))
+            .Setup(x => x.GetByIdAsync(organizationId, It.IsAny<CancellationToken>()))
             .ReturnsAsync((Issuer?)null);
 
         // Act & Assert
@@ -227,7 +228,7 @@ public class IssueCredentialCommandHandlerTests
             .ReturnsAsync(wallet);
 
         _issuerRepositoryMock
-            .Setup(x => x.GetByIdAsync(issuerId, It.IsAny<CancellationToken>()))
+            .Setup(x => x.GetByIdAsync(organizationId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(issuer);
 
         // Act & Assert
@@ -276,7 +277,7 @@ public class IssueCredentialCommandHandlerTests
             .ReturnsAsync(wallet);
 
         _issuerRepositoryMock
-            .Setup(x => x.GetByIdAsync(issuerId, It.IsAny<CancellationToken>()))
+            .Setup(x => x.GetByIdAsync(organizationId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(issuer);
 
         _credentialRepositoryMock

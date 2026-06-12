@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using NumbatWallet.Application.DTOs;
 using NumbatWallet.Application.Interfaces;
@@ -22,11 +23,21 @@ public class PlatformWalletBuilderTests
         _mockWebBuilder = new Mock<IWebWalletBuilder>();
         _mockLogger = new Mock<ILogger<PlatformWalletBuilder>>();
 
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["AppleWallet:TeamIdentifier"] = "TEST_TEAM_ID",
+                ["GoogleWallet:IssuerId"] = "3388000000022297348",
+                ["GoogleWallet:ServiceAccountEmail"] = "test@test.iam.gserviceaccount.com"
+            })
+            .Build();
+
         _builder = new PlatformWalletBuilder(
             _mockAppleBuilder.Object,
             _mockGoogleBuilder.Object,
             _mockWebBuilder.Object,
-            _mockLogger.Object);
+            _mockLogger.Object,
+            configuration);
 
         // Setup default mock responses
         SetupDefaultMocks();

@@ -13,14 +13,44 @@ public class GoogleWalletBuilderTests
     private readonly Mock<IConfiguration> _mockConfiguration;
     private readonly GoogleWalletBuilder _builder;
 
+    private const string TestRsaPrivateKeyPem =
+        "-----BEGIN PRIVATE KEY-----\n" +
+        "MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQC3cLQBWkDpzb8H\n" +
+        "Ewa9HC1hwPjDoR+kGeseb8Sd+RyhTx9kY/BG8P7ZigIyHsFy7GkgZQ1Lcghxhhlh\n" +
+        "a29L0fwUeYeSq3/uw2ELCckYQlcPn8E4amo90TcbsM/OZNaeniKk8Ceh1cTXYObZ\n" +
+        "eo7WyAMsi9jXKJo3vM6CB6dxsRa/RBIuI7zIHT3iIahTjX6bJBS1pteGmVvdKhCD\n" +
+        "K1QEKKFO9AQ62dchOzpqIefwblHWErBPOaCkQEn2gXwEYB/haeySXF4M7bcw0Ubr\n" +
+        "+fiEPfe6rdnxbW14ZKWy/NbbAYnYfCQ03LHxhcim476j90zn/MYEabRpHggY3Mlu\n" +
+        "QirV8CJXAgMBAAECggEAHUAX5o/6gi2VadkzUwv/V93k7OYwJ5hzFindULv3FZO1\n" +
+        "HkAUrBiOkqfqfLfMbKOyNFZYszCOPx09G9HSmo+eYgdqQk1y0Lg6glTqSiIomWxb\n" +
+        "FkCwYIYQAwGDyVXpURFHK0TDamSuBr1EDOakMy8L2S+9gRAk3da57nWuUgyFDjSq\n" +
+        "FJyhR6kVgctracrwtl42rs7ufdR+mJpEUuV9NbN6ITuJ4N7fmsP434noaAAZ5qL1\n" +
+        "rwgwjNYCZbEGVngiD4Zcb9RdX7QEhppy63U9/b1mw1q40kiRwfb4+G3NRoZjy9bU\n" +
+        "QKp3Wp4Q/U9gt7MG05iPvgpPZED9+GfPxO11j6KJKQKBgQD0PQjKcnn3di9a9nBi\n" +
+        "PZMKm8/ATBr7ogvSvgB+9qCqEu1iLXkvewDGNlRrmz4LLTQA8vZBYM3X+h0muD9p\n" +
+        "3JOTEHpgi8RbL/q5Qf5RacM/sqpTAQUXHBkTKek7lNYLBDxjMS7+561aUXOZVIDa\n" +
+        "bAnTnb5cFiD6DVWcvcsU8HBtqQKBgQDARiZ91cDfLVI3SVolPxC0mNGXiM/FC/4w\n" +
+        "QHuTmIDafGaFRCOVfD4H/FJkgNi1hBc4h1g5tFt7SCGNlX5a34WURHX7Kt9t6W+K\n" +
+        "wVQ4N5v0Dz6yIbLaUF8ls2jGNruMKpL8LvWxLssTz7cQg7N7PB7DnOrIQBmTjaRl\n" +
+        "PUcamxYP/wKBgDZ/6BZEtTKjDK4fj7RcSRN08UbXtK2x2zGLdFDgd7l7v7zIqOIP\n" +
+        "cHzKYswgOBgGXjRYAttT3przFM4vDvdwYP3QD367sXUnn6r3Lui70PXFyHv9HkWp\n" +
+        "326HS6Qf8iNDLrZzoyj+SZB93G26jYYv1YGDEZc62ODzWMdBEq/5dx0BAoGBAK6P\n" +
+        "QaTeqkM0Fz9gVfoYvmbnkulbaR4BHF3cPRUr0FgLttvol9HAQWTonDjojVaGPLqy\n" +
+        "jdOdvaw4OVYcUeHYqqKIYQCN1NkppH25tWdwfSLfsFDyrTjs3OUSc934lN7VTCqt\n" +
+        "y5t32yD6ZL4Wg50vYNLBJJp3L4E5h/Xt4x7xi98rAoGAEZ6Uvy6m3wdPdbAVo6Fh\n" +
+        "I+YAtCN41WeJSW83rJnYC1ZONpSiU0A5ObjPg+Du0cHCd4RgU76PumdsuSDECY53\n" +
+        "mJ0X9eLf8b101GE+SN7seKheHNceZsvo5drez6p0TWb0OW/nel3W16Y8mAwHTF5X\n" +
+        "0r2FhZm+FxbMQitMuyemB28=\n" +
+        "-----END PRIVATE KEY-----";
+
     public GoogleWalletBuilderTests()
     {
         _mockLogger = new Mock<ILogger<GoogleWalletBuilder>>();
         _mockConfiguration = new Mock<IConfiguration>();
 
-        // Setup default configuration
-        _mockConfiguration.Setup(x => x["GoogleWallet:ServiceAccountEmail"]).Returns("test@example.com");
-        _mockConfiguration.Setup(x => x["GoogleWallet:PrivateKey"]).Returns("test-private-key-for-development");
+        // Setup default configuration with real RSA key for JWT signing
+        _mockConfiguration.Setup(x => x["GoogleWallet:ServiceAccountEmail"]).Returns("test@test.iam.gserviceaccount.com");
+        _mockConfiguration.Setup(x => x["GoogleWallet:PrivateKeyPem"]).Returns(TestRsaPrivateKeyPem);
         _mockConfiguration.Setup(x => x["GoogleWallet:IssuerId"]).Returns("3388000000022297348");
 
         _builder = new GoogleWalletBuilder(_mockLogger.Object, _mockConfiguration.Object);

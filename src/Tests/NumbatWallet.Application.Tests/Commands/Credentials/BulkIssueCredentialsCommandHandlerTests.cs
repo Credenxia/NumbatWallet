@@ -61,7 +61,7 @@ public class BulkIssueCredentialsCommandHandlerTests
         var issuer = issuerResult.Value;
 
         _issuerRepositoryMock
-            .Setup(x => x.GetByIdAsync(issuerId, It.IsAny<CancellationToken>()))
+            .Setup(x => x.GetByIdAsync(organizationId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(issuer);
 
         // Setup wallets
@@ -134,7 +134,7 @@ public class BulkIssueCredentialsCommandHandlerTests
         var issuer = issuerResult.Value;
 
         _issuerRepositoryMock
-            .Setup(x => x.GetByIdAsync(issuerId, It.IsAny<CancellationToken>()))
+            .Setup(x => x.GetByIdAsync(organizationId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(issuer);
 
         // Setup valid wallet
@@ -196,17 +196,18 @@ public class BulkIssueCredentialsCommandHandlerTests
         // Arrange
         var walletIds = new List<Guid> { Guid.NewGuid(), Guid.NewGuid() };
         var issuerId = Guid.NewGuid();
+        var organizationId = Guid.NewGuid();
         var command = new BulkIssueCredentialsCommand(
             walletIds,
             CredentialType.MembershipCard,
             new Dictionary<string, object>(),
             issuerId.ToString(),
-            Guid.NewGuid(),
+            organizationId,
             DateTime.UtcNow,
             null);
 
         _issuerRepositoryMock
-            .Setup(x => x.GetByIdAsync(issuerId, It.IsAny<CancellationToken>()))
+            .Setup(x => x.GetByIdAsync(organizationId, It.IsAny<CancellationToken>()))
             .ReturnsAsync((Issuer?)null);
 
         // Act & Assert
@@ -223,12 +224,13 @@ public class BulkIssueCredentialsCommandHandlerTests
     {
         // Arrange
         var issuerId = Guid.NewGuid();
+        var organizationId = Guid.NewGuid();
         var command = new BulkIssueCredentialsCommand(
             new List<Guid>(),
             CredentialType.HealthCard,
             new Dictionary<string, object>(),
             issuerId.ToString(),
-            Guid.NewGuid(),
+            organizationId,
             DateTime.UtcNow,
             null);
 
@@ -236,7 +238,7 @@ public class BulkIssueCredentialsCommandHandlerTests
         var issuer = issuerResult.Value;
 
         _issuerRepositoryMock
-            .Setup(x => x.GetByIdAsync(issuerId, It.IsAny<CancellationToken>()))
+            .Setup(x => x.GetByIdAsync(organizationId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(issuer);
 
         // Act

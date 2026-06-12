@@ -258,6 +258,35 @@ public class CryptoServiceTests : IDisposable
             It.IsAny<string>()), Times.Once);
     }
 
+    [Fact]
+    public async Task EncryptThenDecrypt_RoundTrips_AndCachedDekSurvivesMultipleOperations()
+    {
+        // Regression for the DEK-zeroing bug: EncryptBytesAsync/DecryptBytesAsync used to call
+        // ZeroMemory on the shared cached DEK, so any operation after the first used an all-zero
+        // key and could not decrypt previously-encrypted data.
+        var classification = DataClassification.Protected;
+        var plain = Encoding.UTF8.GetBytes("Sensitive PII value");
+        var sut = CreateTestableService();
+
+        _wrapProviderMock.Setup(x => x.CreateKekAsync(It.IsAny<string>(), It.IsAny<KekProperties>()))
+            .ReturnsAsync("test-kek-id");
+        _wrapProviderMock.Setup(x => x.WrapAsync(It.IsAny<byte[]>(), It.IsAny<string>(), It.IsAny<string>()))
+            .ReturnsAsync(new byte[] { 1, 2, 3, 4, 5 });
+        _keyVaultServiceMock.Setup(x => x.SetSecretAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+
+        // First round-trip
+        var cipher1 = await sut.EncryptBytesAsync(plain, classification);
+        var decrypted1 = await sut.DecryptBytesAsync(cipher1, classification);
+
+        // Second round-trip reusing the same cached DEK (would fail if the DEK had been zeroed)
+        var cipher2 = await sut.EncryptBytesAsync(plain, classification);
+        var decrypted2 = await sut.DecryptBytesAsync(cipher2, classification);
+
+        decrypted1.Should().Equal(plain);
+        decrypted2.Should().Equal(plain);
+    }
+
     private CryptoService CreateTestableService()
     {
         return new CryptoService(
