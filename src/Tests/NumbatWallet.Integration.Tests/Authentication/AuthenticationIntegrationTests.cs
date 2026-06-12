@@ -370,24 +370,29 @@ public class AuthenticationIntegrationTests : IntegrationTestBase
         validation.Claims.Should().Contain(c => c.Type.Contains("tenant"));
     }
 
-    [Fact(Skip = "Rate limiting test consumes rate limit quota affecting other tests. Run separately.")]
+    [Fact]
     public async Task RateLimiting_MultipleFailedLogins_GetsThrottled()
     {
-        // Arrange
+        // Arrange - use a DEDICATED host so this test neither depends on the shared host's
+        // rate-limit quota nor consumes it for subsequent tests (the reason it used to be
+        // skipped). The login endpoint applies the "Authentication" sliding-window policy
+        // (100 permits/min in Testing, queue 0 — see Program.cs), and the limiter state lives
+        // in the host, so exhausting it here cannot affect other tests.
+        using var throttledFactory = Fixture.WithWebHostBuilder(_ => { });
+        using var throttledClient = throttledFactory.CreateClient();
+        throttledClient.DefaultRequestHeaders.Add("X-Tenant-Id", Fixture.TestTenantId);
+
         var loginRequest = new LoginRequestDto
         {
             Email = "test@example.com",
             Password = "WrongPassword"
         };
 
-        // Act - Attempt multiple failed logins
-        // Testing environment has 200 requests/minute limit, so we need 201+ attempts
-        var responses = new List<HttpResponseMessage>();
-        for (int i = 0; i < 205; i++)
-        {
-            var response = await Client.PostAsJsonAsync("/api/v1/authentication/login", loginRequest);
-            responses.Add(response);
-        }
+        // Act - exceed the 100/min Authentication policy; with QueueLimit 0 the overflow is
+        // rejected immediately. Concurrent so all attempts land in the same window.
+        var tasks = Enumerable.Range(0, 120)
+            .Select(_ => throttledClient.PostAsJsonAsync("/api/v1/authentication/login", loginRequest));
+        var responses = await Task.WhenAll(tasks);
 
         // Assert - At least one should be rate limited (429 Too Many Requests)
         responses.Should().Contain(r => r.StatusCode == (HttpStatusCode)429);

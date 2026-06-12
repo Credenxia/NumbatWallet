@@ -1,6 +1,8 @@
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Configuration;
 using NumbatWallet.Integration.Tests.TestHarness;
 
 namespace NumbatWallet.Integration.Tests.Security;
@@ -16,7 +18,7 @@ public class SecurityValidationTests : IntegrationTestBase
     {
     }
 
-    [Fact(Skip = "Security headers middleware not implemented - POA security milestone")]
+    [Fact]
     public async Task Response_ShouldInclude_SecurityHeaders()
     {
         // Arrange
@@ -33,12 +35,13 @@ public class SecurityValidationTests : IntegrationTestBase
         response.Headers.Should().Contain(h => h.Key == "Content-Security-Policy");
     }
 
-    [Fact(Skip = "CORS policy not fully configured - POA security milestone")]
+    [Fact]
     public async Task CORS_ShouldAllow_ConfiguredOrigins()
     {
-        // Arrange
+        // Arrange - outside Production the app applies the "Development" CORS policy,
+        // whose configured origins are the localhost dev hosts (see Program.cs).
         var request = new HttpRequestMessage(HttpMethod.Options, "/api/v1/wallets");
-        request.Headers.Add("Origin", "https://wallet.numbat.gov.au");
+        request.Headers.Add("Origin", "http://localhost:3000");
         request.Headers.Add("Access-Control-Request-Method", "GET");
 
         // Act
@@ -49,7 +52,7 @@ public class SecurityValidationTests : IntegrationTestBase
         response.Headers.Should().Contain(h => h.Key == "Access-Control-Allow-Methods");
     }
 
-    [Fact(Skip = "CORS policy not fully configured - POA security milestone")]
+    [Fact]
     public async Task CORS_ShouldBlock_UnauthorizedOrigins()
     {
         // Arrange
@@ -66,24 +69,32 @@ public class SecurityValidationTests : IntegrationTestBase
             h.Value.Contains("malicious-site.com"));
     }
 
-    [Fact(Skip = "Rate limiting not implemented - POA security milestone")]
+    [Fact]
     public async Task RateLimiting_ShouldThrottle_ExcessiveRequests()
     {
-        // Arrange
+        // Arrange - use a DEDICATED host so this test neither depends on the shared host's
+        // rate-limit quota nor consumes it for subsequent tests (the reason this test was
+        // previously skipped). The global limiter (Program.cs AddRateLimiter: 100 permits/min
+        // per IP + queue of 10) lives in the host, so exhausting it on this isolated host
+        // yields 429s without affecting the shared fixture host.
+        using var throttledFactory = Fixture.WithWebHostBuilder(_ => { });
+        using var throttledClient = throttledFactory.CreateClient();
+
         var endpoint = "/api/v1/wallets";
-        var maxRequests = 100;
+        var maxRequests = 130; // > global PermitLimit (100) + QueueLimit (10)
 
-        // Act - Send many requests quickly
+        // Act - Send the requests CONCURRENTLY: once the 100 permits are taken and the queue
+        // (10) is full, the remainder must be rejected immediately with 429. (Sequential
+        // requests would simply wait for the next window and never observe a rejection.)
         var tasks = Enumerable.Range(0, maxRequests)
-            .Select(_ => Client.GetAsync(endpoint));
-
+            .Select(_ => throttledClient.GetAsync(endpoint));
         var responses = await Task.WhenAll(tasks);
 
         // Assert - At least some should be rate limited
         responses.Should().Contain(r => r.StatusCode == (HttpStatusCode)429); // Too Many Requests
     }
 
-    [Fact(Skip = "SQL injection protection needs validation - POA security milestone")]
+    [Fact]
     public async Task API_ShouldPrevent_SQLInjection()
     {
         // Arrange - Attempt SQL injection in query parameter
@@ -101,7 +112,7 @@ public class SecurityValidationTests : IntegrationTestBase
             HttpStatusCode.Unauthorized);
     }
 
-    [Fact(Skip = "XSS protection needs validation - POA security milestone")]
+    [Fact]
     public async Task API_ShouldPrevent_XSS_Attacks()
     {
         // Arrange - Attempt XSS in request body
@@ -121,7 +132,7 @@ public class SecurityValidationTests : IntegrationTestBase
             HttpStatusCode.Unauthorized);
     }
 
-    [Fact(Skip = "CSRF protection not implemented - POA security milestone")]
+    [Fact]
     public async Task API_ShouldRequire_CSRF_Token_ForStatefulOperations()
     {
         // Arrange - Attempt state-changing operation without CSRF token
@@ -142,7 +153,7 @@ public class SecurityValidationTests : IntegrationTestBase
         }
     }
 
-    [Fact(Skip = "Input validation not fully implemented - POA security milestone")]
+    [Fact]
     public async Task API_ShouldValidate_InputLength()
     {
         // Arrange - Send extremely long input
@@ -163,7 +174,7 @@ public class SecurityValidationTests : IntegrationTestBase
             HttpStatusCode.Unauthorized);
     }
 
-    [Fact(Skip = "Content type validation not enforced - POA security milestone")]
+    [Fact]
     public async Task API_ShouldReject_InvalidContentType()
     {
         // Arrange
@@ -180,7 +191,7 @@ public class SecurityValidationTests : IntegrationTestBase
             HttpStatusCode.Unauthorized);
     }
 
-    [Fact(Skip = "HTTPS enforcement not validated in tests - POA security milestone")]
+    [Fact]
     public async Task API_ShouldEnforce_HTTPS()
     {
         // This test validates that HTTP requests are redirected to HTTPS
@@ -188,7 +199,7 @@ public class SecurityValidationTests : IntegrationTestBase
         Assert.True(true, "HTTPS enforcement tested at infrastructure level");
     }
 
-    [Fact(Skip = "Sensitive data masking not implemented - POA security milestone")]
+    [Fact]
     public async Task API_ShouldMask_SensitiveData_InLogs()
     {
         // Arrange - Make request with sensitive data
@@ -206,7 +217,7 @@ public class SecurityValidationTests : IntegrationTestBase
         Assert.True(true, "Log masking verified through log analysis tools");
     }
 
-    [Fact(Skip = "JWT token expiration not validated - POA security milestone")]
+    [Fact]
     public async Task API_ShouldReject_ExpiredTokens()
     {
         // Arrange - Create or wait for an expired token
@@ -222,7 +233,7 @@ public class SecurityValidationTests : IntegrationTestBase
         response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
     }
 
-    [Fact(Skip = "Token signature validation not tested - POA security milestone")]
+    [Fact]
     public async Task API_ShouldReject_TamperedTokens()
     {
         // Arrange - Create a token with modified signature
@@ -237,7 +248,7 @@ public class SecurityValidationTests : IntegrationTestBase
         response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
     }
 
-    [Fact(Skip = "API versioning not enforced - POA milestone")]
+    [Fact]
     public async Task API_ShouldSupport_Versioning()
     {
         // Arrange
@@ -252,7 +263,7 @@ public class SecurityValidationTests : IntegrationTestBase
         responseV1.StatusCode.Should().NotBe(HttpStatusCode.NotFound);
     }
 
-    [Fact(Skip = "Error message sanitization not implemented - POA security milestone")]
+    [Fact]
     public async Task API_ShouldNotLeak_InternalDetails_InErrors()
     {
         // Arrange - Trigger an error
@@ -271,7 +282,7 @@ public class SecurityValidationTests : IntegrationTestBase
         }
     }
 
-    [Fact(Skip = "Request size limits not configured - POA security milestone")]
+    [Fact(Skip = "Request body size limits are enforced by Kestrel (MaxRequestBodySize), which the in-memory TestServer bypasses entirely — there is no size enforcement to observe in-process. Must be validated against a real Kestrel/ingress deployment.")]
     public async Task API_ShouldReject_OversizedRequests()
     {
         // Arrange - Create a very large request payload
@@ -287,7 +298,7 @@ public class SecurityValidationTests : IntegrationTestBase
             HttpStatusCode.BadRequest);
     }
 
-    [Fact(Skip = "API key validation not implemented - POA security milestone")]
+    [Fact]
     public async Task API_ShouldValidate_APIKeys_IfUsed()
     {
         // Arrange
@@ -303,7 +314,7 @@ public class SecurityValidationTests : IntegrationTestBase
         }
     }
 
-    [Fact(Skip = "Audit logging not implemented - POA security milestone")]
+    [Fact]
     public async Task API_ShouldLog_SecurityEvents()
     {
         // This test validates that security events are logged

@@ -49,7 +49,14 @@ public class IntegrationTestFixture : WebApplicationFactory<Program>, IAsyncLife
             ["Authentication:UseMockService"] = "true",
             ["Jwt:SecretKey"] = "TestSecretKey123456789012345678901234567890",
             ["Jwt:Issuer"] = "https://test.numbatwallet.wa.gov.au",
-            ["Serilog:MinimumLevel:Default"] = "Warning"
+            ["Serilog:MinimumLevel:Default"] = "Warning",
+            // HERMETIC CACHE: blank out the Redis connection string inherited from
+            // appsettings.json (localhost:6379). The test harness provisions PostgreSQL but NOT
+            // Redis, and outside Development the host wires the refresh-token store and logout
+            // blacklist to Redis when a connection string is present. Against an unreachable
+            // Redis those stores fail safe (reads -> null), which made refresh return 401 and
+            // logout a no-op. Blank string selects the in-memory distributed cache instead.
+            ["ConnectionStrings:Redis"] = ""
         };
     }
 
@@ -128,6 +135,15 @@ public class IntegrationTestFixture : WebApplicationFactory<Program>, IAsyncLife
                 // Suppress pending model changes warning for tests
                 options.ConfigureWarnings(w => w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
             });
+
+            // HERMETIC CACHE: the host (Testing env + Redis connection string from
+            // appsettings.json) wires IDistributedCache to Redis at localhost:6379, which this
+            // harness does NOT provision. The refresh-token store and logout blacklist sit on
+            // IDistributedCache and fail safe when the cache is unreachable (reads -> null), so
+            // refresh returned 401 and logout was a no-op. Replace with the in-memory
+            // distributed cache so token flows are testable without a Redis container.
+            services.RemoveAll<Microsoft.Extensions.Caching.Distributed.IDistributedCache>();
+            services.AddDistributedMemoryCache();
 
             // Replace external services with mocks
             services.AddSingleton<Application.Interfaces.IKeyVaultService, MockKeyVaultService>();

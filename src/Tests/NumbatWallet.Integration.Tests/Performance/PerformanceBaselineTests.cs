@@ -15,7 +15,7 @@ public class PerformanceBaselineTests : IntegrationTestBase
     {
     }
 
-    [Fact(Skip = "Caching not implemented - POA milestone pending")]
+    [Fact(Skip = "Output caching deliberately excludes authenticated and API-key requests (security: cached responses must never cross callers — see AddOutputCache base policy in Program.cs), and GET /api/v1/wallets requires auth, so there is no cache effect to measure; wall-clock comparisons in-process are also inherently flaky.")]
     public async Task CachedEndpoint_ShouldBeFaster_ThanUncached()
     {
         // Arrange
@@ -122,7 +122,7 @@ public class PerformanceBaselineTests : IntegrationTestBase
             because: "Health checks should be very fast");
     }
 
-    [Fact(Skip = "Pagination not fully implemented - POA milestone pending")]
+    [Fact]
     public async Task LargeResultSet_ShouldUse_Pagination()
     {
         // Arrange
@@ -143,7 +143,7 @@ public class PerformanceBaselineTests : IntegrationTestBase
         }
     }
 
-    [Fact(Skip = "Database query optimization not yet measured - POA milestone pending")]
+    [Fact]
     public async Task DatabaseQuery_ShouldExecute_InLessThan200ms()
     {
         // This test would measure database query performance

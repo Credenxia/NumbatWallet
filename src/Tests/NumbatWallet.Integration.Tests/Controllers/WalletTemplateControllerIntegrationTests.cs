@@ -5,102 +5,122 @@ using NumbatWallet.Integration.Tests.TestHarness;
 namespace NumbatWallet.Integration.Tests.Controllers;
 
 /// <summary>
-/// Integration tests for Wallet Template Controller
-/// Tests CRUD operations for wallet templates (Apple Wallet, Google Pay, Web Wallet)
+/// Integration tests for Wallet Template Controller (POA-200 template builder).
+/// Exercises the REAL API contract: CreateTemplateRequest(Name, Description, Type,
+/// SupportedCredentialTypes, Fields) where Type is the WalletTemplateType enum
+/// (DriverLicense, Passport, ..., Custom) — not the legacy Name/Platform/Configuration shape
+/// these tests were originally written (and skipped) against.
 /// </summary>
 [Collection("Integration")]
 public class WalletTemplateControllerIntegrationTests : IntegrationTestBase
 {
     public WalletTemplateControllerIntegrationTests(IntegrationTestFixture fixture) : base(fixture)
     {
-        // Set up authentication for tests
+        // Endpoints require the AdminOnly policy
         SetBearerToken(GenerateMockToken("test-admin", new[] { "Admin" }));
     }
 
-    [Fact(Skip = "WalletTemplates table not in database schema - POA milestone pending")]
+    private static object BuildCreateRequest(string name, string type = "Custom") => new
+    {
+        Name = name,
+        Description = $"Integration test template: {name}",
+        Type = type,
+        SupportedCredentialTypes = new List<string> { "DriverLicense" },
+        Fields = new List<object>
+        {
+            new
+            {
+                Name = "fullName",
+                Label = "Full Name",
+                FieldType = "text",
+                IsRequired = true,
+                IsEditable = false,
+                MappedCredentialField = (string?)null,
+                ValidationRule = (string?)null,
+                DefaultValue = (string?)null,
+                DisplayOrder = 1
+            }
+        }
+    };
+
+    [Fact]
     public async Task GetAllTemplates_ReturnsTemplateList()
     {
         // Arrange
         var endpoint = "/api/v1/wallet-templates";
 
         // Act
-        var response = await GetAsync<List<WalletTemplateDto>>(endpoint);
+        var response = await GetAsync<List<WalletTemplateResponseDto>>(endpoint);
 
         // Assert
         response.Should().NotBeNull();
-        response.Should().BeOfType<List<WalletTemplateDto>>();
+        response.Should().BeOfType<List<WalletTemplateResponseDto>>();
     }
 
-    [Fact(Skip = "WalletTemplates table not in database schema - POA milestone pending")]
+    [Fact]
     public async Task GetTemplateById_WithValidId_ReturnsTemplate()
     {
         // Arrange - First create a template
-        var createRequest = new CreateWalletTemplateRequestDto
-        {
-            Name = "Test Template",
-            Platform = "Apple",
-            Configuration = new { PassTypeId = "pass.com.example.test" }
-        };
-
-        var createdTemplate = await PostAsync<CreateWalletTemplateRequestDto, WalletTemplateDto>(
-            "/api/v1/wallet-templates", createRequest);
+        var createdTemplate = await PostAsync<object, WalletTemplateResponseDto>(
+            "/api/v1/wallet-templates", BuildCreateRequest("Test Template"));
 
         // Act
-        var response = await GetAsync<WalletTemplateDto>($"/api/v1/wallet-templates/{createdTemplate!.Id}");
+        var response = await GetAsync<WalletTemplateResponseDto>(
+            $"/api/v1/wallet-templates/{createdTemplate!.Id}");
 
         // Assert
         response.Should().NotBeNull();
-        response.Id.Should().Be(createdTemplate.Id);
+        response!.Id.Should().Be(createdTemplate.Id);
         response.Name.Should().Be("Test Template");
     }
 
-    [Fact(Skip = "WalletTemplates table not in database schema - POA milestone pending")]
+    [Fact]
     public async Task CreateTemplate_WithValidData_ReturnsCreatedTemplate()
     {
         // Arrange
-        var request = new CreateWalletTemplateRequestDto
-        {
-            Name = "Apple Wallet Driver License",
-            Platform = "Apple",
-            Configuration = new
-            {
-                PassTypeId = "pass.com.wa.gov.driverslic",
-                TeamId = "TEAM123",
-                LogoText = "Western Australia",
-                BackgroundColor = "rgb(23, 187, 247)"
-            }
-        };
+        var request = BuildCreateRequest("Apple Wallet Driver License", type: "DriverLicense");
 
         // Act
-        var response = await PostAsync<CreateWalletTemplateRequestDto, WalletTemplateDto>(
+        var response = await PostAsync<object, WalletTemplateResponseDto>(
             "/api/v1/wallet-templates", request);
 
         // Assert
         response.Should().NotBeNull();
-        response.Name.Should().Be("Apple Wallet Driver License");
-        response.Platform.Should().Be("Apple");
-        response.Id.Should().NotBeNullOrEmpty();
+        response!.Name.Should().Be("Apple Wallet Driver License");
+        response.Type.Should().Be("DriverLicense");
+        response.Id.Should().NotBeEmpty();
+        response.SupportedCredentialTypes.Should().Contain("DriverLicense");
     }
 
-    [Fact(Skip = "WalletTemplates table not in database schema - POA milestone pending")]
+    [Fact]
     public async Task UpdateTemplate_WithValidData_ReturnsUpdatedTemplate()
     {
         // Arrange - First create a template
-        var createRequest = new CreateWalletTemplateRequestDto
+        var createdTemplate = await PostAsync<object, WalletTemplateResponseDto>(
+            "/api/v1/wallet-templates", BuildCreateRequest("Original Template"));
+
+        // NOTE: UpdateTemplate only mutates Fields and SupportedCredentialTypes
+        // (core properties of WalletTemplate are immutable).
+        var updateRequest = new
         {
             Name = "Original Template",
-            Platform = "Google",
-            Configuration = new { }
-        };
-
-        var createdTemplate = await PostAsync<CreateWalletTemplateRequestDto, WalletTemplateDto>(
-            "/api/v1/wallet-templates", createRequest);
-
-        var updateRequest = new UpdateWalletTemplateRequestDto
-        {
-            Name = "Updated Template",
-            Platform = "Google",
-            Configuration = new { IssuerId = "3388000000000000000" }
+            Description = "updated",
+            SupportedCredentialTypes = new List<string> { "ProofOfAge" },
+            Fields = new List<object>
+            {
+                new
+                {
+                    Name = "dateOfBirth",
+                    Label = "Date of Birth",
+                    FieldType = "date",
+                    IsRequired = true,
+                    IsEditable = false,
+                    MappedCredentialField = (string?)null,
+                    ValidationRule = (string?)null,
+                    DefaultValue = (string?)null,
+                    DisplayOrder = 1
+                }
+            }
         };
 
         // Act
@@ -109,23 +129,16 @@ public class WalletTemplateControllerIntegrationTests : IntegrationTestBase
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
-        var updated = await response.Content.ReadFromJsonAsync<WalletTemplateDto>(JsonOptions);
-        updated!.Name.Should().Be("Updated Template");
+        var updated = await response.Content.ReadFromJsonAsync<WalletTemplateResponseDto>(JsonOptions);
+        updated!.SupportedCredentialTypes.Should().ContainSingle().Which.Should().Be("ProofOfAge");
     }
 
-    [Fact(Skip = "WalletTemplates table not in database schema - POA milestone pending")]
+    [Fact]
     public async Task DeleteTemplate_WithValidId_ReturnsNoContent()
     {
         // Arrange - First create a template
-        var createRequest = new CreateWalletTemplateRequestDto
-        {
-            Name = "Template To Delete",
-            Platform = "Web",
-            Configuration = new { }
-        };
-
-        var createdTemplate = await PostAsync<CreateWalletTemplateRequestDto, WalletTemplateDto>(
-            "/api/v1/wallet-templates", createRequest);
+        var createdTemplate = await PostAsync<object, WalletTemplateResponseDto>(
+            "/api/v1/wallet-templates", BuildCreateRequest("Template To Delete"));
 
         // Act
         var response = await Client.DeleteAsync($"/api/v1/wallet-templates/{createdTemplate!.Id}");
@@ -138,46 +151,30 @@ public class WalletTemplateControllerIntegrationTests : IntegrationTestBase
         getResponse.StatusCode.Should().Be(HttpStatusCode.NotFound);
     }
 
-    [Fact(Skip = "WalletTemplates table not in database schema - POA milestone pending")]
-    public async Task GetTemplatesByPlatform_ReturnsFilteredTemplates()
+    [Fact]
+    public async Task GetTemplatesByTenant_ReturnsTenantTemplates()
     {
-        // Arrange - Create templates for different platforms
-        await PostAsync<CreateWalletTemplateRequestDto, WalletTemplateDto>(
-            "/api/v1/wallet-templates",
-            new CreateWalletTemplateRequestDto
-            {
-                Name = "Apple Template 1",
-                Platform = "Apple",
-                Configuration = new { }
-            });
-
-        await PostAsync<CreateWalletTemplateRequestDto, WalletTemplateDto>(
-            "/api/v1/wallet-templates",
-            new CreateWalletTemplateRequestDto
-            {
-                Name = "Google Template 1",
-                Platform = "Google",
-                Configuration = new { }
-            });
+        // Arrange - Create templates of different types for the test tenant
+        // (the API filters by tenant, not by platform — platform filtering does not exist)
+        var apple = await PostAsync<object, WalletTemplateResponseDto>(
+            "/api/v1/wallet-templates", BuildCreateRequest("DL Template", type: "DriverLicense"));
+        var custom = await PostAsync<object, WalletTemplateResponseDto>(
+            "/api/v1/wallet-templates", BuildCreateRequest("Custom Template", type: "Custom"));
 
         // Act
-        var response = await GetAsync<List<WalletTemplateDto>>("/api/v1/wallet-templates?platform=Apple");
+        var response = await GetAsync<List<WalletTemplateResponseDto>>(
+            $"/api/v1/wallet-templates/tenant/{Fixture.TestTenantId}");
 
         // Assert
         response.Should().NotBeNull();
-        response.Should().OnlyContain(t => t.Platform == "Apple");
+        response!.Select(t => t.Id).Should().Contain(new[] { apple!.Id, custom!.Id });
     }
 
-    [Fact(Skip = "WalletTemplates table not in database schema - POA milestone pending")]
-    public async Task CreateTemplate_WithInvalidPlatform_ReturnsBadRequest()
+    [Fact]
+    public async Task CreateTemplate_WithInvalidType_ReturnsBadRequest()
     {
-        // Arrange
-        var request = new CreateWalletTemplateRequestDto
-        {
-            Name = "Invalid Template",
-            Platform = "InvalidPlatform",
-            Configuration = new { }
-        };
+        // Arrange - Type is not a valid WalletTemplateType enum value
+        var request = BuildCreateRequest("Invalid Template", type: "InvalidPlatform");
 
         // Act
         var response = await Client.PostAsJsonAsync("/api/v1/wallet-templates", request);
@@ -187,27 +184,15 @@ public class WalletTemplateControllerIntegrationTests : IntegrationTestBase
     }
 }
 
-// DTOs for Wallet Template tests
-public record WalletTemplateDto
+// Response DTO matching the serialized WalletTemplate entity (enums as strings)
+public record WalletTemplateResponseDto
 {
-    public string Id { get; init; } = string.Empty;
+    public Guid Id { get; init; }
     public string Name { get; init; } = string.Empty;
-    public string Platform { get; init; } = string.Empty;
-    public object Configuration { get; init; } = new { };
-    public DateTime CreatedAt { get; init; }
-    public DateTime? UpdatedAt { get; init; }
-}
-
-public record CreateWalletTemplateRequestDto
-{
-    public string Name { get; init; } = string.Empty;
-    public string Platform { get; init; } = string.Empty;
-    public object Configuration { get; init; } = new { };
-}
-
-public record UpdateWalletTemplateRequestDto
-{
-    public string Name { get; init; } = string.Empty;
-    public string Platform { get; init; } = string.Empty;
-    public object Configuration { get; init; } = new { };
+    public string Description { get; init; } = string.Empty;
+    public string Type { get; init; } = string.Empty;
+    public List<string> SupportedCredentialTypes { get; init; } = new();
+    public bool IsActive { get; init; }
+    public DateTimeOffset CreatedAt { get; init; }
+    public DateTimeOffset? UpdatedAt { get; init; }
 }
