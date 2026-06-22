@@ -8,19 +8,16 @@ tags:
 > **Audience:** Support. Source: `README.md` "Known gaps", `docs/OPERATIONS.md §4`,
 > `perf/RESULTS-2026-06-12.md §8`, `docs/ARCHITECTURE-CURRENT.md §8`.
 
-## 1. AKS seeded-login backfill (open)
+## 1. AKS seeded-login backfill (RESOLVED 2026-06)
 
-**Symptom:** logging in on AKS with a pre-existing seeded account (e.g.
-`citizen@example.com`) fails with **"person not found"**.
+**Was:** logging in on AKS with a pre-existing seeded account (e.g. `citizen@example.com`)
+failed with **"person not found"** — the searchable-PII change made login resolve persons
+via an `email_search_token`, and persons seeded **before** that change had no token.
 
-**Cause:** the searchable-PII change means login resolves persons via an
-`email_search_token`. Persons seeded **before** that change have no token.
-
-**Workaround:** use `john.doe@example.com` / `Test123!@#` (created through the API after
-the change, so its tokens are correct).
-
-**Fix:** re-seed the disposable `numbatwallet_test` data, or run an authorized backfill
-job that re-saves persons (which recomputes tokens). Ensure the pepper is stable first.
+**Resolved:** an in-namespace Job truncated `Persons` (CASCADE) in the disposable
+`numbatwallet_test` DB and the API was restarted, so the seeder repopulated persons with
+tokens under the stable pepper. `citizen@example.com` / `Test123!@#` now logs in and has a
+wallet on AKS. To repeat for a fresh seed, re-run that Job + `kubectl rollout restart`.
 
 ## 2. Search-token pepper not yet in Key Vault (open)
 
