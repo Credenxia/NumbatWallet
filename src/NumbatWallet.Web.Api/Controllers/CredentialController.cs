@@ -1,6 +1,7 @@
 using NumbatWallet.Application.Commands.Credentials;
 using NumbatWallet.Application.DTOs;
 using NumbatWallet.Application.Queries.Credentials;
+using NumbatWallet.Application.Queries.Wallets;
 using NumbatWallet.SharedKernel.Interfaces;
 using NumbatWallet.Web.Api.Security;
 using System.Security.Claims;
@@ -10,6 +11,7 @@ namespace NumbatWallet.Web.Api.Controllers;
 [ApiController]
 [Asp.Versioning.ApiVersion("1.0")]
 [Route("api/v{version:apiVersion}/[controller]")]
+[Route("api/v1/credentials")] // plural alias for SDK clients (mirrors WalletController)
 [Microsoft.AspNetCore.Authorization.Authorize]
 [Produces("application/json")]
 public class CredentialController : ControllerBase
@@ -17,11 +19,11 @@ public class CredentialController : ControllerBase
     private readonly ICommandHandler<IssueCredentialCommand, CredentialDto> _issueCredentialHandler;
     private readonly ICommandHandler<VerifyCredentialCommand, VerificationResultDto> _verifyCredentialHandler;
     private readonly ICommandHandler<RevokeCredentialCommand, bool> _revokeCredentialHandler;
-    private readonly ICommandHandler<ShareCredentialCommand, Application.Commands.Credentials.ShareCredentialResult> _shareCredentialHandler;
-    private readonly ICommandHandler<RequestCredentialCommand, Application.Commands.Credentials.CredentialRequestDto> _requestCredentialHandler;
+    private readonly ICommandHandler<ShareCredentialCommand, ShareCredentialResult> _shareCredentialHandler;
+    private readonly ICommandHandler<RequestCredentialCommand, CredentialRequestDto> _requestCredentialHandler;
     private readonly IQueryHandler<GetCredentialByIdQuery, CredentialDto?> _getCredentialByIdHandler;
     private readonly IQueryHandler<GetCredentialsByWalletQuery, IEnumerable<CredentialDto>> _getCredentialsByWalletHandler;
-    private readonly ICurrentTenantService _tenantService;
+    private readonly IQueryHandler<GetWalletByIdQuery, WalletDto?> _getWalletByIdHandler;
     private readonly ISecurityAuditService _auditService;
     private readonly ILogger<CredentialController> _logger;
 
@@ -29,11 +31,11 @@ public class CredentialController : ControllerBase
         ICommandHandler<IssueCredentialCommand, CredentialDto> issueCredentialHandler,
         ICommandHandler<VerifyCredentialCommand, VerificationResultDto> verifyCredentialHandler,
         ICommandHandler<RevokeCredentialCommand, bool> revokeCredentialHandler,
-        ICommandHandler<ShareCredentialCommand, Application.Commands.Credentials.ShareCredentialResult> shareCredentialHandler,
-        ICommandHandler<RequestCredentialCommand, Application.Commands.Credentials.CredentialRequestDto> requestCredentialHandler,
+        ICommandHandler<ShareCredentialCommand, ShareCredentialResult> shareCredentialHandler,
+        ICommandHandler<RequestCredentialCommand, CredentialRequestDto> requestCredentialHandler,
         IQueryHandler<GetCredentialByIdQuery, CredentialDto?> getCredentialByIdHandler,
         IQueryHandler<GetCredentialsByWalletQuery, IEnumerable<CredentialDto>> getCredentialsByWalletHandler,
-        ICurrentTenantService tenantService,
+        IQueryHandler<GetWalletByIdQuery, WalletDto?> getWalletByIdHandler,
         ISecurityAuditService auditService,
         ILogger<CredentialController> logger)
     {
@@ -44,9 +46,54 @@ public class CredentialController : ControllerBase
         _requestCredentialHandler = requestCredentialHandler;
         _getCredentialByIdHandler = getCredentialByIdHandler;
         _getCredentialsByWalletHandler = getCredentialsByWalletHandler;
-        _tenantService = tenantService;
+        _getWalletByIdHandler = getWalletByIdHandler;
         _auditService = auditService;
         _logger = logger;
+    }
+
+    /// <summary>The authenticated caller's person id (from the NameIdentifier claim), if any.</summary>
+    private Guid? GetCallerPersonId()
+    {
+        var id = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        return Guid.TryParse(id, out var g) ? g : null;
+    }
+
+    /// <summary>Roles allowed to access any holder's credentials (issuance/administration).</summary>
+    private bool IsPrivileged()
+        => User.IsInRole("Admin") || User.IsInRole("Officer") || User.IsInRole("Issuer") || User.IsInRole("TenantAdmin");
+
+    /// <summary>True when the caller's person owns the given wallet (tenant filter already applied).</summary>
+    private async Task<bool> CallerOwnsWalletAsync(Guid walletId)
+    {
+        var caller = GetCallerPersonId();
+        if (caller is null)
+        {
+            return false;
+        }
+
+        var wallet = await _getWalletByIdHandler.HandleAsync(new GetWalletByIdQuery(walletId));
+        return wallet is not null
+            && string.Equals(wallet.PersonId, caller.Value.ToString(), StringComparison.OrdinalIgnoreCase);
+    }
+
+    /// <summary>
+    /// Ownership check for a credential whose holder is identified by <paramref name="holderId"/>.
+    /// HolderId may be a wallet id or a person id, so both interpretations are accepted.
+    /// </summary>
+    private async Task<bool> CallerOwnsCredentialAsync(string? holderId)
+    {
+        var caller = GetCallerPersonId();
+        if (caller is null || string.IsNullOrEmpty(holderId))
+        {
+            return false;
+        }
+
+        if (string.Equals(holderId, caller.Value.ToString(), StringComparison.OrdinalIgnoreCase))
+        {
+            return true; // holder is the caller's person id
+        }
+
+        return Guid.TryParse(holderId, out var walletId) && await CallerOwnsWalletAsync(walletId);
     }
 
     /// <summary>
@@ -69,15 +116,14 @@ public class CredentialController : ControllerBase
             $"Credential issuance for wallet {request.WalletId}");
 
         // Parse credential type enum
-        if (!Enum.TryParse<NumbatWallet.Domain.Enums.CredentialType>(request.CredentialType, out var credentialType))
+        if (!Enum.TryParse<Domain.Enums.CredentialType>(request.CredentialType, out var credentialType))
         {
             return BadRequest($"Invalid credential type: {request.CredentialType}");
         }
 
-        // Get organization from tenant context or use default
-        var tenantId = _tenantService.TenantId ?? "00000000-0000-0000-0000-000000000000";
-        var organizationId = Guid.Parse(tenantId); // In multi-tenant, each tenant has an organization
-
+        // The handler resolves the Issuer ENTITY by IssuerOrganizationId — the request's
+        // IssuerId is that organisation's id. The command's IssuerId carries the issuing
+        // PRINCIPAL (authenticated user) for provenance.
         var command = new IssueCredentialCommand(
             WalletId: request.WalletId,
             CredentialType: credentialType,
@@ -85,30 +131,14 @@ public class CredentialController : ControllerBase
             Claims: request.Claims,
             ValidFrom: DateTime.UtcNow,
             ValidUntil: request.ExpiryDate,
-            IssuerId: request.IssuerId ?? userId ?? "system",
-            IssuerOrganizationId: organizationId);
+            IssuerId: userId ?? "system",
+            IssuerOrganizationId: request.IssuerId);
 
         var result = await _issueCredentialHandler.HandleAsync(command);
 
-        // Keep the mock data as fallback for now
-        if (result == null)
-        {
-            result = new CredentialDto
-            {
-                Id = Guid.NewGuid().ToString(),
-                HolderId = request.WalletId.ToString(),
-                IssuerId = request.IssuerId ?? userId ?? "system",
-                Type = request.CredentialType.ToString(),
-                CredentialSubject = request.Claims,
-                IssuanceDate = DateTime.UtcNow,
-                Status = "Active"
-            };
-        }
-
-        return CreatedAtAction(
-            nameof(GetCredentialById),
-            new { id = result.Id },
-            result);
+        // Return 201 Created with location header
+        var locationUri = $"/api/v1/credential/{result.Id}";
+        return Created(locationUri, result);
     }
 
     /// <summary>
@@ -124,12 +154,21 @@ public class CredentialController : ControllerBase
             SecurityEventType.DataAccess,
             $"Credential access: {id}");
 
-        var tenantId = _tenantService.TenantId ?? "00000000-0000-0000-0000-000000000000";
-        var query = new GetCredentialByIdQuery(Guid.Parse(tenantId), id);
+        // Tenant filtering is handled by repository layer via ICurrentTenantService
+        var query = new GetCredentialByIdQuery(Guid.Empty, id);
         var result = await _getCredentialByIdHandler.HandleAsync(query);
 
         if (result == null)
         {
+            return NotFound($"Credential {id} not found");
+        }
+
+        // SECURITY: a non-privileged caller may only read credentials they hold.
+        // 404 (not 403) so credential existence isn't disclosed to non-owners.
+        if (!IsPrivileged() && !await CallerOwnsCredentialAsync(result.HolderId))
+        {
+            _logger.LogWarning("Blocked cross-holder credential access: caller {Caller} requested credential {CredentialId}",
+                GetCallerPersonId(), id);
             return NotFound($"Credential {id} not found");
         }
 
@@ -148,8 +187,21 @@ public class CredentialController : ControllerBase
             SecurityEventType.DataAccess,
             $"Wallet credentials access: {walletId}");
 
-        var tenantId = _tenantService.TenantId ?? "00000000-0000-0000-0000-000000000000";
-        var query = new GetCredentialsByWalletQuery(Guid.Parse(tenantId), walletId, false);
+        // SECURITY: only privileged roles may list another holder's wallet credentials.
+        if (!IsPrivileged() && !await CallerOwnsWalletAsync(walletId))
+        {
+            _logger.LogWarning("Blocked cross-holder credential listing: caller {Caller} requested wallet {WalletId}",
+                GetCallerPersonId(), walletId);
+            return Forbid();
+        }
+
+        // Extract tenant ID from JWT claims
+        var tenantIdClaim = User.FindFirst("tenant_id")?.Value;
+        var tenantId = !string.IsNullOrEmpty(tenantIdClaim) && Guid.TryParse(tenantIdClaim, out var tid)
+            ? tid
+            : Guid.Empty;
+
+        var query = new GetCredentialsByWalletQuery(tenantId, walletId);
         var result = await _getCredentialsByWalletHandler.HandleAsync(query);
 
         return Ok(result);
@@ -160,17 +212,17 @@ public class CredentialController : ControllerBase
     /// </summary>
     [HttpPost("verify")]
     [Microsoft.AspNetCore.Authorization.AllowAnonymous]
-    [ProducesResponseType(typeof(NumbatWallet.Application.DTOs.VerificationResultDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(VerificationResultDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> VerifyCredential([FromBody] VerifyCredentialRequestDto request)
     {
-        _logger.LogInformation("Verifying credential {CredentialId}", request.CredentialId);
+        _logger.LogInformation("Verifying credential data");
 
         var command = new VerifyCredentialCommand
         {
-            CredentialId = request.CredentialId.ToString(),
+            CredentialId = string.Empty, // Application DTO doesn't have CredentialId on request
             CredentialData = request.CredentialData,
-            VerificationOptions = request.Options?.ToVerificationOptions()
+            VerificationOptions = request.VerificationOptions?.ToDictionary()
         };
 
         var result = await _verifyCredentialHandler.HandleAsync(command);
@@ -183,7 +235,7 @@ public class CredentialController : ControllerBase
     /// </summary>
     [HttpPost("{id:guid}/revoke")]
     [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Issuer,Admin")]
-    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> RevokeCredential(Guid id, [FromBody] RevokeCredentialRequestDto request)
     {
@@ -208,38 +260,36 @@ public class CredentialController : ControllerBase
             return NotFound($"Credential {id} not found");
         }
 
-        return NoContent();
+        return Ok(new { message = "Credential revoked successfully", credentialId = id });
     }
 
     /// <summary>
     /// Share a credential with another party
     /// </summary>
     [HttpPost("{id:guid}/share")]
-    [ProducesResponseType(typeof(CredentialShareResponseDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ShareCredentialResultDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> ShareCredential(Guid id, [FromBody] ShareCredentialRequestDto request)
     {
-        _logger.LogInformation("Sharing credential {CredentialId} with {RecipientId}",
-            id, request.RecipientId);
+        _logger.LogInformation("Sharing credential {CredentialId} with {RecipientEmail}",
+            id, request.RecipientEmail);
 
         // Use the share credential command handler
         var command = new ShareCredentialCommand(
             CredentialId: id,
-            RecipientEmail: request.RecipientId,
-            ExpiresInMinutes: (request.ValidityHours ?? 24) * 60,
-            RequirePin: request.RequirePin,
-            Pin: request.Pin);
+            RecipientEmail: request.RecipientEmail,
+            ExpiresInMinutes: request.ExpiryHours * 60,
+            RequirePin: request.RequireAuthentication,
+            Pin: null); // PIN would come from request if needed
 
         var result = await _shareCredentialHandler.HandleAsync(command);
 
-        var response = new CredentialShareResponseDto
+        var response = new ShareCredentialResultDto
         {
-            ShareId = Guid.NewGuid(),
-            CredentialId = id,
-            SharedWith = request.RecipientId,
-            SharedClaims = request.ClaimsToShare,
-            ExpiresAt = result.ExpiresAt,
-            ShareUrl = result.ShareUrl
+            IsSuccess = true,
+            ShareToken = null, // Would be generated by handler
+            ShareUrl = result.ShareUrl,
+            ExpiresAt = result.ExpiresAt
         };
 
         return Ok(response);
@@ -276,81 +326,5 @@ public class CredentialController : ControllerBase
         };
 
         return Accepted(response);
-    }
-}
-
-// Request DTOs
-public class IssueCredentialRequestDto
-{
-    public Guid WalletId { get; set; }
-    public required string CredentialType { get; set; }
-    public required string Subject { get; set; }
-    public Dictionary<string, object> Claims { get; set; } = new();
-    public string? IssuerId { get; set; }
-    public DateTime? ExpiryDate { get; set; }
-}
-
-public class VerifyCredentialRequestDto
-{
-    public Guid CredentialId { get; set; }
-    public string? CredentialData { get; set; }
-    public NumbatWallet.Application.DTOs.VerificationOptionsDto? Options { get; set; }
-}
-
-public class RevokeCredentialRequestDto
-{
-    public required string Reason { get; set; }
-}
-
-public class ShareCredentialRequestDto
-{
-    public required string RecipientId { get; set; }
-    public List<string> ClaimsToShare { get; set; } = new();
-    public int? ValidityHours { get; set; }
-    public bool RequirePin { get; set; }
-    public string? Pin { get; set; }
-}
-
-public class RequestCredentialDto
-{
-    public Guid WalletId { get; set; }
-    public Guid IssuerId { get; set; }
-    public required string CredentialType { get; set; }
-    public Dictionary<string, object>? RequestedClaims { get; set; }
-    public string? Justification { get; set; }
-}
-
-// Response DTOs
-public class CredentialShareResponseDto
-{
-    public Guid ShareId { get; set; }
-    public Guid CredentialId { get; set; }
-    public required string SharedWith { get; set; }
-    public List<string> SharedClaims { get; set; } = new();
-    public DateTime ExpiresAt { get; set; }
-    public required string ShareUrl { get; set; }
-}
-
-public class CredentialRequestResponseDto
-{
-    public Guid RequestId { get; set; }
-    public required string Status { get; set; }
-    public DateTime RequestedAt { get; set; }
-    public string? Message { get; set; }
-}
-
-// Extension methods
-public static class VerificationOptionsDtoExtensions
-{
-    public static Dictionary<string, object> ToVerificationOptions(this VerificationOptionsDto dto)
-    {
-        return new Dictionary<string, object>
-        {
-            ["checkRevocation"] = dto.CheckRevocation,
-            ["checkExpiry"] = dto.CheckExpiry,
-            ["checkSignature"] = dto.CheckSignature,
-            ["checkSchema"] = dto.CheckSchema,
-            ["requireTrustChain"] = dto.RequireTrustChain
-        };
     }
 }

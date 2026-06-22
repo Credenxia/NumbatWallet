@@ -1,0 +1,136 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: numbatwallet-api
+  labels:
+    app: numbatwallet-api
+    component: api
+    app.kubernetes.io/part-of: numbatwallet
+spec:
+  replicas: {{ .Values.api.replicas }}
+  selector:
+    matchLabels:
+      app: numbatwallet-api
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  template:
+    metadata:
+      labels:
+        app: numbatwallet-api
+        component: api
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1654
+        runAsGroup: 1654
+        fsGroup: 1654
+      containers:
+        - name: numbatwallet-api
+          image: "{{ .Values.image.registry }}/{{ .Values.image.api }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - containerPort: 8080
+              name: http
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+          env:
+            # Runtime
+            - name: ASPNETCORE_ENVIRONMENT
+              value: {{ .Values.api.environment | quote }}
+            - name: ASPNETCORE_URLS
+              value: "http://+:8080"
+            # NOTE: forwarded headers (X-Forwarded-For/X-Forwarded-Proto) are now
+            # configured explicitly in Program.cs (app.UseForwardedHeaders, trust-all
+            # within the cluster) so they run exactly once and BEFORE the rate limiter.
+            # ASPNETCORE_FORWARDEDHEADERS_ENABLED was removed to avoid the middleware
+            # running twice and consuming an extra X-Forwarded-For hop.
+
+            {{- with .Values.api.rateLimiting }}
+            # Global rate limiter (per client, X-Forwarded-For aware). Raised for the
+            # test stage so load tests measure the app, not the limiter.
+            - name: RateLimiting__PermitLimit
+              value: {{ .permitLimit | quote }}
+            - name: RateLimiting__Window
+              value: {{ .window | quote }}
+            - name: RateLimiting__QueueLimit
+              value: {{ .queueLimit | quote }}
+            {{- end }}
+
+            # PostgreSQL (shared psql-shared-nonprod-aue, database numbatwallet_test)
+            - name: ConnectionStrings__numbatwallet
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secretName }}
+                  key: connection-string
+
+            {{- if .Values.api.redisConnectionString }}
+            # Shared Redis (requires the shared-services allow-from network policy
+            # to include numbatwallet-test)
+            - name: ConnectionStrings__Redis
+              value: {{ .Values.api.redisConnectionString | quote }}
+            {{- end }}
+
+            # Self-issued JWT signing (HS256)
+            - name: Jwt__SecretKey
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secretName }}
+                  key: jwt-secret-key
+
+            # Field-level PII encryption at rest (AES-256-GCM, base64 32-byte key)
+            - name: FieldEncryption__Key
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secretName }}
+                  key: field-encryption-key
+
+            {{- if .Values.api.searchTokenPepper }}
+            # Deterministic search-token pepper (login resolves persons by
+            # email_search_token; must stay stable across restarts — see values.yaml).
+            - name: Search__TokenPepper
+              value: {{ .Values.api.searchTokenPepper | quote }}
+            {{- end }}
+
+            # Service-to-service API key auth (Admin portal + SDK clients)
+            - name: ApiKey__Enabled
+              value: "true"
+            - name: ApiKey__Roles
+              value: "Admin,Officer,Issuer,User"
+            - name: ApiKey__Keys__AdminPortal
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secretName }}
+                  key: admin-api-key
+
+            {{- with .Values.api.extraEnv }}
+            # Ad-hoc environment (set at deploy time, e.g. --set-json api.extraEnv=...)
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+
+          resources:
+            {{- toYaml .Values.api.resources | nindent 12 }}
+          startupProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            failureThreshold: 24
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            periodSeconds: 30
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            periodSeconds: 10
+            failureThreshold: 3

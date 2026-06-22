@@ -1,0 +1,8 @@
+=== API Evidence: Login Endpoint Rejects GET ===
+Endpoint: GET http://localhost:5042/api/v1/authentication/login
+Method: GET (should be POST only)
+Status Code: 405
+Response Body: 
+Timestamp: 2026-03-13T07:48:18.2832560Z
+Expected: Non-200
+Result: PASS

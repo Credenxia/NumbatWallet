@@ -4,7 +4,10 @@ using NumbatWallet.Application.Commands.Persons;
 using NumbatWallet.Application.Commands.Wallets;
 using NumbatWallet.Application.Wallets.Commands.CreateWallet;
 using NumbatWallet.Application.DTOs;
+using NumbatWallet.Application.Queries.Wallets;
 using NumbatWallet.Domain.Enums;
+using NumbatWallet.Web.Api.Security;
+using System.Text.Json;
 using WalletCommands = NumbatWallet.Application.Commands.Wallets;
 
 namespace NumbatWallet.Web.Api.GraphQL.Schema;
@@ -166,6 +169,65 @@ public class Mutation
         return await handler.HandleAsync(command, cancellationToken);
     }
 
+    // Moved from the former GraphQL/Mutations/WalletMutation.cs (dormant) — backed by the
+    // registered ICommandHandler<DeleteWalletCommand, bool>.
+    [Authorize]
+    public async Task<bool> DeactivateWallet(
+        DeactivateWalletInput input,
+        [Service] ICommandHandler<DeleteWalletCommand, bool> handler,
+        [Service] ISecurityAuditService auditService,
+        [Service] IHttpContextAccessor httpContextAccessor,
+        CancellationToken cancellationToken)
+    {
+        var command = new DeleteWalletCommand(input.WalletId);
+        var result = await handler.HandleAsync(command, cancellationToken);
+
+        var httpContext = httpContextAccessor.HttpContext;
+        if (httpContext != null)
+        {
+            await auditService.LogSecurityEventAsync(
+                httpContext,
+                SecurityEventType.DataDeletion,
+                $"Wallet deactivated: {input.WalletId} (reason: {input.Reason})");
+        }
+
+        return result;
+    }
+
+    // Moved from the former GraphQL/Mutations/WalletMutation.cs (dormant) — backed by the
+    // registered IQueryHandler<GetWalletByIdQuery, WalletDto?>. Returns the wallet snapshot;
+    // credential/history bundling is not implemented yet (the flags record what was requested).
+    [Authorize]
+    public async Task<WalletExportDto> ExportWallet(
+        ExportWalletInput input,
+        [Service] IQueryHandler<GetWalletByIdQuery, WalletDto?> handler,
+        [Service] ISecurityAuditService auditService,
+        [Service] IHttpContextAccessor httpContextAccessor,
+        CancellationToken cancellationToken)
+    {
+        var wallet = await handler.HandleAsync(new GetWalletByIdQuery(input.WalletId), cancellationToken)
+            ?? throw new GraphQLException($"Wallet {input.WalletId} not found");
+
+        var httpContext = httpContextAccessor.HttpContext;
+        if (httpContext != null)
+        {
+            await auditService.LogSecurityEventAsync(
+                httpContext,
+                SecurityEventType.DataAccess,
+                $"Wallet exported: {input.WalletId}");
+        }
+
+        return new WalletExportDto
+        {
+            WalletId = input.WalletId,
+            Format = input.Format ?? "JSON",
+            ExportedAt = DateTime.UtcNow,
+            Data = wallet,
+            IncludeCredentials = input.IncludeCredentials ?? true,
+            IncludeHistory = input.IncludeHistory ?? false
+        };
+    }
+
     // Credential Mutations
     [Authorize(Roles = new[] { "Admin", "Officer", "Issuer" })]
     public async Task<CredentialDto> IssueCredential(
@@ -177,11 +239,14 @@ public class Mutation
         var issuerId = httpContextAccessor.HttpContext?.User.FindFirst("sub")?.Value
             ?? throw new UnauthorizedException("Issuer not authenticated");
 
+        var claims = JsonSerializer.Deserialize<Dictionary<string, object>>(input.ClaimsJson)
+            ?? throw new ArgumentException("Invalid ClaimsJson format");
+
         var command = new IssueCredentialCommand(
             input.WalletId,
             input.CredentialType,
             input.Subject,
-            input.Claims,
+            claims,
             input.ValidFrom ?? DateTime.UtcNow,
             input.ValidUntil,
             issuerId,
@@ -250,10 +315,13 @@ public class Mutation
         var issuerId = httpContextAccessor.HttpContext?.User.FindFirst("sub")?.Value
             ?? throw new UnauthorizedException("Issuer not authenticated");
 
+        var template = JsonSerializer.Deserialize<Dictionary<string, object>>(input.TemplateJson)
+            ?? throw new ArgumentException("Invalid TemplateJson format");
+
         var command = new BulkIssueCredentialsCommand(
             input.WalletIds,
             input.CredentialType,
-            input.Template,
+            template,
             issuerId,
             input.IssuerOrganizationId,
             input.ValidFrom ?? DateTime.UtcNow,
@@ -326,6 +394,20 @@ public class UpdateWalletSettingsInput
     public int? AutoLockTimeoutMinutes { get; set; }
 }
 
+public class DeactivateWalletInput
+{
+    public Guid WalletId { get; set; }
+    public required string Reason { get; set; }
+}
+
+public class ExportWalletInput
+{
+    public Guid WalletId { get; set; }
+    public string? Format { get; set; }
+    public bool? IncludeCredentials { get; set; }
+    public bool? IncludeHistory { get; set; }
+}
+
 public class RestoreWalletInput
 {
     public required string BackupData { get; set; }
@@ -338,7 +420,8 @@ public class IssueCredentialInput
     public Guid WalletId { get; set; }
     public required CredentialType CredentialType { get; set; }
     public required string Subject { get; set; }
-    public required Dictionary<string, object> Claims { get; set; }
+    [GraphQLDescription("JSON string containing credential claims")]
+    public required string ClaimsJson { get; set; }
     public DateTime? ValidFrom { get; set; }
     public DateTime? ValidUntil { get; set; }
     public Guid IssuerOrganizationId { get; set; }
@@ -363,13 +446,56 @@ public class BulkIssueCredentialsInput
 {
     public required List<Guid> WalletIds { get; set; }
     public required CredentialType CredentialType { get; set; }
-    public required Dictionary<string, object> Template { get; set; }
+    [GraphQLDescription("JSON string containing credential template")]
+    public required string TemplateJson { get; set; }
     public Guid IssuerOrganizationId { get; set; }
     public DateTime? ValidFrom { get; set; }
     public DateTime? ValidUntil { get; set; }
 }
 
+public class VerifyCredentialInput
+{
+    public required string CredentialId { get; set; }
+    public string? CredentialData { get; set; }
+    public bool CheckRevocation { get; set; } = true;
+    public bool CheckExpiry { get; set; } = true;
+    public bool CheckSignature { get; set; } = true;
+    public bool? CheckSchema { get; set; }
+    public bool? RequireTrustChain { get; set; }
+}
+
+public class CreateIssuanceInput
+{
+    public required string CredentialType { get; set; }
+    public required Guid WalletId { get; set; }
+    public List<string>? RequiredDocuments { get; set; }
+    [GraphQLDescription("JSON string containing additional data")]
+    public string? AdditionalDataJson { get; set; }
+}
+
+public class ApproveIssuanceInput
+{
+    public required Guid IssuanceId { get; set; }
+    public string? Comments { get; set; }
+}
+
+public class RejectIssuanceInput
+{
+    public required Guid IssuanceId { get; set; }
+    public required string Reason { get; set; }
+}
+
 // Result Types
+public class WalletExportDto
+{
+    public Guid WalletId { get; set; }
+    public required string Format { get; set; }
+    public DateTime ExportedAt { get; set; }
+    public WalletDto? Data { get; set; }
+    public bool IncludeCredentials { get; set; }
+    public bool IncludeHistory { get; set; }
+}
+
 public class VerificationResult
 {
     public bool IsValid { get; set; }

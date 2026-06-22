@@ -4,7 +4,7 @@ using NumbatWallet.Application.CQRS.Interfaces;
 using NumbatWallet.Application.Services;
 using NumbatWallet.Domain.Entities;
 using NumbatWallet.Domain.Interfaces;
-using NumbatWallet.Domain.Services;
+using NumbatWallet.Application.DomainServices;
 
 namespace NumbatWallet.Application.Commands.Certificates;
 
@@ -103,9 +103,6 @@ public class RenewCertificateCommandHandler : ICommandHandler<RenewCertificateCo
             // Handle auto-rotation
             if (command.AutoRotate)
             {
-                // Calculate grace period end date
-                var gracePeriodEnd = DateTimeOffset.UtcNow.AddDays(command.GracePeriodDays);
-
                 // If old certificate expires before grace period, keep it active
                 if (oldCertificate.ValidTo > DateTimeOffset.UtcNow)
                 {

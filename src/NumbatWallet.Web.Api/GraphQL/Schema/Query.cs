@@ -4,22 +4,9 @@ namespace NumbatWallet.Web.Api.GraphQL.Schema;
 
 public class Query
 {
-    private readonly IPersonService _personService;
-    private readonly IOrganizationService _organizationService;
-    private readonly ICredentialService _credentialService;
-    private readonly IWalletService _walletService;
-
-    public Query(
-        IPersonService personService,
-        IOrganizationService organizationService,
-        ICredentialService credentialService,
-        IWalletService walletService)
-    {
-        _personService = personService;
-        _organizationService = organizationService;
-        _credentialService = credentialService;
-        _walletService = walletService;
-    }
+    // No constructor injection: application services are SCOPED (DbContext-backed) and this
+    // HotChocolate root type is a singleton — every resolver takes its services via [Service]
+    // parameters instead, so each request gets a fresh scope (no captive dependencies).
 
     // Person Queries
     [Authorize]

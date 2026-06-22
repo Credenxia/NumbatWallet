@@ -4,7 +4,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using Moq;
 using NumbatWallet.Domain.Entities;
 using NumbatWallet.Domain.Interfaces;
 using NumbatWallet.Infrastructure.Data;
@@ -92,8 +91,7 @@ public class RevocationRegistryServiceTests : IDisposable
         var existingRevocation = new CertificateRevocation(
             serialNumber,
             (int)RevocationReason.Unspecified,
-            "Already revoked",
-            null);
+            "Already revoked");
 
         _context.Set<CertificateRevocation>().Add(existingRevocation);
         await _context.SaveChangesAsync();
@@ -118,8 +116,7 @@ public class RevocationRegistryServiceTests : IDisposable
         var revocation = new CertificateRevocation(
             serialNumber,
             (int)RevocationReason.KeyCompromise,
-            "Test",
-            null);
+            "Test");
 
         _context.Set<CertificateRevocation>().Add(revocation);
         await _context.SaveChangesAsync();
@@ -160,8 +157,8 @@ public class RevocationRegistryServiceTests : IDisposable
     public async Task GetRevokedCertificatesAsync_ShouldReturnAllRevoked()
     {
         // Arrange
-        var rev1 = new CertificateRevocation("11:11:11", (int)RevocationReason.KeyCompromise, null, null);
-        var rev2 = new CertificateRevocation("22:22:22", (int)RevocationReason.Superseded, null, null);
+        var rev1 = new CertificateRevocation("11:11:11", (int)RevocationReason.KeyCompromise);
+        var rev2 = new CertificateRevocation("22:22:22", (int)RevocationReason.Superseded);
 
         _context.Set<CertificateRevocation>().AddRange(rev1, rev2);
         await _context.SaveChangesAsync();
@@ -181,8 +178,8 @@ public class RevocationRegistryServiceTests : IDisposable
     public async Task GetRevokedCertificatesAsync_WithSinceFilter_ShouldReturnFiltered()
     {
         // Arrange
-        var oldRevocation = new CertificateRevocation("OLD:OLD:OLD", (int)RevocationReason.Unspecified, null, null);
-        var newRevocation = new CertificateRevocation("NEW:NEW:NEW", (int)RevocationReason.KeyCompromise, null, null);
+        var oldRevocation = new CertificateRevocation("OLD:OLD:OLD", (int)RevocationReason.Unspecified);
+        var newRevocation = new CertificateRevocation("NEW:NEW:NEW", (int)RevocationReason.KeyCompromise);
 
         // Manipulate dates using reflection or EF Core features
         _context.Set<CertificateRevocation>().Add(oldRevocation);
@@ -247,7 +244,7 @@ public class RevocationRegistryServiceTests : IDisposable
     public async Task GenerateCrlAsync_WithRevokedCertificates_ShouldGenerateCrl()
     {
         // Arrange
-        var rev = new CertificateRevocation("AB:CD:EF", (int)RevocationReason.KeyCompromise, null, null);
+        var rev = new CertificateRevocation("AB:CD:EF", (int)RevocationReason.KeyCompromise);
         _context.Set<CertificateRevocation>().Add(rev);
         await _context.SaveChangesAsync();
 
@@ -274,9 +271,7 @@ public class RevocationRegistryServiceTests : IDisposable
         // Arrange
         var expiredRevocation = new CertificateRevocation(
             "EXPIRED:CERT",
-            (int)RevocationReason.CessationOfOperation,
-            null,
-            null);
+            (int)RevocationReason.CessationOfOperation);
 
         // Set invalidity date to over a year ago
         expiredRevocation.SetInvalidityDate(DateTime.UtcNow.AddYears(-2));

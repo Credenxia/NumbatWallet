@@ -12,20 +12,18 @@ public class ProtectionService : IProtectionService
     private readonly ITenantPolicyService _tenantPolicyService;
     private readonly ICurrentTenantService _currentTenantService;
     private readonly IAuditService _auditService;
-    private readonly ILogger<ProtectionService> _logger;
 
     public ProtectionService(
         IEncryptionService encryptionService,
         ITenantPolicyService tenantPolicyService,
         ICurrentTenantService currentTenantService,
         IAuditService auditService,
-        ILogger<ProtectionService> logger)
+        ILogger<ProtectionService> _logger)
     {
         _encryptionService = encryptionService;
         _tenantPolicyService = tenantPolicyService;
         _currentTenantService = currentTenantService;
         _auditService = auditService;
-        _logger = logger;
     }
 
     public async Task<ProtectedValue<T>> ProtectAsync<T>(

@@ -166,7 +166,6 @@ public class SystemMetricsService : ISystemMetricsService, IDisposable
         await Task.CompletedTask;
 
         var process = Process.GetCurrentProcess();
-        var totalMemory = GC.GetTotalMemory(false);
 
         return new ResourceUsageDto(
             CpuUsagePercent: GetCpuUsage(),
@@ -183,7 +182,6 @@ public class SystemMetricsService : ISystemMetricsService, IDisposable
 
     public async Task<DatabaseMetricsDto> GetDatabaseMetricsAsync(CancellationToken cancellationToken = default)
     {
-        var connectionString = _context.Database.GetConnectionString();
         var activeConnections = 0;
         var maxConnections = 100;
 
@@ -368,7 +366,10 @@ public class SystemMetricsService : ISystemMetricsService, IDisposable
             {
                 return _cpuCounter.NextValue();
             }
-            catch { }
+            catch
+            {
+                // Performance counter access failed, fall back to simulated metrics
+            }
         }
 
         return 35.0 + _random.NextDouble() * 30;
@@ -382,7 +383,10 @@ public class SystemMetricsService : ISystemMetricsService, IDisposable
             {
                 return (long)(_memoryCounter.NextValue() * 1024 * 1024);
             }
-            catch { }
+            catch
+            {
+                // Performance counter access failed, fall back to process memory metrics
+            }
         }
 
         return 8_589_934_592 - Process.GetCurrentProcess().WorkingSet64;

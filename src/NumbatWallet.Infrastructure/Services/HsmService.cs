@@ -20,7 +20,6 @@ public class HsmService : IHsmService
     private readonly IHsmProvider _provider;
     private readonly IConfiguration _configuration;
     private readonly ILogger<HsmService> _logger;
-    private readonly string _providerType;
 
     public HsmService(
         IServiceProvider serviceProvider,
@@ -31,14 +30,14 @@ public class HsmService : IHsmService
         _logger = logger;
 
         // Select provider based on configuration
-        _providerType = configuration["Hsm:Provider"] ?? "Software";
+        var providerType = configuration["Hsm:Provider"] ?? "Software";
 
-        _provider = _providerType.ToLowerInvariant() switch
+        _provider = providerType.ToLowerInvariant() switch
         {
             "software" => serviceProvider.GetRequiredService<SoftwareHsmProvider>(),
             "keyvault" => serviceProvider.GetRequiredService<KeyVaultHsmProvider>(),
             "managedhsm" => serviceProvider.GetRequiredService<ManagedHsmProvider>(),
-            _ => throw new NotSupportedException($"HSM provider '{_providerType}' not supported")
+            _ => throw new NotSupportedException($"HSM provider '{providerType}' not supported")
         };
 
         _logger.LogInformation("HSM Service initialized with {Provider} provider (FIPS: {Compliance})",
@@ -258,7 +257,7 @@ public class HsmService : IHsmService
                 }
             };
 
-            var key = await _provider.GenerateKeyAsync(keyRequest, cancellationToken);
+            _ = await _provider.GenerateKeyAsync(keyRequest, cancellationToken);
 
             // Create certificate request
             using var rsa = RSA.Create(2048);
@@ -350,9 +349,9 @@ public class HsmService : IHsmService
                 Algorithm = ConvertKeyTypeToAlgorithm(key.Type, key.KeySize),
                 CreatedAt = key.CreatedOn,
                 ExpiresAt = key.ExpiresOn,
-                Version = key.Version ?? string.Empty,
+                Version = key.Version,
                 Enabled = key.Enabled,
-                Tags = key.Tags ?? new Dictionary<string, string>(),
+                Tags = key.Tags,
                 AllowedOperations = ConvertKeyUsageToOperations(key.Usage)
             };
         }
@@ -377,9 +376,9 @@ public class HsmService : IHsmService
                 Algorithm = ConvertKeyTypeToAlgorithm(k.Type, k.KeySize),
                 CreatedAt = k.CreatedOn,
                 ExpiresAt = k.ExpiresOn,
-                Version = k.Version ?? string.Empty,
+                Version = k.Version,
                 Enabled = k.Enabled,
-                Tags = k.Tags ?? new Dictionary<string, string>(),
+                Tags = k.Tags,
                 AllowedOperations = ConvertKeyUsageToOperations(k.Usage)
             });
         }
@@ -396,7 +395,7 @@ public class HsmService : IHsmService
     {
         try
         {
-            var backup = await _provider.BackupKeyAsync(keyName, cancellationToken);
+            _ = await _provider.BackupKeyAsync(keyName, cancellationToken);
 
             // Store backup reference (in production, this would be stored securely)
             var backupId = $"backup_{keyName}_{DateTime.UtcNow:yyyyMMddHHmmss}";
@@ -465,7 +464,7 @@ public class HsmService : IHsmService
                 }
             };
 
-            var newKey = await _provider.GenerateKeyAsync(request, cancellationToken);
+            _ = await _provider.GenerateKeyAsync(request, cancellationToken);
 
             // Mark old key for deletion (soft delete)
             await _provider.DeleteKeyAsync(keyName, false, cancellationToken);
@@ -506,7 +505,7 @@ public class HsmService : IHsmService
                 }
             };
 
-            var newKey = await _provider.GenerateKeyAsync(request, cancellationToken);
+            _ = await _provider.GenerateKeyAsync(request, cancellationToken);
 
             // Mark old key for deletion (soft delete)
             await _provider.DeleteKeyAsync(oldKeyName, false, cancellationToken);

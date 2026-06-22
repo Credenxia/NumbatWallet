@@ -13,7 +13,7 @@ public interface IDatabaseSeeder
     /// <summary>
     /// Seeds test data for development/testing environments
     /// </summary>
-    Task SeedTestDataAsync(CancellationToken cancellationToken = default);
+    Task SeedTestDataAsync(string? tenantId = null, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Clears all data from the database (testing only)

@@ -71,19 +71,19 @@ public sealed class PerformanceMetrics : IDisposable
             description: "Number of cache misses");
 
         // System metrics
-        _memoryUsage = _meter.CreateObservableGauge<long>(
+        _memoryUsage = _meter.CreateObservableGauge(
             "numbatwallet.memory.used",
             observeValue: () => GC.GetTotalMemory(false),
             unit: "bytes",
             description: "Memory usage in bytes");
 
-        _threadCount = _meter.CreateObservableGauge<int>(
+        _threadCount = _meter.CreateObservableGauge(
             "numbatwallet.threads.count",
             observeValue: () => Process.GetCurrentProcess().Threads.Count,
             unit: "threads",
             description: "Number of threads");
 
-        _cpuUsage = _meter.CreateObservableGauge<double>(
+        _cpuUsage = _meter.CreateObservableGauge(
             "numbatwallet.cpu.usage",
             observeValue: GetCpuUsage,
             unit: "%",

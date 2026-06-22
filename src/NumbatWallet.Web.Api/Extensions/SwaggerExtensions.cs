@@ -1,5 +1,5 @@
-using Microsoft.AspNetCore.Mvc.ApiExplorer;
-using Microsoft.OpenApi.Models;
+using Asp.Versioning.ApiExplorer;
+using Microsoft.OpenApi;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using Swashbuckle.AspNetCore.Filters;
 using System.Reflection;
@@ -75,18 +75,11 @@ public static class SwaggerExtensions
             });
 
             // Add security requirement
-            options.AddSecurityRequirement(new OpenApiSecurityRequirement
+            options.AddSecurityRequirement(_ => new OpenApiSecurityRequirement
             {
                 {
-                    new OpenApiSecurityScheme
-                    {
-                        Reference = new OpenApiReference
-                        {
-                            Type = ReferenceType.SecurityScheme,
-                            Id = "Bearer"
-                        }
-                    },
-                    Array.Empty<string>()
+                    new OpenApiSecuritySchemeReference("Bearer"),
+                    new List<string>()
                 }
             });
 
@@ -195,26 +188,12 @@ public class SwaggerDefaultValues : IOperationFilter
 
         // Check if the endpoint is deprecated
         var endpointMetadata = apiDescription.ActionDescriptor?.EndpointMetadata;
-        if (endpointMetadata != null)
+        if (endpointMetadata is not null)
         {
             operation.Deprecated |= endpointMetadata.Any(m => m is ObsoleteAttribute);
         }
 
-        foreach (var responseType in context.ApiDescription.SupportedResponseTypes)
-        {
-            var responseKey = responseType.IsDefaultResponse ? "default" : responseType.StatusCode.ToString();
-            var response = operation.Responses[responseKey];
-
-            foreach (var contentType in response.Content.Keys)
-            {
-                if (responseType.ApiResponseFormats.All(x => x.MediaType != contentType))
-                {
-                    response.Content.Remove(contentType);
-                }
-            }
-        }
-
-        if (operation.Parameters == null)
+        if (operation.Parameters is null)
         {
             return;
         }
@@ -222,17 +201,8 @@ public class SwaggerDefaultValues : IOperationFilter
         foreach (var parameter in operation.Parameters)
         {
             var description = apiDescription.ParameterDescriptions.First(p => p.Name == parameter.Name);
-
             parameter.Description ??= description.ModelMetadata?.Description;
-
-            if (parameter.Schema.Default == null && description.DefaultValue != null)
-            {
-                // Set default value directly as a primitive type
-                var defaultJson = System.Text.Json.JsonSerializer.Serialize(description.DefaultValue);
-                parameter.Schema.Default = new Microsoft.OpenApi.Any.OpenApiString(defaultJson);
-            }
-
-            parameter.Required |= description.IsRequired;
+            // parameter.Required is read-only on IOpenApiParameter in OpenApi v3
         }
     }
 }
@@ -241,7 +211,7 @@ public class AuthorizeCheckOperationFilter : IOperationFilter
 {
     public void Apply(OpenApiOperation operation, OperationFilterContext context)
     {
-        var hasAuthorize = context.MethodInfo.DeclaringType != null &&
+        var hasAuthorize = context.MethodInfo.DeclaringType is not null &&
             (context.MethodInfo.DeclaringType.GetCustomAttributes(true).OfType<Microsoft.AspNetCore.Authorization.AuthorizeAttribute>().Any() ||
              context.MethodInfo.GetCustomAttributes(true).OfType<Microsoft.AspNetCore.Authorization.AuthorizeAttribute>().Any());
 
@@ -249,8 +219,8 @@ public class AuthorizeCheckOperationFilter : IOperationFilter
 
         if (hasAuthorize && !hasAllowAnonymous)
         {
-            operation.Responses.TryAdd("401", new OpenApiResponse { Description = "Unauthorized" });
-            operation.Responses.TryAdd("403", new OpenApiResponse { Description = "Forbidden" });
+            operation.Responses?.TryAdd("401", new OpenApiResponse { Description = "Unauthorized" });
+            operation.Responses?.TryAdd("403", new OpenApiResponse { Description = "Forbidden" });
         }
     }
 }
@@ -259,6 +229,8 @@ public class LowercaseDocumentFilter : IDocumentFilter
 {
     public void Apply(OpenApiDocument swaggerDoc, DocumentFilterContext context)
     {
+        if (swaggerDoc.Paths is null) return;
+
         var paths = swaggerDoc.Paths.ToList();
         swaggerDoc.Paths.Clear();
 

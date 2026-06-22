@@ -1,4 +1,3 @@
-using System.Data.Common;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
@@ -6,11 +5,9 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
-using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using NumbatWallet.Infrastructure.Data;
 using Testcontainers.PostgreSql;
-using Xunit;
 
 namespace NumbatWallet.Integration.Tests.TestHarness;
 
@@ -22,8 +19,10 @@ public class IntegrationTestFixture : WebApplicationFactory<Program>, IAsyncLife
 {
     private readonly PostgreSqlContainer _postgresContainer;
     private readonly Dictionary<string, string> _testConfiguration;
-    private readonly string _testTenantId = Guid.NewGuid().ToString();
-    private bool _initialized = false;
+    // Use a valid test tenant GUID (domain entities validate against Guid.Empty)
+    private readonly Guid _testTenantGuid = Guid.Parse("10000000-0000-0000-0000-000000000001");
+    private readonly string _testTenantId = "10000000-0000-0000-0000-000000000001";
+    private bool _initialized;
 
     public IntegrationTestFixture()
     {
@@ -50,7 +49,15 @@ public class IntegrationTestFixture : WebApplicationFactory<Program>, IAsyncLife
             ["Authentication:UseMockService"] = "true",
             ["Jwt:SecretKey"] = "TestSecretKey123456789012345678901234567890",
             ["Jwt:Issuer"] = "https://test.numbatwallet.wa.gov.au",
-            ["Serilog:MinimumLevel:Default"] = "Warning"
+            ["Serilog:MinimumLevel:Default"] = "Warning",
+            // HERMETIC CACHE: keep the Redis connection string blank. The base
+            // appsettings.json no longer ships a localhost:6379 default (removed with the
+            // CacheRegistrationPolicy fix — unconfigured deployments now fall back to the
+            // in-memory distributed cache), but the harness pins the blank value anyway so a
+            // future config default can never reintroduce a Redis dependency here. The
+            // refresh-token store and logout blacklist fail safe (reads -> null) against an
+            // unreachable Redis, which surfaced as refresh 401 / logout no-op historically.
+            ["ConnectionStrings:Redis"] = ""
         };
     }
 
@@ -77,9 +84,9 @@ public class IntegrationTestFixture : WebApplicationFactory<Program>, IAsyncLife
         await dbContext.Database.EnsureDeletedAsync();
         await dbContext.Database.EnsureCreatedAsync();
 
-        // Seed test data
-        var seeder = scope.ServiceProvider.GetRequiredService<NumbatWallet.Infrastructure.Data.IDatabaseSeeder>();
-        await seeder.SeedTestDataAsync();
+        // Seed test data with the test tenant ID
+        var seeder = scope.ServiceProvider.GetRequiredService<IDatabaseSeeder>();
+        await seeder.SeedTestDataAsync(_testTenantId);
 
         _initialized = true;
     }
@@ -94,7 +101,7 @@ public class IntegrationTestFixture : WebApplicationFactory<Program>, IAsyncLife
     {
         builder.UseEnvironment("Testing");
 
-        builder.ConfigureAppConfiguration((context, config) =>
+        builder.ConfigureAppConfiguration((_context, config) =>
         {
             config.AddInMemoryCollection(_testConfiguration.Select(kvp => new KeyValuePair<string, string?>(kvp.Key, kvp.Value)));
         });
@@ -109,7 +116,8 @@ public class IntegrationTestFixture : WebApplicationFactory<Program>, IAsyncLife
             services.RemoveAll<DbContextOptions<NumbatWalletDbContext>>();
 
             // Add test DbContext with real PostgreSQL from container
-            services.AddDbContext<NumbatWalletDbContext>(options =>
+            // Use factory pattern to access interceptors from DI container
+            services.AddDbContext<NumbatWalletDbContext>((serviceProvider, options) =>
             {
                 options.UseNpgsql(ConnectionString, npgsqlOptions =>
                 {
@@ -117,24 +125,52 @@ public class IntegrationTestFixture : WebApplicationFactory<Program>, IAsyncLife
                     npgsqlOptions.CommandTimeout(60);
                 });
                 options.EnableSensitiveDataLogging();
+
+                // Add interceptors for tenant isolation, auditing, and soft delete
+                // These are registered by AddInfrastructure() and are critical for multi-tenancy
+                options.AddInterceptors(
+                    serviceProvider.GetRequiredService<Infrastructure.Data.Interceptors.AuditInterceptor>(),
+                    serviceProvider.GetRequiredService<Infrastructure.Data.Interceptors.TenantInterceptor>(),
+                    serviceProvider.GetRequiredService<Infrastructure.Data.Interceptors.SoftDeleteInterceptor>());
+
                 // Suppress pending model changes warning for tests
                 options.ConfigureWarnings(w => w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
             });
 
+            // HERMETIC CACHE: belt-and-braces alongside the blank ConnectionStrings:Redis
+            // above. With CacheRegistrationPolicy the host only wires Redis when a non-empty
+            // connection string is configured, so this normally re-registers the same
+            // in-memory cache — but it guarantees the harness can never depend on a Redis
+            // container regardless of host configuration. The refresh-token store and logout
+            // blacklist sit on IDistributedCache and fail safe (reads -> null) when a cache
+            // is unreachable, which historically surfaced as refresh 401 / logout no-op.
+            services.RemoveAll<Microsoft.Extensions.Caching.Distributed.IDistributedCache>();
+            services.AddDistributedMemoryCache();
+
             // Replace external services with mocks
-            services.AddSingleton<NumbatWallet.Application.Interfaces.IKeyVaultService, MockKeyVaultService>();
-            services.AddSingleton<NumbatWallet.Application.Interfaces.IBlobStorageService, MockBlobStorageService>();
-            services.AddSingleton<NumbatWallet.Application.Interfaces.IEmailService, MockEmailService>();
-            services.AddSingleton<NumbatWallet.Application.Interfaces.INotificationService, MockNotificationService>();
+            services.AddSingleton<Application.Interfaces.IKeyVaultService, MockKeyVaultService>();
+            services.AddSingleton<Application.Interfaces.IBlobStorageService, MockBlobStorageService>();
+            services.AddSingleton<Application.Interfaces.IEmailService, MockEmailService>();
+            services.AddSingleton<Application.Interfaces.INotificationService, MockNotificationService>();
 
             // Register HSM Provider for tests (SoftwareHsmProvider)
-            services.AddSingleton<NumbatWallet.Infrastructure.Services.Providers.SoftwareHsmProvider>();
+            services.AddSingleton<Infrastructure.Services.Providers.SoftwareHsmProvider>();
 
             // Register DatabaseSeeder for tests
-            services.AddScoped<NumbatWallet.Infrastructure.Data.IDatabaseSeeder, NumbatWallet.Infrastructure.Data.DatabaseSeeder>();
+            services.AddScoped<IDatabaseSeeder, DatabaseSeeder>();
 
             // Add mock current user service for audit fields
-            services.AddSingleton<NumbatWallet.SharedKernel.Interfaces.ICurrentUserService, MockCurrentUserService>();
+            services.AddSingleton<SharedKernel.Interfaces.ICurrentUserService, MockCurrentUserService>();
+
+            // Replace tenant services with mocks to return consistent tenant ID for tests
+            // Mock both GUID-based and string-based tenant services for multi-tenancy support
+            services.RemoveAll<SharedKernel.Interfaces.ICurrentTenantService>();
+            services.AddSingleton<SharedKernel.Interfaces.ICurrentTenantService>(
+                _sp => new MockCurrentTenantService(_testTenantId));
+
+            services.RemoveAll<SharedKernel.Interfaces.ITenantService>();
+            services.AddSingleton<SharedKernel.Interfaces.ITenantService>(
+                _sp => new MockTenantService(_testTenantGuid));
 
             // Don't initialize database here - let it be done on first use
             // This avoids conflicts with service registration
@@ -163,7 +199,7 @@ public class IntegrationTestCollection : ICollectionFixture<IntegrationTestFixtu
 /// <summary>
 /// Mock Key Vault service for testing
 /// </summary>
-public class MockKeyVaultService : NumbatWallet.Application.Interfaces.IKeyVaultService
+public class MockKeyVaultService : Application.Interfaces.IKeyVaultService
 {
     private readonly Dictionary<string, string> _secrets = new();
 
@@ -212,7 +248,7 @@ public class MockKeyVaultService : NumbatWallet.Application.Interfaces.IKeyVault
 /// <summary>
 /// Mock Blob Storage service for testing
 /// </summary>
-public class MockBlobStorageService : NumbatWallet.Application.Interfaces.IBlobStorageService
+public class MockBlobStorageService : Application.Interfaces.IBlobStorageService
 {
     private readonly Dictionary<string, byte[]> _blobs = new();
     private readonly Dictionary<string, Dictionary<string, string>> _metadata = new();
@@ -300,7 +336,7 @@ public class MockBlobStorageService : NumbatWallet.Application.Interfaces.IBlobS
 /// <summary>
 /// Mock Email service for testing
 /// </summary>
-public class MockEmailService : NumbatWallet.Application.Interfaces.IEmailService
+public class MockEmailService : Application.Interfaces.IEmailService
 {
     private readonly List<(string To, string Subject, string Body)> _sentEmails = new();
 
@@ -365,7 +401,7 @@ public class MockEmailService : NumbatWallet.Application.Interfaces.IEmailServic
 /// <summary>
 /// Mock Notification service for testing
 /// </summary>
-public class MockNotificationService : NumbatWallet.Application.Interfaces.INotificationService
+public class MockNotificationService : Application.Interfaces.INotificationService
 {
     private readonly List<(string UserId, string Title, string Message)> _notifications = new();
 
@@ -442,10 +478,49 @@ public class MockNotificationService : NumbatWallet.Application.Interfaces.INoti
 /// <summary>
 /// Mock Current User service for testing
 /// </summary>
-public class MockCurrentUserService : NumbatWallet.SharedKernel.Interfaces.ICurrentUserService
+public class MockCurrentUserService : SharedKernel.Interfaces.ICurrentUserService
 {
     public string UserId => "integration-test-user";
     public string UserName => "Test User";
     public string UserEmail => "test@example.com";
     public IEnumerable<string> Roles => new[] { "Admin", "User" };
+}
+
+/// <summary>
+/// Mock Current Tenant service for testing (string-based)
+/// </summary>
+public class MockCurrentTenantService : SharedKernel.Interfaces.ICurrentTenantService
+{
+    private readonly string _tenantId;
+
+    public MockCurrentTenantService(string tenantId)
+    {
+        _tenantId = tenantId;
+    }
+
+    public string? TenantId => _tenantId;
+    public string? TenantName => "Test Tenant";
+    public bool IsMultiTenantContext => true;
+
+    public Task<bool> SetTenantAsync(string tenantId)
+    {
+        // Not needed for tests
+        return Task.FromResult(true);
+    }
+}
+
+/// <summary>
+/// Mock Tenant service for testing (GUID-based)
+/// </summary>
+public class MockTenantService : SharedKernel.Interfaces.ITenantService
+{
+    private readonly Guid _tenantId;
+
+    public MockTenantService(Guid tenantId)
+    {
+        _tenantId = tenantId;
+    }
+
+    public Guid TenantId => _tenantId;
+    public string TenantName => "Test Tenant";
 }

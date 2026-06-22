@@ -18,13 +18,13 @@ public class PersonEndpoints : ICarterModule
             .WithName("GetAllPersons")
             .WithOpenApi()
             .RequireAuthorization("AdminOrOfficer")
-            .Produces<IEnumerable<PersonDto>>(StatusCodes.Status200OK);
+            .Produces<IEnumerable<PersonDto>>();
 
         // GET /api/v1/persons/{id}
         group.MapGet("/{id:guid}", GetPersonById)
             .WithName("GetPersonById")
             .WithOpenApi()
-            .Produces<PersonDto>(StatusCodes.Status200OK)
+            .Produces<PersonDto>()
             .Produces(StatusCodes.Status404NotFound);
 
         // GET /api/v1/persons/search
@@ -32,7 +32,7 @@ public class PersonEndpoints : ICarterModule
             .WithName("SearchPersons")
             .WithOpenApi()
             .RequireAuthorization("AdminOrOfficer")
-            .Produces<IEnumerable<PersonDto>>(StatusCodes.Status200OK);
+            .Produces<IEnumerable<PersonDto>>();
 
         // POST /api/v1/persons
         group.MapPost("/", CreatePerson)
@@ -48,7 +48,7 @@ public class PersonEndpoints : ICarterModule
             .WithName("UpdatePerson")
             .WithOpenApi()
             .Accepts<UpdatePersonCommand>("application/json")
-            .Produces<PersonDto>(StatusCodes.Status200OK)
+            .Produces<PersonDto>()
             .Produces(StatusCodes.Status404NotFound)
             .ProducesValidationProblem();
 
@@ -66,7 +66,7 @@ public class PersonEndpoints : ICarterModule
             .WithOpenApi()
             .RequireAuthorization("AdminOrOfficer")
             .Accepts<VerifyIdentityRequest>("application/json")
-            .Produces<VerificationResult>(StatusCodes.Status200OK)
+            .Produces<VerificationResult>()
             .Produces(StatusCodes.Status404NotFound);
     }
 
@@ -100,9 +100,7 @@ public class PersonEndpoints : ICarterModule
     {
         var query = new SearchPersonsQuery(
             searchRequest.SearchTerm,
-            null,
-            1,
-            20);
+            null);
 
         var result = await handler.HandleAsync(query, cancellationToken);
         return Results.Ok(result);
@@ -187,7 +185,7 @@ public class PersonEndpoints : ICarterModule
                 DocumentNumber = request.DocumentNumber,
                 DocumentImage = request.DocumentImage,
                 SelfieImage = null, // Not provided in request
-                AdditionalData = request.AdditionalData ?? new Dictionary<string, string>()
+                AdditionalData = request.AdditionalData
             };
             var result = await personService.VerifyIdentityAsync(id, verificationDto, cancellationToken);
             return Results.Ok(result);
@@ -220,3 +218,12 @@ public record IdentityVerificationResult(
     string? VerificationMethod,
     DateTime VerifiedAt,
     Dictionary<string, object> Details);
+
+/// <summary>Credential/identity verification result (OpenAPI response shape).</summary>
+public record VerificationResult(
+    bool IsValid,
+    string? Issuer,
+    DateTime? IssuedAt,
+    DateTime? ExpiresAt,
+    List<string> Errors,
+    Dictionary<string, object> Claims);

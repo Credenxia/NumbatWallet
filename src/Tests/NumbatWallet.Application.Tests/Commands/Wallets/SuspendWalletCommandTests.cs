@@ -1,6 +1,4 @@
-using FluentAssertions;
 using Microsoft.Extensions.Logging;
-using Moq;
 using NumbatWallet.Application.Commands.Wallets;
 using NumbatWallet.Application.Common.Exceptions;
 using NumbatWallet.Domain.Aggregates;
@@ -13,19 +11,18 @@ public class SuspendWalletCommandTests
 {
     private readonly Mock<IUnitOfWork> _unitOfWorkMock;
     private readonly Mock<IWalletRepository> _walletRepositoryMock;
-    private readonly Mock<ILogger<SuspendWalletCommandHandler>> _loggerMock;
     private readonly SuspendWalletCommandHandler _handler;
 
     public SuspendWalletCommandTests()
     {
         _unitOfWorkMock = new Mock<IUnitOfWork>();
         _walletRepositoryMock = new Mock<IWalletRepository>();
-        _loggerMock = new Mock<ILogger<SuspendWalletCommandHandler>>();
+        var loggerMock = new Mock<ILogger<SuspendWalletCommandHandler>>();
 
         _handler = new SuspendWalletCommandHandler(
             _unitOfWorkMock.Object,
             _walletRepositoryMock.Object,
-            _loggerMock.Object);
+            loggerMock.Object);
     }
 
     [Fact]

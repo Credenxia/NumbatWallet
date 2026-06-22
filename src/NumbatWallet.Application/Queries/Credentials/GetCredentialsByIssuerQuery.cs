@@ -36,7 +36,7 @@ public class GetCredentialsByIssuerQueryHandler : IQueryHandler<GetCredentialsBy
         _logger.LogInformation("Retrieving credentials for issuer {IssuerId}", query.IssuerId);
 
         // Get credentials issued by this issuer
-        var credentials = await _credentialRepository.GetByIssuerIdAsync(query.IssuerId, cancellationToken);
+        var credentials = (await _credentialRepository.GetByIssuerIdAsync(query.IssuerId, cancellationToken)).ToList();
 
         // Get issuer details once
         var issuer = await _issuerRepository.GetByIdAsync(query.IssuerId, cancellationToken);

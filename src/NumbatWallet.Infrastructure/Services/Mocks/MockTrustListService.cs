@@ -295,7 +295,6 @@ public class MockTrustListService : ITrustListService
         }
 
         // Check if issuer is trusted
-        var issuerName = certificate.Issuer;
         var trustedEntity = _trustedEntities.Values
             .FirstOrDefault(e => certificate.Issuer.Contains(e.Name));
 

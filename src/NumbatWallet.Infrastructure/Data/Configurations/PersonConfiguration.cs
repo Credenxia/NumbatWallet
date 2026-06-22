@@ -57,17 +57,17 @@ public class PersonConfiguration : IEntityTypeConfiguration<Person>
         builder.Property(p => p.ModifiedBy)
             .HasMaxLength(256);
 
-        // Value objects - stored as protected JSONB
+        // Value objects - stored as protected JSONB.
+        // Email/Phone are ENCRYPTED at rest (AES-256-GCM, non-deterministic ciphertext).
+        // Exact-match lookups (login, uniqueness) go through the deterministic HMAC search-token
+        // shadow columns below, populated by SearchTokenInterceptor on every save.
         builder.OwnsOne(p => p.Email, email =>
         {
             email.Property(e => e.Value)
                 .HasColumnName("Email")
                 .IsRequired()
                 .HasColumnType("jsonb")
-                .HasConversion(new ProtectedFieldConverter());
-
-            // Index on the searchable token (will be added via interceptor)
-            email.HasIndex(e => e.Value);
+                .HasConversion(new ProtectedFieldConverter(encrypt: true));
         });
 
         builder.OwnsOne(p => p.PhoneNumber, phone =>
@@ -76,15 +76,38 @@ public class PersonConfiguration : IEntityTypeConfiguration<Person>
                 .HasColumnName("PhoneNumberValue")
                 .IsRequired()
                 .HasMaxLength(500) // Increased to accommodate encrypted data
-                .HasConversion(new ProtectedFieldConverter());
+                .HasConversion(new ProtectedFieldConverter(encrypt: true));
 
             phone.Property(ph => ph.CountryCode)
                 .HasColumnName("PhoneNumberCountryCode")
                 .HasMaxLength(5);
-
-            // Index on the searchable token (will be added via interceptor)
-            phone.HasIndex(ph => ph.Value);
         });
+
+        // Deterministic search tokens (HMAC-SHA256 of the normalized value, deployment-wide
+        // pepper) — the ONLY queryable form of email/phone now that the values are encrypted.
+        // Shadow properties: written by SearchTokenInterceptor, queried via EF.Property.
+        builder.Property<string?>("EmailSearchToken")
+            .HasColumnName("email_search_token")
+            .HasMaxLength(64);
+
+        builder.Property<string?>("PhoneSearchToken")
+            .HasColumnName("phone_search_token")
+            .HasMaxLength(64);
+
+        builder.HasIndex("EmailSearchToken");
+        builder.HasIndex("PhoneSearchToken");
+
+        // PIN security fields
+        builder.Property(p => p.PinHash)
+            .HasMaxLength(500); // BCrypt hash is ~60 chars, allow extra for future algorithms
+
+        builder.Property(p => p.FailedPinAttempts)
+            .IsRequired()
+            .HasDefaultValue(0);
+
+        builder.Property(p => p.PinLockedUntil);
+
+        builder.Property(p => p.LastPinAttemptAt);
 
         // Indexes
         builder.HasIndex(p => p.TenantId);

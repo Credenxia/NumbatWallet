@@ -1,5 +1,5 @@
 @page "/admin/wallet-builder"
-@using NumbatWallet.Domain.Entities
+@using NumbatWallet.Web.Admin.Models
 @using Microsoft.AspNetCore.Authorization
 @using Microsoft.AspNetCore.Components.Forms
 @using Microsoft.AspNetCore.Components.Web
@@ -231,10 +231,184 @@
                     </div>
                 </div>
 
+                <!-- Platform Configuration Tabs -->
+                <div class="mt-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h6>Platform-Specific Configuration</h6>
+                        </div>
+                        <div class="card-body">
+                            <ul class="nav nav-tabs mb-3" role="tablist">
+                                <li class="nav-item">
+                                    <button class="nav-link @(activePlatformTab == "ios" ? "active" : "")"
+                                            @onclick="@(() => activePlatformTab = "ios")" type="button">
+                                        <i class="bi bi-apple"></i> iOS / Apple Wallet
+                                    </button>
+                                </li>
+                                <li class="nav-item">
+                                    <button class="nav-link @(activePlatformTab == "android" ? "active" : "")"
+                                            @onclick="@(() => activePlatformTab = "android")" type="button">
+                                        <i class="bi bi-android2"></i> Android / Google Wallet
+                                    </button>
+                                </li>
+                                <li class="nav-item">
+                                    <button class="nav-link @(activePlatformTab == "web" ? "active" : "")"
+                                            @onclick="@(() => activePlatformTab = "web")" type="button">
+                                        <i class="bi bi-globe"></i> Web / PWA
+                                    </button>
+                                </li>
+                            </ul>
+
+                            @if (activePlatformTab == "ios")
+                            {
+                                <div class="platform-config">
+                                    <h6>Apple Wallet Configuration</h6>
+                                    <div class="row">
+                                        <div class="col-md-4 mb-3">
+                                            <label class="form-label">Background Color</label>
+                                            <input type="color" @bind="iosConfig.BackgroundColor" class="form-control form-control-color" />
+                                        </div>
+                                        <div class="col-md-4 mb-3">
+                                            <label class="form-label">Foreground Color</label>
+                                            <input type="color" @bind="iosConfig.ForegroundColor" class="form-control form-control-color" />
+                                        </div>
+                                        <div class="col-md-4 mb-3">
+                                            <label class="form-label">Label Color</label>
+                                            <input type="color" @bind="iosConfig.LabelColor" class="form-control form-control-color" />
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Logo Text</label>
+                                        <input type="text" @bind="iosConfig.LogoText" class="form-control" />
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Barcode Format</label>
+                                        <select @bind="iosConfig.BarcodeFormat" class="form-select">
+                                            <option value="PKBarcodeFormatQR">QR Code</option>
+                                            <option value="PKBarcodeFormatPDF417">PDF417</option>
+                                            <option value="PKBarcodeFormatAztec">Aztec</option>
+                                            <option value="PKBarcodeFormatCode128">Code 128</option>
+                                        </select>
+                                    </div>
+                                    <div class="alert alert-info">
+                                        <strong>iOS Constraints:</strong>
+                                        <ul class="mb-0">
+                                            <li>Header fields: 1 max</li>
+                                            <li>Primary fields: 4 max (displayed prominently)</li>
+                                            <li>Secondary fields: 4 max</li>
+                                            <li>Auxiliary fields: 4 max</li>
+                                            <li>Back fields: unlimited</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            }
+                            else if (activePlatformTab == "android")
+                            {
+                                <div class="platform-config">
+                                    <h6>Google Wallet Configuration</h6>
+                                    <div class="mb-3">
+                                        <label class="form-label">Card Title</label>
+                                        <input type="text" @bind="androidConfig.CardTitle" class="form-control" />
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">Header</label>
+                                            <input type="text" @bind="androidConfig.Header" class="form-control" />
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">Subheader</label>
+                                            <input type="text" @bind="androidConfig.Subheader" class="form-control" />
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Background Color</label>
+                                        <input type="color" @bind="androidConfig.BackgroundColor" class="form-control form-control-color" />
+                                    </div>
+                                    <div class="alert alert-info">
+                                        <strong>Google Wallet Constraints:</strong>
+                                        <ul class="mb-0">
+                                            <li>Text Modules: up to 10 fields</li>
+                                            <li>Info Modules: up to 10 fields</li>
+                                            <li>Use header/subheader for prominent display</li>
+                                            <li>Barcode is always QR code format</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            }
+                            else if (activePlatformTab == "web")
+                            {
+                                <div class="platform-config">
+                                    <h6>Web/PWA Configuration</h6>
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">Theme</label>
+                                            <select @bind="webConfig.Theme" class="form-select">
+                                                <option value="light">Light</option>
+                                                <option value="dark">Dark</option>
+                                                <option value="auto">Auto (System)</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">Background Color</label>
+                                            <input type="color" @bind="webConfig.BackgroundColor" class="form-control form-control-color" />
+                                        </div>
+                                    </div>
+                                    <div class="form-check mb-2">
+                                        <input type="checkbox" @bind="webConfig.EnableQrCode" class="form-check-input" id="enableQr" />
+                                        <label class="form-check-label" for="enableQr">Enable QR Code</label>
+                                    </div>
+                                    <div class="form-check mb-2">
+                                        <input type="checkbox" @bind="webConfig.EnableSharing" class="form-check-input" id="enableShare" />
+                                        <label class="form-check-label" for="enableShare">Enable Sharing</label>
+                                    </div>
+                                    <div class="form-check mb-3">
+                                        <input type="checkbox" @bind="webConfig.EnablePrinting" class="form-check-input" id="enablePrint" />
+                                        <label class="form-check-label" for="enablePrint">Enable Printing</label>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Custom CSS (optional)</label>
+                                        <textarea @bind="webConfig.CustomCss" class="form-control font-monospace" rows="4"
+                                                  placeholder=".wallet-card { border-radius: 10px; }"></textarea>
+                                    </div>
+                                    <div class="alert alert-info">
+                                        <strong>Web/PWA Features:</strong>
+                                        <ul class="mb-0">
+                                            <li>No field constraints</li>
+                                            <li>Full CSS customization</li>
+                                            <li>Responsive design</li>
+                                            <li>Offline support with PWA</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+
                 <div class="mt-4">
                     <button class="btn btn-success" @onclick="SaveTemplate">Save Template</button>
                     <button class="btn btn-secondary ms-2" @onclick="PreviewTemplate">Preview</button>
-                    <button class="btn btn-info ms-2" @onclick="ExportTemplate">Export JSON</button>
+
+                    <div class="btn-group ms-2" role="group">
+                        <button type="button" class="btn btn-info dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-download"></i> Export
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" @onclick="ExportAppleWallet" @onclick:preventDefault>
+                                <i class="bi bi-apple"></i> Apple Wallet (.pkpass)
+                            </a></li>
+                            <li><a class="dropdown-item" @onclick="ExportGoogleWallet" @onclick:preventDefault>
+                                <i class="bi bi-google"></i> Google Wallet
+                            </a></li>
+                            <li><a class="dropdown-item" @onclick="ExportWebWallet" @onclick:preventDefault>
+                                <i class="bi bi-globe"></i> Web/PWA Wallet
+                            </a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" @onclick="ExportTemplate" @onclick:preventDefault>
+                                <i class="bi bi-filetype-json"></i> Export JSON
+                            </a></li>
+                        </ul>
+                    </div>
                 </div>
             </div>
         </div>
@@ -323,54 +497,167 @@
                 <div class="modal-body">
                     @if (selectedTemplate != null)
                     {
-                        <div class="wallet-preview">
-                            <h6>@selectedTemplate.Name</h6>
-                            <p class="text-muted">@selectedTemplate.Description</p>
-                            @foreach (var field in selectedTemplate.Fields.OrderBy(f => f.DisplayOrder))
-                            {
-                                <div class="mb-3">
-                                    <label class="form-label">
-                                        @field.Label
-                                        @if (field.IsRequired)
+                        <!-- Platform Tabs -->
+                        <ul class="nav nav-tabs mb-3">
+                            <li class="nav-item">
+                                <a class="nav-link @(previewPlatform == "generic" ? "active" : "")"
+                                   @onclick="@(() => SetPreviewPlatform("generic"))"
+                                   style="cursor: pointer;">
+                                    <i class="bi bi-card-text"></i> Generic
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link @(previewPlatform == "apple" ? "active" : "")"
+                                   @onclick="@(() => SetPreviewPlatform("apple"))"
+                                   style="cursor: pointer;">
+                                    <i class="bi bi-apple"></i> Apple Wallet
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link @(previewPlatform == "google" ? "active" : "")"
+                                   @onclick="@(() => SetPreviewPlatform("google"))"
+                                   style="cursor: pointer;">
+                                    <i class="bi bi-google"></i> Google Wallet
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link @(previewPlatform == "web" ? "active" : "")"
+                                   @onclick="@(() => SetPreviewPlatform("web"))"
+                                   style="cursor: pointer;">
+                                    <i class="bi bi-globe"></i> Web/PWA
+                                </a>
+                            </li>
+                        </ul>
+
+                        <!-- Preview Content -->
+                        @if (previewPlatform == "generic")
+                        {
+                            <div class="wallet-preview">
+                                <h6>@selectedTemplate.Name</h6>
+                                <p class="text-muted">@selectedTemplate.Description</p>
+                                @foreach (var field in selectedTemplate.Fields.OrderBy(f => f.DisplayOrder))
+                                {
+                                    <div class="mb-3">
+                                        <label class="form-label">
+                                            @field.Label
+                                            @if (field.IsRequired)
+                                            {
+                                                <span class="text-danger">*</span>
+                                            }
+                                        </label>
+                                        @switch (field.FieldType)
                                         {
-                                            <span class="text-danger">*</span>
+                                            case "text":
+                                            case "email":
+                                            case "phone":
+                                            case "url":
+                                                <input type="@field.FieldType" class="form-control"
+                                                       placeholder="@field.DefaultValue"
+                                                       disabled="@(!field.IsEditable)" />
+                                                break;
+                                            case "date":
+                                                <input type="date" class="form-control" disabled="@(!field.IsEditable)" />
+                                                break;
+                                            case "boolean":
+                                                <div class="form-check">
+                                                    <input type="checkbox" class="form-check-input" disabled="@(!field.IsEditable)" />
+                                                    <label class="form-check-label">@field.Label</label>
+                                                </div>
+                                                break;
+                                            case "image":
+                                                <div class="border rounded p-3 text-center">
+                                                    <i class="bi bi-image" style="font-size: 3rem;"></i>
+                                                    <p class="mb-0">Image placeholder</p>
+                                                </div>
+                                                break;
                                         }
-                                    </label>
-                                    @switch (field.FieldType)
-                                    {
-                                        case "text":
-                                        case "email":
-                                        case "phone":
-                                        case "url":
-                                            <input type="@field.FieldType" class="form-control"
-                                                   placeholder="@field.DefaultValue"
-                                                   disabled="@(!field.IsEditable)" />
-                                            break;
-                                        case "date":
-                                            <input type="date" class="form-control" disabled="@(!field.IsEditable)" />
-                                            break;
-                                        case "boolean":
-                                            <div class="form-check">
-                                                <input type="checkbox" class="form-check-input" disabled="@(!field.IsEditable)" />
-                                                <label class="form-check-label">@field.Label</label>
-                                            </div>
-                                            break;
-                                        case "image":
-                                            <div class="border rounded p-3 text-center">
-                                                <i class="bi bi-image" style="font-size: 3rem;"></i>
-                                                <p class="mb-0">Image placeholder</p>
-                                            </div>
-                                            break;
-                                    }
-                                    @if (!string.IsNullOrEmpty(field.MappedCredentialField))
-                                    {
-                                        <small class="form-text text-muted">
-                                            Maps to: @field.MappedCredentialField
-                                        </small>
-                                    }
+                                        @if (!string.IsNullOrEmpty(field.MappedCredentialField))
+                                        {
+                                            <small class="form-text text-muted">
+                                                Maps to: @field.MappedCredentialField
+                                            </small>
+                                        }
+                                    </div>
+                                }
+                            </div>
+                        }
+                        else if (previewPlatform == "apple")
+                        {
+                            <div class="apple-wallet-preview p-3" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 15px; color: white; max-width: 400px; margin: 0 auto;">
+                                <div class="text-center mb-3">
+                                    <i class="bi bi-apple" style="font-size: 2rem;"></i>
+                                    <h5 class="mt-2">@selectedTemplate.Name</h5>
                                 </div>
-                            }
-                        </div>
+                                @foreach (var field in selectedTemplate.Fields.OrderBy(f => f.DisplayOrder).Take(4))
+                                {
+                                    <div class="mb-2">
+                                        <small class="text-white-50">@field.Label.ToUpper()</small>
+                                        <div class="fw-bold">@(field.DefaultValue ?? "Sample Value")</div>
+                                    </div>
+                                }
+                                <div class="text-center mt-3 pt-3 border-top border-white-50">
+                                    <i class="bi bi-upc-scan" style="font-size: 3rem;"></i>
+                                    <p class="mb-0 mt-2 small">QR Code / Barcode</p>
+                                </div>
+                            </div>
+                        }
+                        else if (previewPlatform == "google")
+                        {
+                            <div class="google-wallet-preview p-3" style="background: white; border: 1px solid #ddd; border-radius: 10px; max-width: 400px; margin: 0 auto; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                                <div class="d-flex align-items-center mb-3 pb-3 border-bottom">
+                                    <i class="bi bi-google text-primary" style="font-size: 2rem;"></i>
+                                    <div class="ms-3">
+                                        <h6 class="mb-0">@selectedTemplate.Name</h6>
+                                        <small class="text-muted">@selectedTemplate.Description</small>
+                                    </div>
+                                </div>
+                                @foreach (var field in selectedTemplate.Fields.OrderBy(f => f.DisplayOrder).Take(5))
+                                {
+                                    <div class="mb-2">
+                                        <small class="text-muted">@field.Label</small>
+                                        <div class="fw-bold">@(field.DefaultValue ?? "Sample Value")</div>
+                                    </div>
+                                }
+                                <div class="text-center mt-3 pt-3 border-top">
+                                    <div style="width: 200px; height: 200px; border: 2px dashed #ccc; margin: 0 auto; display: flex; align-items: center; justify-content: center;">
+                                        <i class="bi bi-qr-code" style="font-size: 4rem; color: #ccc;"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                        else if (previewPlatform == "web")
+                        {
+                            <div class="web-wallet-preview p-4" style="background: #f8f9fa; border-radius: 10px; max-width: 500px; margin: 0 auto;">
+                                <div class="bg-white p-3 rounded shadow-sm">
+                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                        <div>
+                                            <h5 class="mb-0">@selectedTemplate.Name</h5>
+                                            <small class="text-muted">@selectedTemplate.Description</small>
+                                        </div>
+                                        <i class="bi bi-globe2 text-primary" style="font-size: 2rem;"></i>
+                                    </div>
+                                    <hr />
+                                    @foreach (var field in selectedTemplate.Fields.OrderBy(f => f.DisplayOrder))
+                                    {
+                                        <div class="row mb-2">
+                                            <div class="col-5">
+                                                <strong class="text-muted">@field.Label:</strong>
+                                            </div>
+                                            <div class="col-7">
+                                                @(field.DefaultValue ?? "Sample Value")
+                                            </div>
+                                        </div>
+                                    }
+                                    <div class="text-center mt-4 pt-3 border-top">
+                                        <div class="btn-group w-100">
+                                            <button class="btn btn-sm btn-outline-primary"><i class="bi bi-share"></i> Share</button>
+                                            <button class="btn btn-sm btn-outline-primary"><i class="bi bi-printer"></i> Print</button>
+                                            <button class="btn btn-sm btn-outline-primary"><i class="bi bi-download"></i> Save</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        }
                     }
                 </div>
             </div>

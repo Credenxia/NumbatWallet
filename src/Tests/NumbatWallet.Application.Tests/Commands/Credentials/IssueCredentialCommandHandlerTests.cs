@@ -1,15 +1,13 @@
-using FluentAssertions;
 using Microsoft.Extensions.Logging;
-using Moq;
 using NumbatWallet.Application.Commands.Credentials;
 using NumbatWallet.Application.Commands.Credentials.Handlers;
 using NumbatWallet.Application.Exceptions;
-using NumbatWallet.Application.Interfaces;
 using NumbatWallet.Domain.Aggregates;
 using NumbatWallet.Domain.Enums;
 using NumbatWallet.Domain.Events;
 using NumbatWallet.Domain.Interfaces;
 using NumbatWallet.SharedKernel.Enums;
+using NumbatWallet.SharedKernel.Interfaces;
 
 namespace NumbatWallet.Application.Tests.Commands.Credentials;
 
@@ -18,8 +16,7 @@ public class IssueCredentialCommandHandlerTests
     private readonly Mock<ICredentialRepository> _credentialRepositoryMock;
     private readonly Mock<IWalletRepository> _walletRepositoryMock;
     private readonly Mock<IIssuerRepository> _issuerRepositoryMock;
-    private readonly Mock<IEventDispatcher> _eventDispatcherMock;
-    private readonly Mock<ILogger<IssueCredentialCommandHandler>> _loggerMock;
+    private readonly Mock<Application.Interfaces.IEventDispatcher> _eventDispatcherMock;
     private readonly IssueCredentialCommandHandler _handler;
 
     public IssueCredentialCommandHandlerTests()
@@ -27,15 +24,17 @@ public class IssueCredentialCommandHandlerTests
         _credentialRepositoryMock = new Mock<ICredentialRepository>();
         _walletRepositoryMock = new Mock<IWalletRepository>();
         _issuerRepositoryMock = new Mock<IIssuerRepository>();
-        _eventDispatcherMock = new Mock<IEventDispatcher>();
-        _loggerMock = new Mock<ILogger<IssueCredentialCommandHandler>>();
+        var unitOfWorkMock = new Mock<IUnitOfWork>();
+        _eventDispatcherMock = new Mock<Application.Interfaces.IEventDispatcher>();
+        var loggerMock = new Mock<ILogger<IssueCredentialCommandHandler>>();
 
         _handler = new IssueCredentialCommandHandler(
             _credentialRepositoryMock.Object,
             _walletRepositoryMock.Object,
             _issuerRepositoryMock.Object,
+            unitOfWorkMock.Object,
             _eventDispatcherMock.Object,
-            _loggerMock.Object);
+            loggerMock.Object);
     }
 
     [Fact]
@@ -76,12 +75,12 @@ public class IssueCredentialCommandHandlerTests
             .ReturnsAsync(wallet);
 
         _issuerRepositoryMock
-            .Setup(x => x.GetByIdAsync(issuerId, It.IsAny<CancellationToken>()))
+            .Setup(x => x.GetByIdAsync(organizationId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(issuer);
 
         _credentialRepositoryMock
             .Setup(x => x.AddAsync(It.IsAny<Credential>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync((Credential c, CancellationToken ct) => c);
+            .ReturnsAsync((Credential c, CancellationToken _) => c);
 
         _eventDispatcherMock
             .Setup(x => x.DispatchAsync(It.IsAny<CredentialIssuedEvent>(), It.IsAny<CancellationToken>()))
@@ -155,6 +154,7 @@ public class IssueCredentialCommandHandlerTests
         var walletId = Guid.NewGuid();
         var personId = Guid.NewGuid();
         var issuerId = Guid.NewGuid();
+        var organizationId = Guid.NewGuid();
 
         var command = new IssueCredentialCommand(
             walletId,
@@ -168,7 +168,7 @@ public class IssueCredentialCommandHandlerTests
             DateTime.UtcNow,
             DateTime.UtcNow.AddYears(4),
             issuerId.ToString(),
-            Guid.NewGuid());
+            organizationId);
 
         var walletResult = Wallet.Create(personId, "Test Wallet");
         var wallet = walletResult.Value;
@@ -180,7 +180,7 @@ public class IssueCredentialCommandHandlerTests
             .ReturnsAsync(wallet);
 
         _issuerRepositoryMock
-            .Setup(x => x.GetByIdAsync(issuerId, It.IsAny<CancellationToken>()))
+            .Setup(x => x.GetByIdAsync(organizationId, It.IsAny<CancellationToken>()))
             .ReturnsAsync((Issuer?)null);
 
         // Act & Assert
@@ -228,7 +228,7 @@ public class IssueCredentialCommandHandlerTests
             .ReturnsAsync(wallet);
 
         _issuerRepositoryMock
-            .Setup(x => x.GetByIdAsync(issuerId, It.IsAny<CancellationToken>()))
+            .Setup(x => x.GetByIdAsync(organizationId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(issuer);
 
         // Act & Assert
@@ -277,12 +277,12 @@ public class IssueCredentialCommandHandlerTests
             .ReturnsAsync(wallet);
 
         _issuerRepositoryMock
-            .Setup(x => x.GetByIdAsync(issuerId, It.IsAny<CancellationToken>()))
+            .Setup(x => x.GetByIdAsync(organizationId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(issuer);
 
         _credentialRepositoryMock
             .Setup(x => x.AddAsync(It.IsAny<Credential>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync((Credential c, CancellationToken ct) => c);
+            .ReturnsAsync((Credential c, CancellationToken _) => c);
 
         _eventDispatcherMock
             .Setup(x => x.DispatchAsync(It.IsAny<CredentialIssuedEvent>(), It.IsAny<CancellationToken>()))

@@ -2,16 +2,13 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
-using Moq;
 using NumbatWallet.Web.Api.Controllers;
 using NumbatWallet.Web.Api.Security;
 using NumbatWallet.Web.Api.Webhooks;
 using NumbatWallet.Web.Api.Tests.TestHelpers;
-using Xunit;
 
 namespace NumbatWallet.Web.Api.Tests.Controllers;
 
@@ -107,7 +104,7 @@ public class WebhookControllerTests : ApiTestBase
         response.StatusCode.Should().Be(HttpStatusCode.Created);
         var result = await response.Content.ReadFromJsonAsync<WebhookSubscriptionResponseDto>(_jsonOptions);
         result.Should().NotBeNull();
-        result!.Id.Should().Be(expectedId);
+        result.Id.Should().Be(expectedId);
         result.Url.Should().Be(request.Url);
         result.Secret.Should().NotBeNullOrEmpty();
     }
@@ -142,7 +139,7 @@ public class WebhookControllerTests : ApiTestBase
         response.StatusCode.Should().Be(HttpStatusCode.OK);
         var result = await response.Content.ReadFromJsonAsync<WebhookSubscriptionResponseDto>(_jsonOptions);
         result.Should().NotBeNull();
-        result!.Id.Should().Be(subscriptionId);
+        result.Id.Should().Be(subscriptionId);
         result.Url.Should().Be(expectedSubscription.Url);
     }
 
@@ -296,7 +293,7 @@ public class WebhookControllerTests : ApiTestBase
         response.StatusCode.Should().Be(HttpStatusCode.OK);
         var result = await response.Content.ReadFromJsonAsync<WebhookTestResponseDto>(_jsonOptions);
         result.Should().NotBeNull();
-        result!.Success.Should().BeTrue();
+        result.Success.Should().BeTrue();
         result.StatusCode.Should().Be(200);
     }
 
@@ -344,7 +341,7 @@ public class WebhookControllerTests : ApiTestBase
         response.StatusCode.Should().Be(HttpStatusCode.OK);
         var result = await response.Content.ReadFromJsonAsync<WebhookTestResponseDto>(_jsonOptions);
         result.Should().NotBeNull();
-        result!.Success.Should().BeFalse();
+        result.Success.Should().BeFalse();
         result.StatusCode.Should().Be(500);
         result.ErrorMessage.Should().Be("Internal server error");
     }
@@ -373,7 +370,7 @@ public class WebhookControllerTests : ApiTestBase
         response.StatusCode.Should().Be(HttpStatusCode.OK);
         var result = await response.Content.ReadFromJsonAsync<WebhookValidationResponseDto>(_jsonOptions);
         result.Should().NotBeNull();
-        result!.IsValid.Should().BeTrue();
+        result.IsValid.Should().BeTrue();
     }
 
     [Fact]
@@ -400,7 +397,7 @@ public class WebhookControllerTests : ApiTestBase
         response.StatusCode.Should().Be(HttpStatusCode.OK);
         var result = await response.Content.ReadFromJsonAsync<WebhookValidationResponseDto>(_jsonOptions);
         result.Should().NotBeNull();
-        result!.IsValid.Should().BeFalse();
+        result.IsValid.Should().BeFalse();
     }
 
     [Fact]

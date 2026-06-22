@@ -1,9 +1,6 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using Microsoft.IdentityModel.Tokens;
-using System.IdentityModel.Tokens.Jwt;
 using System.Net.Http.Headers;
-using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
@@ -19,11 +16,9 @@ public class ServiceWAIdXService : IWAIdXService
 {
     private readonly HttpClient _httpClient;
     private readonly ILogger<ServiceWAIdXService> _logger;
-    private readonly IConfiguration _configuration;
     private readonly string _clientId;
     private readonly string _clientSecret;
     private readonly string _authority;
-    private readonly string _apiBaseUrl;
     private readonly string _scope;
 
     public ServiceWAIdXService(
@@ -33,16 +28,15 @@ public class ServiceWAIdXService : IWAIdXService
     {
         _httpClient = httpClient;
         _logger = logger;
-        _configuration = configuration;
 
         // Load configuration
         _clientId = configuration["ServiceWA:ClientId"] ?? throw new InvalidOperationException("ServiceWA:ClientId not configured");
         _clientSecret = configuration["ServiceWA:ClientSecret"] ?? throw new InvalidOperationException("ServiceWA:ClientSecret not configured");
         _authority = configuration["ServiceWA:Authority"] ?? "https://identity.wa.gov.au";
-        _apiBaseUrl = configuration["ServiceWA:ApiBaseUrl"] ?? "https://api.servicewa.wa.gov.au";
+        var apiBaseUrl = configuration["ServiceWA:ApiBaseUrl"] ?? "https://api.servicewa.wa.gov.au";
         _scope = configuration["ServiceWA:Scope"] ?? "openid profile identity.verify";
 
-        _httpClient.BaseAddress = new Uri(_apiBaseUrl);
+        _httpClient.BaseAddress = new Uri(apiBaseUrl);
         _httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
     }
 

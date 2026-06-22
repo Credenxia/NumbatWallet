@@ -97,7 +97,7 @@ public class CreateTenantCommandHandler : ICommandHandler<CreateTenantCommand, G
             tenant.Identifier,
             tenant.Name,
             string.Empty,
-            _currentUserService.UserId?.ToString() ?? "system",
+            _currentUserService.UserId,
             tenant.CreatedAt);
         tenant.AddDomainEvent(tenantCreatedEvent);
 

@@ -3,7 +3,6 @@ using NumbatWallet.Application.DTOs;
 using NumbatWallet.Application.Interfaces;
 using NumbatWallet.Domain.Entities;
 using NumbatWallet.Domain.Interfaces;
-using NumbatWallet.SharedKernel.Interfaces;
 
 namespace NumbatWallet.Application.Services;
 
@@ -320,7 +319,6 @@ public class WalletTemplateBuilder : IWalletTemplateBuilder
                         wallet, template, cancellationToken);
                     break;
 
-                case "web":
                 default:
                     packages["web"] = await _platformBuilder.BuildWebWalletAsync(
                         wallet, template, cancellationToken);

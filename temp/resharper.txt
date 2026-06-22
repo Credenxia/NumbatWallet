@@ -1,0 +1,608 @@
+Solution NumbatWallet.sln
+    Project NumbatWallet.Application
+      src\NumbatWallet.Application\DomainServices\PersonVerificationService.cs:143 Parameter '_ct' is never used
+      src\NumbatWallet.Application\DomainServices\PersonVerificationService.cs:162 Parameter '_ct' is never used
+      src\NumbatWallet.Application\DomainServices\PersonVerificationService.cs:181 Parameter '_ct' is never used
+      src\NumbatWallet.Application\DomainServices\PersonVerificationService.cs:193 Parameter '_ct' is never used
+    
+    Project NumbatWallet.Domain
+      src\NumbatWallet.Domain\Specifications\CredentialSpecifications.cs:88 Parameter '_claimValue' is never used
+    
+    Project NumbatWallet.Infrastructure
+      src\NumbatWallet.Infrastructure\Azure\AzureKeyVaultService.cs:203 Parameter '_logger' is never used
+      src\NumbatWallet.Infrastructure\Azure\AzureServiceBusService.cs:15 Parameter '_connectionString' is never used
+      src\NumbatWallet.Infrastructure\Data\Interceptors\ProtectionInterceptor.cs:72 Parameter '_ct' is never used
+      src\NumbatWallet.Infrastructure\Data\Interceptors\ProtectionInterceptor.cs:142 Parameter '_entry' is never used
+      src\NumbatWallet.Infrastructure\Data\Interceptors\ProtectionInterceptor.cs:143 Parameter '_propertyName' is never used
+      src\NumbatWallet.Infrastructure\Data\Interceptors\ProtectionInterceptor.cs:144 Parameter '_tokens' is never used
+      src\NumbatWallet.Infrastructure\Data\Repositories\WalletTemplateRepository.cs:116 Expression is always true according to nullable reference types' annotations
+      src\NumbatWallet.Infrastructure\EventSourcing\EventStore.cs:33 Possible performance issues caused by unlimited string length
+      src\NumbatWallet.Infrastructure\EventSourcing\EventStore.cs:34 Possible performance issues caused by unlimited string length
+      src\NumbatWallet.Infrastructure\EventSourcing\EventStore.cs:40 Possible performance issues caused by unlimited string length
+      src\NumbatWallet.Infrastructure\EventSourcing\EventStore.cs:51 Possible performance issues caused by unlimited string length
+      src\NumbatWallet.Infrastructure\Services\CertificateValidationService.cs:17 Parameter '_trustStoreRepository' is never used
+      src\NumbatWallet.Infrastructure\Services\KeyRotationService.cs:403 Parameter '_oldKeyId' is never used
+      src\NumbatWallet.Infrastructure\Services\KeyRotationService.cs:403 Parameter '_newKeyId' is never used
+      src\NumbatWallet.Infrastructure\Services\KeyRotationService.cs:403 Parameter '_cancellationToken' is never used
+      src\NumbatWallet.Infrastructure\Services\KeyRotationService.cs:486 Parameter '_ct' is never used
+      src\NumbatWallet.Infrastructure\Services\KeyRotationService.cs:509 Parameter '_policy' is never used
+      src\NumbatWallet.Infrastructure\Services\KeyRotationService.cs:509 Parameter '_cancellationToken' is never used
+      src\NumbatWallet.Infrastructure\Services\KeyRotationService.cs:515 Parameter '_cancellationToken' is never used
+      src\NumbatWallet.Infrastructure\Services\KeyRotationService.cs:526 Parameter '_cancellationToken' is never used
+      src\NumbatWallet.Infrastructure\Services\KeyRotationService.cs:534 Parameter '_cancellationToken' is never used
+      src\NumbatWallet.Infrastructure\Services\KeyRotationService.cs:541 Parameter '_keyId' is never used
+      src\NumbatWallet.Infrastructure\Services\KeyRotationService.cs:541 Parameter '_reason' is never used
+      src\NumbatWallet.Infrastructure\Services\KeyRotationService.cs:541 Parameter '_cancellationToken' is never used
+      src\NumbatWallet.Infrastructure\Services\KeyRotationService.cs:553 Parameter '_rotationId' is never used
+      src\NumbatWallet.Infrastructure\Services\KeyRotationService.cs:553 Parameter '_reason' is never used
+      src\NumbatWallet.Infrastructure\Services\KeyRotationService.cs:553 Parameter '_cancellationToken' is never used
+      src\NumbatWallet.Infrastructure\Services\KeyRotationService.cs:613 Redundant 'switch' expression arm
+      src\NumbatWallet.Infrastructure\Services\Mocks\MockIcaoService.cs:446 Parameter '_ct' is never used
+      src\NumbatWallet.Infrastructure\Services\NotificationService.cs:15 Parameter '_emailService' is never used
+      src\NumbatWallet.Infrastructure\Services\NotificationService.cs:188 Parameter '_message' is never used
+      src\NumbatWallet.Infrastructure\Services\NotificationService.cs:189 Parameter '_cancellationToken' is never used
+      src\NumbatWallet.Infrastructure\Services\ProtectionService.cs:21 Parameter '_logger' is never used
+      src\NumbatWallet.Infrastructure\Services\Providers\KeyVaultHsmProvider.cs:30 Parameter '_cache' is never used
+      src\NumbatWallet.Infrastructure\Services\Providers\KeyVaultHsmProvider.cs:542 Parameter '_targetProvider' is never used
+      src\NumbatWallet.Infrastructure\Services\Providers\KeyVaultHsmProvider.cs:543 Parameter '_options' is never used
+      src\NumbatWallet.Infrastructure\Services\Providers\KeyVaultHsmProvider.cs:544 Parameter '_ct' is never used
+      src\NumbatWallet.Infrastructure\Services\Providers\ManagedHsmProvider.cs:707 Type cast is redundant
+      src\NumbatWallet.Infrastructure\Services\Providers\ManagedHsmProvider.cs:708 Type cast is redundant
+      src\NumbatWallet.Infrastructure\Services\Providers\ManagedHsmProvider.cs:709 Type cast is redundant
+      src\NumbatWallet.Infrastructure\Services\Providers\ManagedHsmProvider.cs:710 Type cast is redundant
+      src\NumbatWallet.Infrastructure\Services\Providers\ManagedHsmProvider.cs:717 Parameter '_keyId' is never used
+      src\NumbatWallet.Infrastructure\Services\Providers\ManagedHsmProvider.cs:718 Parameter '_targetHsm' is never used
+      src\NumbatWallet.Infrastructure\Services\Providers\ManagedHsmProvider.cs:719 Parameter '_options' is never used
+      src\NumbatWallet.Infrastructure\Services\Providers\ManagedHsmProvider.cs:720 Parameter '_cancellationToken' is never used
+      src\NumbatWallet.Infrastructure\Services\Providers\SoftwareHsmProvider.cs:796 Auto-property accessor 'DeletedOn.get' is never used
+      src\NumbatWallet.Infrastructure\Services\RedisCacheService.cs:17 Parameter '_distributedCache' is never used
+      src\NumbatWallet.Infrastructure\Services\ServiceWAIdXService.cs:22 The field is always assigned before being used and can be converted into a local variable
+      src\NumbatWallet.Infrastructure\Services\SystemMetricsService.cs:369 Empty general catch clause suppresses any errors
+      src\NumbatWallet.Infrastructure\Services\SystemMetricsService.cs:383 Empty general catch clause suppresses any errors
+      src\NumbatWallet.Infrastructure\Services\TelemetryService.cs:65 Parameter '_logger' is never used
+    
+    Project NumbatWallet.Infrastructure.Tests
+      src\Tests\NumbatWallet.Infrastructure.Tests\Data\NumbatWalletDbContextTests.cs:14 The field is always assigned before being used and can be converted into a local variable
+      src\Tests\NumbatWallet.Infrastructure.Tests\Data\NumbatWalletDbContextTests.cs:19 The field is always assigned before being used and can be converted into a local variable
+      src\Tests\NumbatWallet.Infrastructure.Tests\EventSourcing\EventStoreTests.cs:13 The field is always assigned before being used and can be converted into a local variable
+      src\Tests\NumbatWallet.Infrastructure.Tests\EventSourcing\EventStoreTests.cs:14 The field is always assigned before being used and can be converted into a local variable
+      src\Tests\NumbatWallet.Infrastructure.Tests\EventSourcing\EventStoreTests.cs:15 The field is always assigned before being used and can be converted into a local variable
+      src\Tests\NumbatWallet.Infrastructure.Tests\EventSourcing\EventStoreTests.cs:16 The field is always assigned before being used and can be converted into a local variable
+      src\Tests\NumbatWallet.Infrastructure.Tests\EventSourcing\EventStoreTests.cs:17 The field is always assigned before being used and can be converted into a local variable
+      src\Tests\NumbatWallet.Infrastructure.Tests\EventSourcing\EventStoreTests.cs:18 The field is always assigned before being used and can be converted into a local variable
+      src\Tests\NumbatWallet.Infrastructure.Tests\Repositories\RepositoryBaseTests.cs:47 The field is always assigned before being used and can be converted into a local variable
+      src\Tests\NumbatWallet.Infrastructure.Tests\Repositories\RepositoryBaseTests.cs:48 The field is always assigned before being used and can be converted into a local variable
+      src\Tests\NumbatWallet.Infrastructure.Tests\Services\CacheServiceTests.cs:77 Parameter '_k' is never used
+      src\Tests\NumbatWallet.Infrastructure.Tests\Services\CacheServiceTests.cs:77 Parameter '_ct' is never used
+      src\Tests\NumbatWallet.Infrastructure.Tests\Services\HmacSearchTokenServiceTests.cs:14 The field is always assigned before being used and can be converted into a local variable
+      src\Tests\NumbatWallet.Infrastructure.Tests\Services\HsmServiceTests.cs:14 Field '_configurationMock' is assigned but its value is never used
+      src\Tests\NumbatWallet.Infrastructure.Tests\Services\HsmServiceTests.cs:16 The field is always assigned before being used and can be converted into a local variable
+      src\Tests\NumbatWallet.Infrastructure.Tests\Services\HsmServiceTests.cs:18 The field is always assigned before being used and can be converted into a local variable
+      src\Tests\NumbatWallet.Infrastructure.Tests\Services\ProtectionServiceTests.cs:16 The field is always assigned before being used and can be converted into a local variable
+      src\Tests\NumbatWallet.Infrastructure.Tests\Services\ProtectionServiceTests.cs:189 Parameter '_key' is never used
+      src\Tests\NumbatWallet.Infrastructure.Tests\Services\RevocationRegistryServiceTests.cs:19 The field is always assigned before being used and can be converted into a local variable
+      src\Tests\NumbatWallet.Infrastructure.Tests\Services\RevocationRegistryServiceTests.cs:20 The field is always assigned before being used and can be converted into a local variable
+      src\Tests\NumbatWallet.Infrastructure.Tests\Services\RevocationRegistryServiceTests.cs:21 The field is always assigned before being used and can be converted into a local variable
+      src\Tests\NumbatWallet.Infrastructure.Tests\Services\RevocationRegistryServiceTests.cs:24 The field is always assigned before being used and can be converted into a local variable
+      src\Tests\NumbatWallet.Infrastructure.Tests\Services\RevocationRegistryServiceTests.cs:25 The field is always assigned before being used and can be converted into a local variable
+      src\Tests\NumbatWallet.Infrastructure.Tests\Services\RevocationRegistryServiceTests.cs:26 The field is always assigned before being used and can be converted into a local variable
+      src\Tests\NumbatWallet.Infrastructure.Tests\Services\RevocationRegistryServiceTests.cs:27 The field is always assigned before being used and can be converted into a local variable
+      src\Tests\NumbatWallet.Infrastructure.Tests\Services\RevocationRegistryServiceTests.cs:28 The field is always assigned before being used and can be converted into a local variable
+      src\Tests\NumbatWallet.Infrastructure.Tests\Services\TelemetryServiceTests.cs:19 The field is always assigned before being used and can be converted into a local variable
+      src\Tests\NumbatWallet.Infrastructure.Tests\Services\TelemetryServiceTests.cs:20 The field is always assigned before being used and can be converted into a local variable
+      src\Tests\NumbatWallet.Infrastructure.Tests\Services\TelemetryServiceTests.cs:122 Parameter '_pii' is never used
+      src\Tests\NumbatWallet.Infrastructure.Tests\Services\TelemetryServiceTests.cs:122 Parameter '_pattern' is never used
+      src\Tests\NumbatWallet.Infrastructure.Tests\Services\TelemetryServiceTests.cs:122 Parameter '_ct' is never used
+      src\Tests\NumbatWallet.Infrastructure.Tests\Services\TelemetryServiceTests.cs:267 Parameter '_pii' is never used
+      src\Tests\NumbatWallet.Infrastructure.Tests\Services\TelemetryServiceTests.cs:267 Parameter '_pattern' is never used
+      src\Tests\NumbatWallet.Infrastructure.Tests\Services\TelemetryServiceTests.cs:267 Parameter '_ct' is never used
+      src\Tests\NumbatWallet.Infrastructure.Tests\Services\TelemetryServiceTests.cs:307 Parameter '_pattern' is never used
+      src\Tests\NumbatWallet.Infrastructure.Tests\Services\TelemetryServiceTests.cs:307 Parameter '_ct' is never used
+      src\Tests\NumbatWallet.Infrastructure.Tests\WalletBuilders\AppleWalletBuilderTests.cs:14 The field is always assigned before being used and can be converted into a local variable
+      src\Tests\NumbatWallet.Infrastructure.Tests\WalletBuilders\GoogleWalletBuilderTests.cs:13 The field is always assigned before being used and can be converted into a local variable
+      src\Tests\NumbatWallet.Infrastructure.Tests\WalletBuilders\WebWalletBuilderTests.cs:12 The field is always assigned before being used and can be converted into a local variable
+    
+    Project NumbatWallet.Integration.Tests
+      src\Tests\NumbatWallet.Integration.Tests\Performance\PerformanceBaselineTests.cs:42 Xunit tests should use ITestOutputHelper instead of System.Console
+      src\Tests\NumbatWallet.Integration.Tests\TestHarness\IntegrationTestBase.cs:75 '??' left operand is never null according to nullable reference types' annotations
+      src\Tests\NumbatWallet.Integration.Tests\TestHarness\IntegrationTestFixture.cs:96 Parameter '_context' is never used
+      src\Tests\NumbatWallet.Integration.Tests\TestHarness\IntegrationTestFixture.cs:151 Parameter '_sp' is never used
+      src\Tests\NumbatWallet.Integration.Tests\TestHarness\IntegrationTestFixture.cs:155 Parameter '_sp' is never used
+      src\Tests\NumbatWallet.Integration.Tests\TestHarness\IntegrationTestFixture.cs:483 Return type of 'TenantId' can be made non-nullable
+      src\Tests\NumbatWallet.Integration.Tests\TestHarness\IntegrationTestFixture.cs:484 Return type of 'TenantName' can be made non-nullable
+    
+    Project NumbatWallet.ServiceDefaults
+      src\NumbatWallet.ServiceDefaults\Extensions.cs:11 Namespace does not correspond to file location, must be: 'NumbatWallet.ServiceDefaults'
+      src\NumbatWallet.ServiceDefaults\Extensions.cs:65 Method 'AddOpenTelemetryExporters' return value is never used
+    
+    Project NumbatWallet.SharedKernel
+      src\NumbatWallet.SharedKernel\Primitives\Entity.cs:76 Non-readonly property referenced in 'GetHashCode()'
+    
+    Project NumbatWallet.SharedKernel.Tests
+      src\Tests\NumbatWallet.SharedKernel.Tests\Enums\DataClassificationTests.cs:39 Expression is always true
+      src\Tests\NumbatWallet.SharedKernel.Tests\Enums\DataClassificationTests.cs:40 Expression is always false
+      src\Tests\NumbatWallet.SharedKernel.Tests\Enums\DataClassificationTests.cs:41 Expression is always true
+      src\Tests\NumbatWallet.SharedKernel.Tests\ValueObjectTests.cs:25 Class 'SingleValueObject' is never used
+    
+    Project NumbatWallet.Tests.Shared
+      src\Tests\Shared\TestHelpers\TestBase.cs:5 Namespace does not correspond to file location, must be: 'NumbatWallet.Tests.Shared.TestHelpers'
+      src\Tests\Shared\TestHelpers\TestBase.cs:25 Virtual member call in constructor
+      src\Tests\Shared\TestHelpers\TestDataBuilder.cs:3 Namespace does not correspond to file location, must be: 'NumbatWallet.Tests.Shared.TestHelpers'
+    
+    Project NumbatWallet.Web.Admin
+      src\NumbatWallet.Web.Admin\Components\App.razor:23 Path '/Users/rodrigolmiranda/repo/NumbatWallet/src/NumbatWallet.Web.Admin/wwwroot/_framework' is not found
+      src\NumbatWallet.Web.Admin\Components\App.razor:23 Path '/Users/rodrigolmiranda/repo/NumbatWallet/src/NumbatWallet.Web.Admin/wwwroot/_framework/blazor.web.js' is not found
+      src\NumbatWallet.Web.Admin\Components\Charts\ChartComponent.razor:3 Name 'JS' does not match rule 'Properties'. Suggested name is 'Js'.
+      src\NumbatWallet.Web.Admin\Components\Charts\ChartComponent.razor:34 Initializing property by default value is redundant
+      src\NumbatWallet.Web.Admin\Components\Charts\ChartComponent.razor:53 Avoid using 'async' lambda when delegate type returns 'void': any exceptions unhandled by the lambda might lead to the process crash
+      src\NumbatWallet.Web.Admin\Components\Charts\ChartComponent.razor:344 Initializing property by default value is redundant
+      src\NumbatWallet.Web.Admin\Components\Common\SignalRConnection.razor:2 Name 'JS' does not match rule 'Properties'. Suggested name is 'Js'.
+      src\NumbatWallet.Web.Admin\Components\Common\SignalRConnection.razor:16 Initializing field by default value is redundant
+      src\NumbatWallet.Web.Admin\Components\Common\SignalRConnection.razor:251 Auto-property accessor 'WalletId.set' is never used
+      src\NumbatWallet.Web.Admin\Components\Common\SignalRConnection.razor:259 Auto-property accessor 'CredentialId.set' is never used
+      src\NumbatWallet.Web.Admin\Components\Common\SignalRConnection.razor:268 Auto-property accessor 'CredentialId.set' is never used
+      src\NumbatWallet.Web.Admin\Components\Common\ThemeToggle.razor:1 Name 'JS' does not match rule 'Properties'. Suggested name is 'Js'.
+      src\NumbatWallet.Web.Admin\Components\Dashboard\MasterAdminDashboard.razor:3 Name 'JS' does not match rule 'Properties'. Suggested name is 'Js'.
+      src\NumbatWallet.Web.Admin\Components\Dashboard\MasterAdminDashboard.razor:80 Name 'ShowPresets' does not match rule 'Instance fields (private)'. Suggested name is '_showPresets'.
+      src\NumbatWallet.Web.Admin\Components\Dashboard\MasterAdminDashboard.razor:80 Initializing field by default value is redundant
+      src\NumbatWallet.Web.Admin\Components\Dashboard\MasterAdminDashboard.razor:81 Name 'IsEmpty' does not match rule 'Instance fields (private)'. Suggested name is '_isEmpty'.
+      src\NumbatWallet.Web.Admin\Components\Dashboard\MasterAdminDashboard.razor:81 Initializing field by default value is redundant
+      src\NumbatWallet.Web.Admin\Components\Dashboard\TenantAdminDashboard.razor:4 Name 'JS' does not match rule 'Properties'. Suggested name is 'Js'.
+      src\NumbatWallet.Web.Admin\Components\Dashboard\TenantAdminDashboard.razor:85 Name 'TenantName' does not match rule 'Instance fields (private)'. Suggested name is '_tenantName'.
+      src\NumbatWallet.Web.Admin\Components\Dashboard\TenantAdminDashboard.razor:86 Name 'ActiveSince' does not match rule 'Instance fields (private)'. Suggested name is '_activeSince'.
+      src\NumbatWallet.Web.Admin\Components\Dashboard\TenantAdminDashboard.razor:87 Name 'SubscriptionPlan' does not match rule 'Instance fields (private)'. Suggested name is '_subscriptionPlan'.
+      src\NumbatWallet.Web.Admin\Components\Dashboard\TenantAdminDashboard.razor:88 Name 'MonthlyUsage' does not match rule 'Instance fields (private)'. Suggested name is '_monthlyUsage'.
+      src\NumbatWallet.Web.Admin\Components\Dashboard\TenantAdminDashboard.razor:263 Local variable 'data' is never used
+      src\NumbatWallet.Web.Admin\Components\Layout\AdminLayout.razor:142 Avoid using 'async' lambda when delegate type returns 'void': any exceptions unhandled by the lambda might lead to the process crash
+      src\NumbatWallet.Web.Admin\Components\Layout\AdminLayout.razor:142 Cannot resolve symbol 'Key'
+      src\NumbatWallet.Web.Admin\Components\Layout\AdminLayout.razor:228 Name 'IsSidebarCollapsed' does not match rule 'Instance fields (private)'. Suggested name is '_isSidebarCollapsed'.
+      src\NumbatWallet.Web.Admin\Components\Layout\AdminLayout.razor:228 Initializing field by default value is redundant
+      src\NumbatWallet.Web.Admin\Components\Layout\AdminLayout.razor:229 Name 'IsUserMenuOpen' does not match rule 'Instance fields (private)'. Suggested name is '_isUserMenuOpen'.
+      src\NumbatWallet.Web.Admin\Components\Layout\AdminLayout.razor:229 Initializing field by default value is redundant
+      src\NumbatWallet.Web.Admin\Components\Layout\AdminLayout.razor:230 Name 'IsNotificationPanelOpen' does not match rule 'Instance fields (private)'. Suggested name is '_isNotificationPanelOpen'.
+      src\NumbatWallet.Web.Admin\Components\Layout\AdminLayout.razor:230 Initializing field by default value is redundant
+      src\NumbatWallet.Web.Admin\Components\Layout\AdminLayout.razor:231 Name 'SearchQuery' does not match rule 'Instance fields (private)'. Suggested name is '_searchQuery'.
+      src\NumbatWallet.Web.Admin\Components\Layout\AdminLayout.razor:232 Name 'UnreadNotifications' does not match rule 'Instance fields (private)'. Suggested name is '_unreadNotifications'.
+      src\NumbatWallet.Web.Admin\Components\Layout\AdminLayout.razor:235 Name 'UserName' does not match rule 'Instance fields (private)'. Suggested name is '_userName'.
+      src\NumbatWallet.Web.Admin\Components\Layout\AdminLayout.razor:236 Name 'UserRole' does not match rule 'Instance fields (private)'. Suggested name is '_userRole'.
+      src\NumbatWallet.Web.Admin\Components\Layout\AdminLayout.razor:237 Name 'UserInitials' does not match rule 'Instance fields (private)'. Suggested name is '_userInitials'.
+      src\NumbatWallet.Web.Admin\Components\Layout\AdminLayout.razor:240 Name 'TenantName' does not match rule 'Instance fields (private)'. Suggested name is '_tenantName'.
+      src\NumbatWallet.Web.Admin\Components\Layout\AdminLayout.razor:241 Name 'TenantLogo' does not match rule 'Instance fields (private)'. Suggested name is '_tenantLogo'.
+      src\NumbatWallet.Web.Admin\Components\Layout\AdminLayout.razor:242 Name 'IsWhiteLabel' does not match rule 'Instance fields (private)'. Suggested name is '_isWhiteLabel'.
+      src\NumbatWallet.Web.Admin\Components\Layout\AdminLayout.razor:242 Initializing field by default value is redundant
+      src\NumbatWallet.Web.Admin\Components\Layout\AdminLayout.razor:243 Name 'CompanyLogo' does not match rule 'Instance fields (private)'. Suggested name is '_companyLogo'.
+      src\NumbatWallet.Web.Admin\Components\Layout\AdminLayout.razor:244 Name 'IsMasterAdmin' does not match rule 'Instance fields (private)'. Suggested name is '_isMasterAdmin'.
+      src\NumbatWallet.Web.Admin\Components\Layout\AdminLayout.razor:247 Name 'Notifications' does not match rule 'Instance fields (private)'. Suggested name is '_notifications'.
+      src\NumbatWallet.Web.Admin\Components\Layout\MainLayout.razor:2 Name 'JS' does not match rule 'Properties'. Suggested name is 'Js'.
+      src\NumbatWallet.Web.Admin\Components\Pages\AuditLogs.razor:85 Avoid using 'async' lambda when delegate type returns 'void': any exceptions unhandled by the lambda might lead to the process crash
+      src\NumbatWallet.Web.Admin\Components\Pages\AuditLogs.razor:85 Cannot resolve symbol 'Key'
+      src\NumbatWallet.Web.Admin\Components\Pages\AuditLogs.razor:242 Name 'IsLoading' does not match rule 'Instance fields (private)'. Suggested name is '_isLoading'.
+      src\NumbatWallet.Web.Admin\Components\Pages\AuditLogs.razor:243 Name 'IsRealTimeEnabled' does not match rule 'Instance fields (private)'. Suggested name is '_isRealTimeEnabled'.
+      src\NumbatWallet.Web.Admin\Components\Pages\AuditLogs.razor:243 Initializing field by default value is redundant
+      src\NumbatWallet.Web.Admin\Components\Pages\AuditLogs.razor:244 Name 'AuditLogsList' does not match rule 'Instance fields (private)'. Suggested name is '_auditLogsList'.
+      src\NumbatWallet.Web.Admin\Components\Pages\AuditLogs.razor:245 Name 'SelectedLog' does not match rule 'Instance fields (private)'. Suggested name is '_selectedLog'.
+      src\NumbatWallet.Web.Admin\Components\Pages\AuditLogs.razor:246 Name 'Filter' does not match rule 'Instance fields (private)'. Suggested name is '_filter'.
+      src\NumbatWallet.Web.Admin\Components\Pages\AuditLogs.razor:247 Name 'CurrentPage' does not match rule 'Instance fields (private)'. Suggested name is '_currentPage'.
+      src\NumbatWallet.Web.Admin\Components\Pages\AuditLogs.razor:248 Name 'PageSize' does not match rule 'Instance fields (private)'. Suggested name is '_pageSize'.
+      src\NumbatWallet.Web.Admin\Components\Pages\AuditLogs.razor:249 Name 'TotalPages' does not match rule 'Instance fields (private)'. Suggested name is '_totalPages'.
+      src\NumbatWallet.Web.Admin\Components\Pages\AuditLogs.razor:250 Name 'TotalRecords' does not match rule 'Instance fields (private)'. Suggested name is '_totalRecords'.
+      src\NumbatWallet.Web.Admin\Components\Pages\AuditLogs.razor:250 Initializing field by default value is redundant
+      src\NumbatWallet.Web.Admin\Components\Pages\AuditLogs.razor:327 Avoid using 'async' lambda when delegate type returns 'void': any exceptions unhandled by the lambda might lead to the process crash
+      src\NumbatWallet.Web.Admin\Components\Pages\AuditLogs.razor:347 The parameter 'format' has the same default value
+      src\NumbatWallet.Web.Admin\Components\Pages\Credentials.razor:7 Name 'JS' does not match rule 'Properties'. Suggested name is 'Js'.
+      src\NumbatWallet.Web.Admin\Components\Pages\Credentials.razor:85 Avoid using 'async' lambda when delegate type returns 'void': any exceptions unhandled by the lambda might lead to the process crash
+      src\NumbatWallet.Web.Admin\Components\Pages\Credentials.razor:85 Argument type 'Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder' is not assignable to parameter type 'Microsoft.AspNetCore.Components.ChangeEventArgs'
+      src\NumbatWallet.Web.Admin\Components\Pages\Credentials.razor:447 Name 'IsLoading' does not match rule 'Instance fields (private)'. Suggested name is '_isLoading'.
+      src\NumbatWallet.Web.Admin\Components\Pages\Credentials.razor:447 Initializing field by default value is redundant
+      src\NumbatWallet.Web.Admin\Components\Pages\Credentials.razor:448 Name 'ErrorMessage' does not match rule 'Instance fields (private)'. Suggested name is '_errorMessage'.
+      src\NumbatWallet.Web.Admin\Components\Pages\Credentials.razor:449 Name 'AllCredentials' does not match rule 'Instance fields (private)'. Suggested name is '_allCredentials'.
+      src\NumbatWallet.Web.Admin\Components\Pages\Credentials.razor:450 Name 'FilteredCredentials' does not match rule 'Instance fields (private)'. Suggested name is '_filteredCredentials'.
+      src\NumbatWallet.Web.Admin\Components\Pages\Credentials.razor:452 Name 'SearchTerm' does not match rule 'Instance fields (private)'. Suggested name is '_searchTerm'.
+      src\NumbatWallet.Web.Admin\Components\Pages\Credentials.razor:453 Name 'TypeFilter' does not match rule 'Instance fields (private)'. Suggested name is '_typeFilter'.
+      src\NumbatWallet.Web.Admin\Components\Pages\Credentials.razor:454 Name 'StatusFilter' does not match rule 'Instance fields (private)'. Suggested name is '_statusFilter'.
+      src\NumbatWallet.Web.Admin\Components\Pages\Credentials.razor:455 Name 'IssuerFilter' does not match rule 'Instance fields (private)'. Suggested name is '_issuerFilter'.
+      src\NumbatWallet.Web.Admin\Components\Pages\Credentials.razor:457 Name 'CurrentPage' does not match rule 'Instance fields (private)'. Suggested name is '_currentPage'.
+      src\NumbatWallet.Web.Admin\Components\Pages\Credentials.razor:458 Name 'PageSize' does not match rule 'Instance fields (private)'. Suggested name is '_pageSize'.
+      src\NumbatWallet.Web.Admin\Components\Pages\Credentials.razor:459 Name 'TotalCount' does not match rule 'Instance fields (private)'. Suggested name is '_totalCount'.
+      src\NumbatWallet.Web.Admin\Components\Pages\Credentials.razor:459 Initializing field by default value is redundant
+      src\NumbatWallet.Web.Admin\Components\Pages\Credentials.razor:469 Name 'ShowIssueModal' does not match rule 'Instance fields (private)'. Suggested name is '_showIssueModal'.
+      src\NumbatWallet.Web.Admin\Components\Pages\Credentials.razor:469 Initializing field by default value is redundant
+      src\NumbatWallet.Web.Admin\Components\Pages\Credentials.razor:470 Name 'NewCredential' does not match rule 'Instance fields (private)'. Suggested name is '_newCredential'.
+      src\NumbatWallet.Web.Admin\Components\Pages\Credentials.razor:528 Possible multiple enumeration
+      src\NumbatWallet.Web.Admin\Components\Pages\Credentials.razor:529 Possible multiple enumeration
+      src\NumbatWallet.Web.Admin\Components\Pages\Credentials.razor:594 Parameter 'credential' is never used
+      src\NumbatWallet.Web.Admin\Components\Pages\Tenants.razor:7 Name 'JS' does not match rule 'Properties'. Suggested name is 'Js'.
+      src\NumbatWallet.Web.Admin\Components\Pages\Tenants.razor:45 Avoid using 'async' lambda when delegate type returns 'void': any exceptions unhandled by the lambda might lead to the process crash
+      src\NumbatWallet.Web.Admin\Components\Pages\Tenants.razor:45 Argument type 'Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder' is not assignable to parameter type 'Microsoft.AspNetCore.Components.ChangeEventArgs'
+      src\NumbatWallet.Web.Admin\Components\Pages\Tenants.razor:371 Name 'IsLoading' does not match rule 'Instance fields (private)'. Suggested name is '_isLoading'.
+      src\NumbatWallet.Web.Admin\Components\Pages\Tenants.razor:372 Name 'ErrorMessage' does not match rule 'Instance fields (private)'. Suggested name is '_errorMessage'.
+      src\NumbatWallet.Web.Admin\Components\Pages\Tenants.razor:373 Name 'TenantsList' does not match rule 'Instance fields (private)'. Suggested name is '_tenantsList'.
+      src\NumbatWallet.Web.Admin\Components\Pages\Tenants.razor:374 Name 'FilteredTenants' does not match rule 'Instance fields (private)'. Suggested name is '_filteredTenants'.
+      src\NumbatWallet.Web.Admin\Components\Pages\Tenants.razor:376 Name 'SearchTerm' does not match rule 'Instance fields (private)'. Suggested name is '_searchTerm'.
+      src\NumbatWallet.Web.Admin\Components\Pages\Tenants.razor:377 Name 'StatusFilter' does not match rule 'Instance fields (private)'. Suggested name is '_statusFilter'.
+      src\NumbatWallet.Web.Admin\Components\Pages\Tenants.razor:378 Name 'TypeFilter' does not match rule 'Instance fields (private)'. Suggested name is '_typeFilter'.
+      src\NumbatWallet.Web.Admin\Components\Pages\Tenants.razor:380 Name 'CurrentPage' does not match rule 'Instance fields (private)'. Suggested name is '_currentPage'.
+      src\NumbatWallet.Web.Admin\Components\Pages\Tenants.razor:381 Name 'PageSize' does not match rule 'Instance fields (private)'. Suggested name is '_pageSize'.
+      src\NumbatWallet.Web.Admin\Components\Pages\Tenants.razor:382 Name 'TotalCount' does not match rule 'Instance fields (private)'. Suggested name is '_totalCount'.
+      src\NumbatWallet.Web.Admin\Components\Pages\Tenants.razor:382 Initializing field by default value is redundant
+      src\NumbatWallet.Web.Admin\Components\Pages\Tenants.razor:385 Name 'ShowModal' does not match rule 'Instance fields (private)'. Suggested name is '_showModal'.
+      src\NumbatWallet.Web.Admin\Components\Pages\Tenants.razor:385 Initializing field by default value is redundant
+      src\NumbatWallet.Web.Admin\Components\Pages\Tenants.razor:386 Name 'IsEditMode' does not match rule 'Instance fields (private)'. Suggested name is '_isEditMode'.
+      src\NumbatWallet.Web.Admin\Components\Pages\Tenants.razor:386 Initializing field by default value is redundant
+      src\NumbatWallet.Web.Admin\Components\Pages\Tenants.razor:387 Name 'CurrentTenant' does not match rule 'Instance fields (private)'. Suggested name is '_currentTenant'.
+      src\NumbatWallet.Web.Admin\Components\Pages\Test.razor:16 Name 'currentCount' does not match rule 'Instance fields (private)'. Suggested name is '_currentCount'.
+      src\NumbatWallet.Web.Admin\Components\Pages\Wallets.razor:7 Name 'JS' does not match rule 'Properties'. Suggested name is 'Js'.
+      src\NumbatWallet.Web.Admin\Components\Pages\Wallets.razor:85 Avoid using 'async' lambda when delegate type returns 'void': any exceptions unhandled by the lambda might lead to the process crash
+      src\NumbatWallet.Web.Admin\Components\Pages\Wallets.razor:85 Argument type 'Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder' is not assignable to parameter type 'Microsoft.AspNetCore.Components.ChangeEventArgs'
+      src\NumbatWallet.Web.Admin\Components\Pages\Wallets.razor:415 Name 'IsLoading' does not match rule 'Instance fields (private)'. Suggested name is '_isLoading'.
+      src\NumbatWallet.Web.Admin\Components\Pages\Wallets.razor:415 Initializing field by default value is redundant
+      src\NumbatWallet.Web.Admin\Components\Pages\Wallets.razor:416 Name 'ErrorMessage' does not match rule 'Instance fields (private)'. Suggested name is '_errorMessage'.
+      src\NumbatWallet.Web.Admin\Components\Pages\Wallets.razor:417 Name 'AllWallets' does not match rule 'Instance fields (private)'. Suggested name is '_allWallets'.
+      src\NumbatWallet.Web.Admin\Components\Pages\Wallets.razor:418 Name 'FilteredWallets' does not match rule 'Instance fields (private)'. Suggested name is '_filteredWallets'.
+      src\NumbatWallet.Web.Admin\Components\Pages\Wallets.razor:420 Name 'SearchTerm' does not match rule 'Instance fields (private)'. Suggested name is '_searchTerm'.
+      src\NumbatWallet.Web.Admin\Components\Pages\Wallets.razor:421 Name 'StatusFilter' does not match rule 'Instance fields (private)'. Suggested name is '_statusFilter'.
+      src\NumbatWallet.Web.Admin\Components\Pages\Wallets.razor:422 Name 'TenantFilter' does not match rule 'Instance fields (private)'. Suggested name is '_tenantFilter'.
+      src\NumbatWallet.Web.Admin\Components\Pages\Wallets.razor:424 Name 'CurrentPage' does not match rule 'Instance fields (private)'. Suggested name is '_currentPage'.
+      src\NumbatWallet.Web.Admin\Components\Pages\Wallets.razor:425 Name 'PageSize' does not match rule 'Instance fields (private)'. Suggested name is '_pageSize'.
+      src\NumbatWallet.Web.Admin\Components\Pages\Wallets.razor:426 Name 'TotalCount' does not match rule 'Instance fields (private)'. Suggested name is '_totalCount'.
+      src\NumbatWallet.Web.Admin\Components\Pages\Wallets.razor:426 Initializing field by default value is redundant
+      src\NumbatWallet.Web.Admin\Components\Pages\Wallets.razor:434 Name 'ShowCreateModal' does not match rule 'Instance fields (private)'. Suggested name is '_showCreateModal'.
+      src\NumbatWallet.Web.Admin\Components\Pages\Wallets.razor:434 Initializing field by default value is redundant
+      src\NumbatWallet.Web.Admin\Components\Pages\Wallets.razor:435 Name 'NewWallet' does not match rule 'Instance fields (private)'. Suggested name is '_newWallet'.
+      src\NumbatWallet.Web.Admin\Components\Pages\Wallets.razor:487 Possible multiple enumeration
+      src\NumbatWallet.Web.Admin\Components\Pages\Wallets.razor:488 Possible multiple enumeration
+      src\NumbatWallet.Web.Admin\Components\Pages\Wallets.razor:549 Parameter 'wallet' is never used
+      src\NumbatWallet.Web.Admin\Components\Pages\Wallets.razor:554 Parameter 'wallet' is never used
+      src\NumbatWallet.Web.Admin\Components\Pages\Wallets.razor:559 Name 'ShowQRCode' does not match rule 'Methods'. Suggested name is 'ShowQrCode'.
+      src\NumbatWallet.Web.Admin\Components\Pages\Wallets.razor:559 Parameter 'wallet' is never used
+      src\NumbatWallet.Web.Admin\Components\Pages\Wallets.razor:564 Parameter 'wallet' is never used
+      src\NumbatWallet.Web.Admin\Pages\BackupRestore.razor:5 Name 'JSRuntime' does not match rule 'Properties'. Suggested name is 'JsRuntime'.
+      src\NumbatWallet.Web.Admin\Pages\BackupRestore.razor:366 Name 'lastBackupTime' does not match rule 'Instance fields (private)'. Suggested name is '_lastBackupTime'.
+      src\NumbatWallet.Web.Admin\Pages\BackupRestore.razor:367 Name 'lastBackupSize' does not match rule 'Instance fields (private)'. Suggested name is '_lastBackupSize'.
+      src\NumbatWallet.Web.Admin\Pages\BackupRestore.razor:368 Name 'backupSchedule' does not match rule 'Instance fields (private)'. Suggested name is '_backupSchedule'.
+      src\NumbatWallet.Web.Admin\Pages\BackupRestore.razor:369 Name 'nextBackupTime' does not match rule 'Instance fields (private)'. Suggested name is '_nextBackupTime'.
+      src\NumbatWallet.Web.Admin\Pages\BackupRestore.razor:370 Name 'totalBackups' does not match rule 'Instance fields (private)'. Suggested name is '_totalBackups'.
+      src\NumbatWallet.Web.Admin\Pages\BackupRestore.razor:371 Name 'totalBackupSize' does not match rule 'Instance fields (private)'. Suggested name is '_totalBackupSize'.
+      src\NumbatWallet.Web.Admin\Pages\BackupRestore.razor:372 Name 'retentionDays' does not match rule 'Instance fields (private)'. Suggested name is '_retentionDays'.
+      src\NumbatWallet.Web.Admin\Pages\BackupRestore.razor:373 Name 'backupsToExpire' does not match rule 'Instance fields (private)'. Suggested name is '_backupsToExpire'.
+      src\NumbatWallet.Web.Admin\Pages\BackupRestore.razor:376 Name 'backupType' does not match rule 'Instance fields (private)'. Suggested name is '_backupType'.
+      src\NumbatWallet.Web.Admin\Pages\BackupRestore.razor:377 Name 'backupDescription' does not match rule 'Instance fields (private)'. Suggested name is '_backupDescription'.
+      src\NumbatWallet.Web.Admin\Pages\BackupRestore.razor:378 Name 'encryptBackup' does not match rule 'Instance fields (private)'. Suggested name is '_encryptBackup'.
+      src\NumbatWallet.Web.Admin\Pages\BackupRestore.razor:379 Name 'isBackupRunning' does not match rule 'Instance fields (private)'. Suggested name is '_isBackupRunning'.
+      src\NumbatWallet.Web.Admin\Pages\BackupRestore.razor:379 Initializing field by default value is redundant
+      src\NumbatWallet.Web.Admin\Pages\BackupRestore.razor:380 Name 'backupProgress' does not match rule 'Instance fields (private)'. Suggested name is '_backupProgress'.
+      src\NumbatWallet.Web.Admin\Pages\BackupRestore.razor:380 Initializing field by default value is redundant
+      src\NumbatWallet.Web.Admin\Pages\BackupRestore.razor:381 Name 'backupMessage' does not match rule 'Instance fields (private)'. Suggested name is '_backupMessage'.
+      src\NumbatWallet.Web.Admin\Pages\BackupRestore.razor:382 Name 'backupSuccess' does not match rule 'Instance fields (private)'. Suggested name is '_backupSuccess'.
+      src\NumbatWallet.Web.Admin\Pages\BackupRestore.razor:382 Initializing field by default value is redundant
+      src\NumbatWallet.Web.Admin\Pages\BackupRestore.razor:385 Name 'selectedBackupId' does not match rule 'Instance fields (private)'. Suggested name is '_selectedBackupId'.
+      src\NumbatWallet.Web.Admin\Pages\BackupRestore.razor:386 Name 'stopServicesBeforeRestore' does not match rule 'Instance fields (private)'. Suggested name is '_stopServicesBeforeRestore'.
+      src\NumbatWallet.Web.Admin\Pages\BackupRestore.razor:387 Name 'createRestorePoint' does not match rule 'Instance fields (private)'. Suggested name is '_createRestorePoint'.
+      src\NumbatWallet.Web.Admin\Pages\BackupRestore.razor:388 Name 'validateBackupIntegrity' does not match rule 'Instance fields (private)'. Suggested name is '_validateBackupIntegrity'.
+      src\NumbatWallet.Web.Admin\Pages\BackupRestore.razor:389 Name 'isRestoreRunning' does not match rule 'Instance fields (private)'. Suggested name is '_isRestoreRunning'.
+      src\NumbatWallet.Web.Admin\Pages\BackupRestore.razor:389 Initializing field by default value is redundant
+      src\NumbatWallet.Web.Admin\Pages\BackupRestore.razor:390 Name 'restoreProgress' does not match rule 'Instance fields (private)'. Suggested name is '_restoreProgress'.
+      src\NumbatWallet.Web.Admin\Pages\BackupRestore.razor:390 Initializing field by default value is redundant
+      src\NumbatWallet.Web.Admin\Pages\BackupRestore.razor:391 Name 'restoreMessage' does not match rule 'Instance fields (private)'. Suggested name is '_restoreMessage'.
+      src\NumbatWallet.Web.Admin\Pages\BackupRestore.razor:392 Name 'restoreSuccess' does not match rule 'Instance fields (private)'. Suggested name is '_restoreSuccess'.
+      src\NumbatWallet.Web.Admin\Pages\BackupRestore.razor:392 Initializing field by default value is redundant
+      src\NumbatWallet.Web.Admin\Pages\BackupRestore.razor:395 Name 'scheduleFrequency' does not match rule 'Instance fields (private)'. Suggested name is '_scheduleFrequency'.
+      src\NumbatWallet.Web.Admin\Pages\BackupRestore.razor:396 Name 'scheduleTime' does not match rule 'Instance fields (private)'. Suggested name is '_scheduleTime'.
+      src\NumbatWallet.Web.Admin\Pages\BackupRestore.razor:397 Name 'scheduleRetention' does not match rule 'Instance fields (private)'. Suggested name is '_scheduleRetention'.
+      src\NumbatWallet.Web.Admin\Pages\BackupRestore.razor:400 Name 'storageLocation' does not match rule 'Instance fields (private)'. Suggested name is '_storageLocation'.
+      src\NumbatWallet.Web.Admin\Pages\BackupRestore.razor:401 Name 'storagePath' does not match rule 'Instance fields (private)'. Suggested name is '_storagePath'.
+      src\NumbatWallet.Web.Admin\Pages\BackupRestore.razor:402 Name 'maxStorageSize' does not match rule 'Instance fields (private)'. Suggested name is '_maxStorageSize'.
+      src\NumbatWallet.Web.Admin\Pages\BackupRestore.razor:403 Name 'enableCompression' does not match rule 'Instance fields (private)'. Suggested name is '_enableCompression'.
+      src\NumbatWallet.Web.Admin\Pages\BackupRestore.razor:406 Name 'selectAllBackups' does not match rule 'Instance fields (private)'. Suggested name is '_selectAllBackups'.
+      src\NumbatWallet.Web.Admin\Pages\BackupRestore.razor:406 Initializing field by default value is redundant
+      src\NumbatWallet.Web.Admin\Pages\BackupRestore.razor:407 Name 'selectedBackupCount' does not match rule 'Instance fields (private)'. Suggested name is '_selectedBackupCount'.
+      src\NumbatWallet.Web.Admin\Pages\BackupRestore.razor:407 Initializing field by default value is redundant
+      src\NumbatWallet.Web.Admin\Pages\BackupRestore.razor:409 Name 'availableBackups' does not match rule 'Instance fields (private)'. Suggested name is '_availableBackups'.
+      src\NumbatWallet.Web.Admin\Pages\BackupRestore.razor:410 Name 'backupHistory' does not match rule 'Instance fields (private)'. Suggested name is '_backupHistory'.
+      src\NumbatWallet.Web.Admin\Pages\Dashboard.razor:166 Name 'activeWallets' does not match rule 'Instance fields (private)'. Suggested name is '_activeWallets'.
+      src\NumbatWallet.Web.Admin\Pages\Dashboard.razor:166 Initializing field by default value is redundant
+      src\NumbatWallet.Web.Admin\Pages\Dashboard.razor:167 Name 'totalCredentials' does not match rule 'Instance fields (private)'. Suggested name is '_totalCredentials'.
+      src\NumbatWallet.Web.Admin\Pages\Dashboard.razor:167 Initializing field by default value is redundant
+      src\NumbatWallet.Web.Admin\Pages\Dashboard.razor:168 Name 'credentialsIssuedToday' does not match rule 'Instance fields (private)'. Suggested name is '_credentialsIssuedToday'.
+      src\NumbatWallet.Web.Admin\Pages\Dashboard.razor:168 Initializing field by default value is redundant
+      src\NumbatWallet.Web.Admin\Pages\Dashboard.razor:169 Name 'activeTenants' does not match rule 'Instance fields (private)'. Suggested name is '_activeTenants'.
+      src\NumbatWallet.Web.Admin\Pages\Dashboard.razor:170 Name 'totalTenants' does not match rule 'Instance fields (private)'. Suggested name is '_totalTenants'.
+      src\NumbatWallet.Web.Admin\Pages\Dashboard.razor:171 Name 'apiRequestsPerMinute' does not match rule 'Instance fields (private)'. Suggested name is '_apiRequestsPerMinute'.
+      src\NumbatWallet.Web.Admin\Pages\Dashboard.razor:172 Name 'avgResponseTime' does not match rule 'Instance fields (private)'. Suggested name is '_avgResponseTime'.
+      src\NumbatWallet.Web.Admin\Pages\Dashboard.razor:173 Name 'cpuUsage' does not match rule 'Instance fields (private)'. Suggested name is '_cpuUsage'.
+      src\NumbatWallet.Web.Admin\Pages\Dashboard.razor:173 Initializing field by default value is redundant
+      src\NumbatWallet.Web.Admin\Pages\Dashboard.razor:174 Name 'memoryUsage' does not match rule 'Instance fields (private)'. Suggested name is '_memoryUsage'.
+      src\NumbatWallet.Web.Admin\Pages\Dashboard.razor:174 Initializing field by default value is redundant
+      src\NumbatWallet.Web.Admin\Pages\Dashboard.razor:190 The parameter 'timeRange' has the same default value
+      src\NumbatWallet.Web.Admin\Pages\KeyRotation.razor:5 Name 'JSRuntime' does not match rule 'Properties'. Suggested name is 'JsRuntime'.
+      src\NumbatWallet.Web.Admin\Pages\KeyRotation.razor:693 Name 'activeTab' does not match rule 'Instance fields (private)'. Suggested name is '_activeTab'.
+      src\NumbatWallet.Web.Admin\Pages\KeyRotation.razor:694 Name 'showAlert' does not match rule 'Instance fields (private)'. Suggested name is '_showAlert'.
+      src\NumbatWallet.Web.Admin\Pages\KeyRotation.razor:694 Initializing field by default value is redundant
+      src\NumbatWallet.Web.Admin\Pages\KeyRotation.razor:695 Name 'alertMessage' does not match rule 'Instance fields (private)'. Suggested name is '_alertMessage'.
+      src\NumbatWallet.Web.Admin\Pages\KeyRotation.razor:696 Name 'alertClass' does not match rule 'Instance fields (private)'. Suggested name is '_alertClass'.
+      src\NumbatWallet.Web.Admin\Pages\KeyRotation.razor:699 Name 'activeKeys' does not match rule 'Instance fields (private)'. Suggested name is '_activeKeys'.
+      src\NumbatWallet.Web.Admin\Pages\KeyRotation.razor:700 Name 'expiringKeys' does not match rule 'Instance fields (private)'. Suggested name is '_expiringKeys'.
+      src\NumbatWallet.Web.Admin\Pages\KeyRotation.razor:701 Name 'expiredKeys' does not match rule 'Instance fields (private)'. Suggested name is '_expiredKeys'.
+      src\NumbatWallet.Web.Admin\Pages\KeyRotation.razor:702 Name 'lastRotationDays' does not match rule 'Instance fields (private)'. Suggested name is '_lastRotationDays'.
+      src\NumbatWallet.Web.Admin\Pages\KeyRotation.razor:705 Name 'showRotateModal' does not match rule 'Instance fields (private)'. Suggested name is '_showRotateModal'.
+      src\NumbatWallet.Web.Admin\Pages\KeyRotation.razor:705 Initializing field by default value is redundant
+      src\NumbatWallet.Web.Admin\Pages\KeyRotation.razor:706 Name 'showGenerateModal' does not match rule 'Instance fields (private)'. Suggested name is '_showGenerateModal'.
+      src\NumbatWallet.Web.Admin\Pages\KeyRotation.razor:707 Name 'rotateAllKeys' does not match rule 'Instance fields (private)'. Suggested name is '_rotateAllKeys'.
+      src\NumbatWallet.Web.Admin\Pages\KeyRotation.razor:707 Initializing field by default value is redundant
+      src\NumbatWallet.Web.Admin\Pages\KeyRotation.razor:708 Name 'selectedKeysForRotation' does not match rule 'Instance fields (private)'. Suggested name is '_selectedKeysForRotation'.
+      src\NumbatWallet.Web.Admin\Pages\KeyRotation.razor:709 Name 'rotationReason' does not match rule 'Instance fields (private)'. Suggested name is '_rotationReason'.
+      src\NumbatWallet.Web.Admin\Pages\KeyRotation.razor:710 Name 'rotationNotes' does not match rule 'Instance fields (private)'. Suggested name is '_rotationNotes'.
+      src\NumbatWallet.Web.Admin\Pages\KeyRotation.razor:713 Name 'autoRotationEnabled' does not match rule 'Instance fields (private)'. Suggested name is '_autoRotationEnabled'.
+      src\NumbatWallet.Web.Admin\Pages\KeyRotation.razor:714 Name 'rotationFrequency' does not match rule 'Instance fields (private)'. Suggested name is '_rotationFrequency'.
+      src\NumbatWallet.Web.Admin\Pages\KeyRotation.razor:715 Name 'gracePeriodDays' does not match rule 'Instance fields (private)'. Suggested name is '_gracePeriodDays'.
+      src\NumbatWallet.Web.Admin\Pages\KeyRotation.razor:716 Name 'rotationStartTime' does not match rule 'Instance fields (private)'. Suggested name is '_rotationStartTime'.
+      src\NumbatWallet.Web.Admin\Pages\KeyRotation.razor:717 Name 'rotationEndTime' does not match rule 'Instance fields (private)'. Suggested name is '_rotationEndTime'.
+      src\NumbatWallet.Web.Admin\Pages\KeyRotation.razor:718 Name 'rotateSigningKeys' does not match rule 'Instance fields (private)'. Suggested name is '_rotateSigningKeys'.
+      src\NumbatWallet.Web.Admin\Pages\KeyRotation.razor:719 Name 'rotateEncryptionKeys' does not match rule 'Instance fields (private)'. Suggested name is '_rotateEncryptionKeys'.
+      src\NumbatWallet.Web.Admin\Pages\KeyRotation.razor:720 Name 'rotateMacKeys' does not match rule 'Instance fields (private)'. Suggested name is '_rotateMacKeys'.
+      src\NumbatWallet.Web.Admin\Pages\KeyRotation.razor:723 Name 'minRsaKeyLength' does not match rule 'Instance fields (private)'. Suggested name is '_minRsaKeyLength'.
+      src\NumbatWallet.Web.Admin\Pages\KeyRotation.razor:724 Name 'ellipticCurve' does not match rule 'Instance fields (private)'. Suggested name is '_ellipticCurve'.
+      src\NumbatWallet.Web.Admin\Pages\KeyRotation.razor:725 Name 'requireMfa' does not match rule 'Instance fields (private)'. Suggested name is '_requireMfa'.
+      src\NumbatWallet.Web.Admin\Pages\KeyRotation.razor:726 Name 'requireDualControl' does not match rule 'Instance fields (private)'. Suggested name is '_requireDualControl'.
+      src\NumbatWallet.Web.Admin\Pages\KeyRotation.razor:726 Initializing field by default value is redundant
+      src\NumbatWallet.Web.Admin\Pages\KeyRotation.razor:727 Name 'requireSeparationOfDuties' does not match rule 'Instance fields (private)'. Suggested name is '_requireSeparationOfDuties'.
+      src\NumbatWallet.Web.Admin\Pages\KeyRotation.razor:728 Name 'keyStorageProvider' does not match rule 'Instance fields (private)'. Suggested name is '_keyStorageProvider'.
+      src\NumbatWallet.Web.Admin\Pages\KeyRotation.razor:729 Name 'backupStrategy' does not match rule 'Instance fields (private)'. Suggested name is '_backupStrategy'.
+      src\NumbatWallet.Web.Admin\Pages\KeyRotation.razor:730 Name 'fipsCompliant' does not match rule 'Instance fields (private)'. Suggested name is '_fipsCompliant'.
+      src\NumbatWallet.Web.Admin\Pages\KeyRotation.razor:731 Name 'auditAllOperations' does not match rule 'Instance fields (private)'. Suggested name is '_auditAllOperations'.
+      src\NumbatWallet.Web.Admin\Pages\KeyRotation.razor:732 Name 'enforceKeyEscrow' does not match rule 'Instance fields (private)'. Suggested name is '_enforceKeyEscrow'.
+      src\NumbatWallet.Web.Admin\Pages\KeyRotation.razor:732 Initializing field by default value is redundant
+      src\NumbatWallet.Web.Admin\Pages\KeyRotation.razor:735 Name 'auditSearchTerm' does not match rule 'Instance fields (private)'. Suggested name is '_auditSearchTerm'.
+      src\NumbatWallet.Web.Admin\Pages\KeyRotation.razor:736 Name 'nextAuditType' does not match rule 'Instance fields (private)'. Suggested name is '_nextAuditType'.
+      src\NumbatWallet.Web.Admin\Pages\KeyRotation.razor:737 Name 'nextAuditDate' does not match rule 'Instance fields (private)'. Suggested name is '_nextAuditDate'.
+      src\NumbatWallet.Web.Admin\Pages\KeyRotation.razor:738 Name 'auditorName' does not match rule 'Instance fields (private)'. Suggested name is '_auditorName'.
+      src\NumbatWallet.Web.Admin\Pages\KeyRotation.razor:740 Name 'cryptographicKeys' does not match rule 'Instance fields (private)'. Suggested name is '_cryptographicKeys'.
+      src\NumbatWallet.Web.Admin\Pages\KeyRotation.razor:788 Name 'upcomingRotations' does not match rule 'Instance fields (private)'. Suggested name is '_upcomingRotations'.
+      src\NumbatWallet.Web.Admin\Pages\KeyRotation.razor:808 Name 'rotationHistory' does not match rule 'Instance fields (private)'. Suggested name is '_rotationHistory'.
+      src\NumbatWallet.Web.Admin\Pages\KeyRotation.razor:826 Name 'auditLogs' does not match rule 'Instance fields (private)'. Suggested name is '_auditLogs'.
+      src\NumbatWallet.Web.Admin\Pages\KeyRotation.razor:985 Redundant 'switch' expression arm
+      src\NumbatWallet.Web.Admin\Pages\Reports.razor:6 Name 'JSRuntime' does not match rule 'Properties'. Suggested name is 'JsRuntime'.
+      src\NumbatWallet.Web.Admin\Pages\Reports.razor:449 Name 'totalWallets' does not match rule 'Instance fields (private)'. Suggested name is '_totalWallets'.
+      src\NumbatWallet.Web.Admin\Pages\Reports.razor:450 Name 'newWalletsThisMonth' does not match rule 'Instance fields (private)'. Suggested name is '_newWalletsThisMonth'.
+      src\NumbatWallet.Web.Admin\Pages\Reports.razor:451 Name 'totalCredentials' does not match rule 'Instance fields (private)'. Suggested name is '_totalCredentials'.
+      src\NumbatWallet.Web.Admin\Pages\Reports.razor:452 Name 'credentialsGrowth' does not match rule 'Instance fields (private)'. Suggested name is '_credentialsGrowth'.
+      src\NumbatWallet.Web.Admin\Pages\Reports.razor:453 Name 'totalVerifications' does not match rule 'Instance fields (private)'. Suggested name is '_totalVerifications'.
+      src\NumbatWallet.Web.Admin\Pages\Reports.razor:454 Name 'verificationSuccessRate' does not match rule 'Instance fields (private)'. Suggested name is '_verificationSuccessRate'.
+      src\NumbatWallet.Web.Admin\Pages\Reports.razor:455 Name 'activeUsers' does not match rule 'Instance fields (private)'. Suggested name is '_activeUsers'.
+      src\NumbatWallet.Web.Admin\Pages\Reports.razor:458 Name 'selectedReportType' does not match rule 'Instance fields (private)'. Suggested name is '_selectedReportType'.
+      src\NumbatWallet.Web.Admin\Pages\Reports.razor:459 Name 'dateRange' does not match rule 'Instance fields (private)'. Suggested name is '_dateRange'.
+      src\NumbatWallet.Web.Admin\Pages\Reports.razor:460 Name 'startDate' does not match rule 'Instance fields (private)'. Suggested name is '_startDate'.
+      src\NumbatWallet.Web.Admin\Pages\Reports.razor:461 Name 'endDate' does not match rule 'Instance fields (private)'. Suggested name is '_endDate'.
+      src\NumbatWallet.Web.Admin\Pages\Reports.razor:462 Name 'exportFormat' does not match rule 'Instance fields (private)'. Suggested name is '_exportFormat'.
+      src\NumbatWallet.Web.Admin\Pages\Reports.razor:463 Name 'deliveryMethod' does not match rule 'Instance fields (private)'. Suggested name is '_deliveryMethod'.
+      src\NumbatWallet.Web.Admin\Pages\Reports.razor:466 Name 'emailRecipients' does not match rule 'Instance fields (private)'. Suggested name is '_emailRecipients'.
+      src\NumbatWallet.Web.Admin\Pages\Reports.razor:467 Name 'includeCharts' does not match rule 'Instance fields (private)'. Suggested name is '_includeCharts'.
+      src\NumbatWallet.Web.Admin\Pages\Reports.razor:468 Name 'includeRawData' does not match rule 'Instance fields (private)'. Suggested name is '_includeRawData'.
+      src\NumbatWallet.Web.Admin\Pages\Reports.razor:468 Initializing field by default value is redundant
+      src\NumbatWallet.Web.Admin\Pages\Reports.razor:470 Name 'isGenerating' does not match rule 'Instance fields (private)'. Suggested name is '_isGenerating'.
+      src\NumbatWallet.Web.Admin\Pages\Reports.razor:470 Initializing field by default value is redundant
+      src\NumbatWallet.Web.Admin\Pages\Reports.razor:471 Name 'reportMessage' does not match rule 'Instance fields (private)'. Suggested name is '_reportMessage'.
+      src\NumbatWallet.Web.Admin\Pages\Reports.razor:472 Name 'reportSuccess' does not match rule 'Instance fields (private)'. Suggested name is '_reportSuccess'.
+      src\NumbatWallet.Web.Admin\Pages\Reports.razor:472 Initializing field by default value is redundant
+      src\NumbatWallet.Web.Admin\Pages\Reports.razor:475 Name 'avgDailyIssuance' does not match rule 'Instance fields (private)'. Suggested name is '_avgDailyIssuance'.
+      src\NumbatWallet.Web.Admin\Pages\Reports.razor:476 Name 'peakIssuanceDay' does not match rule 'Instance fields (private)'. Suggested name is '_peakIssuanceDay'.
+      src\NumbatWallet.Web.Admin\Pages\Reports.razor:477 Name 'issuanceGrowth' does not match rule 'Instance fields (private)'. Suggested name is '_issuanceGrowth'.
+      src\NumbatWallet.Web.Admin\Pages\Reports.razor:478 Name 'avgResponseTime' does not match rule 'Instance fields (private)'. Suggested name is '_avgResponseTime'.
+      src\NumbatWallet.Web.Admin\Pages\Reports.razor:479 Name 'errorRate' does not match rule 'Instance fields (private)'. Suggested name is '_errorRate'.
+      src\NumbatWallet.Web.Admin\Pages\Reports.razor:480 Name 'uptime' does not match rule 'Instance fields (private)'. Suggested name is '_uptime'.
+      src\NumbatWallet.Web.Admin\Pages\Reports.razor:481 Name 'totalApiCalls' does not match rule 'Instance fields (private)'. Suggested name is '_totalApiCalls'.
+      src\NumbatWallet.Web.Admin\Pages\Reports.razor:484 Name 'failedAuthCount' does not match rule 'Instance fields (private)'. Suggested name is '_failedAuthCount'.
+      src\NumbatWallet.Web.Admin\Pages\Reports.razor:485 Name 'failedAuthPercent' does not match rule 'Instance fields (private)'. Suggested name is '_failedAuthPercent'.
+      src\NumbatWallet.Web.Admin\Pages\Reports.razor:486 Name 'revokedCredentials' does not match rule 'Instance fields (private)'. Suggested name is '_revokedCredentials'.
+      src\NumbatWallet.Web.Admin\Pages\Reports.razor:487 Name 'revokedPercent' does not match rule 'Instance fields (private)'. Suggested name is '_revokedPercent'.
+      src\NumbatWallet.Web.Admin\Pages\Reports.razor:488 Name 'expiredCredentials' does not match rule 'Instance fields (private)'. Suggested name is '_expiredCredentials'.
+      src\NumbatWallet.Web.Admin\Pages\Reports.razor:489 Name 'expiredPercent' does not match rule 'Instance fields (private)'. Suggested name is '_expiredPercent'.
+      src\NumbatWallet.Web.Admin\Pages\Reports.razor:490 Name 'suspiciousActivities' does not match rule 'Instance fields (private)'. Suggested name is '_suspiciousActivities'.
+      src\NumbatWallet.Web.Admin\Pages\Reports.razor:536 Name 'recentReports' does not match rule 'Instance fields (private)'. Suggested name is '_recentReports'.
+      src\NumbatWallet.Web.Admin\Pages\Reports.razor:537 Name 'topCredentialTypes' does not match rule 'Instance fields (private)'. Suggested name is '_topCredentialTypes'.
+      src\NumbatWallet.Web.Admin\Pages\Reports.razor:538 Name 'topTenants' does not match rule 'Instance fields (private)'. Suggested name is '_topTenants'.
+      src\NumbatWallet.Web.Admin\Pages\Reports.razor:539 Name 'scheduledReports' does not match rule 'Instance fields (private)'. Suggested name is '_scheduledReports'.
+      src\NumbatWallet.Web.Admin\Pages\UserManagement.razor:6 Name 'JSRuntime' does not match rule 'Properties'. Suggested name is 'JsRuntime'.
+      src\NumbatWallet.Web.Admin\Pages\UserManagement.razor:309 Name 'users' does not match rule 'Instance fields (private)'. Suggested name is '_users'.
+      src\NumbatWallet.Web.Admin\Pages\UserManagement.razor:310 Name 'filteredUsers' does not match rule 'Instance fields (private)'. Suggested name is '_filteredUsers'.
+      src\NumbatWallet.Web.Admin\Pages\UserManagement.razor:311 Name 'selectedUserIds' does not match rule 'Instance fields (private)'. Suggested name is '_selectedUserIds'.
+      src\NumbatWallet.Web.Admin\Pages\UserManagement.razor:312 Name 'searchTerm' does not match rule 'Instance fields (private)'. Suggested name is '_searchTerm'.
+      src\NumbatWallet.Web.Admin\Pages\UserManagement.razor:313 Name 'filterRole' does not match rule 'Instance fields (private)'. Suggested name is '_filterRole'.
+      src\NumbatWallet.Web.Admin\Pages\UserManagement.razor:314 Name 'filterStatus' does not match rule 'Instance fields (private)'. Suggested name is '_filterStatus'.
+      src\NumbatWallet.Web.Admin\Pages\UserManagement.razor:315 Name 'isLoading' does not match rule 'Instance fields (private)'. Suggested name is '_isLoading'.
+      src\NumbatWallet.Web.Admin\Pages\UserManagement.razor:315 Initializing field by default value is redundant
+      src\NumbatWallet.Web.Admin\Pages\UserManagement.razor:317 Name 'showUserModal' does not match rule 'Instance fields (private)'. Suggested name is '_showUserModal'.
+      src\NumbatWallet.Web.Admin\Pages\UserManagement.razor:317 Initializing field by default value is redundant
+      src\NumbatWallet.Web.Admin\Pages\UserManagement.razor:318 Name 'isEditMode' does not match rule 'Instance fields (private)'. Suggested name is '_isEditMode'.
+      src\NumbatWallet.Web.Admin\Pages\UserManagement.razor:318 Initializing field by default value is redundant
+      src\NumbatWallet.Web.Admin\Pages\UserManagement.razor:319 Name 'editingUser' does not match rule 'Instance fields (private)'. Suggested name is '_editingUser'.
+      src\NumbatWallet.Web.Admin\Pages\UserManagement.razor:320 Name 'temporaryPassword' does not match rule 'Instance fields (private)'. Suggested name is '_temporaryPassword'.
+      src\NumbatWallet.Web.Admin\Pages\UserManagement.razor:322 Name 'currentPage' does not match rule 'Instance fields (private)'. Suggested name is '_currentPage'.
+      src\NumbatWallet.Web.Admin\Pages\UserManagement.razor:323 Name 'pageSize' does not match rule 'Instance fields (private)'. Suggested name is '_pageSize'.
+      src\NumbatWallet.Web.Admin\Pages\UserManagement.razor:324 Name 'totalPages' does not match rule 'Instance fields (private)'. Suggested name is '_totalPages'.
+      src\NumbatWallet.Web.Admin\Pages\UserManagement.razor:326 Name 'availablePermissions' does not match rule 'Instance fields (private)'. Suggested name is '_availablePermissions'.
+      src\NumbatWallet.Web.Admin\Pages\UserManagement.razor:493 Parameter 'user' is never used
+      src\NumbatWallet.Web.Admin\Pages\WalletBuilder.razor:5 Using directive is not required by the code and can be safely removed
+      src\NumbatWallet.Web.Admin\Pages\WalletBuilder.razor.cs:15 Auto-property accessor 'Navigation.get' is never used
+      src\NumbatWallet.Web.Admin\Pages\WalletBuilder.razor.cs:20 Initializing field by default value is redundant
+      src\NumbatWallet.Web.Admin\Pages\WalletBuilder.razor.cs:21 Initializing field by default value is redundant
+      src\NumbatWallet.Web.Admin\Pages\WalletBuilder.razor.cs:22 Initializing field by default value is redundant
+      src\NumbatWallet.Web.Admin\Pages\WalletBuilder.razor.cs:427 Local variable 'webWallet' is never used
+      src\NumbatWallet.Web.Admin\Pages\WalletBuilder.razor.cs:628 Auto-property accessor 'DisplayOrder.get' is never used
+      src\NumbatWallet.Web.Admin\Program.cs:224 Parameter 'outcome' is never used
+      src\NumbatWallet.Web.Admin\Program.cs:224 Parameter 'context' is never used
+      src\NumbatWallet.Web.Admin\Program.cs:237 Parameter 'result' is never used
+    
+    Project NumbatWallet.Web.Api
+      src\NumbatWallet.Web.Api\Authentication\OidcAuthenticationExtensions.cs:139 Local variable 'serviceWaConfig' hides outer local variable with the same name
+      src\NumbatWallet.Web.Api\Authentication\OidcAuthenticationExtensions.cs:197 Parameter 'options' is never used
+      src\NumbatWallet.Web.Api\Caching\CacheInvalidationService.cs:142 Parameter 'cancellationToken' is never used
+      src\NumbatWallet.Web.Api\Caching\CacheInvalidationService.cs:145 Local variable 'cacheService' is never used
+      src\NumbatWallet.Web.Api\Controllers\AuditController.cs:55 Expression is always false according to nullable reference types' annotations
+      src\NumbatWallet.Web.Api\Controllers\AuditController.cs:258 Possible multiple enumeration
+      src\NumbatWallet.Web.Api\Controllers\AuditController.cs:258 Possible multiple enumeration
+      src\NumbatWallet.Web.Api\Controllers\AuditController.cs:261 Possible multiple enumeration
+      src\NumbatWallet.Web.Api\Controllers\AuditController.cs:262 Possible multiple enumeration
+      src\NumbatWallet.Web.Api\Controllers\AuditController.cs:264 Possible multiple enumeration
+      src\NumbatWallet.Web.Api\Controllers\AuditController.cs:264 Possible multiple enumeration
+      src\NumbatWallet.Web.Api\Controllers\CredentialController.cs:4 Using directive is not required by the code and can be safely removed
+      src\NumbatWallet.Web.Api\Controllers\IssuanceController.cs:370 Possible multiple enumeration
+      src\NumbatWallet.Web.Api\Controllers\IssuanceController.cs:371 Possible multiple enumeration
+      src\NumbatWallet.Web.Api\Controllers\IssuanceController.cs:376 '??' left operand is never null according to nullable reference types' annotations
+      src\NumbatWallet.Web.Api\Controllers\WalletGenerationController.cs:309 Return type of 'GetPlatformRequirements' can be made non-nullable
+      src\NumbatWallet.Web.Api\Documentation\DocumentationService.cs:163 Local variable 'html' is never used
+      src\NumbatWallet.Web.Api\Endpoints\WalletEndpoints.cs:139 Expression is always true according to nullable reference types' annotations
+      src\NumbatWallet.Web.Api\Extensions\RateLimitingExtensions.cs:17 Parameter 'partition' is never used
+      src\NumbatWallet.Web.Api\Extensions\RateLimitingExtensions.cs:28 Parameter 'partition' is never used
+      src\NumbatWallet.Web.Api\Extensions\RateLimitingExtensions.cs:40 Parameter 'partition' is never used
+      src\NumbatWallet.Web.Api\Extensions\RateLimitingExtensions.cs:51 Parameter 'partition' is never used
+      src\NumbatWallet.Web.Api\Extensions\RateLimitingExtensions.cs:63 Parameter 'partition' is never used
+      src\NumbatWallet.Web.Api\Extensions\RateLimitingExtensions.cs:74 Parameter 'partition' is never used
+      src\NumbatWallet.Web.Api\Extensions\RateLimitingExtensions.cs:85 Parameter 'partition' is never used
+      src\NumbatWallet.Web.Api\Extensions\SerilogExtensions.cs:56 Type argument specification is redundant
+      src\NumbatWallet.Web.Api\GraphQL\Mutations\AdminMutation.cs:274 Value assigned is not used in any execution path
+      src\NumbatWallet.Web.Api\GraphQL\Mutations\WalletMutation.cs:220 Local variable 'walletData' is never used
+      src\NumbatWallet.Web.Api\GraphQL\Queries\CredentialQuery.cs:21 Field '_credentialRepository' is assigned but its value is never used
+      src\NumbatWallet.Web.Api\GraphQL\Queries\CredentialQuery.cs:100 The parameter 'IncludeRevoked' has the same default value
+      src\NumbatWallet.Web.Api\GraphQL\Queries\CredentialQuery.cs:304 Possible multiple enumeration
+      src\NumbatWallet.Web.Api\GraphQL\Queries\CredentialQuery.cs:309 Possible multiple enumeration
+      src\NumbatWallet.Web.Api\GraphQL\Queries\CredentialQuery.cs:325 Local variable 'start' is never used
+      src\NumbatWallet.Web.Api\GraphQL\Queries\CredentialQuery.cs:326 Local variable 'end' is never used
+      src\NumbatWallet.Web.Api\GraphQL\Queries\CredentialQuery.cs:355 '??' left operand is never null according to nullable reference types' annotations
+      src\NumbatWallet.Web.Api\GraphQL\Queries\CredentialQuery.cs:357 '??' left operand is never null according to nullable reference types' annotations
+      src\NumbatWallet.Web.Api\GraphQL\Queries\CredentialQuery.cs:398 Possible multiple enumeration
+      src\NumbatWallet.Web.Api\GraphQL\Queries\CredentialQuery.cs:399 Possible multiple enumeration
+      src\NumbatWallet.Web.Api\GraphQL\Queries\CredentialQuery.cs:410 '??' left operand is never null according to nullable reference types' annotations
+      src\NumbatWallet.Web.Api\GraphQL\Queries\CredentialQuery.cs:412 '??' left operand is never null according to nullable reference types' annotations
+      src\NumbatWallet.Web.Api\GraphQL\Schema\Mutation.cs:118 Local variable 'userId' is never used
+      src\NumbatWallet.Web.Api\GraphQL\Schema\Query.cs:7 Field '_personService' is assigned but its value is never used
+      src\NumbatWallet.Web.Api\GraphQL\Schema\Query.cs:8 Field '_organizationService' is assigned but its value is never used
+      src\NumbatWallet.Web.Api\GraphQL\Schema\Query.cs:9 Field '_credentialService' is assigned but its value is never used
+      src\NumbatWallet.Web.Api\GraphQL\Schema\Query.cs:10 Field '_walletService' is assigned but its value is never used
+      src\NumbatWallet.Web.Api\Health\StorageHealthCheck.cs:41 Local variable 'exists' is never used
+      src\NumbatWallet.Web.Api\HealthChecks\CustomHealthChecks.cs:39 Local variable 'testQuery' is never used
+      src\NumbatWallet.Web.Api\HealthChecks\CustomHealthChecks.cs:109 Local variable 'info' is never used
+      src\NumbatWallet.Web.Api\HealthChecks\HealthCheckExtensions.cs:126 Local variable 'options' is never used
+      src\NumbatWallet.Web.Api\HealthChecks\HealthCheckExtensions.cs:152 Local variable 'options' is never used
+      src\NumbatWallet.Web.Api\Hubs\ProgressHub.cs:61 Parameter 'key' is never used
+      src\NumbatWallet.Web.Api\Hubs\ProgressHub.cs:125 Parameter 'key' is never used
+      src\NumbatWallet.Web.Api\Hubs\ProgressHub.cs:125 Parameter 'old' is never used
+      src\NumbatWallet.Web.Api\Hubs\ProgressHub.cs:133 Parameter 't' is never used
+      src\NumbatWallet.Web.Api\Hubs\ProgressHub.cs:241 Parameter 'cancellationToken' is never used
+      src\NumbatWallet.Web.Api\Middleware\AuthenticationMiddleware.cs:325 '??' left operand is never null according to nullable reference types' annotations
+      src\NumbatWallet.Web.Api\Middleware\EnhancedRateLimitingMiddleware.cs:127 Local variable 'now' is never used
+      src\NumbatWallet.Web.Api\Middleware\EnhancedRateLimitingMiddleware.cs:150 Parameter 'window' is never used
+      src\NumbatWallet.Web.Api\Middleware\EnhancedRateLimitingMiddleware.cs:163 Value assigned is not used in any execution path
+      src\NumbatWallet.Web.Api\Middleware\EnhancedRateLimitingMiddleware.cs:283 Value assigned is not used in any execution path
+      src\NumbatWallet.Web.Api\Middleware\EnhancedRateLimitingMiddleware.cs:305 Parameter 'clientId' is never used
+      src\NumbatWallet.Web.Api\Middleware\EnhancedRateLimitingMiddleware.cs:395 Parameter 'partition' is never used
+      src\NumbatWallet.Web.Api\Middleware\ExceptionHandlingMiddleware.cs:128 Local variable 'timeoutEx' is never used
+      src\NumbatWallet.Web.Api\Middleware\RateLimitingMiddleware.cs:49 Specify string culture explicitly
+      src\NumbatWallet.Web.Api\Middleware\RequestSignatureMiddleware.cs:115 Content of collection 'headers' is only updated but never used
+      src\NumbatWallet.Web.Api\Middleware\SecurityHeadersMiddleware.cs:290 Initializing property by default value is redundant
+      src\NumbatWallet.Web.Api\Middleware\SecurityHeadersMiddleware.cs:291 Initializing property by default value is redundant
+      src\NumbatWallet.Web.Api\Middleware\TenantMiddleware.cs:46 Expression is always true according to nullable reference types' annotations
+      src\NumbatWallet.Web.Api\Program.cs:167 Parameter 'options' is never used
+      src\NumbatWallet.Web.Api\Program.cs:248 Parameter 'builder' hides outer local variable with the same name
+      src\NumbatWallet.Web.Api\Program.cs:253 Parameter 'builder' hides outer local variable with the same name
+      src\NumbatWallet.Web.Api\Program.cs:259 Parameter 'builder' hides outer local variable with the same name
+      src\NumbatWallet.Web.Api\Program.cs:265 Parameter 'builder' hides outer local variable with the same name
+      src\NumbatWallet.Web.Api\Program.cs:271 Parameter 'builder' hides outer local variable with the same name
+      src\NumbatWallet.Web.Api\Program.cs:275 Parameter 'builder' hides outer local variable with the same name
+      src\NumbatWallet.Web.Api\Program.cs:287 Parameter 'partition' is never used
+      src\NumbatWallet.Web.Api\Program.cs:309 Parameter 'partition' is never used
+      src\NumbatWallet.Web.Api\Program.cs:325 Parameter 'partition' is never used
+      src\NumbatWallet.Web.Api\Program.cs:342 Specify string culture explicitly
+      src\NumbatWallet.Web.Api\RateLimiting\RateLimitingPolicies.cs:78 Parameter 'partition' is never used
+      src\NumbatWallet.Web.Api\RateLimiting\RateLimitingPolicies.cs:94 Parameter 'partition' is never used
+      src\NumbatWallet.Web.Api\RateLimiting\RateLimitingPolicies.cs:113 Parameter 'partition' is never used
+      src\NumbatWallet.Web.Api\RateLimiting\RateLimitingPolicies.cs:130 Parameter 'partition' is never used
+      src\NumbatWallet.Web.Api\RateLimiting\RateLimitingPolicies.cs:143 Parameter 'partition' is never used
+      src\NumbatWallet.Web.Api\RateLimiting\RateLimitingPolicies.cs:159 Parameter 'partition' is never used
+      src\NumbatWallet.Web.Api\RateLimiting\RateLimitingPolicies.cs:174 Parameter 'partition' is never used
+      src\NumbatWallet.Web.Api\RateLimiting\RateLimitingPolicies.cs:192 Parameter 'partition' is never used
+      src\NumbatWallet.Web.Api\RateLimiting\RateLimitingPolicies.cs:277 Method is recursive on all execution paths
+      src\NumbatWallet.Web.Api\Rest\Modules\DtpModule.cs:77 The parameter 'statusCode' has the same default value
+      src\NumbatWallet.Web.Api\Rest\Modules\DtpModule.cs:103 The parameter 'statusCode' has the same default value
+      src\NumbatWallet.Web.Api\Rest\Modules\DtpModule.cs:107 Possible multiple enumeration
+      src\NumbatWallet.Web.Api\Rest\Modules\DtpModule.cs:112 Possible multiple enumeration
+      src\NumbatWallet.Web.Api\Rest\Modules\DtpModule.cs:130 The parameter 'statusCode' has the same default value
+      src\NumbatWallet.Web.Api\Rest\Modules\DtpModule.cs:156 The parameter 'statusCode' has the same default value
+      src\NumbatWallet.Web.Api\Rest\Modules\DtpModule.cs:160 Possible multiple enumeration
+      src\NumbatWallet.Web.Api\Rest\Modules\DtpModule.cs:165 Possible multiple enumeration
+      src\NumbatWallet.Web.Api\Rest\Modules\DtpModule.cs:190 The parameter 'statusCode' has the same default value
+      src\NumbatWallet.Web.Api\Rest\Modules\DtpModule.cs:223 The parameter 'statusCode' has the same default value
+      src\NumbatWallet.Web.Api\Rest\Modules\DtpModule.cs:268 The parameter 'statusCode' has the same default value
+      src\NumbatWallet.Web.Api\Rest\Modules\DtpModule.cs:271 Local variable 'revokerId' is never used
+      src\NumbatWallet.Web.Api\Rest\Modules\DtpModule.cs:290 The parameter 'statusCode' has the same default value
+      src\NumbatWallet.Web.Api\Rest\Modules\WebhookModule.cs:175 The parameter 'statusCode' has the same default value
+      src\NumbatWallet.Web.Api\Rest\Modules\WebhookModule.cs:267 Parameter 'request' is never used
+      src\NumbatWallet.Web.Api\Rest\Modules\WebhookModule.cs:267 Parameter 'walletService' is never used
+      src\NumbatWallet.Web.Api\Rest\Modules\WebhookModule.cs:267 Parameter 'cancellationToken' is never used
+      src\NumbatWallet.Web.Api\Rest\Modules\WebhookModule.cs:273 Parameter 'request' is never used
+      src\NumbatWallet.Web.Api\Rest\Modules\WebhookModule.cs:273 Parameter 'walletService' is never used
+      src\NumbatWallet.Web.Api\Rest\Modules\WebhookModule.cs:273 Parameter 'cancellationToken' is never used
+      src\NumbatWallet.Web.Api\Rest\Modules\WebhookModule.cs:279 Parameter 'request' is never used
+      src\NumbatWallet.Web.Api\Rest\Modules\WebhookModule.cs:279 Parameter 'walletService' is never used
+      src\NumbatWallet.Web.Api\Rest\Modules\WebhookModule.cs:279 Parameter 'cancellationToken' is never used
+      src\NumbatWallet.Web.Api\Rest\Modules\WebhookModule.cs:285 Parameter 'request' is never used
+      src\NumbatWallet.Web.Api\Rest\Modules\WebhookModule.cs:285 Parameter 'credentialService' is never used
+      src\NumbatWallet.Web.Api\Rest\Modules\WebhookModule.cs:285 Parameter 'cancellationToken' is never used
+      src\NumbatWallet.Web.Api\Rest\Modules\WebhookModule.cs:291 Parameter 'request' is never used
+      src\NumbatWallet.Web.Api\Rest\Modules\WebhookModule.cs:291 Parameter 'credentialService' is never used
+      src\NumbatWallet.Web.Api\Rest\Modules\WebhookModule.cs:291 Parameter 'cancellationToken' is never used
+      src\NumbatWallet.Web.Api\Rest\Modules\WebhookModule.cs:297 Parameter 'request' is never used
+      src\NumbatWallet.Web.Api\Rest\Modules\WebhookModule.cs:297 Parameter 'credentialService' is never used
+      src\NumbatWallet.Web.Api\Rest\Modules\WebhookModule.cs:297 Parameter 'cancellationToken' is never used
+      src\NumbatWallet.Web.Api\Rest\Modules\WebhookModule.cs:303 Parameter 'request' is never used
+      src\NumbatWallet.Web.Api\Rest\Modules\WebhookModule.cs:303 Parameter 'credentialService' is never used
+      src\NumbatWallet.Web.Api\Rest\Modules\WebhookModule.cs:303 Parameter 'cancellationToken' is never used
+      src\NumbatWallet.Web.Api\Rest\Validators\DtpValidators.cs:87 Expression is always false according to nullable reference types' annotations
+      src\NumbatWallet.Web.Api\Security\RequestResponseLoggingMiddleware.cs:37 Local variable 'requestLog' is never used
+      src\NumbatWallet.Web.Api\Security\SecurityAuditService.cs:274 Local variable 'method' is never used
+      src\NumbatWallet.Web.Api\Security\SecurityHeaders.cs:14 Field '_logger' is assigned but its value is never used
+      src\NumbatWallet.Web.Api\Security\SecurityHeaders.cs:171 Field '_logger' is assigned but its value is never used
+      src\NumbatWallet.Web.Api\Security\SecurityHeaders.cs:299 Parameter 'partition' is never used
+      src\NumbatWallet.Web.Api\Security\SecurityHeaders.cs:311 Parameter 'partition' is never used
+      src\NumbatWallet.Web.Api\Security\SecurityHeaders.cs:321 Parameter 'partition' is never used
+      src\NumbatWallet.Web.Api\Security\SecurityHeaders.cs:331 Parameter 'partition' is never used
+      src\NumbatWallet.Web.Api\Telemetry\PerformanceMetrics.cs:20 Field '_memoryUsage' is assigned but its value is never used
+      src\NumbatWallet.Web.Api\Telemetry\PerformanceMetrics.cs:21 Field '_threadCount' is assigned but its value is never used
+      src\NumbatWallet.Web.Api\Telemetry\PerformanceMetrics.cs:22 Field '_cpuUsage' is assigned but its value is never used
+      src\NumbatWallet.Web.Api\Telemetry\TelemetryExtensions.cs:177 Field '_activeWallets' is assigned but its value is never used
+      src\NumbatWallet.Web.Api\Telemetry\TelemetryExtensions.cs:178 Initializing field by default value is redundant
+      src\NumbatWallet.Web.Api\Telemetry\TracingService.cs:129 Expression is always true according to nullable reference types' annotations
+      src\NumbatWallet.Web.Api\Telemetry\TracingService.cs:159 Expression is always true according to nullable reference types' annotations
+      src\NumbatWallet.Web.Api\Telemetry\TracingService.cs:233 Expression is always true according to nullable reference types' annotations
+      src\NumbatWallet.Web.Api\Webhooks\WebhookService.cs:117 Parameter 'outcome' is never used
+      src\NumbatWallet.Web.Api\Webhooks\WebhookService.cs:117 Parameter 'context' is never used
+      src\NumbatWallet.Web.Api\Webhooks\WebhookService.cs:273 Initialize object properties inside the 'using' statement to ensure that the object is disposed if an exception is thrown during initialization
+    
+    Project NumbatWallet.Web.Api.Tests
+      src\Tests\NumbatWallet.Web.Api.Tests\Controllers\WebhookControllerTests.cs:63 Local variable 'mockAuditService' is never used
+      src\Tests\NumbatWallet.Web.Api.Tests\Controllers\WebhookControllerTests.cs:116 Local variable 'mockAuditService' is never used
+      src\Tests\NumbatWallet.Web.Api.Tests\Controllers\WebhookControllerTests.cs:150 Local variable 'mockAuditService' is never used
+      src\Tests\NumbatWallet.Web.Api.Tests\Controllers\WebhookControllerTests.cs:171 Local variable 'mockAuditService' is never used
+      src\Tests\NumbatWallet.Web.Api.Tests\Controllers\WebhookControllerTests.cs:203 Possible multiple enumeration
+      src\Tests\NumbatWallet.Web.Api.Tests\Controllers\WebhookControllerTests.cs:204 Possible multiple enumeration
+      src\Tests\NumbatWallet.Web.Api.Tests\Controllers\WebhookControllerTests.cs:238 Local variable 'mockAuditService' is never used
+      src\Tests\NumbatWallet.Web.Api.Tests\Controllers\WebhookControllerTests.cs:257 Local variable 'mockAuditService' is never used
+      src\Tests\NumbatWallet.Web.Api.Tests\Controllers\WebhookControllerTests.cs:304 Local variable 'mockAuditService' is never used
+      src\Tests\NumbatWallet.Web.Api.Tests\Controllers\WebhookControllerTests.cs:353 Local variable 'mockAuditService' is never used
+      src\Tests\NumbatWallet.Web.Api.Tests\Controllers\WebhookControllerTests.cs:380 Local variable 'mockAuditService' is never used
+      src\Tests\NumbatWallet.Web.Api.Tests\GraphQL\Admin\AdminQueryTests.cs:13 Field '_statisticsServiceMock' is assigned but its value is never used
+      src\Tests\NumbatWallet.Web.Api.Tests\GraphQL\Admin\AdminQueryTests.cs:16 Field '_featureFlagServiceMock' is assigned but its value is never used
+      src\Tests\NumbatWallet.Web.Api.Tests\GraphQL\Admin\AdminQueryTests.cs:17 Field '_configurationServiceMock' is assigned but its value is never used
+      src\Tests\NumbatWallet.Web.Api.Tests\GraphQL\Admin\AdminQueryTests.cs:18 Field '_reportingServiceMock' is assigned but its value is never used
+      src\Tests\NumbatWallet.Web.Api.Tests\Middleware\MutualTlsMiddlewareTests.cs:16 The field is always assigned before being used and can be converted into a local variable
+      src\Tests\NumbatWallet.Web.Api.Tests\Middleware\MutualTlsMiddlewareTests.cs:21 The field is always assigned before being used and can be converted into a local variable
+      src\Tests\NumbatWallet.Web.Api.Tests\Middleware\RequestSignatureMiddlewareTests.cs:15 The field is always assigned before being used and can be converted into a local variable
+      src\Tests\NumbatWallet.Web.Api.Tests\Middleware\RequestSignatureMiddlewareTests.cs:20 The field is always assigned before being used and can be converted into a local variable
+      src\Tests\NumbatWallet.Web.Api.Tests\TestHelpers\ApiTestBase.cs:42 Parameter 'options' is never used
+    Solution NumbatWallet.sln
+    Project NumbatWallet.Tests.Shared
+      src\Tests\Shared\TestHelpers\TestBase.cs:5 Namespace does not correspond to file location, must be: 'NumbatWallet.Tests.Shared.TestHelpers'
+      src\Tests\Shared\TestHelpers\TestBase.cs:25 Virtual member call in constructor
+      src\Tests\Shared\TestHelpers\TestDataBuilder.cs:3 Namespace does not correspond to file location, must be: 'NumbatWallet.Tests.Shared.TestHelpers'
+    
+  

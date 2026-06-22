@@ -73,14 +73,12 @@ public class EventSourcingHandler : IEventSourcingHandler
 public class EventSourcingInterceptor : SaveChangesInterceptor
 {
     private readonly IEventSourcingHandler _eventHandler;
-    private readonly ILogger<EventSourcingInterceptor> _logger;
 
     public EventSourcingInterceptor(
         IEventSourcingHandler eventHandler,
-        ILogger<EventSourcingInterceptor> logger)
+        ILogger<EventSourcingInterceptor> _)
     {
         _eventHandler = eventHandler;
-        _logger = logger;
     }
 
     public override async ValueTask<InterceptionResult<int>> SavingChangesAsync(
@@ -244,9 +242,9 @@ public class EventSourcingService : IEventSourcingService
         CancellationToken cancellationToken = default) where T : class, new()
     {
         var events = await _eventStore.GetEventsAsync(aggregateId, cancellationToken);
-        var eventsBeforeDate = events.Where(e => e.OccurredAt <= asOf);
+        var eventsBeforeDate = events.Where(e => e.OccurredAt <= asOf).ToList();
 
-        if (!eventsBeforeDate.Any())
+        if (eventsBeforeDate.Count == 0)
         {
             return null;
         }

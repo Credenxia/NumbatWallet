@@ -1,6 +1,8 @@
 using NumbatWallet.Application.Wallets.Commands.CreateWallet;
 using NumbatWallet.Application.DTOs;
 using NumbatWallet.Web.Api.GraphQL.Subscriptions;
+using NumbatWallet.Web.Api.Security;
+using System.Security.Claims;
 
 namespace NumbatWallet.Web.Api.GraphQL.Admin;
 
@@ -9,7 +11,6 @@ namespace NumbatWallet.Web.Api.GraphQL.Admin;
 /// POA: Issue #153 - Admin GraphQL API
 /// </summary>
 [ExtendObjectType("Mutation")]
-[Authorize(Policy = "AdminOnly")]
 public class AdminMutation
 {
     /// <summary>
@@ -33,6 +34,7 @@ public class AdminMutation
     /// Toggle feature flag
     /// </summary>
     [GraphQLDescription("Enable or disable a feature flag")]
+    [Authorize(Policy = "AdminOnly")]
     public async Task<FeatureFlagDto> ToggleFeatureFlag(
         [Service] IFeatureFlagService featureFlagService,
         string id,
@@ -68,6 +70,7 @@ public class AdminMutation
     /// Update tenant configuration
     /// </summary>
     [GraphQLDescription("Update an existing tenant's configuration")]
+    [Authorize(Policy = "AdminOnly")]
     public async Task<TenantDto> UpdateTenant(
         [Service] ITenantService tenantService,
         string id,
@@ -141,68 +144,18 @@ public class AdminMutation
         return tenant;
     }
 
-    /// <summary>
-    /// Create admin user
-    /// </summary>
-    [GraphQLDescription("Create a new admin user")]
-    [Authorize(Policy = "SuperAdmin")]
-    public async Task<AdminUserDto> CreateAdminUser(
-        [Service] IUserManagementService userService,
-        CreateAdminUserInput input,
-        CancellationToken cancellationToken = default)
-    {
-        var user = await userService.CreateAdminUserAsync(
-            input.ToCreateUserCommand(),
-            cancellationToken);
-
-        if (user == null)
-        {
-            throw new GraphQLException("Failed to create admin user");
-        }
-
-        return user;
-    }
-
-    /// <summary>
-    /// Update admin user
-    /// </summary>
-    [GraphQLDescription("Update an existing admin user")]
-    public async Task<AdminUserDto> UpdateAdminUser(
-        [Service] IUserManagementService userService,
-        string id,
-        UpdateAdminUserInput input,
-        CancellationToken cancellationToken = default)
-    {
-        var user = await userService.UpdateAdminUserAsync(
-            id,
-            input.ToUpdateUserCommand(),
-            cancellationToken);
-
-        if (user == null)
-        {
-            throw new GraphQLException("Admin user not found");
-        }
-
-        return user;
-    }
-
-    /// <summary>
-    /// Reset admin password
-    /// </summary>
-    [GraphQLDescription("Reset an admin user's password")]
-    [Authorize(Policy = "SuperAdmin")]
-    public async Task<ResetPasswordResult> ResetAdminPassword(
-        [Service] IUserManagementService userService,
-        string id,
-        CancellationToken cancellationToken = default)
-    {
-        return await userService.ResetPasswordAsync(id, cancellationToken);
-    }
+    // The createAdminUser / updateAdminUser / resetAdminPassword mutations (and the
+    // IUserManagementService in-memory stub behind them) were DELETED in the Credentry
+    // federation cleanup: user/role management is owned by the Credentry platform.
+    // Create/update users, assign NW.* roles, and reset passwords in the Credentry portal
+    // (see credentry/docs/integration/06-NUMBATWALLET-FEDERATION-CONTRACT.md). The
+    // read-only adminUsers query (AdminQuery) over the legacy admin_users table remains.
 
     /// <summary>
     /// Initiate backup
     /// </summary>
     [GraphQLDescription("Start a backup operation")]
+    [Authorize(Policy = "AdminOnly")]
     public async Task<BackupJobDto> InitiateBackup(
         [Service] IBackupService backupService,
         BackupInput input,
@@ -271,6 +224,7 @@ public class AdminMutation
     /// Run database maintenance
     /// </summary>
     [GraphQLDescription("Run database maintenance operations")]
+    [Authorize(Policy = "AdminOnly")]
     public async Task<MaintenanceResult> RunDatabaseMaintenance(
         [Service] IMaintenanceService maintenanceService,
         CancellationToken cancellationToken = default)
@@ -291,6 +245,7 @@ public class AdminMutation
     /// Clear cache
     /// </summary>
     [GraphQLDescription("Clear system cache")]
+    [Authorize(Policy = "AdminOnly")]
     public async Task<ClearCacheResult> ClearCache(
         [Service] ICacheService cacheService,
         CacheType? cacheType,
@@ -307,9 +262,54 @@ public class AdminMutation
     }
 
     /// <summary>
+    /// Update rate limits
+    /// </summary>
+    /// <remarks>
+    /// POA: persists the configuration to cache only — it does not reconfigure the live
+    /// rate limiter middleware. Merged from the former GraphQL/Mutations/AdminMutation.
+    /// </remarks>
+    [GraphQLDescription("Update API rate limiting configuration")]
+    [Authorize(Policy = "AdminOnly")]
+    public async Task<RateLimitConfigurationDto> UpdateRateLimits(
+        [Service] ICacheService cacheService,
+        [Service] ISecurityAuditService auditService,
+        [Service] IHttpContextAccessor httpContextAccessor,
+        UpdateRateLimitsInput input,
+        CancellationToken cancellationToken = default)
+    {
+        var httpContext = httpContextAccessor.HttpContext;
+        var userId = httpContext?.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        if (httpContext != null)
+        {
+            // Fully qualified: the GraphQL.Admin namespace also defines a SecurityEventType (subscriptions).
+            await auditService.LogSecurityEventAsync(
+                httpContext,
+                Security.SecurityEventType.ConfigurationChange,
+                $"Rate limits updated: {input.PolicyName}");
+        }
+
+        var config = new RateLimitConfigurationDto
+        {
+            PolicyName = input.PolicyName,
+            RequestsPerMinute = input.RequestsPerMinute,
+            RequestsPerHour = input.RequestsPerHour ?? input.RequestsPerMinute * 60,
+            BurstSize = input.BurstSize ?? input.RequestsPerMinute * 2,
+            IsEnabled = input.IsEnabled ?? true,
+            UpdatedAt = DateTime.UtcNow,
+            UpdatedBy = userId ?? "system"
+        };
+
+        await cacheService.SetAsync($"ratelimit:{config.PolicyName}", config, TimeSpan.FromDays(1), cancellationToken);
+
+        return config;
+    }
+
+    /// <summary>
     /// Schedule a report
     /// </summary>
     [GraphQLDescription("Schedule a recurring report")]
+    [Authorize(Policy = "AdminOnly")]
     public async Task<ScheduledReportDto> ScheduleReport(
         [Service] IReportingService reportingService,
         ScheduleReportInput input,
@@ -337,6 +337,7 @@ public class AdminMutation
     /// Cancel scheduled report
     /// </summary>
     [GraphQLDescription("Cancel a scheduled report")]
+    [Authorize(Policy = "AdminOnly")]
     public async Task<bool> CancelScheduledReport(
         [Service] IReportingService reportingService,
         string id,
@@ -349,6 +350,7 @@ public class AdminMutation
     /// Batch create wallets
     /// </summary>
     [GraphQLDescription("Create multiple wallets in a single operation")]
+    [Authorize(Policy = "AdminOnly")]
     public async Task<BatchOperationResultDto> BatchCreateWallets(
         [Service] IDispatcher dispatcher,
         BatchCreateWalletsInput input,
@@ -433,43 +435,8 @@ public class UpdateTenantInput
     }
 }
 
-public class CreateAdminUserInput
-{
-    public string Email { get; set; } = string.Empty;
-    public string FirstName { get; set; } = string.Empty;
-    public string LastName { get; set; } = string.Empty;
-    public List<string> Roles { get; set; } = new();
-
-    public CreateUserCommand ToCreateUserCommand()
-    {
-        return new CreateUserCommand
-        {
-            Email = Email,
-            FirstName = FirstName,
-            LastName = LastName,
-            Roles = Roles
-        };
-    }
-}
-
-public class UpdateAdminUserInput
-{
-    public string? FirstName { get; set; }
-    public string? LastName { get; set; }
-    public List<string>? Roles { get; set; }
-    public bool? IsActive { get; set; }
-
-    public UpdateUserCommand ToUpdateUserCommand()
-    {
-        return new UpdateUserCommand
-        {
-            FirstName = FirstName,
-            LastName = LastName,
-            Roles = Roles,
-            IsActive = IsActive
-        };
-    }
-}
+// CreateAdminUserInput / UpdateAdminUserInput were deleted with the admin-user mutations:
+// user management happens in the Credentry portal (federation contract doc 06).
 
 public class BackupInput
 {
@@ -530,13 +497,35 @@ public class ScheduleReportInput
     }
 }
 
+public class UpdateRateLimitsInput
+{
+    public required string PolicyName { get; set; }
+    public required int RequestsPerMinute { get; set; }
+    public int? RequestsPerHour { get; set; }
+    public int? BurstSize { get; set; }
+    public bool? IsEnabled { get; set; }
+}
+
+public class RateLimitConfigurationDto
+{
+    public required string PolicyName { get; set; }
+    public int RequestsPerMinute { get; set; }
+    public int RequestsPerHour { get; set; }
+    public int BurstSize { get; set; }
+    public bool IsEnabled { get; set; }
+    public DateTime UpdatedAt { get; set; }
+    public required string UpdatedBy { get; set; }
+}
+
 public class BatchCreateWalletsInput
 {
-    public List<CreateWalletInput> Wallets { get; set; } = new();
+    public List<BatchWalletInput> Wallets { get; set; } = new();
     public bool ContinueOnError { get; set; } = true;
 }
 
-public class CreateWalletInput
+// Named BatchWalletInput (not CreateWalletInput) to avoid a GraphQL type-name
+// collision with Schema.CreateWalletInput used by the root createWallet mutation.
+public class BatchWalletInput
 {
     public string PersonId { get; set; } = string.Empty;
     public string Name { get; set; } = string.Empty;

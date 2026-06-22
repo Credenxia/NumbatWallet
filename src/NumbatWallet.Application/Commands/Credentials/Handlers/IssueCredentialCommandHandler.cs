@@ -3,12 +3,12 @@ using Microsoft.Extensions.Logging;
 using NumbatWallet.Application.CQRS.Interfaces;
 using NumbatWallet.Application.DTOs;
 using NumbatWallet.Application.Exceptions;
-using NumbatWallet.Application.Interfaces;
 using NumbatWallet.Domain.Aggregates;
 using NumbatWallet.Domain.Enums;
 using NumbatWallet.Domain.Events;
 using NumbatWallet.Domain.Interfaces;
 using NumbatWallet.SharedKernel.Enums;
+using NumbatWallet.SharedKernel.Interfaces;
 
 namespace NumbatWallet.Application.Commands.Credentials.Handlers;
 
@@ -17,19 +17,22 @@ public class IssueCredentialCommandHandler : ICommandHandler<IssueCredentialComm
     private readonly ICredentialRepository _credentialRepository;
     private readonly IWalletRepository _walletRepository;
     private readonly IIssuerRepository _issuerRepository;
-    private readonly IEventDispatcher _eventDispatcher;
+    private readonly IUnitOfWork _unitOfWork;
+    private readonly Application.Interfaces.IEventDispatcher _eventDispatcher;
     private readonly ILogger<IssueCredentialCommandHandler> _logger;
 
     public IssueCredentialCommandHandler(
         ICredentialRepository credentialRepository,
         IWalletRepository walletRepository,
         IIssuerRepository issuerRepository,
-        IEventDispatcher eventDispatcher,
+        IUnitOfWork unitOfWork,
+        Application.Interfaces.IEventDispatcher eventDispatcher,
         ILogger<IssueCredentialCommandHandler> logger)
     {
         _credentialRepository = credentialRepository;
         _walletRepository = walletRepository;
         _issuerRepository = issuerRepository;
+        _unitOfWork = unitOfWork;
         _eventDispatcher = eventDispatcher;
         _logger = logger;
     }
@@ -49,9 +52,11 @@ public class IssueCredentialCommandHandler : ICommandHandler<IssueCredentialComm
             throw new BusinessRuleException("Cannot issue credential to inactive wallet");
         }
 
-        // Get issuer
-        var issuer = await _issuerRepository.GetByIdAsync(Guid.Parse(command.IssuerId), cancellationToken)
-            ?? throw new NotFoundException($"Issuer with ID {command.IssuerId} not found");
+        // Get issuer organisation. The issuing PRINCIPAL is command.IssuerId (the authenticated
+        // user's "sub", which is not a Guid for API-key/service callers); the issuer ENTITY is
+        // identified by command.IssuerOrganizationId.
+        var issuer = await _issuerRepository.GetByIdAsync(command.IssuerOrganizationId, cancellationToken)
+            ?? throw new NotFoundException($"Issuer with ID {command.IssuerOrganizationId} not found");
 
         // Serialize claims data
         var credentialData = JsonSerializer.Serialize(command.Claims);
@@ -108,6 +113,9 @@ public class IssueCredentialCommandHandler : ICommandHandler<IssueCredentialComm
         // Add credential to repository
         await _credentialRepository.AddAsync(credential, cancellationToken);
 
+        // Save changes to database
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+
         // Dispatch domain event
         var credentialIssuedEvent = new CredentialIssuedEvent(
             credential.Id,
@@ -126,7 +134,7 @@ public class IssueCredentialCommandHandler : ICommandHandler<IssueCredentialComm
         // Map to DTO
         return new CredentialDto
         {
-            Id = credential.CredentialId,
+            Id = credential.Id.ToString(),  // Fixed: Use GUID primary key, not business identifier
             HolderId = credential.WalletId.ToString(),
             IssuerId = credential.IssuerId.ToString(),
             Type = credential.CredentialType,

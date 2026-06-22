@@ -1,11 +1,9 @@
 using System.Text;
 using Microsoft.Extensions.Logging;
-using Moq;
 using NumbatWallet.Application.Interfaces;
 using NumbatWallet.Infrastructure.Services;
 using NumbatWallet.SharedKernel.Enums;
 using NumbatWallet.SharedKernel.Interfaces;
-using FluentAssertions;
 
 namespace NumbatWallet.Infrastructure.Tests.Services;
 
@@ -188,7 +186,7 @@ public class ProtectionServiceTests
 
         _currentTenantServiceMock.Setup(x => x.TenantId).Returns(tenantId);
         _encryptionServiceMock.Setup(x => x.GenerateHmacAsync(It.IsAny<string>(), It.IsAny<string>()))
-            .ReturnsAsync((string data, string context) => $"hmac_{data}");
+            .ReturnsAsync((string data, string _key) => $"hmac_{data}");
 
         // Act
         var result = await _sut.GenerateSearchTokensAsync(value, fieldName, strategy);

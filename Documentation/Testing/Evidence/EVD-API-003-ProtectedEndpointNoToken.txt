@@ -1,0 +1,8 @@
+=== API Evidence: Protected Endpoint Without Token ===
+Endpoint: GET http://localhost:5042/api/v1/authentication/validate
+Authorization Header: None
+Status Code: 401
+Response Body: 
+Timestamp: 2026-03-13T07:48:38.9190940Z
+Expected: 401
+Result: PASS

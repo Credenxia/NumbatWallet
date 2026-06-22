@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -28,15 +29,22 @@ public class StoredEvent
 {
     public Guid Id { get; set; } = Guid.NewGuid();
     public Guid AggregateId { get; set; }
+    [MaxLength(200)]
     public string AggregateType { get; set; } = string.Empty;
+    [MaxLength(200)]
     public string EventType { get; set; } = string.Empty;
+    [MaxLength]
     public string EventData { get; set; } = string.Empty;
+    [MaxLength]
     public string? Metadata { get; set; }
     public DateTime OccurredAt { get; set; }
+    [MaxLength(200)]
     public string UserId { get; set; } = string.Empty;
+    [MaxLength(100)]
     public string TenantId { get; set; } = string.Empty;
     public int Version { get; set; }
     public Guid CorrelationId { get; set; }
+    [MaxLength(100)]
     public string? CausationId { get; set; }
 }
 
@@ -47,10 +55,13 @@ public class EventSnapshot
 {
     public Guid Id { get; set; } = Guid.NewGuid();
     public Guid AggregateId { get; set; }
+    [MaxLength(200)]
     public string AggregateType { get; set; } = string.Empty;
+    [MaxLength]
     public string SnapshotData { get; set; } = string.Empty;
     public int Version { get; set; }
     public DateTime CreatedAt { get; set; }
+    [MaxLength(100)]
     public string TenantId { get; set; } = string.Empty;
 }
 
@@ -62,7 +73,7 @@ public class EventStore : IEventStore
     private readonly NumbatWalletDbContext _context;
     private readonly ILogger<EventStore> _logger;
     private readonly JsonSerializerOptions _jsonOptions;
-    private readonly SharedKernel.Interfaces.ITenantService? _tenantService;
+    private readonly ITenantService? _tenantService;
     private readonly ICurrentUserService? _currentUserService;
 
     public EventStore(
@@ -79,7 +90,7 @@ public class EventStore : IEventStore
 
         // Try to get tenant and user services from DbContext via reflection
         var tenantServiceProperty = context.GetType().GetField("_tenantService", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-        _tenantService = tenantServiceProperty?.GetValue(context) as SharedKernel.Interfaces.ITenantService;
+        _tenantService = tenantServiceProperty?.GetValue(context) as ITenantService;
 
         var currentUserServiceProperty = context.GetType().GetField("_currentUserService", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         _currentUserService = currentUserServiceProperty?.GetValue(context) as ICurrentUserService;
@@ -217,7 +228,7 @@ public class EventStore : IEventStore
         // Try to get from current user service
         if (_currentUserService != null)
         {
-            return _currentUserService.UserId ?? "system";
+            return _currentUserService.UserId;
         }
 
         return "system";
@@ -358,7 +369,7 @@ public class EventProjector : IEventProjector
         Action<IDomainEvent> handler,
         CancellationToken cancellationToken = default)
     {
-        var events = await _eventStore.GetEventsAsync(aggregateId, cancellationToken);
+        var events = (await _eventStore.GetEventsAsync(aggregateId, cancellationToken)).ToList();
 
         foreach (var storedEvent in events.OrderBy(e => e.Version))
         {
@@ -372,7 +383,7 @@ public class EventProjector : IEventProjector
         }
 
         _logger.LogInformation("Replayed {Count} events for aggregate {AggregateId}",
-            events.Count(), aggregateId);
+            events.Count, aggregateId);
     }
 
     private void ApplyEvent<T>(T aggregate, IDomainEvent domainEvent) where T : class

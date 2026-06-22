@@ -1,0 +1,21 @@
+=== CRUD Evidence: Wallet Lifecycle ===
+Timestamp: 2026-03-13T08:02:59.9181830Z
+
+--- STEP 1: CREATE Wallet ---
+POST /api/v1/wallet
+Request: {
+  "personId": "b8156a12-b908-48da-ab77-688c98780568",
+  "walletName": "Integration Test Wallet",
+  "tenantId": "test-tenant",
+  "type": 0
+}
+Status: 401 Unauthorized
+Response: 
+
+--- STEP 2: READ All Wallets ---
+GET /api/v1/wallet
+Status: 401 Unauthorized
+Response (truncated): 
+
+
+=== Wallet CRUD Evidence Complete ===

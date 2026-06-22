@@ -58,19 +58,8 @@ public class GetTenantStatisticsQueryHandler : IQueryHandler<GetTenantStatistics
         // Calculate storage (simplified - in production would query actual storage)
         var storageUsedMB = (decimal)(credentialCount * 0.1 + walletCount * 0.05 + userCount * 0.2);
 
-        // Get last activity date from most recent credential or wallet
-        var lastActivityDate = DateTime.UtcNow;
-        if (tenantCredentials.Any())
-        {
-            lastActivityDate = tenantCredentials.Max(c => c.IssuedAt.DateTime);
-        }
-        else if (tenantWallets.Any())
-        {
-            lastActivityDate = tenantWallets.Max(w => w.CreatedAt).DateTime;
-        }
-
         // Get tenant name
-        var tenantName = tenant.Name ?? "Unknown";
+        var tenantName = tenant.Name;
 
         var statistics = new TenantStatisticsDto
         {

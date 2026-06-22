@@ -2,6 +2,7 @@ using NumbatWallet.Application.DTOs;
 using NumbatWallet.Application.Interfaces;
 using NumbatWallet.Domain.Aggregates;
 using NumbatWallet.Domain.Interfaces;
+using NumbatWallet.Domain.Specifications;
 using NumbatWallet.Domain.ValueObjects;
 using NumbatWallet.SharedKernel.Interfaces;
 
@@ -26,10 +27,10 @@ public class PersonService : IPersonService
 
     public async Task<PersonDto?> GetByEmailAsync(string email, CancellationToken cancellationToken = default)
     {
-        // TODO: Implement specification pattern
-        var allPersons = await _personRepository.GetAllAsync(cancellationToken);
-        var persons = allPersons.Where(p => p.Email.Value == email);
-        var person = persons.FirstOrDefault();
+        // Must go through the repository: email is encrypted at rest and only queryable via its
+        // deterministic search token. A specification on Email.Value would translate to SQL
+        // equality against ciphertext and never match.
+        var person = await _personRepository.GetByEmailAsync(email, cancellationToken);
         return person != null ? MapToDto(person) : null;
     }
 
@@ -37,6 +38,15 @@ public class PersonService : IPersonService
     {
         var persons = await _personRepository.GetAllAsync(cancellationToken);
         return persons.Select(MapToDto);
+    }
+
+    public async Task<IEnumerable<PersonDto>> GetPagedAsync(int page, int pageSize, CancellationToken cancellationToken = default)
+    {
+        // Paging is pushed to the database (Skip/Take) rather than materialising all rows.
+        var result = await _personRepository.GetPagedAsync(
+            new SharedKernel.Models.PagedRequest { PageNumber = page, PageSize = pageSize },
+            cancellationToken: cancellationToken);
+        return result.Items.Select(MapToDto);
     }
 
     public async Task<PersonDto> CreateAsync(CreatePersonDto dto, CancellationToken cancellationToken = default)
@@ -78,10 +88,30 @@ public class PersonService : IPersonService
             throw new InvalidOperationException($"Person with ID {id} not found");
         }
 
-        // Note: Person entity doesn't have UpdateName or UpdatePhoneNumber methods
-        // We would need to implement these methods or use a different approach
-        // For now, we'll just return the existing person as-is
-        // TODO: Implement person update logic in domain entity
+        // Update personal details (FirstName, LastName) if provided
+        if (!string.IsNullOrWhiteSpace(dto.FirstName) || !string.IsNullOrWhiteSpace(dto.LastName))
+        {
+            var firstName = dto.FirstName ?? person.FirstName;
+            var lastName = dto.LastName ?? person.LastName;
+            var result = person.UpdatePersonalDetails(firstName, lastName);
+
+            if (!result.IsSuccess)
+            {
+                throw new InvalidOperationException(result.Error.Message);
+            }
+        }
+
+        // Update phone number if provided
+        if (!string.IsNullOrWhiteSpace(dto.PhoneNumber))
+        {
+            var phoneNumber = PhoneNumber.Create(dto.PhoneNumber);
+            var result = person.UpdatePhoneNumber(phoneNumber);
+
+            if (!result.IsSuccess)
+            {
+                throw new InvalidOperationException(result.Error.Message);
+            }
+        }
 
         await _personRepository.UpdateAsync(person, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);

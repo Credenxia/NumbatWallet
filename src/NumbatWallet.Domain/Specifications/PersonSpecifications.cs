@@ -28,6 +28,11 @@ public class UnverifiedPersonSpecification : Specification<Person>
     }
 }
 
+/// <summary>
+/// IN-MEMORY USE ONLY: Email is encrypted at rest, so this criteria cannot be translated to a
+/// database query (it would compare against ciphertext and never match). For database lookups
+/// use IPersonRepository.GetByEmailAsync, which queries the deterministic email search token.
+/// </summary>
 public class PersonByEmailSpecification : Specification<Person>
 {
     public PersonByEmailSpecification(string email)
@@ -74,7 +79,7 @@ public class PersonSearchSpecification : Specification<Person>
                 p.FirstName.ToLowerInvariant().Contains(lowerSearchTerm) ||
                 p.LastName.ToLowerInvariant().Contains(lowerSearchTerm) ||
                 p.Email.Value.ToLowerInvariant().Contains(lowerSearchTerm) ||
-                (p.ExternalId != null && p.ExternalId.ToLowerInvariant().Contains(lowerSearchTerm)));
+                p.ExternalId.ToLowerInvariant().Contains(lowerSearchTerm));
         }
 
         ApplyOrderBy(p => p.LastName);

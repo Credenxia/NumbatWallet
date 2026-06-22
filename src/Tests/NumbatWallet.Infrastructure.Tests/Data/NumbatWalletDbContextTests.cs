@@ -4,7 +4,6 @@ using NumbatWallet.Infrastructure.Data;
 using NumbatWallet.Domain.Aggregates;
 using NumbatWallet.SharedKernel.Interfaces;
 using Microsoft.Extensions.Logging;
-using Moq;
 
 namespace NumbatWallet.Infrastructure.Tests.Data;
 
@@ -12,12 +11,10 @@ namespace NumbatWallet.Infrastructure.Tests.Data;
 public class NumbatWalletDbContextTests : IDisposable
 {
     private readonly NumbatWalletDbContext _context;
-    private readonly DbContextOptions<NumbatWalletDbContext> _options;
     private readonly Mock<ITenantService> _tenantServiceMock;
     private readonly Mock<ICurrentUserService> _currentUserServiceMock;
     private readonly Mock<IDateTimeService> _dateTimeServiceMock;
     private readonly Mock<IEventDispatcher> _eventDispatcherMock;
-    private readonly Mock<ILogger<NumbatWalletDbContext>> _loggerMock;
     private readonly Guid _tenantId;
     private readonly SqliteConnection _connection;
 
@@ -27,7 +24,7 @@ public class NumbatWalletDbContextTests : IDisposable
         _connection = new SqliteConnection("DataSource=:memory:");
         _connection.Open();
 
-        _options = new DbContextOptionsBuilder<NumbatWalletDbContext>()
+        var options = new DbContextOptionsBuilder<NumbatWalletDbContext>()
             .UseSqlite(_connection)
             .Options;
 
@@ -35,7 +32,7 @@ public class NumbatWalletDbContextTests : IDisposable
         _currentUserServiceMock = new Mock<ICurrentUserService>();
         _dateTimeServiceMock = new Mock<IDateTimeService>();
         _eventDispatcherMock = new Mock<IEventDispatcher>();
-        _loggerMock = new Mock<ILogger<NumbatWalletDbContext>>();
+        var loggerMock = new Mock<ILogger<NumbatWalletDbContext>>();
 
         _tenantId = Guid.NewGuid();
         _tenantServiceMock.Setup(x => x.TenantId).Returns(_tenantId);
@@ -43,12 +40,12 @@ public class NumbatWalletDbContextTests : IDisposable
         _dateTimeServiceMock.Setup(x => x.UtcNow).Returns(DateTimeOffset.UtcNow);
 
         _context = new NumbatWalletDbContext(
-            _options,
+            options,
             _tenantServiceMock.Object,
             _currentUserServiceMock.Object,
             _dateTimeServiceMock.Object,
             _eventDispatcherMock.Object,
-            _loggerMock.Object);
+            loggerMock.Object);
 
         _context.Database.EnsureCreated();
     }

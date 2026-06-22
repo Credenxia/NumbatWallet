@@ -1,40 +1,69 @@
-﻿@inherits LayoutComponentBase
+@inherits LayoutComponentBase
 @inject IJSRuntime JS
+@inject NavigationManager Navigation
 
-<div class="admin-layout @(_isDarkMode ? "dark-mode" : "")">
-    <aside class="sidebar">
-        <div class="sidebar-header">
-            <div class="sidebar-logo">
-                <i class="bi bi-wallet2"></i>
-                <span>NumbatWallet</span>
-            </div>
-            <button class="theme-toggle @(_isDarkMode ? "active" : "")" @onclick="ToggleTheme">
-                <span class="theme-toggle-slider"></span>
-            </button>
+<div class="ce-app">
+    <aside class="ce-sidebar">
+        <div class="ce-sidebar-header">
+            <a href="/" class="ce-logo">
+                <div class="ce-logo-icon">
+                    <i class="bi bi-wallet2"></i>
+                </div>
+                <span class="ce-logo-text">Numbat<span>Wallet</span></span>
+            </a>
         </div>
         <NavMenu />
+        <div class="ce-sidebar-footer">
+            <AuthorizeView>
+                <Authorized>
+                    <div class="ce-user-card">
+                        <div class="ce-user-avatar">@GetInitials(context.User)</div>
+                        <div class="ce-user-info">
+                            <div class="ce-user-name">@GetDisplayName(context.User)</div>
+                            <div class="ce-user-role">@GetUserRole(context.User)</div>
+                        </div>
+                    </div>
+                </Authorized>
+                <NotAuthorized>
+                    <div class="ce-user-card">
+                        <div class="ce-user-avatar">?</div>
+                        <div class="ce-user-info">
+                            <div class="ce-user-name">Not signed in</div>
+                        </div>
+                    </div>
+                </NotAuthorized>
+            </AuthorizeView>
+        </div>
     </aside>
 
-    <div class="main-content">
-        <div class="top-bar">
-            <nav class="breadcrumb">
-                <a href="/" class="breadcrumb-item">Home</a>
-                <span class="breadcrumb-separator">/</span>
-                <span class="breadcrumb-item">@_currentPage</span>
-            </nav>
-            <div class="user-menu">
-                <div class="notification-bell">
-                    <i class="bi bi-bell"></i>
-                    <span class="notification-badge">3</span>
-                </div>
-                <div class="user-profile">
-                    <span class="user-name">Admin User</span>
-                    <i class="bi bi-chevron-down"></i>
-                </div>
+    <div class="ce-main">
+        <header class="ce-header">
+            <div class="ce-header-left">
+                <nav class="ce-breadcrumb">
+                    <a href="/" class="ce-breadcrumb-item">Home</a>
+                    <span class="ce-breadcrumb-separator">/</span>
+                    <span class="ce-breadcrumb-item active">@_currentPage</span>
+                </nav>
             </div>
-        </div>
+            <div class="ce-header-right">
+                <button class="ce-header-btn" title="Notifications">
+                    <i class="bi bi-bell"></i>
+                    <span class="ce-notification-dot"></span>
+                </button>
+                <button class="ce-theme-toggle" @onclick="ToggleTheme" title="Toggle theme">
+                    <i class="bi @(_isDarkMode ? "bi-sun" : "bi-moon")"></i>
+                </button>
+                <AuthorizeView>
+                    <Authorized>
+                        <button class="ce-header-btn" title="Sign Out" @onclick="HandleLogout">
+                            <i class="bi bi-box-arrow-right"></i>
+                        </button>
+                    </Authorized>
+                </AuthorizeView>
+            </div>
+        </header>
 
-        <main class="page-content">
+        <main class="ce-content">
             @Body
         </main>
     </div>
@@ -43,7 +72,7 @@
 <div id="blazor-error-ui" data-nosnippet>
     An unhandled error has occurred.
     <a href="." class="reload">Reload</a>
-    <span class="dismiss">🗙</span>
+    <span class="dismiss">X</span>
 </div>
 
 @code {
@@ -74,5 +103,40 @@
     private async Task ApplyTheme()
     {
         await JS.InvokeVoidAsync("document.documentElement.setAttribute", "data-theme", _isDarkMode ? "dark" : "light");
+    }
+
+    private void HandleLogout()
+    {
+        Navigation.NavigateTo("/logout", forceLoad: true);
+    }
+
+    private static string GetDisplayName(System.Security.Claims.ClaimsPrincipal user)
+    {
+        var name = user.FindFirst(System.Security.Claims.ClaimTypes.Name)?.Value;
+        if (!string.IsNullOrEmpty(name))
+        {
+            return name;
+        }
+
+        var email = user.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value
+                    ?? user.FindFirst("preferred_username")?.Value;
+        return email ?? "Admin User";
+    }
+
+    private static string GetInitials(System.Security.Claims.ClaimsPrincipal user)
+    {
+        var name = GetDisplayName(user);
+        var parts = name.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        return parts.Length >= 2
+            ? $"{parts[0][0]}{parts[1][0]}".ToUpperInvariant()
+            : name.Length >= 2
+                ? name[..2].ToUpperInvariant()
+                : name.ToUpperInvariant();
+    }
+
+    private static string GetUserRole(System.Security.Claims.ClaimsPrincipal user)
+    {
+        var role = user.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value;
+        return role ?? "User";
     }
 }

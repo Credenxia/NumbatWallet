@@ -20,7 +20,7 @@ public static class AzurePostgreSQLConfiguration
         IConfiguration configuration)
     {
         var azureConfig = configuration.GetSection("Azure:PostgreSQL");
-        var useAzureDb = azureConfig.GetValue<bool>("UseAzureDatabase", false);
+        var useAzureDb = azureConfig.GetValue("UseAzureDatabase", false);
 
         if (useAzureDb)
         {
@@ -39,7 +39,7 @@ public static class AzurePostgreSQLConfiguration
                         errorCodesToAdd: null);
 
                     // Enable Azure AD authentication if configured
-                    if (azureConfig.GetValue<bool>("UseAzureADAuthentication", false))
+                    if (azureConfig.GetValue("UseAzureADAuthentication", false))
                     {
                         // For Azure AD authentication, configure the data source with password callback
                         // This is handled in the connection string builder for now
@@ -52,7 +52,7 @@ public static class AzurePostgreSQLConfiguration
                 });
 
                 // Enable sensitive data logging in development
-                if (configuration.GetValue<bool>("EnableSensitiveDataLogging", false))
+                if (configuration.GetValue("EnableSensitiveDataLogging", false))
                 {
                     options.EnableSensitiveDataLogging();
                 }
@@ -108,25 +108,25 @@ public static class AzurePostgreSQLConfiguration
             Host = config["Server"] ?? throw new InvalidOperationException("Azure PostgreSQL Server not configured"),
             Database = config["Database"] ?? "numbatwallet",
             Username = config["Username"] ?? throw new InvalidOperationException("Azure PostgreSQL Username not configured"),
-            Port = config.GetValue<int>("Port", 5432),
+            Port = config.GetValue("Port", 5432),
             SslMode = SslMode.Require
         };
 
         // Set password if not using Azure AD authentication
-        if (!config.GetValue<bool>("UseAzureADAuthentication", false))
+        if (!config.GetValue("UseAzureADAuthentication", false))
         {
             builder.Password = config["Password"] ?? throw new InvalidOperationException("Azure PostgreSQL Password not configured");
         }
 
         // Connection pool settings
-        builder.MinPoolSize = config.GetValue<int>("MinPoolSize", 10);
-        builder.MaxPoolSize = config.GetValue<int>("MaxPoolSize", 100);
-        builder.ConnectionIdleLifetime = config.GetValue<int>("ConnectionIdleLifetime", 300);
-        builder.Pooling = config.GetValue<bool>("Pooling", true);
+        builder.MinPoolSize = config.GetValue("MinPoolSize", 10);
+        builder.MaxPoolSize = config.GetValue("MaxPoolSize", 100);
+        builder.ConnectionIdleLifetime = config.GetValue("ConnectionIdleLifetime", 300);
+        builder.Pooling = config.GetValue("Pooling", true);
 
         // Performance settings
-        builder.CommandTimeout = config.GetValue<int>("CommandTimeout", 30);
-        builder.KeepAlive = config.GetValue<int>("KeepAlive", 30);
+        builder.CommandTimeout = config.GetValue("CommandTimeout", 30);
+        builder.KeepAlive = config.GetValue("KeepAlive", 30);
 
         // Application name for monitoring
         builder.ApplicationName = "NumbatWallet.Api";
@@ -134,14 +134,14 @@ public static class AzurePostgreSQLConfiguration
         return builder.ConnectionString;
     }
 
-    private static async Task<string> GetAzureADTokenAsync(IConfiguration configuration)
+    private static async Task<string> GetAzureADTokenAsync(IConfiguration _)
     {
         // Use Azure.Identity to get token for PostgreSQL
         var credential = new DefaultAzureCredential();
         var tokenRequestContext = new TokenRequestContext(
             new[] { "https://ossrdbms-aad.database.windows.net/.default" });
 
-        var token = await credential.GetTokenAsync(tokenRequestContext, default);
+        var token = await credential.GetTokenAsync(tokenRequestContext);
         return token.Token;
     }
 }
@@ -216,14 +216,11 @@ public interface IDatabaseBackupService
 
 public class DatabaseBackupService : IDatabaseBackupService
 {
-    private readonly IConfiguration _configuration;
     private readonly ILogger<DatabaseBackupService> _logger;
 
     public DatabaseBackupService(
-        IConfiguration configuration,
         ILogger<DatabaseBackupService> logger)
     {
-        _configuration = configuration;
         _logger = logger;
     }
 

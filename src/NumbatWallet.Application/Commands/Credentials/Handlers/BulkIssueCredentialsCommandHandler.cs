@@ -38,9 +38,10 @@ public class BulkIssueCredentialsCommandHandler : ICommandHandler<BulkIssueCrede
         _logger.LogInformation("Bulk issuing {Type} credentials to {Count} wallets",
             command.CredentialType, command.WalletIds.Count);
 
-        // Get issuer
-        var issuer = await _issuerRepository.GetByIdAsync(Guid.Parse(command.IssuerId), cancellationToken)
-            ?? throw new NotFoundException($"Issuer with ID {command.IssuerId} not found");
+        // Get issuer organisation (entity is identified by IssuerOrganizationId, not the
+        // authenticated principal's "sub" in command.IssuerId — see IssueCredentialCommandHandler).
+        var issuer = await _issuerRepository.GetByIdAsync(command.IssuerOrganizationId, cancellationToken)
+            ?? throw new NotFoundException($"Issuer with ID {command.IssuerOrganizationId} not found");
 
         var issuedCredentialIds = new List<Guid>();
         var errors = new List<BulkIssueError>();

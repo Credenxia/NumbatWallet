@@ -2,7 +2,6 @@ using System.Text;
 using Azure.Identity;
 using Azure.Security.KeyVault.Keys;
 using AzureCrypto = Azure.Security.KeyVault.Keys.Cryptography;
-using Azure.Security.KeyVault.Secrets;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -17,10 +16,8 @@ namespace NumbatWallet.Infrastructure.Services.Providers;
 public class KeyVaultHsmProvider : IHsmProvider
 {
     private readonly KeyClient _keyClient;
-    private readonly SecretClient _secretClient;
     private readonly ILogger<KeyVaultHsmProvider> _logger;
     private readonly IConfiguration _configuration;
-    private readonly IMemoryCache _cache;
     private readonly Dictionary<string, AzureCrypto.CryptographyClient> _cryptoClients;
 
     public string ProviderType => "KeyVault";
@@ -30,11 +27,10 @@ public class KeyVaultHsmProvider : IHsmProvider
     public KeyVaultHsmProvider(
         IConfiguration configuration,
         ILogger<KeyVaultHsmProvider> logger,
-        IMemoryCache cache)
+        IMemoryCache _cache)
     {
         _configuration = configuration;
         _logger = logger;
-        _cache = cache;
         _cryptoClients = new Dictionary<string, AzureCrypto.CryptographyClient>();
 
         var keyVaultUri = configuration["KeyVault:Uri"]
@@ -48,7 +44,6 @@ public class KeyVaultHsmProvider : IHsmProvider
         });
 
         _keyClient = new KeyClient(new Uri(keyVaultUri), credential);
-        _secretClient = new SecretClient(new Uri(keyVaultUri), credential);
 
         _logger.LogInformation("Key Vault HSM Provider initialized with URI: {Uri}", keyVaultUri);
     }
@@ -58,7 +53,7 @@ public class KeyVaultHsmProvider : IHsmProvider
         try
         {
             // Test connectivity by listing keys (with limit of 1)
-            await foreach (var keyProps in _keyClient.GetPropertiesOfKeysAsync(cancellationToken))
+            await foreach (var _ in _keyClient.GetPropertiesOfKeysAsync(cancellationToken))
             {
                 break; // Just checking if we can access at least one key
             }
@@ -543,10 +538,10 @@ public class KeyVaultHsmProvider : IHsmProvider
     }
 
     private async Task<MigrationResult> MigrateToKeyVaultAsync(
-        string keyId,
-        KeyVaultHsmProvider targetProvider,
-        MigrationOptions options,
-        CancellationToken cancellationToken)
+        string _,
+        KeyVaultHsmProvider _targetProvider,
+        MigrationOptions _options,
+        CancellationToken _ct)
     {
         // Backup/Restore operations are only available in Managed HSM
         // For Key Vault Premium, we need to recreate the key in the target vault

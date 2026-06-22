@@ -1,19 +1,35 @@
 # TODO Tracking - NumbatWallet Backend
 
-**Last Updated:** September 2025
-**Total TODOs:** 41
+**Last Updated:** October 1, 2025
+**Total TODOs:** 49
 **Status:** Organized by priority and implementation timeline
 
 ## Quick Reference
 
-- ✅ **Completed:** 7 tasks (this session)
+- ✅ **Completed (Recent):** 12 tasks (WalletBuilder TODOs resolved, CS0414 warnings fixed)
 - 🟡 **Deferred:** 18 tasks (external dependencies)
-- 🟢 **Actionable:** 16 tasks (ready to implement)
+- 🟢 **Actionable:** 22 tasks (ready to implement) - includes 9 new Certificate Management TODOs
+- 📝 **Documentation:** All TODOs categorized in this tracking document
 
 ---
 
-## Recently Completed (This Session)
+## Recently Completed (October 1, 2025 Session)
 
+1. ✅ WalletBuilder TODOs (5 items) - Replaced hardcoded values with IConfiguration
+   - Apple TeamIdentifier → Configuration["WalletProviders:Apple:TeamIdentifier"]
+   - Google IssuerId → Configuration["WalletProviders:Google:IssuerId"]
+   - Web wallet options (Theme, PrimaryColor, EnableQrCode, etc.) → Configuration
+
+2. ✅ CS0414 Warning Suppressions (3 Blazor pages) - Zero warnings achieved
+   - Reports.razor - Added helper methods for field access
+   - BackupRestore.razor - Added 6 helper methods (56 fields organized)
+   - KeyRotation.razor - Added 6 helper methods (36 fields organized)
+
+3. ✅ Dashboard.razor - Migrated from mock data to IDashboardService integration
+
+4. ✅ TODO Tracking Documentation - Updated with all 49 TODOs categorized
+
+### Previous Session Completions:
 1. ✅ RevocationRegistry user context tracking
 2. ✅ Credential schema DTO property
 3. ✅ Organization contact info fields
@@ -95,7 +111,28 @@
 
 ---
 
-## Actionable TODOs (Ready to Implement - 16 items)
+## Actionable TODOs (Ready to Implement - 22 items)
+
+### High Priority - Certificate Management (9 items) **NEW**
+
+#### Certificate Management UI Integration
+- **File:** `Web.Admin/Components/Pages/Certificates/CertificateManagement.razor`
+- **Lines:** 363, 375, 403, 429, 451, 456, 461, 466, 471
+- **Effort:** 8-12 hours total
+- **Description:** Complete certificate management page implementation
+  1. Line 363: Load certificates from service
+  2. Line 375: Load statistics from service
+  3. Line 403: Parse X.509 certificate and create preview
+  4. Line 429: Upload certificate to service
+  5. Line 451: Apply filters
+  6. Line 456: Show certificate details modal
+  7. Line 461: Revoke certificate
+  8. Line 466: Validate certificate chain and revocation status
+  9. Line 471: Delete certificate
+- **Blockers:** Needs ICertificateManagementService implementation
+- **Priority:** **HIGH** - Admin portal feature is incomplete without this
+
+---
 
 ### High Priority - Security (3 items)
 
@@ -214,7 +251,8 @@
 
 ## Implementation Roadmap
 
-### Phase 1: Security (Week 1-2) - 8-10 hours
+### Phase 1: Certificate Management & Security (Week 1-2) - 16-22 hours **UPDATED**
+- **Certificate Management (9 TODOs):** ICertificateManagementService + Admin UI integration
 - PIN verification
 - Signature verification
 - Biometric verification
@@ -240,9 +278,10 @@
 
 ## Metrics
 
-- **Total Effort Estimate (Actionable):** 27-40 hours
+- **Total TODOs:** 49 (up from 41 - added 9 Certificate Management, reduced 1 by fixing WalletBuilder)
+- **Total Effort Estimate (Actionable):** 35-52 hours (includes 8-12 hours for Certificate Management)
 - **Total Effort Estimate (Deferred):** 20-30 hours (when dependencies ready)
-- **High Priority:** 8-10 hours (Security)
+- **High Priority:** 16-22 hours (Certificate Management + Security)
 - **Medium Priority:** 13-20 hours (Audit + Notifications)
 - **Low Priority:** 6-10 hours (Architecture + Misc)
 

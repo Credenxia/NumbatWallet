@@ -1,7 +1,5 @@
-using FluentAssertions;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
-using Moq;
 using NumbatWallet.Infrastructure.Services;
 using System.Text;
 using System.Text.Json;
@@ -44,7 +42,7 @@ public class CacheServiceTests
 
         // Assert
         result.Should().NotBeNull();
-        result!.Id.Should().Be(expectedValue.Id);
+        result.Id.Should().Be(expectedValue.Id);
         result.Name.Should().Be(expectedValue.Name);
     }
 
@@ -76,7 +74,7 @@ public class CacheServiceTests
 
         _mockDistributedCache
             .Setup(x => x.SetAsync(key, It.IsAny<byte[]>(), It.IsAny<DistributedCacheEntryOptions>(), It.IsAny<CancellationToken>()))
-            .Callback<string, byte[], DistributedCacheEntryOptions, CancellationToken>((k, b, o, c) =>
+            .Callback<string, byte[], DistributedCacheEntryOptions, CancellationToken>((_k, b, o, _ct) =>
             {
                 capturedBytes = b;
                 capturedOptions = o;
@@ -114,7 +112,7 @@ public class CacheServiceTests
             .Returns(Task.CompletedTask);
 
         // Act
-        await _cacheService.SetAsync<TestCacheItem>(key, null, TimeSpan.FromMinutes(10));
+        await _cacheService.SetAsync<TestCacheItem>(key, null!, TimeSpan.FromMinutes(10));
 
         // Assert
         _mockDistributedCache.Verify(x => x.RemoveAsync(
@@ -173,7 +171,7 @@ public class CacheServiceTests
 
         // Assert
         result.Should().NotBeNull();
-        result!.Id.Should().Be(expectedValue.Id);
+        result.Id.Should().Be(expectedValue.Id);
         result.Name.Should().Be(expectedValue.Name);
 
         _mockDistributedCache.Verify(x => x.GetAsync(
@@ -216,7 +214,7 @@ public class CacheServiceTests
 
         // Assert
         result.Should().NotBeNull();
-        result!.Id.Should().Be(cachedValue.Id);
+        result.Id.Should().Be(cachedValue.Id);
         result.Name.Should().Be(cachedValue.Name);
         factoryCalled.Should().BeFalse();
 

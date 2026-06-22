@@ -9,13 +9,13 @@ namespace NumbatWallet.Web.Api.GraphQL.Admin;
 /// POA: Issue #153 - Admin GraphQL API
 /// </summary>
 [ExtendObjectType("Query")]
-[Authorize(Policy = "AdminOnly")]
 public class AdminQuery
 {
     /// <summary>
     /// Get system health status
     /// </summary>
     [GraphQLDescription("Get current system health and component status")]
+    [Authorize(Policy = "AdminOnly")]
     public async Task<SystemHealthDto> GetSystemHealth(
         [Service] IHealthCheckService healthService,
         CancellationToken cancellationToken = default)
@@ -27,6 +27,7 @@ public class AdminQuery
     /// Get system metrics snapshot
     /// </summary>
     [GraphQLDescription("Get system metrics for the specified time range")]
+    [Authorize(Policy = "AdminOnly")]
     public async Task<MetricsSnapshotDto> GetMetrics(
         [Service] IStatisticsService statisticsService,
         TimeRangeInput timeRange,
@@ -52,7 +53,6 @@ public class AdminQuery
         };
     }
 
-    /* TODO: Implement AuditLog entity
     /// <summary>
     /// Get audit logs with filtering
     /// </summary>
@@ -60,13 +60,57 @@ public class AdminQuery
     [UsePaging]
     [UseFiltering]
     [UseSorting]
+    [Authorize(Policy = "AdminOnly")]
     public IQueryable<AuditLogDto> GetAuditLogs(
         [Service] NumbatWalletDbContext context,
         AuditLogFilterInput? filter = null)
     {
-        // Audit logs will be implemented in a future iteration
-        return Enumerable.Empty<AuditLogDto>().AsQueryable();
-    }*/
+        var query = context.AuditLogs.AsQueryable();
+
+        if (filter != null)
+        {
+            if (!string.IsNullOrEmpty(filter.UserId))
+            {
+                query = query.Where(a => a.UserId == filter.UserId);
+            }
+
+            if (!string.IsNullOrEmpty(filter.Action))
+            {
+                query = query.Where(a => a.Action.Contains(filter.Action));
+            }
+
+            if (filter.From.HasValue)
+            {
+                query = query.Where(a => a.CreatedAt >= filter.From.Value);
+            }
+
+            if (filter.To.HasValue)
+            {
+                query = query.Where(a => a.CreatedAt <= filter.To.Value);
+            }
+
+            if (filter.EventType.HasValue)
+            {
+                var filterEventType = (SharedKernel.Enums.AuditEventType)filter.EventType.Value;
+                query = query.Where(a => a.EventType == filterEventType);
+            }
+        }
+
+        return query.Select(a => new AuditLogDto
+        {
+            Id = a.Id.ToString(),
+            UserId = a.UserId,
+            Action = a.Action,
+            EntityType = a.EntityType,
+            EntityId = a.EntityId,
+            OldValues = a.OldValues,
+            NewValues = a.NewValues,
+            IpAddress = a.IpAddress,
+            UserAgent = a.UserAgent,
+            EventType = (AuditEventType)(int)a.EventType, // Convert SharedKernel enum to GraphQL enum
+            CreatedAt = a.CreatedAt.DateTime
+        });
+    }
 
     /// <summary>
     /// Get all tenants with filtering
@@ -75,6 +119,7 @@ public class AdminQuery
     [UsePaging]
     [UseFiltering]
     [UseSorting]
+    [Authorize(Policy = "AdminOnly")]
     public async Task<IQueryable<TenantDto>> GetTenants(
         [Service] ITenantService tenantService,
         TenantFilterInput? filter = null,
@@ -110,6 +155,7 @@ public class AdminQuery
     /// Get tenant by ID
     /// </summary>
     [GraphQLDescription("Get detailed information about a specific tenant")]
+    [Authorize(Policy = "AdminOnly")]
     public async Task<TenantDto?> GetTenant(
         [Service] ITenantService tenantService,
         string id,
@@ -118,21 +164,55 @@ public class AdminQuery
         return await tenantService.GetTenantByIdAsync(id, cancellationToken);
     }
 
-    /* TODO: Implement User entity
     /// <summary>
-    /// Get admin users
+    /// Get admin users — READ-ONLY view over the LEGACY admin_users table.
+    /// The admin-user mutations (create/update/reset password) were deleted in the
+    /// Credentry federation cleanup: user/role management is owned by the Credentry
+    /// portal (credentry/docs/integration/06-NUMBATWALLET-FEDERATION-CONTRACT.md).
+    /// The table is no longer written to by this API.
     /// </summary>
-    [GraphQLDescription("Query admin users with filtering and pagination")]
+    [GraphQLDescription("Query admin users (read-only legacy table; user management lives in the Credentry portal)")]
     [UsePaging]
     [UseFiltering]
     [UseSorting]
+    [Authorize(Policy = "AdminOnly")]
     public IQueryable<AdminUserDto> GetAdminUsers(
         [Service] NumbatWalletDbContext context,
         UserFilterInput? filter = null)
     {
-        // User management will be implemented in a future iteration
-        return Enumerable.Empty<AdminUserDto>().AsQueryable();
-    }*/
+        var query = context.AdminUsers.AsQueryable();
+
+        if (filter != null)
+        {
+            if (!string.IsNullOrEmpty(filter.SearchTerm))
+            {
+                query = query.Where(u =>
+                    u.Email.Contains(filter.SearchTerm) ||
+                    u.FirstName.Contains(filter.SearchTerm) ||
+                    u.LastName.Contains(filter.SearchTerm));
+            }
+
+            if (filter.IsActive.HasValue)
+            {
+                query = query.Where(u => u.IsActive == filter.IsActive.Value);
+            }
+
+            // Note: Role filtering would require a more complex query since Roles is a collection
+            // For now we'll skip it in the database query and can filter in memory if needed
+        }
+
+        return query.Select(u => new AdminUserDto
+        {
+            Id = u.Id.ToString(),
+            Email = u.Email,
+            FirstName = u.FirstName,
+            LastName = u.LastName,
+            Roles = new List<string>(), // EF Core doesn't support projecting collections from backing fields easily
+            IsActive = u.IsActive,
+            CreatedAt = u.CreatedAt,
+            LastLoginAt = u.LastLoginAt
+        });
+    }
 
     /// <summary>
     /// Get backup history
@@ -140,6 +220,7 @@ public class AdminQuery
     [GraphQLDescription("Query backup history with pagination")]
     [UsePaging]
     [UseSorting]
+    [Authorize(Policy = "AdminOnly")]
     public async Task<IQueryable<BackupDto>> GetBackups(
         [Service] IBackupService backupService,
         CancellationToken cancellationToken = default)
@@ -163,6 +244,7 @@ public class AdminQuery
     /// Get backup status
     /// </summary>
     [GraphQLDescription("Get the status of a specific backup operation")]
+    [Authorize(Policy = "AdminOnly")]
     public async Task<BackupStatusDto?> GetBackupStatus(
         [Service] IBackupService backupService,
         string id,
@@ -190,6 +272,7 @@ public class AdminQuery
     /// Get feature flags
     /// </summary>
     [GraphQLDescription("Get all feature flags and their current states")]
+    [Authorize(Policy = "AdminOnly")]
     public async Task<List<FeatureFlagDto>> GetFeatureFlags(
         [Service] IFeatureFlagService featureFlagService,
         CancellationToken cancellationToken = default)
@@ -201,6 +284,7 @@ public class AdminQuery
     /// Get system configurations
     /// </summary>
     [GraphQLDescription("Get system configurations for the specified environment")]
+    [Authorize(Policy = "AdminOnly")]
     public async Task<List<ConfigurationDto>> GetConfigurations(
         [Service] IConfigurationService configService,
         string environment,
@@ -213,6 +297,7 @@ public class AdminQuery
     /// Generate a report
     /// </summary>
     [GraphQLDescription("Generate a system report of the specified type")]
+    [Authorize(Policy = "AdminOnly")]
     public async Task<ReportDto> GenerateReport(
         [Service] IReportingService reportingService,
         ReportType type,
@@ -247,6 +332,7 @@ public class AdminQuery
     /// Get scheduled reports
     /// </summary>
     [GraphQLDescription("Get all scheduled reports")]
+    [Authorize(Policy = "AdminOnly")]
     public async Task<List<ScheduledReportDto>> GetScheduledReports(
         [Service] IReportingService reportingService,
         CancellationToken cancellationToken = default)
@@ -267,9 +353,43 @@ public class AdminQuery
     }
 
     /// <summary>
+    /// Get wallets for admin management views.
+    /// Tenant scoping: the wallet repository goes through the DbContext global query filter,
+    /// which is bound to the ambient SharedKernel.ITenantService tenant — admins only ever
+    /// see wallets belonging to their own tenant (no cross-tenant leakage).
+    /// NOTE: IWalletService is SCOPED and must stay a [Service] resolver parameter
+    /// (HotChocolate type extensions are singletons — captive-dependency rule).
+    /// </summary>
+    [GraphQLDescription("Query wallets in the current tenant for admin management views")]
+    [Authorize(Policy = "AdminOnly")]
+    public async Task<List<WalletDto>> GetAdminWallets(
+        [Service] IWalletService walletService,
+        string? search = null,
+        int? first = null,
+        CancellationToken cancellationToken = default)
+    {
+        var wallets = await walletService.GetAllAsync(cancellationToken);
+
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            wallets = wallets.Where(w =>
+                w.Id.Contains(search, StringComparison.OrdinalIgnoreCase) ||
+                w.Name.Contains(search, StringComparison.OrdinalIgnoreCase) ||
+                w.PersonName.Contains(search, StringComparison.OrdinalIgnoreCase));
+        }
+
+        var take = first is > 0 ? Math.Min(first.Value, 200) : 100;
+        return wallets
+            .OrderByDescending(w => w.CreatedAt)
+            .Take(take)
+            .ToList();
+    }
+
+    /// <summary>
     /// Get database statistics
     /// </summary>
     [GraphQLDescription("Get database usage and performance statistics")]
+    [Authorize(Policy = "AdminOnly")]
     public async Task<DatabaseStatsDto> GetDatabaseStats(
         [Service] NumbatWalletDbContext context,
         CancellationToken cancellationToken = default)
@@ -281,7 +401,10 @@ public class AdminQuery
             TotalPersons = await context.Persons.CountAsync(cancellationToken),
             TotalOrganizations = 0, // Organizations entity not yet implemented
             DatabaseSizeMB = await GetDatabaseSizeAsync(context, cancellationToken),
-            LastBackup = await GetLastBackupTimeAsync(context, cancellationToken)
+            // POA: no backup metadata table exists in the EF model yet, so this is honestly null.
+            // (Previously queried context.Set<BackupMetadata>() which threw at runtime because
+            // BackupMetadata is not a mapped entity.)
+            LastBackup = null
         };
 
         return stats;
@@ -303,16 +426,6 @@ public class AdminQuery
         return result != null ? Convert.ToDecimal(result) : 0;
     }
 
-    private async Task<DateTime?> GetLastBackupTimeAsync(
-        NumbatWalletDbContext context,
-        CancellationToken cancellationToken)
-    {
-        // Query backup metadata table if it exists
-        return await context.Set<BackupMetadata>()
-            .OrderByDescending(b => b.CreatedAt)
-            .Select(b => b.CreatedAt)
-            .FirstOrDefaultAsync(cancellationToken);
-    }
 }
 
 // Input types
@@ -479,10 +592,3 @@ public enum TenantStatus
 }
 
 // ReportParameters moved to AdminMutation.cs to avoid duplication
-
-// Entity for backup metadata
-public class BackupMetadata
-{
-    public string Id { get; set; } = string.Empty;
-    public DateTime CreatedAt { get; set; }
-}

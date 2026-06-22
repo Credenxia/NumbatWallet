@@ -61,6 +61,16 @@ public class RequestSignatureMiddleware
             return;
         }
 
+        // Check signature timestamp age
+        var signatureAge = DateTimeOffset.UtcNow - signature.Timestamp;
+        if (signatureAge.TotalSeconds > _options.MaxSignatureAgeSeconds)
+        {
+            _logger.LogWarning("Signature timestamp expired: {Age} seconds old", signatureAge.TotalSeconds);
+            context.Response.StatusCode = 400;
+            await context.Response.WriteAsync("Request signature expired");
+            return;
+        }
+
         // Get client certificate or API key
         string? publicKey = null;
 

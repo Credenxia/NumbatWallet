@@ -1,6 +1,28 @@
-﻿<Router AppAssembly="typeof(Program).Assembly">
+@using Microsoft.AspNetCore.Components.Authorization
+
+<Router AppAssembly="typeof(Program).Assembly">
     <Found Context="routeData">
-        <RouteView RouteData="routeData" DefaultLayout="typeof(Layout.MainLayout)" />
+        <AuthorizeRouteView RouteData="routeData" DefaultLayout="typeof(Layout.MainLayout)">
+            <NotAuthorized>
+                <RedirectToLogin />
+            </NotAuthorized>
+            <Authorizing>
+                <LayoutView Layout="typeof(Layout.MainLayout)">
+                    <div class="text-center p-5">
+                        <div class="spinner-border" role="status">
+                            <span class="visually-hidden">Authorizing...</span>
+                        </div>
+                        <p class="mt-2">Authorizing...</p>
+                    </div>
+                </LayoutView>
+            </Authorizing>
+        </AuthorizeRouteView>
         <FocusOnNavigate RouteData="routeData" Selector="h1" />
     </Found>
+    <NotFound>
+        <PageTitle>Not found</PageTitle>
+        <LayoutView Layout="typeof(Layout.MainLayout)">
+            <p role="alert">Sorry, there's nothing at this address.</p>
+        </LayoutView>
+    </NotFound>
 </Router>

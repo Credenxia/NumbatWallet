@@ -1,9 +1,12 @@
+using System.IdentityModel.Tokens.Jwt;
 using System.Net.Http.Headers;
+using System.Security.Claims;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.IdentityModel.Tokens;
 using NumbatWallet.Infrastructure.Data;
-using Xunit;
 
 namespace NumbatWallet.Integration.Tests.TestHarness;
 
@@ -18,6 +21,7 @@ public abstract class IntegrationTestBase : IClassFixture<IntegrationTestFixture
     protected HttpClient Client { get; }
     protected JsonSerializerOptions JsonOptions { get; }
     protected TestDataHelper TestData { get; }
+    protected NumbatWalletDbContext Context => GetDbContext();
 
     protected IntegrationTestBase(IntegrationTestFixture fixture)
     {
@@ -25,15 +29,16 @@ public abstract class IntegrationTestBase : IClassFixture<IntegrationTestFixture
         Client = fixture.CreateClient();
         TestData = new TestDataHelper(fixture.Services);
 
-        // Set default headers
+        // Set default headers with valid test tenant ID
         Client.DefaultRequestHeaders.Accept.Clear();
         Client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-        Client.DefaultRequestHeaders.Add("X-Tenant-Id", fixture.TestTenantId);
+        Client.DefaultRequestHeaders.Add("X-Tenant-Id", Fixture.TestTenantId);
 
         JsonOptions = new JsonSerializerOptions
         {
             PropertyNameCaseInsensitive = true,
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            Converters = { new JsonStringEnumConverter() }
         };
     }
 
@@ -63,15 +68,45 @@ public abstract class IntegrationTestBase : IClassFixture<IntegrationTestFixture
     }
 
     /// <summary>
-    /// Generate a mock JWT token for testing
+    /// Generate a real JWT token for testing with proper claims
     /// </summary>
     protected string GenerateMockToken(string userId = "test-user", string[] roles = null!)
     {
         roles ??= new[] { "User" };
 
-        // This would normally use the JWT service
-        // For testing, we return a mock token
-        return "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ0ZXN0LXVzZXIiLCJyb2xlcyI6WyJVc2VyIl0sImlhdCI6MTUxNjIzOTAyMn0.mock";
+        // Use the same secret key as the application
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(
+            "TestSecretKey123456789012345678901234567890")); // Must be 256+ bits
+        var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
+        // Create claims matching production JWT structure
+        var claims = new List<Claim>
+        {
+            new Claim(ClaimTypes.NameIdentifier, userId),
+            new Claim(ClaimTypes.Email, $"{userId}@example.com"),
+            new Claim(JwtRegisteredClaimNames.Sub, $"{userId}@example.com"),
+            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+        };
+
+        // Add all roles as separate claims
+        foreach (var role in roles)
+        {
+            claims.Add(new Claim(ClaimTypes.Role, role));
+        }
+
+        // Add tenant context for multi-tenancy tests (use fixture's valid test tenant ID)
+        claims.Add(new Claim("tenant_id", Fixture.TestTenantId));
+        claims.Add(new Claim("user_id", userId));
+
+        // Create token with 1 hour expiry
+        var token = new JwtSecurityToken(
+            issuer: "https://test.numbatwallet.wa.gov.au",
+            audience: "https://api.numbatwallet.wa.gov.au",
+            claims: claims,
+            expires: DateTime.UtcNow.AddHours(1),
+            signingCredentials: creds);
+
+        return new JwtSecurityTokenHandler().WriteToken(token);
     }
 
     /// <summary>
@@ -95,7 +130,14 @@ public abstract class IntegrationTestBase : IClassFixture<IntegrationTestFixture
         var content = new StringContent(json, Encoding.UTF8, "application/json");
 
         var response = await Client.PostAsync(url, content);
-        response.EnsureSuccessStatusCode();
+
+        // Log error details for debugging
+        if (!response.IsSuccessStatusCode)
+        {
+            var errorContent = await response.Content.ReadAsStringAsync();
+            throw new HttpRequestException(
+                $"Response status code does not indicate success: {(int)response.StatusCode} ({response.StatusCode}).\nError: {errorContent}");
+        }
 
         var responseJson = await response.Content.ReadAsStringAsync();
         return JsonSerializer.Deserialize<TResponse>(responseJson, JsonOptions);

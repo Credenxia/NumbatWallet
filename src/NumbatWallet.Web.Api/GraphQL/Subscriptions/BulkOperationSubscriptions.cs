@@ -36,9 +36,11 @@ public class BulkOperationSubscriptions
     /// <summary>
     /// Subscribe to all bulk operation starts for a tenant
     /// </summary>
-    [Subscribe]
+    [Subscribe(With = nameof(SubscribeToBulkOperationStarted))]
     [GraphQLDescription("Subscribe to all bulk operations starting for the current tenant")]
-    public async IAsyncEnumerable<BulkOperationStartedEvent> OnBulkOperationStarted(
+    public BulkOperationStartedEvent OnBulkOperationStarted([EventMessage] BulkOperationStartedEvent @event) => @event;
+
+    public async IAsyncEnumerable<BulkOperationStartedEvent> SubscribeToBulkOperationStarted(
         [Service] ITopicEventReceiver eventReceiver,
         [EnumeratorCancellation] CancellationToken cancellationToken)
     {
@@ -55,9 +57,11 @@ public class BulkOperationSubscriptions
     /// <summary>
     /// Subscribe to bulk operation completions
     /// </summary>
-    [Subscribe]
+    [Subscribe(With = nameof(SubscribeToBulkOperationCompleted))]
     [GraphQLDescription("Subscribe to bulk operation completion events")]
-    public async IAsyncEnumerable<BulkOperationCompletedEvent> OnBulkOperationCompleted(
+    public BulkOperationCompletedEvent OnBulkOperationCompleted([EventMessage] BulkOperationCompletedEvent @event) => @event;
+
+    public async IAsyncEnumerable<BulkOperationCompletedEvent> SubscribeToBulkOperationCompleted(
         [Service] ITopicEventReceiver eventReceiver,
         [EnumeratorCancellation] CancellationToken cancellationToken)
     {
@@ -74,9 +78,11 @@ public class BulkOperationSubscriptions
     /// <summary>
     /// Subscribe to bulk operation errors
     /// </summary>
-    [Subscribe]
+    [Subscribe(With = nameof(SubscribeToBulkOperationError))]
     [GraphQLDescription("Subscribe to bulk operation error events")]
-    public async IAsyncEnumerable<BulkOperationErrorEvent> OnBulkOperationError(
+    public BulkOperationErrorEvent OnBulkOperationError([EventMessage] BulkOperationErrorEvent @event) => @event;
+
+    public async IAsyncEnumerable<BulkOperationErrorEvent> SubscribeToBulkOperationError(
         [Service] ITopicEventReceiver eventReceiver,
         string? operationId,
         [EnumeratorCancellation] CancellationToken cancellationToken)

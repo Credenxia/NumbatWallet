@@ -1,10 +1,10 @@
 using System.Text.Json;
-using FluentAssertions;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using Moq;
 using NumbatWallet.Application.Commands.Credentials;
 using NumbatWallet.Application.Commands.Credentials.Handlers;
 using NumbatWallet.Application.Exceptions;
+using NumbatWallet.Application.Interfaces;
 using NumbatWallet.Domain.Aggregates;
 using NumbatWallet.Domain.Events;
 using NumbatWallet.Domain.Interfaces;
@@ -15,22 +15,43 @@ namespace NumbatWallet.Application.Tests.Commands.Credentials;
 public class PresentCredentialCommandHandlerTests
 {
     private readonly Mock<ICredentialRepository> _credentialRepositoryMock;
+    private readonly Mock<IPresentationRepository> _presentationRepositoryMock;
     private readonly Mock<IVerificationService> _verificationServiceMock;
+    private readonly Mock<IUnitOfWork> _unitOfWorkMock;
     private readonly Mock<Application.Interfaces.IEventDispatcher> _eventDispatcherMock;
-    private readonly Mock<ILogger<PresentCredentialCommandHandler>> _loggerMock;
+    private readonly Mock<IConfiguration> _configurationMock;
     private readonly PresentCredentialCommandHandler _handler;
 
     public PresentCredentialCommandHandlerTests()
     {
         _credentialRepositoryMock = new Mock<ICredentialRepository>();
+        _presentationRepositoryMock = new Mock<IPresentationRepository>();
         _verificationServiceMock = new Mock<IVerificationService>();
+        _unitOfWorkMock = new Mock<IUnitOfWork>();
         _eventDispatcherMock = new Mock<Application.Interfaces.IEventDispatcher>();
-        _loggerMock = new Mock<ILogger<PresentCredentialCommandHandler>>();
+        _configurationMock = new Mock<IConfiguration>();
+        var loggerMock = new Mock<ILogger<PresentCredentialCommandHandler>>();
         _handler = new PresentCredentialCommandHandler(
             _credentialRepositoryMock.Object,
+            _presentationRepositoryMock.Object,
             _verificationServiceMock.Object,
+            _unitOfWorkMock.Object,
             _eventDispatcherMock.Object,
-            _loggerMock.Object);
+            _configurationMock.Object,
+            loggerMock.Object);
+    }
+
+    private void SetupTokenService(string presentationToken = "token", string verificationUrl = "url")
+    {
+        _verificationServiceMock.Setup(x => x.CreatePresentationTokenAsync(
+                It.IsAny<PresentationTokenRequest>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(presentationToken);
+
+        _verificationServiceMock.Setup(x => x.CreateVerificationUrlAsync(
+                It.IsAny<string>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(verificationUrl);
     }
 
     [Fact]
@@ -71,18 +92,7 @@ public class PresentCredentialCommandHandlerTests
         _credentialRepositoryMock.Setup(x => x.GetByIdAsync(credentialId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(credential);
 
-        _verificationServiceMock.Setup(x => x.CreatePresentationTokenAsync(
-                It.IsAny<Guid>(),
-                It.IsAny<string>(),
-                It.IsAny<string>(),
-                It.IsAny<Dictionary<string, object>>(),
-                It.IsAny<CancellationToken>()))
-            .ReturnsAsync(presentationToken);
-
-        _verificationServiceMock.Setup(x => x.CreateVerificationUrlAsync(
-                It.IsAny<string>(),
-                It.IsAny<CancellationToken>()))
-            .ReturnsAsync(verificationUrl);
+        SetupTokenService(presentationToken, verificationUrl);
 
         // Act
         var result = await _handler.HandleAsync(command);
@@ -102,30 +112,127 @@ public class PresentCredentialCommandHandlerTests
     }
 
     [Fact]
+    public async Task HandleAsync_PersistsPresentation_WithSameIdAsTokenJti()
+    {
+        // Arrange
+        var credentialId = Guid.NewGuid();
+        var credential = CreateActiveCredential(
+            new Dictionary<string, object> { { "fullName", "John Doe" }, { "dateOfBirth", "1990-01-01" } });
+
+        var command = new PresentCredentialCommand(
+            credentialId,
+            "verifier_123",
+            "Age Verification",
+            new List<string> { "dateOfBirth" });
+
+        _credentialRepositoryMock.Setup(x => x.GetByIdAsync(credentialId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(credential);
+
+        PresentationTokenRequest? tokenRequest = null;
+        _verificationServiceMock.Setup(x => x.CreatePresentationTokenAsync(
+                It.IsAny<PresentationTokenRequest>(),
+                It.IsAny<CancellationToken>()))
+            .Callback((PresentationTokenRequest req, CancellationToken _) => tokenRequest = req)
+            .ReturnsAsync("token");
+        _verificationServiceMock.Setup(x => x.CreateVerificationUrlAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync("url");
+
+        Presentation? persisted = null;
+        _presentationRepositoryMock.Setup(x => x.AddAsync(It.IsAny<Presentation>(), It.IsAny<CancellationToken>()))
+            .Callback((Presentation p, CancellationToken _) => persisted = p)
+            .ReturnsAsync((Presentation p, CancellationToken _) => p);
+
+        // Act
+        await _handler.HandleAsync(command);
+
+        // Assert — the persisted presentation IS the token's jti
+        persisted.Should().NotBeNull();
+        tokenRequest.Should().NotBeNull();
+        persisted!.Id.Should().Be(tokenRequest!.PresentationId);
+        persisted.CredentialId.Should().Be(credential.Id);
+        persisted.WalletId.Should().Be(credential.WalletId);
+        persisted.VerifierId.Should().Be("verifier_123");
+        persisted.Purpose.Should().Be("Age Verification");
+        persisted.ExpiresAt.Should().Be(tokenRequest.ExpiresAt);
+        persisted.DisclosedClaimsJson.Should().Contain("dateOfBirth");
+        persisted.DisclosedClaimsJson.Should().NotContain("fullName");
+
+        // The token request carries the credential context for the embedded VC plus a nonce.
+        tokenRequest.CredentialId.Should().Be(credential.Id);
+        tokenRequest.WalletId.Should().Be(credential.WalletId);
+        tokenRequest.IssuerId.Should().Be(credential.IssuerId);
+        tokenRequest.CredentialType.Should().Be("Custom");
+        tokenRequest.Nonce.Should().NotBeNullOrWhiteSpace();
+        tokenRequest.DisclosedClaims.Keys.Should().BeEquivalentTo("dateOfBirth");
+
+        // Default lifetime is 15 minutes when not configured
+        persisted.ExpiresAt.Should().BeCloseTo(DateTimeOffset.UtcNow.AddMinutes(15), TimeSpan.FromMinutes(1));
+
+        _unitOfWorkMock.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task HandleAsync_CallerSuppliedNonce_IsUsedInTokenRequest()
+    {
+        // Arrange — OID4VP flow: the verifier's request nonce must end up in the VP
+        var credentialId = Guid.NewGuid();
+        var credential = CreateActiveCredential(new Dictionary<string, object> { { "a", "b" } });
+        _credentialRepositoryMock.Setup(x => x.GetByIdAsync(credentialId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(credential);
+
+        PresentationTokenRequest? tokenRequest = null;
+        _verificationServiceMock.Setup(x => x.CreatePresentationTokenAsync(
+                It.IsAny<PresentationTokenRequest>(), It.IsAny<CancellationToken>()))
+            .Callback((PresentationTokenRequest req, CancellationToken _) => tokenRequest = req)
+            .ReturnsAsync("token");
+        _verificationServiceMock.Setup(x => x.CreateVerificationUrlAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync("url");
+
+        // Act
+        await _handler.HandleAsync(new PresentCredentialCommand(
+            credentialId, "v", "purpose", null, Nonce: "request-nonce-42"));
+
+        // Assert
+        tokenRequest!.Nonce.Should().Be("request-nonce-42");
+    }
+
+    [Fact]
+    public async Task HandleAsync_ConfiguredLifetime_IsUsedForExpiry()
+    {
+        // Arrange
+        var credentialId = Guid.NewGuid();
+        var credential = CreateActiveCredential(new Dictionary<string, object> { { "a", "b" } });
+
+        _configurationMock.Setup(c => c["Presentation:TokenLifetimeMinutes"]).Returns("60");
+
+        _credentialRepositoryMock.Setup(x => x.GetByIdAsync(credentialId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(credential);
+        SetupTokenService();
+
+        Presentation? persisted = null;
+        _presentationRepositoryMock.Setup(x => x.AddAsync(It.IsAny<Presentation>(), It.IsAny<CancellationToken>()))
+            .Callback((Presentation p, CancellationToken _) => persisted = p)
+            .ReturnsAsync((Presentation p, CancellationToken _) => p);
+
+        // Act
+        await _handler.HandleAsync(new PresentCredentialCommand(credentialId, "v", "purpose", null));
+
+        // Assert
+        persisted!.ExpiresAt.Should().BeCloseTo(DateTimeOffset.UtcNow.AddMinutes(60), TimeSpan.FromMinutes(1));
+    }
+
+    [Fact]
     public async Task HandleAsync_NoSelectiveDisclosure_DiscloseAllClaims()
     {
         // Arrange
         var credentialId = Guid.NewGuid();
-        var walletId = Guid.NewGuid();
-        var issuerId = Guid.NewGuid();
-
-        var credentialData = new Dictionary<string, object>
+        var credential = CreateActiveCredential(new Dictionary<string, object>
         {
             { "fullName", "Jane Smith" },
             { "employeeId", "EMP001" },
             { "department", "IT" },
             { "startDate", "2020-01-15" }
-        };
-
-        var credentialResult = Credential.Create(
-            walletId,
-            issuerId,
-            "EmployeeId",
-            JsonSerializer.Serialize(credentialData),
-            "schema:employeeid:1.0");
-
-        var credential = credentialResult.Value;
-        credential.Activate();
+        });
 
         var command = new PresentCredentialCommand(
             credentialId,
@@ -136,18 +243,7 @@ public class PresentCredentialCommandHandlerTests
         _credentialRepositoryMock.Setup(x => x.GetByIdAsync(credentialId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(credential);
 
-        _verificationServiceMock.Setup(x => x.CreatePresentationTokenAsync(
-                It.IsAny<Guid>(),
-                It.IsAny<string>(),
-                It.IsAny<string>(),
-                It.IsAny<Dictionary<string, object>>(),
-                It.IsAny<CancellationToken>()))
-            .ReturnsAsync("token");
-
-        _verificationServiceMock.Setup(x => x.CreateVerificationUrlAsync(
-                It.IsAny<string>(),
-                It.IsAny<CancellationToken>()))
-            .ReturnsAsync("url");
+        SetupTokenService();
 
         // Act
         var result = await _handler.HandleAsync(command);
@@ -204,6 +300,7 @@ public class PresentCredentialCommandHandlerTests
         // Act & Assert
         var exception = await Assert.ThrowsAsync<BusinessRuleException>(() => _handler.HandleAsync(command));
         exception.Message.Should().Contain("Cannot present inactive credential");
+        _presentationRepositoryMock.Verify(x => x.AddAsync(It.IsAny<Presentation>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -237,6 +334,7 @@ public class PresentCredentialCommandHandlerTests
         // Act & Assert
         var exception = await Assert.ThrowsAsync<BusinessRuleException>(() => _handler.HandleAsync(command));
         exception.Message.Should().Contain("Cannot present expired credential");
+        _presentationRepositoryMock.Verify(x => x.AddAsync(It.IsAny<Presentation>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -244,20 +342,9 @@ public class PresentCredentialCommandHandlerTests
     {
         // Arrange
         var credentialId = Guid.NewGuid();
-        var walletId = Guid.NewGuid();
-        var issuerId = Guid.NewGuid();
         var verifierId = "verifier_test";
         var purpose = "Test Purpose";
-
-        var credentialResult = Credential.Create(
-            walletId,
-            issuerId,
-            "Custom",
-            "{}",
-            "schema:custom:1.0");
-
-        var credential = credentialResult.Value;
-        credential.Activate();
+        var credential = CreateActiveCredential(new Dictionary<string, object>());
 
         var command = new PresentCredentialCommand(
             credentialId,
@@ -268,24 +355,13 @@ public class PresentCredentialCommandHandlerTests
         _credentialRepositoryMock.Setup(x => x.GetByIdAsync(credentialId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(credential);
 
-        _verificationServiceMock.Setup(x => x.CreatePresentationTokenAsync(
-                It.IsAny<Guid>(),
-                It.IsAny<string>(),
-                It.IsAny<string>(),
-                It.IsAny<Dictionary<string, object>>(),
-                It.IsAny<CancellationToken>()))
-            .ReturnsAsync("token");
-
-        _verificationServiceMock.Setup(x => x.CreateVerificationUrlAsync(
-                It.IsAny<string>(),
-                It.IsAny<CancellationToken>()))
-            .ReturnsAsync("url");
+        SetupTokenService();
 
         CredentialPresentedEvent? capturedEvent = null;
         _eventDispatcherMock.Setup(x => x.DispatchAsync(
                 It.IsAny<IDomainEvent>(),
                 It.IsAny<CancellationToken>()))
-            .Callback((IDomainEvent evt, CancellationToken ct) =>
+            .Callback((IDomainEvent evt, CancellationToken _) =>
             {
                 capturedEvent = evt as CredentialPresentedEvent;
             })
@@ -301,5 +377,19 @@ public class PresentCredentialCommandHandlerTests
         capturedEvent.VerifierId.Should().Be(verifierId);
         capturedEvent.Purpose.Should().Be(purpose);
         capturedEvent.PresentedAt.Should().BeCloseTo(DateTimeOffset.UtcNow, TimeSpan.FromSeconds(5));
+    }
+
+    private static Credential CreateActiveCredential(Dictionary<string, object> claims)
+    {
+        var credentialResult = Credential.Create(
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            "Custom",
+            JsonSerializer.Serialize(claims),
+            "schema:custom:1.0");
+
+        var credential = credentialResult.Value;
+        credential.Activate();
+        return credential;
     }
 }

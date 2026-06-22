@@ -113,6 +113,9 @@ public class DashboardService : IDashboardService
         }
     }
 
+    // POA: mock data — the /api/admin/dashboard/* REST endpoints below do not exist on the backend,
+    // so the widget dashboards (/dashboard/master, /dashboard/tenant) always fall back to these mocks.
+    // The main /dashboard page uses IAdminGraphQLClient and renders REAL data.
     private DashboardMetrics GetDefaultMetrics()
     {
         return new DashboardMetrics

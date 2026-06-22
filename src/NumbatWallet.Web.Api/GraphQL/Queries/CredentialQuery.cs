@@ -1,4 +1,3 @@
-using NumbatWallet.Application.CQRS.Interfaces;
 using NumbatWallet.Application.DTOs;
 using NumbatWallet.Application.Queries.Credentials;
 using NumbatWallet.Application.Queries.Issuances;
@@ -13,37 +12,18 @@ namespace NumbatWallet.Web.Api.GraphQL.Queries;
 [ExtendObjectType("Query")]
 public class CredentialQuery
 {
-    private readonly IQueryHandler<GetCredentialByIdQuery, CredentialDto?> _getCredentialByIdHandler;
-    private readonly IQueryHandler<GetCredentialsByWalletQuery, IEnumerable<CredentialDto>> _getCredentialsByWalletHandler;
-    private readonly IQueryHandler<GetCredentialsByIssuerQuery, IEnumerable<CredentialDto>> _getCredentialsByIssuerHandler;
-    private readonly IQueryHandler<SearchCredentialsQuery, PagedResultDto<CredentialDto>> _searchCredentialsHandler;
-    private readonly IQueryHandler<GetIssuanceByIdQuery, IssuanceDto?> _getIssuanceByIdHandler;
-    private readonly IQueryHandler<GetIssuancesByStatusQuery, IEnumerable<IssuanceDto>> _getIssuancesByStatusHandler;
-    private readonly ICredentialRepository? _credentialRepository;
-    private readonly IIssuanceRepository? _issuanceRepository;
     private readonly ISecurityAuditService _auditService;
     private readonly ILogger<CredentialQuery> _logger;
 
+    // NOTE: query handlers and repositories are SCOPED (they depend on the scoped DbContext)
+    // and must be resolved per-resolver via [Service] parameters. HotChocolate object types
+    // are singletons, so constructor-injecting a scoped dependency captures a DbContext that
+    // is disposed after the first request (captive dependency → ObjectDisposedException).
+    // Only singletons (audit service, logger) may live in the constructor.
     public CredentialQuery(
-        IQueryHandler<GetCredentialByIdQuery, CredentialDto?> getCredentialByIdHandler,
-        IQueryHandler<GetCredentialsByWalletQuery, IEnumerable<CredentialDto>> getCredentialsByWalletHandler,
-        IQueryHandler<GetCredentialsByIssuerQuery, IEnumerable<CredentialDto>> getCredentialsByIssuerHandler,
-        IQueryHandler<SearchCredentialsQuery, PagedResultDto<CredentialDto>> searchCredentialsHandler,
-        IQueryHandler<GetIssuanceByIdQuery, IssuanceDto?> getIssuanceByIdHandler,
-        IQueryHandler<GetIssuancesByStatusQuery, IEnumerable<IssuanceDto>> getIssuancesByStatusHandler,
         ISecurityAuditService auditService,
-        ILogger<CredentialQuery> logger,
-        ICredentialRepository? credentialRepository = null,
-        IIssuanceRepository? issuanceRepository = null)
+        ILogger<CredentialQuery> logger)
     {
-        _getCredentialByIdHandler = getCredentialByIdHandler;
-        _getCredentialsByWalletHandler = getCredentialsByWalletHandler;
-        _getCredentialsByIssuerHandler = getCredentialsByIssuerHandler;
-        _searchCredentialsHandler = searchCredentialsHandler;
-        _getIssuanceByIdHandler = getIssuanceByIdHandler;
-        _getIssuancesByStatusHandler = getIssuancesByStatusHandler;
-        _credentialRepository = credentialRepository;
-        _issuanceRepository = issuanceRepository;
         _auditService = auditService;
         _logger = logger;
     }
@@ -52,10 +32,12 @@ public class CredentialQuery
     /// Get a credential by ID
     /// </summary>
     [GraphQLDescription("Get a credential by its unique identifier")]
-    [HotChocolate.Authorization.Authorize]
+    [Authorize]
     public async Task<CredentialDto?> GetCredential(
         string id,
-        [Service] IHttpContextAccessor httpContextAccessor)
+        [Service] IHttpContextAccessor httpContextAccessor,
+        [Service] NumbatWallet.SharedKernel.Interfaces.ITenantService tenantService,
+        [Service] IQueryHandler<GetCredentialByIdQuery, CredentialDto?> getCredentialByIdHandler)
     {
         var httpContext = httpContextAccessor.HttpContext;
 
@@ -69,8 +51,10 @@ public class CredentialQuery
                 $"Credential access: {id}");
         }
 
-        var query = new GetCredentialByIdQuery(Guid.Empty, Guid.Parse(id)); // TenantId would come from context
-        var credential = await _getCredentialByIdHandler.HandleAsync(query);
+        // The handler rejects credentials whose TenantId differs from the query's, so the
+        // ambient tenant must be passed (Guid.Empty matched nothing).
+        var query = new GetCredentialByIdQuery(tenantService.TenantId, Guid.Parse(id));
+        var credential = await getCredentialByIdHandler.HandleAsync(query);
         return credential;
     }
 
@@ -78,13 +62,15 @@ public class CredentialQuery
     /// Get all credentials for a wallet
     /// </summary>
     [GraphQLDescription("Get all credentials associated with a specific wallet")]
-    [HotChocolate.Authorization.Authorize]
+    [Authorize]
     [UsePaging]
     [UseFiltering]
     [UseSorting]
     public async Task<IQueryable<CredentialDto>> GetCredentialsByWallet(
         Guid walletId,
-        [Service] IHttpContextAccessor httpContextAccessor)
+        [Service] IHttpContextAccessor httpContextAccessor,
+        [Service] NumbatWallet.SharedKernel.Interfaces.ITenantService tenantService,
+        [Service] IQueryHandler<GetCredentialsByWalletQuery, IEnumerable<CredentialDto>> getCredentialsByWalletHandler)
     {
         var httpContext = httpContextAccessor.HttpContext;
 
@@ -98,8 +84,10 @@ public class CredentialQuery
                 $"Wallet credentials access: {walletId}");
         }
 
-        var query = new GetCredentialsByWalletQuery(Guid.Empty, walletId, false); // TenantId would come from context
-        var credentials = await _getCredentialsByWalletHandler.HandleAsync(query);
+        // Resolve the tenant from the ambient request context (was hardcoded to Guid.Empty,
+        // which filtered out every credential because no wallet belongs to the empty tenant).
+        var query = new GetCredentialsByWalletQuery(tenantService.TenantId, walletId, false);
+        var credentials = await getCredentialsByWalletHandler.HandleAsync(query);
         return credentials.AsQueryable();
     }
 
@@ -107,13 +95,14 @@ public class CredentialQuery
     /// Get credentials by issuer
     /// </summary>
     [GraphQLDescription("Get all credentials issued by a specific issuer")]
-    [HotChocolate.Authorization.Authorize(Roles = new[] { "Issuer", "Admin" })]
+    [Authorize(Roles = new[] { "Issuer", "Admin" })]
     [UsePaging]
     [UseFiltering]
     [UseSorting]
     public async Task<IQueryable<CredentialDto>> GetCredentialsByIssuer(
         string issuerId,
-        [Service] IHttpContextAccessor httpContextAccessor)
+        [Service] IHttpContextAccessor httpContextAccessor,
+        [Service] IQueryHandler<GetCredentialsByIssuerQuery, IEnumerable<CredentialDto>> getCredentialsByIssuerHandler)
     {
         var httpContext = httpContextAccessor.HttpContext;
 
@@ -128,7 +117,7 @@ public class CredentialQuery
         }
 
         var query = new GetCredentialsByIssuerQuery { IssuerId = Guid.Parse(issuerId) };
-        var credentials = await _getCredentialsByIssuerHandler.HandleAsync(query);
+        var credentials = await getCredentialsByIssuerHandler.HandleAsync(query);
         return credentials.AsQueryable();
     }
 
@@ -136,16 +125,19 @@ public class CredentialQuery
     /// Get credentials by type
     /// </summary>
     [GraphQLDescription("Get all credentials of a specific type")]
-    [HotChocolate.Authorization.Authorize]
+    [Authorize]
     [UsePaging]
     [UseFiltering]
     [UseSorting]
-    public async Task<IQueryable<CredentialDto>> GetCredentialsByType(string type)
+    public async Task<IQueryable<CredentialDto>> GetCredentialsByType(
+        string type,
+        [Service] NumbatWallet.SharedKernel.Interfaces.ITenantService tenantService,
+        [Service] IQueryHandler<SearchCredentialsQuery, PagedResultDto<CredentialDto>> searchCredentialsHandler)
     {
         _logger.LogInformation("Fetching credentials of type {Type}", type);
 
         var query = new SearchCredentialsQuery(
-            TenantId: Guid.Empty, // TenantId would come from context
+            TenantId: tenantService.TenantId,
             SearchTerm: null,
             CredentialType: type,
             Status: null,
@@ -154,7 +146,7 @@ public class CredentialQuery
             SortBy: null,
             SortDescending: false);
 
-        var result = await _searchCredentialsHandler.HandleAsync(query);
+        var result = await searchCredentialsHandler.HandleAsync(query);
         return result.Items.AsQueryable();
     }
 
@@ -162,11 +154,13 @@ public class CredentialQuery
     /// Search credentials
     /// </summary>
     [GraphQLDescription("Search credentials based on various criteria")]
-    [HotChocolate.Authorization.Authorize]
+    [Authorize]
     [UsePaging]
     [UseFiltering]
     [UseSorting]
     public async Task<IQueryable<CredentialDto>> SearchCredentials(
+        [Service] NumbatWallet.SharedKernel.Interfaces.ITenantService tenantService,
+        [Service] IQueryHandler<SearchCredentialsQuery, PagedResultDto<CredentialDto>> searchCredentialsHandler,
         string? holderId = null,
         string? issuerId = null,
         string? type = null,
@@ -178,19 +172,32 @@ public class CredentialQuery
     {
         _logger.LogInformation("Searching credentials with criteria");
 
-        // For now, return empty until proper search handler is available
-        var credentials = new List<CredentialDto>();
-        return credentials.AsQueryable();
+        // Build search query with filters
+        var searchTerm = string.IsNullOrEmpty(type) ? null : type;
+
+        var query = new SearchCredentialsQuery(
+            TenantId: tenantService.TenantId,
+            SearchTerm: searchTerm,
+            CredentialType: type,
+            Status: status,
+            PageNumber: 1,
+            PageSize: 1000, // Large page size for GraphQL - paging handled by HotChocolate
+            SortBy: null,
+            SortDescending: false);
+
+        var result = await searchCredentialsHandler.HandleAsync(query);
+        return result.Items.AsQueryable();
     }
 
     /// <summary>
     /// Get an issuance by ID
     /// </summary>
     [GraphQLDescription("Get an issuance request by its unique identifier")]
-    [HotChocolate.Authorization.Authorize]
+    [Authorize]
     public async Task<IssuanceDto?> GetIssuance(
         Guid id,
-        [Service] IHttpContextAccessor httpContextAccessor)
+        [Service] IHttpContextAccessor httpContextAccessor,
+        [Service] IQueryHandler<GetIssuanceByIdQuery, IssuanceDto?> getIssuanceByIdHandler)
     {
         var httpContext = httpContextAccessor.HttpContext;
 
@@ -205,7 +212,7 @@ public class CredentialQuery
         }
 
         var query = new GetIssuanceByIdQuery(id);
-        var issuance = await _getIssuanceByIdHandler.HandleAsync(query);
+        var issuance = await getIssuanceByIdHandler.HandleAsync(query);
         return issuance;
     }
 
@@ -213,16 +220,18 @@ public class CredentialQuery
     /// Get issuances by status
     /// </summary>
     [GraphQLDescription("Get all issuance requests with a specific status")]
-    [HotChocolate.Authorization.Authorize(Roles = new[] { "Issuer", "Admin" })]
+    [Authorize(Roles = new[] { "Issuer", "Admin" })]
     [UsePaging]
     [UseFiltering]
     [UseSorting]
-    public async Task<IQueryable<IssuanceDto>> GetIssuancesByStatus(string status)
+    public async Task<IQueryable<IssuanceDto>> GetIssuancesByStatus(
+        string status,
+        [Service] IQueryHandler<GetIssuancesByStatusQuery, IEnumerable<IssuanceDto>> getIssuancesByStatusHandler)
     {
         _logger.LogInformation("Fetching issuances with status {Status}", status);
 
         var query = new GetIssuancesByStatusQuery(status, null, null, null, null);
-        var issuances = await _getIssuancesByStatusHandler.HandleAsync(query);
+        var issuances = await getIssuancesByStatusHandler.HandleAsync(query);
         return issuances.AsQueryable();
     }
 
@@ -230,16 +239,17 @@ public class CredentialQuery
     /// Get pending issuances
     /// </summary>
     [GraphQLDescription("Get all pending issuance requests awaiting approval")]
-    [HotChocolate.Authorization.Authorize(Roles = new[] { "Issuer", "Admin" })]
+    [Authorize(Roles = new[] { "Issuer", "Admin" })]
     [UsePaging]
     [UseFiltering]
     [UseSorting]
-    public async Task<IQueryable<IssuanceDto>> GetPendingIssuances()
+    public async Task<IQueryable<IssuanceDto>> GetPendingIssuances(
+        [Service] IQueryHandler<GetIssuancesByStatusQuery, IEnumerable<IssuanceDto>> getIssuancesByStatusHandler)
     {
         _logger.LogInformation("Fetching pending issuances");
 
         var query = new GetIssuancesByStatusQuery("Pending", null, null, null, null);
-        var issuances = await _getIssuancesByStatusHandler.HandleAsync(query);
+        var issuances = await getIssuancesByStatusHandler.HandleAsync(query);
         return issuances.AsQueryable();
     }
 
@@ -247,16 +257,40 @@ public class CredentialQuery
     /// Get issuances for a wallet
     /// </summary>
     [GraphQLDescription("Get all issuance requests for a specific wallet")]
-    [HotChocolate.Authorization.Authorize]
+    [Authorize]
     [UsePaging]
     [UseFiltering]
     [UseSorting]
-    public async Task<IQueryable<IssuanceDto>> GetIssuancesByWallet(Guid walletId)
+    public async Task<IQueryable<IssuanceDto>> GetIssuancesByWallet(
+        Guid walletId,
+        [Service] IIssuanceRepository issuanceRepository)
     {
         _logger.LogInformation("Fetching issuances for wallet {WalletId}", walletId);
 
-        // Would need a GetIssuancesByWalletQuery - for now return empty
-        return new List<IssuanceDto>().AsQueryable();
+        // Use repository directly since we don't have a specific query handler for this
+        var issuances = await issuanceRepository.GetByWalletIdAsync(walletId);
+
+        // Map to DTOs
+        var issuanceDtos = issuances.Select(i => new IssuanceDto
+        {
+            Id = i.Id,
+            WalletId = i.WalletId,
+            RequesterId = i.RequesterId,
+            CredentialType = i.CredentialType,
+            Status = i.Status,
+            CreatedAt = i.CreatedAt,
+            ApprovedAt = i.ApprovedAt,
+            RejectedAt = i.RejectedAt,
+            CompletedAt = i.CompletedAt,
+            ApprovedBy = i.ApprovedBy,
+            RejectedBy = i.RejectedBy,
+            CompletedBy = i.CompletedBy,
+            RejectionReason = i.RejectionReason,
+            CredentialId = i.CredentialId,
+            CredentialData = i.Claims.ToDictionary(kvp => kvp.Key, kvp => kvp.Value)
+        }).ToList();
+
+        return issuanceDtos.AsQueryable();
     }
 
     private static TimeSpan CalculateAverageValidityPeriod(List<CredentialDto> credentials)
@@ -275,8 +309,10 @@ public class CredentialQuery
     /// Get credential statistics
     /// </summary>
     [GraphQLDescription("Get statistical information about credentials")]
-    [HotChocolate.Authorization.Authorize(Roles = new[] { "Admin" })]
+    [Authorize(Roles = new[] { "Admin" })]
     public async Task<CredentialStatistics> GetCredentialStatistics(
+        [Service] NumbatWallet.SharedKernel.Interfaces.ITenantService tenantService,
+        [Service] IQueryHandler<SearchCredentialsQuery, PagedResultDto<CredentialDto>> searchCredentialsHandler,
         DateTime? startDate = null,
         DateTime? endDate = null)
     {
@@ -289,11 +325,21 @@ public class CredentialQuery
         var weekAgo = today.AddDays(-7);
         var monthAgo = today.AddMonths(-1);
 
-        // For POA phase, return simulated statistics
-        // In production, this would query the actual database
-        var allCredentials = new List<CredentialDto>();
+        // Fetch real credentials from database using SearchCredentialsQuery
+        var query = new SearchCredentialsQuery(
+            TenantId: tenantService.TenantId,
+            SearchTerm: null,
+            CredentialType: null,
+            Status: null,
+            PageNumber: 1,
+            PageSize: 10000, // Large page size to get all credentials for statistics
+            SortBy: null,
+            SortDescending: false);
 
-        // Calculate statistics
+        var searchResult = await searchCredentialsHandler.HandleAsync(query);
+        var allCredentials = searchResult.Items.ToList();
+
+        // Calculate statistics from real data
         var stats = new CredentialStatistics
         {
             TotalCredentials = allCredentials.Count,
@@ -307,7 +353,7 @@ public class CredentialQuery
                 .ToDictionary(g => g.Key, g => g.Count()),
             CredentialsByIssuer = allCredentials.GroupBy(c => c.IssuerId ?? "Unknown")
                 .ToDictionary(g => g.Key, g => g.Count()),
-            AverageValidityPeriod = CalculateAverageValidityPeriod(allCredentials)
+            AverageValidityPeriod = allCredentials.Any() ? CalculateAverageValidityPeriod(allCredentials) : TimeSpan.Zero
         };
 
         return stats;
@@ -317,8 +363,9 @@ public class CredentialQuery
     /// Get issuance statistics
     /// </summary>
     [GraphQLDescription("Get statistical information about issuances")]
-    [HotChocolate.Authorization.Authorize(Roles = new[] { "Admin" })]
-    public async Task<IssuanceStatistics> GetIssuanceStatistics(
+    [Authorize(Roles = new[] { "Admin" })]
+    public async Task<IssuanceProcessStatistics> GetIssuanceStatistics(
+        [Service] IQueryHandler<GetIssuancesByStatusQuery, IEnumerable<IssuanceDto>> getIssuancesByStatusHandler,
         DateTime? startDate = null,
         DateTime? endDate = null)
     {
@@ -330,19 +377,19 @@ public class CredentialQuery
 
         // Fetch issuances by different statuses
         var allIssuancesQuery = new GetIssuancesByStatusQuery(null, start, end, null, null);
-        var allIssuances = (await _getIssuancesByStatusHandler.HandleAsync(allIssuancesQuery)).ToList();
+        var allIssuances = (await getIssuancesByStatusHandler.HandleAsync(allIssuancesQuery)).ToList();
 
         var pendingQuery = new GetIssuancesByStatusQuery("Pending", start, end, null, null);
-        var pendingIssuances = (await _getIssuancesByStatusHandler.HandleAsync(pendingQuery)).ToList();
+        var pendingIssuances = (await getIssuancesByStatusHandler.HandleAsync(pendingQuery)).ToList();
 
         var approvedQuery = new GetIssuancesByStatusQuery("Approved", start, end, null, null);
-        var approvedIssuances = (await _getIssuancesByStatusHandler.HandleAsync(approvedQuery)).ToList();
+        var approvedIssuances = (await getIssuancesByStatusHandler.HandleAsync(approvedQuery)).ToList();
 
         var rejectedQuery = new GetIssuancesByStatusQuery("Rejected", start, end, null, null);
-        var rejectedIssuances = (await _getIssuancesByStatusHandler.HandleAsync(rejectedQuery)).ToList();
+        var rejectedIssuances = (await getIssuancesByStatusHandler.HandleAsync(rejectedQuery)).ToList();
 
         var completedQuery = new GetIssuancesByStatusQuery("Completed", start, end, null, null);
-        var completedIssuances = (await _getIssuancesByStatusHandler.HandleAsync(completedQuery)).ToList();
+        var completedIssuances = (await getIssuancesByStatusHandler.HandleAsync(completedQuery)).ToList();
 
         // Calculate average processing time
         var processedIssuances = allIssuances.Where(i => i.CompletedAt.HasValue && i.CreatedAt != default);
@@ -350,7 +397,7 @@ public class CredentialQuery
             ? TimeSpan.FromMinutes(processedIssuances.Average(i => (i.CompletedAt!.Value - i.CreatedAt).TotalMinutes))
             : TimeSpan.Zero;
 
-        var stats = new IssuanceStatistics
+        var stats = new IssuanceProcessStatistics
         {
             TotalIssuances = allIssuances.Count,
             PendingIssuances = pendingIssuances.Count,
@@ -388,7 +435,7 @@ public class CredentialStatistics
 /// <summary>
 /// Issuance statistics model
 /// </summary>
-public class IssuanceStatistics
+public class IssuanceProcessStatistics
 {
     public int TotalIssuances { get; set; }
     public int PendingIssuances { get; set; }

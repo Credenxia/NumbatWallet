@@ -1,4 +1,3 @@
-using FluentAssertions;
 using NumbatWallet.Domain.Credentials;
 
 namespace NumbatWallet.Domain.Tests.Credentials;
@@ -97,7 +96,7 @@ public class CredentialManifestTests
 
         var invalidManifest = new CredentialManifest
         {
-            Id = null, // Missing required field
+            Id = null!, // Missing required field
             Version = "1.0.0"
         };
 
@@ -246,7 +245,7 @@ public class CredentialManifestTests
         };
 
         // Act
-        var formats = manifest.GetSupportedFormats();
+        var formats = manifest.GetSupportedFormats().ToList();
 
         // Assert
         formats.Should().Contain("jwt_vc");

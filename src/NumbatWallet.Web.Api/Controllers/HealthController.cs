@@ -9,14 +9,11 @@ namespace NumbatWallet.Web.Api.Controllers;
 public class HealthController : ControllerBase
 {
     private readonly HealthCheckService _healthCheckService;
-    private readonly ILogger<HealthController> _logger;
 
     public HealthController(
-        HealthCheckService healthCheckService,
-        ILogger<HealthController> logger)
+        HealthCheckService healthCheckService)
     {
         _healthCheckService = healthCheckService;
-        _logger = logger;
     }
 
     /// <summary>

@@ -3,7 +3,6 @@ using System.Security.Cryptography.X509Certificates;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Moq;
 using NumbatWallet.Domain.Interfaces;
 using NumbatWallet.Infrastructure.Services;
 using NumbatWallet.Infrastructure.Services.Providers;
@@ -12,7 +11,6 @@ namespace NumbatWallet.Infrastructure.Tests.Services;
 
 public class HsmServiceTests
 {
-    private readonly Mock<IConfiguration> _configurationMock;
     private readonly Mock<ILogger<HsmService>> _loggerMock;
     private readonly Mock<IServiceProvider> _serviceProviderMock;
     private readonly IConfiguration _configuration;
@@ -20,7 +18,6 @@ public class HsmServiceTests
 
     public HsmServiceTests()
     {
-        _configurationMock = new Mock<IConfiguration>();
         _loggerMock = new Mock<ILogger<HsmService>>();
         _serviceProviderMock = new Mock<IServiceProvider>();
 
@@ -48,9 +45,9 @@ public class HsmServiceTests
         // Since GetRequiredService is an extension method, we need to use a real ServiceProvider
         var services = new ServiceCollection();
         services.AddSingleton(mockHsmProvider.Object);
-        services.AddSingleton<KeyVaultHsmProvider>(provider =>
+        services.AddSingleton<KeyVaultHsmProvider>(_ =>
             new Mock<KeyVaultHsmProvider>(Mock.Of<ILogger<KeyVaultHsmProvider>>()).Object);
-        services.AddSingleton<ManagedHsmProvider>(provider =>
+        services.AddSingleton<ManagedHsmProvider>(_ =>
             new Mock<ManagedHsmProvider>(Mock.Of<ILogger<ManagedHsmProvider>>()).Object);
 
         _realServiceProvider = services.BuildServiceProvider();
@@ -62,13 +59,13 @@ public class HsmServiceTests
     private ServiceProvider GetMockedServiceProvider()
     {
         var services = new ServiceCollection();
-        services.AddSingleton<SoftwareHsmProvider>(sp =>
+        services.AddSingleton<SoftwareHsmProvider>(_ =>
             new Mock<SoftwareHsmProvider>(
                 Mock.Of<IConfiguration>(),
                 Mock.Of<ILogger<SoftwareHsmProvider>>()).Object);
-        services.AddSingleton<KeyVaultHsmProvider>(sp =>
+        services.AddSingleton<KeyVaultHsmProvider>(_ =>
             new Mock<KeyVaultHsmProvider>(Mock.Of<ILogger<KeyVaultHsmProvider>>()).Object);
-        services.AddSingleton<ManagedHsmProvider>(sp =>
+        services.AddSingleton<ManagedHsmProvider>(_ =>
             new Mock<ManagedHsmProvider>(Mock.Of<ILogger<ManagedHsmProvider>>()).Object);
         return services.BuildServiceProvider();
     }
@@ -113,7 +110,7 @@ public class HsmServiceTests
     {
         // This test verifies that all algorithm types are properly handled in the switch statement
         // Actual key generation would require Azure Key Vault connection
-        Assert.True(Enum.IsDefined<KeyAlgorithm>(algorithm));
+        Assert.True(Enum.IsDefined(algorithm));
     }
 
     [Fact]
@@ -135,10 +132,10 @@ public class HsmServiceTests
                 ErrorMessage = "Cannot connect to Azure Key Vault"
             });
 
-        services.AddSingleton<SoftwareHsmProvider>(mockSoftwareProvider.Object);
-        services.AddSingleton<KeyVaultHsmProvider>(sp =>
+        services.AddSingleton(mockSoftwareProvider.Object);
+        services.AddSingleton(_ =>
             new Mock<KeyVaultHsmProvider>(Mock.Of<ILogger<KeyVaultHsmProvider>>()).Object);
-        services.AddSingleton<ManagedHsmProvider>(sp =>
+        services.AddSingleton<ManagedHsmProvider>(_ =>
             new Mock<ManagedHsmProvider>(Mock.Of<ILogger<ManagedHsmProvider>>()).Object);
 
         var serviceProvider = services.BuildServiceProvider();
@@ -167,14 +164,14 @@ public class HsmServiceTests
     public void SignDataAsync_WithValidSignatureAlgorithm_ShouldSupportAlgorithm(SignatureAlgorithm algorithm)
     {
         // This test verifies that all signature algorithms are properly mapped
-        Assert.True(Enum.IsDefined<SignatureAlgorithm>(algorithm));
+        Assert.True(Enum.IsDefined(algorithm));
     }
 
     [Fact]
     public void GetOcspResponderUrl_WithCertificateWithoutOcsp_ShouldReturnNull()
     {
         // Arrange
-        var service = new HsmService(GetMockedServiceProvider(), _configuration, _loggerMock.Object);
+        _ = new HsmService(GetMockedServiceProvider(), _configuration, _loggerMock.Object);
 
         // Create a test certificate without OCSP extension
         using var cert = CreateTestCertificate();
@@ -193,7 +190,7 @@ public class HsmServiceTests
     public void CreateCertificateSigningRequestAsync_ShouldRequireSubjectName()
     {
         // Arrange
-        var service = new HsmService(GetMockedServiceProvider(), _configuration, _loggerMock.Object);
+        _ = new HsmService(GetMockedServiceProvider(), _configuration, _loggerMock.Object);
         var subjectName = new X500DistinguishedName("CN=Test Certificate");
 
         // Assert

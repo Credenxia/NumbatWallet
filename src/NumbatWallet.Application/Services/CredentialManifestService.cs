@@ -1,6 +1,5 @@
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
-using NumbatWallet.Application.DTOs;
 
 namespace NumbatWallet.Application.Services;
 
@@ -64,8 +63,6 @@ public class CredentialManifestService : ICredentialManifestService
             if (manifest == null ||
                 string.IsNullOrWhiteSpace(manifest.Id) ||
                 string.IsNullOrWhiteSpace(manifest.SpecVersion) ||
-                manifest.Issuer == null ||
-                manifest.OutputDescriptors == null ||
                 !manifest.OutputDescriptors.Any())
             {
                 return Task.FromResult(false);

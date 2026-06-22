@@ -162,14 +162,11 @@ public class DistributedSessionService : ISessionService
     {
         // Note: This requires maintaining a separate index of user sessions
         // For production, consider using Redis Sets or Sorted Sets
-        var sessions = new List<SessionData>();
-        var pattern = $"session:user:{userId}:*";
-
         // This is a simplified implementation
         // In production, use Redis SCAN command or maintain proper indexes
         _logger.LogDebug("Getting sessions for user {UserId}", userId);
 
-        return sessions;
+        return new List<SessionData>();
     }
 
     public async Task<bool> RevokeUserSessionsAsync(string userId)

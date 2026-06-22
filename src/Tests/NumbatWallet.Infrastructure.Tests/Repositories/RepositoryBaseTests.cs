@@ -2,11 +2,11 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Data.Sqlite;
 using NumbatWallet.Infrastructure.Data;
 using NumbatWallet.Infrastructure.Data.Repositories;
+using NumbatWallet.Infrastructure.Data.Interceptors;
 using NumbatWallet.Domain.Aggregates;
 using NumbatWallet.SharedKernel.Specifications;
 using NumbatWallet.SharedKernel.Interfaces;
 using Microsoft.Extensions.Logging;
-using Moq;
 
 namespace NumbatWallet.Infrastructure.Tests.Repositories;
 
@@ -44,7 +44,6 @@ public class RepositoryBaseTests : IDisposable
 {
     private readonly NumbatWalletDbContext _context;
     private readonly TestWalletRepository _repository;
-    private readonly Mock<ITenantService> _tenantServiceMock;
     private readonly Guid _tenantId;
     private readonly SqliteConnection _connection;
 
@@ -54,25 +53,31 @@ public class RepositoryBaseTests : IDisposable
         _connection = new SqliteConnection("DataSource=:memory:");
         _connection.Open();
 
-        var options = new DbContextOptionsBuilder<NumbatWalletDbContext>()
-            .UseSqlite(_connection)
-            .EnableSensitiveDataLogging()
-            .Options;
-
-        _tenantServiceMock = new Mock<ITenantService>();
+        var tenantServiceMock = new Mock<ITenantService>();
+        var currentTenantServiceMock = new Mock<ICurrentTenantService>();
         var currentUserServiceMock = new Mock<ICurrentUserService>();
         var dateTimeServiceMock = new Mock<IDateTimeService>();
         var eventDispatcherMock = new Mock<IEventDispatcher>();
         var loggerMock = new Mock<ILogger<NumbatWalletDbContext>>();
 
         _tenantId = Guid.NewGuid();
-        _tenantServiceMock.Setup(x => x.TenantId).Returns(_tenantId);
+        var tenantIdString = _tenantId.ToString();
+
+        // Mock both tenant services to return the same tenant ID
+        tenantServiceMock.Setup(x => x.TenantId).Returns(_tenantId);
+        currentTenantServiceMock.Setup(x => x.TenantId).Returns(tenantIdString);
         currentUserServiceMock.Setup(x => x.UserId).Returns("test-user");
         dateTimeServiceMock.Setup(x => x.UtcNow).Returns(DateTimeOffset.UtcNow);
 
+        var options = new DbContextOptionsBuilder<NumbatWalletDbContext>()
+            .UseSqlite(_connection)
+            .EnableSensitiveDataLogging()
+            .AddInterceptors(new TenantInterceptor(currentTenantServiceMock.Object))
+            .Options;
+
         _context = new NumbatWalletDbContext(
             options,
-            _tenantServiceMock.Object,
+            tenantServiceMock.Object,
             currentUserServiceMock.Object,
             dateTimeServiceMock.Object,
             eventDispatcherMock.Object,
@@ -248,7 +253,7 @@ public class RepositoryBaseTests : IDisposable
         var spec = new WalletByPersonIdSpecification(person1.Id);
 
         // Act
-        var results = await _repository.FindAsync(spec);
+        var results = (await _repository.FindAsync(spec)).ToList();
 
         // Assert
         Assert.Single(results);

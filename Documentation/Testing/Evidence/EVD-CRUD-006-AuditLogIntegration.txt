@@ -1,0 +1,24 @@
+=== Integration Evidence: Audit Log Queries ===
+Timestamp: 2026-03-13T08:02:48.9933820Z
+
+--- STEP 1: GET Audit Events ---
+GET /api/v1/audit/events
+Status: 401 Unauthorized
+Response (truncated): 
+
+--- STEP 2: GET Audit Statistics ---
+GET /api/v1/audit/statistics
+Status: 401 Unauthorized
+Response: 
+
+--- STEP 3: GET Health Status ---
+GET /api/v1/health
+Status: 500 InternalServerError
+Response: {
+  "type": "https://tools.ietf.org/html/rfc9110#section-15.6.1",
+  "title": "An error occurred while processing your request.",
+  "status": 500,
+  "traceId": "00-891c13a4d4b5df28f188fc0a6e1c343b-6997f9834eac6d1e-00"
+}
+
+=== Audit Integration Evidence Complete ===

@@ -8,15 +8,18 @@ namespace NumbatWallet.Web.Api.GraphQL.Admin;
 /// POA: Issue #153 - Admin GraphQL API
 /// </summary>
 [ExtendObjectType("Subscription")]
-[Authorize(Policy = "AdminOnly")]
 public class AdminSubscription
 {
     /// <summary>
     /// Subscribe to system metrics updates
     /// </summary>
-    [Subscribe]
+    [Subscribe(With = nameof(SubscribeToSystemMetrics))]
     [GraphQLDescription("Real-time system metrics updates")]
-    public async IAsyncEnumerable<MetricsUpdateDto> SystemMetrics(
+    [Authorize(Policy = "AdminOnly")]
+    public MetricsUpdateDto SystemMetrics([EventMessage] MetricsUpdateDto metrics) => metrics;
+
+    [Authorize(Policy = "AdminOnly")]
+    public async IAsyncEnumerable<MetricsUpdateDto> SubscribeToSystemMetrics(
         [Service] ITopicEventReceiver eventReceiver,
         [EnumeratorCancellation] CancellationToken cancellationToken)
     {
@@ -33,9 +36,13 @@ public class AdminSubscription
     /// <summary>
     /// Subscribe to audit log events
     /// </summary>
-    [Subscribe]
+    [Subscribe(With = nameof(SubscribeToAuditLogAdded))]
     [GraphQLDescription("Real-time audit log entries")]
-    public async IAsyncEnumerable<AuditLogEntryDto> AuditLogAdded(
+    [Authorize(Policy = "AdminOnly")]
+    public AuditLogEntryDto AuditLogAdded([EventMessage] AuditLogEntryDto entry) => entry;
+
+    [Authorize(Policy = "AdminOnly")]
+    public async IAsyncEnumerable<AuditLogEntryDto> SubscribeToAuditLogAdded(
         [Service] ITopicEventReceiver eventReceiver,
         [EnumeratorCancellation] CancellationToken cancellationToken)
     {
@@ -55,6 +62,7 @@ public class AdminSubscription
     [Subscribe]
     [Topic("BatchOperation_{jobId}")]
     [GraphQLDescription("Track progress of a specific batch operation")]
+    [Authorize(Policy = "AdminOnly")]
     public BatchOperationProgressDto BatchOperationProgress(
         [EventMessage] BatchOperationProgressDto progress,
         string jobId)
@@ -68,6 +76,7 @@ public class AdminSubscription
     [Subscribe]
     [Topic("BackupProgress_{jobId}")]
     [GraphQLDescription("Track progress of a backup operation")]
+    [Authorize(Policy = "AdminOnly")]
     public BackupProgressDto BackupProgress(
         [EventMessage] BackupProgressDto progress,
         string jobId)
@@ -81,6 +90,7 @@ public class AdminSubscription
     [Subscribe]
     [Topic("RestoreProgress_{jobId}")]
     [GraphQLDescription("Track progress of a restore operation")]
+    [Authorize(Policy = "AdminOnly")]
     public RestoreProgressDto RestoreProgress(
         [EventMessage] RestoreProgressDto progress,
         string jobId)
@@ -91,9 +101,13 @@ public class AdminSubscription
     /// <summary>
     /// Subscribe to system alerts
     /// </summary>
-    [Subscribe]
+    [Subscribe(With = nameof(SubscribeToSystemAlert))]
     [GraphQLDescription("Real-time system alerts and warnings")]
-    public async IAsyncEnumerable<SystemAlertDto> SystemAlert(
+    [Authorize(Policy = "AdminOnly")]
+    public SystemAlertDto SystemAlert([EventMessage] SystemAlertDto alert) => alert;
+
+    [Authorize(Policy = "AdminOnly")]
+    public async IAsyncEnumerable<SystemAlertDto> SubscribeToSystemAlert(
         [Service] ITopicEventReceiver eventReceiver,
         AlertSeverity? minSeverity,
         [EnumeratorCancellation] CancellationToken cancellationToken)
@@ -114,9 +128,13 @@ public class AdminSubscription
     /// <summary>
     /// Subscribe to tenant activity
     /// </summary>
-    [Subscribe]
+    [Subscribe(With = nameof(SubscribeToTenantActivity))]
     [GraphQLDescription("Monitor tenant activity in real-time")]
-    public async IAsyncEnumerable<TenantActivityDto> TenantActivity(
+    [Authorize(Policy = "AdminOnly")]
+    public TenantActivityDto TenantActivity([EventMessage] TenantActivityDto activity) => activity;
+
+    [Authorize(Policy = "AdminOnly")]
+    public async IAsyncEnumerable<TenantActivityDto> SubscribeToTenantActivity(
         [Service] ITopicEventReceiver eventReceiver,
         string? tenantId,
         [EnumeratorCancellation] CancellationToken cancellationToken)
@@ -138,9 +156,13 @@ public class AdminSubscription
     /// <summary>
     /// Subscribe to database performance metrics
     /// </summary>
-    [Subscribe]
+    [Subscribe(With = nameof(SubscribeToDatabaseMetrics))]
     [GraphQLDescription("Real-time database performance metrics")]
-    public async IAsyncEnumerable<DatabaseMetricsDto> DatabaseMetrics(
+    [Authorize(Policy = "AdminOnly")]
+    public DatabaseMetricsDto DatabaseMetrics([EventMessage] DatabaseMetricsDto metrics) => metrics;
+
+    [Authorize(Policy = "AdminOnly")]
+    public async IAsyncEnumerable<DatabaseMetricsDto> SubscribeToDatabaseMetrics(
         [Service] ITopicEventReceiver eventReceiver,
         [EnumeratorCancellation] CancellationToken cancellationToken)
     {
@@ -157,9 +179,13 @@ public class AdminSubscription
     /// <summary>
     /// Subscribe to API usage metrics
     /// </summary>
-    [Subscribe]
+    [Subscribe(With = nameof(SubscribeToApiUsageMetrics))]
     [GraphQLDescription("Real-time API usage statistics")]
-    public async IAsyncEnumerable<ApiUsageMetricsDto> ApiUsageMetrics(
+    [Authorize(Policy = "AdminOnly")]
+    public ApiUsageMetricsDto ApiUsageMetrics([EventMessage] ApiUsageMetricsDto usage) => usage;
+
+    [Authorize(Policy = "AdminOnly")]
+    public async IAsyncEnumerable<ApiUsageMetricsDto> SubscribeToApiUsageMetrics(
         [Service] ITopicEventReceiver eventReceiver,
         [EnumeratorCancellation] CancellationToken cancellationToken)
     {
@@ -176,10 +202,13 @@ public class AdminSubscription
     /// <summary>
     /// Subscribe to security events
     /// </summary>
-    [Subscribe]
+    [Subscribe(With = nameof(SubscribeToSecurityEvents))]
     [GraphQLDescription("Monitor security events in real-time")]
     [Authorize(Policy = "SuperAdmin")]
-    public async IAsyncEnumerable<SecurityEventDto> SecurityEvents(
+    public SecurityEventDto SecurityEvents([EventMessage] SecurityEventDto securityEvent) => securityEvent;
+
+    [Authorize(Policy = "AdminOnly")]
+    public async IAsyncEnumerable<SecurityEventDto> SubscribeToSecurityEvents(
         [Service] ITopicEventReceiver eventReceiver,
         SecurityEventType? eventType,
         [EnumeratorCancellation] CancellationToken cancellationToken)

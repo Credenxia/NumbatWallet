@@ -1,0 +1,10 @@
+/* Audience-portal helper colours for status icons in tables */
+.green  { color: #2e7d32 !important; }
+.amber  { color: #e6a700 !important; }
+.red    { color: #c62828 !important; }
+.grey   { color: #757575 !important; }
+
+/* Make the audience grid cards a touch more prominent */
+.md-typeset .grid.cards > ul > li {
+  border-radius: 0.4rem;
+}

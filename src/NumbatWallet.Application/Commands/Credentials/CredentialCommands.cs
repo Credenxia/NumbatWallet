@@ -39,7 +39,8 @@ public record PresentCredentialCommand(
     Guid CredentialId,
     string VerifierId,
     string Purpose,
-    List<string>? SelectiveDisclosure) : ICommand<PresentationResult>;
+    List<string>? SelectiveDisclosure,
+    string? Nonce = null) : ICommand<PresentationResult>;
 
 public record ShareCredentialResult(
     string ShareUrl,

@@ -1,7 +1,6 @@
 using Azure.Messaging.ServiceBus;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Distributed;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using NumbatWallet.Domain.Interfaces;
 using NumbatWallet.Infrastructure.Data;
@@ -24,7 +23,6 @@ public class KeyRotationService : IKeyRotationService
     private readonly IDateTimeService _dateTimeService;
     private readonly ICurrentUserService _currentUserService;
     private readonly ILogger<KeyRotationService> _logger;
-    private readonly IConfiguration _configuration;
 
     public KeyRotationService(
         IHsmService hsmService,
@@ -34,8 +32,7 @@ public class KeyRotationService : IKeyRotationService
         ServiceBusClient serviceBusClient,
         IDateTimeService dateTimeService,
         ICurrentUserService currentUserService,
-        ILogger<KeyRotationService> logger,
-        IConfiguration configuration)
+        ILogger<KeyRotationService> logger)
     {
         _hsmService = hsmService;
         _hsmProvider = hsmProvider;
@@ -45,7 +42,6 @@ public class KeyRotationService : IKeyRotationService
         _dateTimeService = dateTimeService;
         _currentUserService = currentUserService;
         _logger = logger;
-        _configuration = configuration;
     }
 
     public async Task<RotationResult> RotateKeyAsync(string keyId, CancellationToken cancellationToken = default)
@@ -56,16 +52,6 @@ public class KeyRotationService : IKeyRotationService
 
             // Get current key metadata
             var currentKey = await _hsmProvider.GetKeyAsync(keyId, cancellationToken);
-            if (currentKey == null)
-            {
-                return new RotationResult
-                {
-                    Success = false,
-                    OldKeyId = keyId,
-                    ErrorMessage = "Key not found",
-                    Type = RotationType.Manual
-                };
-            }
 
             // Get rotation policy
             var policy = await GetRotationPolicyAsync(keyId, cancellationToken);
@@ -234,10 +220,7 @@ public class KeyRotationService : IKeyRotationService
         foreach (var policy in policies.Where(p => p.NextRotationDate <= _dateTimeService.UtcNow.AddDays(p.WarningDays)))
         {
             var status = await GetKeyRotationStatusAsync(policy.KeyId, cancellationToken);
-            if (status != null)
-            {
-                pendingRotations.Add(status);
-            }
+            pendingRotations.Add(status);
         }
 
         return pendingRotations;
@@ -387,7 +370,7 @@ public class KeyRotationService : IKeyRotationService
         return warningDate <= _dateTimeService.UtcNow;
     }
 
-    private async Task StartGracePeriodAsync(string oldKeyId, string newKeyId, int gracePeriodDays, CancellationToken cancellationToken)
+    private async Task StartGracePeriodAsync(string oldKeyId, string _, int gracePeriodDays, CancellationToken cancellationToken)
     {
         // Both keys remain active during grace period
         // No explicit enable needed - keys are active by default
@@ -417,7 +400,7 @@ public class KeyRotationService : IKeyRotationService
         await ScheduleRotationAsync(keyId, archivalTime, cancellationToken);
     }
 
-    private async Task NotifyKeyRotationAsync(string oldKeyId, string newKeyId, RotationPolicy policy, CancellationToken cancellationToken)
+    private async Task NotifyKeyRotationAsync(string _oldKeyId, string _newKeyId, RotationPolicy policy, CancellationToken _cancellationToken)
     {
         if (!string.IsNullOrEmpty(policy.NotificationEmail))
         {
@@ -435,7 +418,7 @@ public class KeyRotationService : IKeyRotationService
             NewKeyId = newKeyId,
             RotatedAt = _dateTimeService.UtcNow.DateTime,
             Type = type,
-            PerformedBy = _currentUserService.UserId ?? "System",
+            PerformedBy = _currentUserService.UserId,
             Success = true
         };
 
@@ -500,7 +483,7 @@ public class KeyRotationService : IKeyRotationService
         };
     }
 
-    private async Task<RotatableKeyType> DetermineKeyTypeAsync(string keyId, CancellationToken cancellationToken)
+    private async Task<RotatableKeyType> DetermineKeyTypeAsync(string keyId, CancellationToken _ct)
     {
         // Determine based on key naming convention or metadata
         if (keyId.Contains("sign", StringComparison.OrdinalIgnoreCase))
@@ -523,13 +506,13 @@ public class KeyRotationService : IKeyRotationService
         return RotatableKeyType.EncryptionKey; // Default
     }
 
-    private async Task SaveRotationPolicyAsync(RotationPolicy policy, CancellationToken cancellationToken)
+    private async Task SaveRotationPolicyAsync(RotationPolicy _policy, CancellationToken _cancellationToken)
     {
         // Save to database - implementation depends on your entity structure
         await Task.CompletedTask;
     }
 
-    private async Task<KeyRotationStatus> GetKeyRotationStatusAsync(string keyId, CancellationToken cancellationToken)
+    private async Task<KeyRotationStatus> GetKeyRotationStatusAsync(string keyId, CancellationToken _cancellationToken)
     {
         // Get key metadata and calculate status
         await Task.CompletedTask;
@@ -540,7 +523,7 @@ public class KeyRotationService : IKeyRotationService
         };
     }
 
-    private async Task SendRotationWarningAsync(RotationPolicy policy, CancellationToken cancellationToken)
+    private async Task SendRotationWarningAsync(RotationPolicy policy, CancellationToken _cancellationToken)
     {
         _logger.LogWarning("Key {KeyId} is due for rotation in {Days} days",
             policy.KeyId,
@@ -548,14 +531,14 @@ public class KeyRotationService : IKeyRotationService
         await Task.CompletedTask;
     }
 
-    private async Task SendEmergencyNotificationsAsync(string keyId, string reason, CancellationToken cancellationToken)
+    private async Task SendEmergencyNotificationsAsync(string keyId, string reason, CancellationToken _cancellationToken)
     {
         _logger.LogCritical("Emergency rotation performed for key {KeyId}: {Reason}", keyId, reason);
         // Send alerts to security team
         await Task.CompletedTask;
     }
 
-    private async Task AuditEmergencyRotationAsync(string keyId, string reason, CancellationToken cancellationToken)
+    private async Task AuditEmergencyRotationAsync(string _keyId, string _reason, CancellationToken _cancellationToken)
     {
         // Record in audit log
         await Task.CompletedTask;
@@ -567,7 +550,7 @@ public class KeyRotationService : IKeyRotationService
             .FirstOrDefaultAsync(r => r.RotationId == rotationId, cancellationToken);
     }
 
-    private async Task RecordRollbackAsync(string rotationId, string reason, CancellationToken cancellationToken)
+    private async Task RecordRollbackAsync(string _rotationId, string _reason, CancellationToken _cancellationToken)
     {
         // Record rollback in audit log
         await Task.CompletedTask;
@@ -627,12 +610,11 @@ public class KeyRotationService : IKeyRotationService
             RotatableKeyType.EncryptionKey => KeyType.AES,
             RotatableKeyType.TlsCertificate => KeyType.RSA,
             RotatableKeyType.ApiKey => KeyType.AES,
-            RotatableKeyType.HsmMasterKey => KeyType.RSA,
             _ => KeyType.RSA
         };
     }
 
-    private RotationType ConvertToRotationType(RotatableKeyType keyType)
+    private RotationType ConvertToRotationType(RotatableKeyType _)
     {
         // Map key types to rotation types - this is a simple mapping
         // In a real implementation, you'd track the actual rotation type

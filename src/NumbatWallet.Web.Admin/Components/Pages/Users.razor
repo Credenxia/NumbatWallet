@@ -1,0 +1,61 @@
+@page "/users"
+@using Microsoft.AspNetCore.Components.Authorization
+@attribute [Authorize]
+@inject IConfiguration Configuration
+
+@* User management is owned by the Credentry platform (federation contract:
+   credentry/docs/integration/06-NUMBATWALLET-FEDERATION-CONTRACT.md).
+   The former in-app create/update/reset-password actions (POA mocks) were deleted;
+   admin users and NW.* roles are managed in the Credentry portal. *@
+
+<PageTitle>Users - NumbatWallet Admin</PageTitle>
+
+<div class="page-header">
+    <h1>User Management</h1>
+</div>
+
+<AuthorizeView>
+    <Authorized>
+        <div class="card">
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i>
+                    <div>
+                        <strong>Users are managed in Credentry</strong>
+                        <p class="mb-0">
+                            NumbatWallet federates identity to the Credentry platform.
+                            Create or update users, assign NumbatWallet roles
+                            (<code>NW.Admin</code>, <code>NW.Officer</code>, <code>NW.Issuer</code>, <code>NW.Citizen</code>)
+                            and reset passwords in the Credentry portal.
+                        </p>
+                        @if (!string.IsNullOrWhiteSpace(PortalUrl))
+                        {
+                            <a class="btn btn-primary mt-3" href="@PortalUrl" target="_blank" rel="noopener">
+                                <i class="bi bi-box-arrow-up-right"></i> Open Credentry portal
+                            </a>
+                        }
+                        else
+                        {
+                            <p class="text-muted mb-0 mt-2">
+                                <small>Set <code>Credentry:PortalUrl</code> in configuration to link the portal here.</small>
+                            </p>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </Authorized>
+    <NotAuthorized>
+        <div class="alert alert-warning">
+            <i class="bi bi-shield-exclamation"></i>
+            <div>
+                <strong>Authentication Required</strong>
+                <p class="mb-0">Please <a href="/login">sign in</a> to access user management.</p>
+            </div>
+        </div>
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+    private string? PortalUrl => Configuration["Credentry:PortalUrl"];
+}

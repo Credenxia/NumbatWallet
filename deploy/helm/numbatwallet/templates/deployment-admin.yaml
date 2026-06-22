@@ -1,0 +1,87 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: numbatwallet-admin
+  labels:
+    app: numbatwallet-admin
+    component: frontend
+    app.kubernetes.io/part-of: numbatwallet
+spec:
+  replicas: {{ .Values.admin.replicas }}
+  selector:
+    matchLabels:
+      app: numbatwallet-admin
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  template:
+    metadata:
+      labels:
+        app: numbatwallet-admin
+        component: frontend
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1654
+        runAsGroup: 1654
+        fsGroup: 1654
+      containers:
+        - name: numbatwallet-admin
+          image: "{{ .Values.image.registry }}/{{ .Values.image.admin }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - containerPort: 8080
+              name: http
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+          env:
+            - name: ASPNETCORE_ENVIRONMENT
+              value: {{ .Values.admin.environment | quote }}
+            - name: ASPNETCORE_URLS
+              value: "http://+:8080"
+            - name: ASPNETCORE_FORWARDEDHEADERS_ENABLED
+              value: "true"
+
+            # API base URL — internal K8s service DNS, read by the Aspire service
+            # discovery config keys (services:webapi:http:0) in Web.Admin Program.cs.
+            - name: services__webapi__http__0
+              value: "http://numbatwallet-api"
+
+            # Service-to-service API key for the typed Admin GraphQL client
+            - name: AdminApi__ApiKey
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secretName }}
+                  key: admin-api-key
+            - name: AdminApi__TenantId
+              value: {{ .Values.admin.tenantId | quote }}
+
+          resources:
+            {{- toYaml .Values.admin.resources | nindent 12 }}
+          # NOTE: /health on the Admin portal answers 302 → /login (auth fallback
+          # policy applies to all endpoints). Kubernetes httpGet probes treat any
+          # status < 400 as success, so this still proves liveness/readiness.
+          startupProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            failureThreshold: 24
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            periodSeconds: 30
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            periodSeconds: 10
+            failureThreshold: 3

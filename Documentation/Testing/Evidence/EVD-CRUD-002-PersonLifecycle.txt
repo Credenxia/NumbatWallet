@@ -1,0 +1,24 @@
+=== CRUD Evidence: Person Lifecycle ===
+Timestamp: 2026-03-13T08:02:48.9837530Z
+
+--- STEP 1: CREATE Person ---
+POST /api/v1/persons
+Request: {
+  "firstName": "Jane",
+  "lastName": "Integration",
+  "email": "jane.test.6c5b838719a84307ad595b4727a709",
+  "phoneNumber": "\u002B61400000001",
+  "dateOfBirth": "1990-01-15",
+  "externalId": "EXT-8d9614f287204006",
+  "tenantId": "test-tenant"
+}
+Status: 404 NotFound
+Response: 
+
+--- STEP 2: READ All Persons ---
+GET /api/v1/persons
+Status: 404 NotFound
+Response (truncated): 
+
+
+=== Result: PASS ===

@@ -10,18 +10,15 @@ public class StatisticsService : IStatisticsService
     private readonly IPersonRepository _personRepository;
     private readonly IWalletRepository _walletRepository;
     private readonly ICredentialRepository _credentialRepository;
-    private readonly IOrganizationRepository _organizationRepository;
 
     public StatisticsService(
         IPersonRepository personRepository,
         IWalletRepository walletRepository,
-        ICredentialRepository credentialRepository,
-        IOrganizationRepository organizationRepository)
+        ICredentialRepository credentialRepository)
     {
         _personRepository = personRepository;
         _walletRepository = walletRepository;
         _credentialRepository = credentialRepository;
-        _organizationRepository = organizationRepository;
     }
 
     public async Task<DashboardStatisticsDto> GetDashboardStatisticsAsync(CancellationToken cancellationToken = default)
@@ -29,15 +26,15 @@ public class StatisticsService : IStatisticsService
         var stats = new DashboardStatisticsDto();
 
         // Get total counts
-        var allPersons = await _personRepository.GetAllAsync(cancellationToken);
-        stats.TotalPersons = allPersons.Count();
+        var allPersons = (await _personRepository.GetAllAsync(cancellationToken)).ToList();
+        stats.TotalPersons = allPersons.Count;
 
-        var allWallets = await _walletRepository.GetAllAsync(cancellationToken);
-        stats.TotalWallets = allWallets.Count();
+        var allWallets = (await _walletRepository.GetAllAsync(cancellationToken)).ToList();
+        stats.TotalWallets = allWallets.Count;
         stats.ActiveWallets = allWallets.Count(w => w.Status == WalletStatus.Active);
 
-        var allCredentials = await _credentialRepository.GetAllAsync(cancellationToken);
-        stats.TotalCredentials = allCredentials.Count();
+        var allCredentials = (await _credentialRepository.GetAllAsync(cancellationToken)).ToList();
+        stats.TotalCredentials = allCredentials.Count;
         stats.ActiveCredentials = allCredentials.Count(c => c.Status == CredentialStatus.Active);
 
         // Today's issuances
@@ -70,7 +67,7 @@ public class StatisticsService : IStatisticsService
         DateTime endDate,
         CancellationToken cancellationToken = default)
     {
-        var allCredentials = await _credentialRepository.GetAllAsync(cancellationToken);
+        var allCredentials = (await _credentialRepository.GetAllAsync(cancellationToken)).ToList();
 
         var statistics = new List<IssuanceStatisticsDto>();
 
@@ -105,14 +102,14 @@ public class StatisticsService : IStatisticsService
             TenantName = "Default Tenant"
         };
 
-        var allPersons = await _personRepository.GetAllAsync(cancellationToken);
-        stats.TotalUsers = allPersons.Count();
+        var allPersons = (await _personRepository.GetAllAsync(cancellationToken)).ToList();
+        stats.TotalUsers = allPersons.Count;
 
-        var allWallets = await _walletRepository.GetAllAsync(cancellationToken);
-        stats.TotalWallets = allWallets.Count();
+        var allWallets = (await _walletRepository.GetAllAsync(cancellationToken)).ToList();
+        stats.TotalWallets = allWallets.Count;
 
-        var allCredentials = await _credentialRepository.GetAllAsync(cancellationToken);
-        stats.TotalCredentials = allCredentials.Count();
+        var allCredentials = (await _credentialRepository.GetAllAsync(cancellationToken)).ToList();
+        stats.TotalCredentials = allCredentials.Count;
 
         // Mock storage and compute metrics
         stats.StorageUsedGB = Math.Round((decimal)(stats.TotalCredentials * 0.001), 3);
@@ -127,8 +124,8 @@ public class StatisticsService : IStatisticsService
     public async Task<MetricsSnapshotDto> GetMetricsSnapshotAsync(DateTime from, DateTime until, CancellationToken cancellationToken = default)
     {
         // Fetch data for the time range
-        var allCredentials = await _credentialRepository.GetAllAsync(cancellationToken);
-        var allWallets = await _walletRepository.GetAllAsync(cancellationToken);
+        var allCredentials = (await _credentialRepository.GetAllAsync(cancellationToken)).ToList();
+        var allWallets = (await _walletRepository.GetAllAsync(cancellationToken)).ToList();
 
         // Filter by date range
         var credentialsInRange = allCredentials.Where(c =>
@@ -146,8 +143,8 @@ public class StatisticsService : IStatisticsService
             ["credentials_expired"] = credentialsInRange.Count(c => c.Status == CredentialStatus.Expired),
             ["wallets_created"] = walletsInRange.Count,
             ["wallets_active"] = walletsInRange.Count(w => w.Status == WalletStatus.Active),
-            ["avg_credentials_per_wallet"] = allWallets.Any() ?
-                (decimal)allCredentials.Count() / allWallets.Count() : 0
+            ["avg_credentials_per_wallet"] = allWallets.Count > 0 ?
+                (decimal)allCredentials.Count / allWallets.Count : 0
         };
 
         // Generate time series data

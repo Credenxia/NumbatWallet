@@ -1,0 +1,192 @@
+name: Deploy NumbatWallet to AKS (nonprod)
+
+# Modeled on credentry's deploy-nonprod.yml. Deploys to the SHARED nonprod AKS
+# cluster as namespace numbatwallet-test. Triggers are deliberately narrow:
+# manual dispatch + pushes to main that touch deployable paths.
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'src/**'
+      - 'deploy/**'
+      - 'Dockerfile'
+      - 'Directory.Build.props'
+      - 'Directory.Build.targets'
+      - 'Directory.Packages.props'
+      - 'global.json'
+      - '.github/workflows/deploy-numbatwallet.yml'
+
+env:
+  ACR_LOGIN_SERVER: cxausvmcontainerregistry.azurecr.io
+  ACR_NAME: cxausvmcontainerregistry
+  AKS_CLUSTER_NAME: aks-shared-nonprod-aue
+  AKS_RESOURCE_GROUP: rg-shared-nonprod-aue
+  NAMESPACE: numbatwallet-test
+  API_IMAGE: numbatwallet-api
+  ADMIN_IMAGE: numbatwallet-admin
+  MIGRATIONS_IMAGE: numbatwallet-migrations
+  DOTNET_VERSION: '10.0.x'
+
+jobs:
+  # ==========================================================================
+  # Job 1: Build & Test — gate: ALL 5 backend unit suites must pass (0 failures)
+  # ==========================================================================
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Restore
+        run: dotnet restore NumbatWallet.sln
+
+      - name: Build
+        run: dotnet build NumbatWallet.sln --configuration Release --no-restore
+
+      - name: Test — Domain
+        run: dotnet test src/Tests/NumbatWallet.Domain.Tests --configuration Release --no-build --verbosity normal
+
+      - name: Test — SharedKernel
+        run: dotnet test src/Tests/NumbatWallet.SharedKernel.Tests --configuration Release --no-build --verbosity normal
+
+      - name: Test — Application
+        run: dotnet test src/Tests/NumbatWallet.Application.Tests --configuration Release --no-build --verbosity normal
+
+      - name: Test — Infrastructure
+        run: dotnet test src/Tests/NumbatWallet.Infrastructure.Tests --configuration Release --no-build --verbosity normal
+
+      - name: Test — Web.Api
+        run: dotnet test src/Tests/NumbatWallet.Web.Api.Tests --configuration Release --no-build --verbosity normal
+
+  # ==========================================================================
+  # Job 2: Build & Push Docker Images (api, admin, migrations)
+  # ==========================================================================
+  build-and-push:
+    runs-on: ubuntu-latest
+    needs: build-and-test
+    outputs:
+      image-tag: ${{ steps.vars.outputs.image_tag }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set image tag
+        id: vars
+        run: |
+          SHORT_SHA=$(echo "${{ github.sha }}" | cut -c1-7)
+          echo "image_tag=test-${SHORT_SHA}" >> $GITHUB_OUTPUT
+
+      - uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Login to ACR
+        run: az acr login --name ${{ env.ACR_NAME }}
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Build & push API image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          target: api
+          push: true
+          tags: |
+            ${{ env.ACR_LOGIN_SERVER }}/${{ env.API_IMAGE }}:${{ steps.vars.outputs.image_tag }}
+            ${{ env.ACR_LOGIN_SERVER }}/${{ env.API_IMAGE }}:test-latest
+          cache-from: type=gha,scope=api
+          cache-to: type=gha,mode=max,scope=api
+
+      - name: Build & push Admin image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          target: admin
+          push: true
+          tags: |
+            ${{ env.ACR_LOGIN_SERVER }}/${{ env.ADMIN_IMAGE }}:${{ steps.vars.outputs.image_tag }}
+            ${{ env.ACR_LOGIN_SERVER }}/${{ env.ADMIN_IMAGE }}:test-latest
+          cache-from: type=gha,scope=admin
+          cache-to: type=gha,mode=max,scope=admin
+
+      - name: Build & push Migrations image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          target: migrations
+          push: true
+          tags: |
+            ${{ env.ACR_LOGIN_SERVER }}/${{ env.MIGRATIONS_IMAGE }}:${{ steps.vars.outputs.image_tag }}
+            ${{ env.ACR_LOGIN_SERVER }}/${{ env.MIGRATIONS_IMAGE }}:test-latest
+          cache-from: type=gha,scope=migrations
+          cache-to: type=gha,mode=max,scope=migrations
+
+  # ==========================================================================
+  # Job 3: Helm upgrade to numbatwallet-test
+  # ==========================================================================
+  deploy-aks:
+    runs-on: ubuntu-latest
+    needs: build-and-push
+    environment: nonprod
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Install kubelogin
+        run: |
+          az aks install-cli
+          kubelogin --version
+
+      - uses: azure/aks-set-context@v3
+        with:
+          resource-group: ${{ env.AKS_RESOURCE_GROUP }}
+          cluster-name: ${{ env.AKS_CLUSTER_NAME }}
+          admin: 'false'
+          use-kubelogin: 'true'
+
+      # The numbatwallet-secrets secret is created once by
+      # deploy/scripts/bootstrap-namespace.sh (sourced from kv-numbatwallet-test-aue).
+      - name: Verify prerequisites
+        run: |
+          kubectl get namespace ${{ env.NAMESPACE }}
+          kubectl get secret numbatwallet-secrets -n ${{ env.NAMESPACE }}
+
+      - name: Helm upgrade
+        env:
+          IMAGE_TAG: ${{ needs.build-and-push.outputs.image-tag }}
+        run: |
+          helm upgrade --install numbatwallet deploy/helm/numbatwallet \
+            --namespace ${{ env.NAMESPACE }} \
+            --set image.tag=${IMAGE_TAG} \
+            --wait --timeout 10m
+
+      # On timeout/failure, print the crashing pods' logs so
+      # `gh run view --log-failed` shows the cause.
+      - name: Diagnose failed rollout
+        if: failure()
+        run: |
+          echo "=== Hook job (migrations) ==="
+          kubectl logs job/numbatwallet-migrate -n ${{ env.NAMESPACE }} --tail=60 || true
+          echo "=== Deployments ==="
+          kubectl get deployments -n ${{ env.NAMESPACE }} -o wide
+          echo "=== Pods ==="
+          kubectl get pods -n ${{ env.NAMESPACE }} -o wide
+          echo "=== Pod descriptions ==="
+          kubectl describe pods -n ${{ env.NAMESPACE }}
+          echo "=== Recent logs ==="
+          kubectl logs -l app=numbatwallet-api -n ${{ env.NAMESPACE }} --tail=50 || true
+          kubectl logs -l app=numbatwallet-admin -n ${{ env.NAMESPACE }} --tail=50 || true
+          echo "=== Events ==="
+          kubectl get events --sort-by='.lastTimestamp' -n ${{ env.NAMESPACE }} | tail -30
+
+      - name: Smoke test (in-cluster)
+        run: |
+          kubectl run nw-smoke --rm -i --restart=Never --namespace ${{ env.NAMESPACE }} \
+            --image=curlimages/curl:8.10.1 -- \
+            curl -fsS -o /dev/null -w "%{http_code}" http://numbatwallet-api/health

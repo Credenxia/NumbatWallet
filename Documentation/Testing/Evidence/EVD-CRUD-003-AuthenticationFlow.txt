@@ -1,0 +1,33 @@
+=== Integration Evidence: Authentication Flow ===
+Timestamp: 2026-03-13T08:02:49.0093470Z
+
+--- STEP 1: Login with INVALID Credentials ---
+POST /api/v1/authentication/login
+Request: {
+  "email": "hacker@evil.com",
+  "password": "WrongPass123!"
+}
+Status: 401 Unauthorized
+Response: "Invalid credentials"
+Expected: 401 Unauthorized
+Result: PASS
+
+--- STEP 2: Access Protected Endpoint (No Token) ---
+GET /api/v1/authentication/validate
+Status: 401 Unauthorized
+Expected: 401 Unauthorized
+Result: PASS
+
+--- STEP 3: Login with Valid Credentials ---
+POST /api/v1/authentication/login
+Request: {
+  "email": "admin@example.com",
+  "password": "Admin123!"
+}
+Status: 401 Unauthorized
+Response: "Invalid credentials"
+
+--- NOTE: No access token received from login ---
+Login may require seeded user data or different credentials
+
+=== Authentication Flow Evidence Complete ===

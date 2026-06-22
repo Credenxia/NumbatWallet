@@ -1,5 +1,3 @@
-using FluentAssertions;
-using Moq;
 using NumbatWallet.Application.Queries.Person;
 using NumbatWallet.Domain.Interfaces;
 
@@ -25,12 +23,6 @@ public sealed class SearchPersonsQueryTests
             "Doe",
             "john@example.com",
             "+61400000000").Value;
-
-        var person2 = Domain.Aggregates.Person.Create(
-            "Jane",
-            "Smith",
-            "jane@example.com",
-            "+61400000001").Value;
 
         var query = new SearchPersonsQuery
         {

@@ -1,13 +1,11 @@
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
-using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Moq;
 using NumbatWallet.Domain.Entities;
 using NumbatWallet.Domain.Interfaces;
-using NumbatWallet.Domain.Services;
+using NumbatWallet.Application.DomainServices;
 using NumbatWallet.Web.Api.Middleware;
 
 namespace NumbatWallet.Web.Api.Tests.Middleware;
@@ -44,7 +42,7 @@ public class MutualTlsMiddlewareTests
             Options.Create(_options));
     }
 
-    [Fact(Skip = "Integration test - requires full middleware implementation")]
+    [Fact]
     public async Task InvokeAsync_WithValidCertificate_ShouldPassToNextMiddleware()
     {
         // Arrange
@@ -53,6 +51,7 @@ public class MutualTlsMiddlewareTests
         context.Connection.ClientCertificate = certificate;
 
         var tenantCert = CreateTenantCertificate(certificate);
+        tenantCert.UpdateTrustLevel(CertificateTrustLevel.Medium); // Ensure meets minimum requirement
         _certificateRepositoryMock
             .Setup(x => x.GetByThumbprintAsync(certificate.Thumbprint, It.IsAny<CancellationToken>()))
             .ReturnsAsync(tenantCert);
@@ -64,6 +63,14 @@ public class MutualTlsMiddlewareTests
         _trustStoreRepositoryMock
             .Setup(x => x.GetActiveByTenantIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(trustStore);
+
+        _validationServiceMock
+            .Setup(x => x.ValidateCertificateAsync(It.IsAny<TenantCertificate>(), It.IsAny<CertificateTrustStore>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new CertificateValidationResult { IsValid = true, Errors = new List<string>() });
+
+        _certificateRepositoryMock
+            .Setup(x => x.UpdateAsync(It.IsAny<TenantCertificate>(), It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
 
         // Act
         await _middleware.InvokeAsync(
@@ -97,7 +104,7 @@ public class MutualTlsMiddlewareTests
         _nextMock.Verify(x => x(It.IsAny<HttpContext>()), Times.Never);
     }
 
-    [Fact(Skip = "Integration test - requires full middleware implementation")]
+    [Fact]
     public async Task InvokeAsync_WithExpiredCertificate_ShouldReturn401()
     {
         // Arrange
@@ -124,7 +131,7 @@ public class MutualTlsMiddlewareTests
         _nextMock.Verify(x => x(It.IsAny<HttpContext>()), Times.Never);
     }
 
-    [Fact(Skip = "Integration test - requires full middleware implementation")]
+    [Fact]
     public async Task InvokeAsync_WithRevokedCertificate_ShouldReturn401()
     {
         // Arrange
@@ -170,7 +177,7 @@ public class MutualTlsMiddlewareTests
         context.Response.StatusCode.Should().Be(200);
     }
 
-    [Fact(Skip = "Integration test - requires full middleware implementation")]
+    [Fact]
     public async Task InvokeAsync_WithInsufficientTrustLevel_ShouldReturn403()
     {
         // Arrange
@@ -193,6 +200,10 @@ public class MutualTlsMiddlewareTests
             .Setup(x => x.GetActiveByTenantIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(trustStore);
 
+        _validationServiceMock
+            .Setup(x => x.ValidateCertificateAsync(It.IsAny<TenantCertificate>(), It.IsAny<CertificateTrustStore>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new CertificateValidationResult { IsValid = true, Errors = new List<string>() });
+
         // Act
         await _middleware.InvokeAsync(
             context,
@@ -210,6 +221,7 @@ public class MutualTlsMiddlewareTests
         var context = new DefaultHttpContext();
         context.Request.Path = path;
         context.Connection.ClientCertificate = null;
+        context.Response.Body = new MemoryStream();
         return context;
     }
 
@@ -258,8 +270,8 @@ public class MutualTlsMiddlewareTests
             x509Cert.Thumbprint,
             x509Cert.SubjectName.Name,
             x509Cert.IssuerName.Name,
-            new DateTimeOffset(x509Cert.NotBefore, TimeSpan.Zero),
-            new DateTimeOffset(x509Cert.NotAfter, TimeSpan.Zero),
+            new DateTimeOffset(x509Cert.NotBefore.ToUniversalTime(), TimeSpan.Zero),
+            new DateTimeOffset(x509Cert.NotAfter.ToUniversalTime(), TimeSpan.Zero),
             CertificatePurpose.Authentication);
     }
 }

@@ -1,7 +1,4 @@
-using FluentValidation;
 using NumbatWallet.Application.Commands.Wallets;
-using NumbatWallet.Application.Common.Exceptions;
-using NumbatWallet.Application.CQRS.Interfaces;
 using NumbatWallet.Application.DTOs;
 using NumbatWallet.Application.Queries.Wallets;
 using NumbatWallet.Application.Wallets.Commands.CreateWallet;
@@ -14,7 +11,8 @@ namespace NumbatWallet.Web.Api.Controllers;
 /// POA: Real implementation for wallet operations
 /// </summary>
 [ApiController]
-[Route("api/v1/[controller]")]
+[Route("api/v1/wallet")]
+[Route("api/v1/wallets")] // Support plural for backwards compatibility
 [Microsoft.AspNetCore.Authorization.Authorize]
 public class WalletController : ControllerBase
 {
@@ -78,6 +76,17 @@ public class WalletController : ControllerBase
                 string.Join(", ", ex.Errors.Select(e => e.ErrorMessage)));
             return BadRequest(new { errors = ex.Errors.Select(e => e.ErrorMessage) });
         }
+        catch (ArgumentException ex)
+        {
+            _logger.LogWarning("Invalid argument for wallet creation: {Error}", ex.Message);
+            return BadRequest(new { error = ex.Message });
+        }
+        catch (Application.Common.Exceptions.ConflictException ex)
+        {
+            // Business conflict (e.g. person already has a wallet) is a 409, not a 500.
+            _logger.LogWarning("Wallet creation conflict: {Error}", ex.Message);
+            return Conflict(new { error = ex.Message });
+        }
         catch (InvalidOperationException ex)
         {
             _logger.LogWarning("Wallet creation failed: {Error}", ex.Message);
@@ -88,6 +97,28 @@ public class WalletController : ControllerBase
             _logger.LogError(ex, "Unexpected error creating wallet");
             return StatusCode(500, new { error = "An error occurred while creating the wallet" });
         }
+    }
+
+    /// <summary>
+    /// Get all wallets for the current user
+    /// </summary>
+    [HttpGet]
+    [ProducesResponseType(typeof(List<WalletDto>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetMyWallets(CancellationToken cancellationToken)
+    {
+        var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+
+        if (string.IsNullOrEmpty(userId) || !Guid.TryParse(userId, out var personId))
+        {
+            return Ok(new List<WalletDto>()); // Return empty list if no valid user ID
+        }
+
+        _logger.LogInformation("Getting wallets for person {PersonId}", personId);
+
+        var query = new GetWalletsByPersonQuery(personId);
+        var wallets = await _getWalletsByPersonHandler.HandleAsync(query, cancellationToken);
+
+        return Ok(wallets);
     }
 
     /// <summary>
@@ -108,6 +139,15 @@ public class WalletController : ControllerBase
             return NotFound(new { error = $"Wallet {id} not found" });
         }
 
+        // SECURITY: prevent IDOR — a non-privileged caller may only read their own wallet.
+        // Return 404 (not 403) so wallet existence isn't disclosed to non-owners.
+        if (!IsAdminOrOfficer() && !OwnsPerson(wallet.PersonId))
+        {
+            _logger.LogWarning("Blocked cross-user wallet access: caller {Caller} requested wallet {WalletId} owned by {Owner}",
+                GetCallerPersonId(), id, wallet.PersonId);
+            return NotFound(new { error = $"Wallet {id} not found" });
+        }
+
         return Ok(wallet);
     }
 
@@ -121,6 +161,14 @@ public class WalletController : ControllerBase
         [FromQuery] bool includeInactive,
         CancellationToken cancellationToken)
     {
+        // SECURITY: prevent IDOR — only Admin/Officer may list another person's wallets.
+        if (!IsAdminOrOfficer() && !OwnsPerson(personId.ToString()))
+        {
+            _logger.LogWarning("Blocked cross-user wallet listing: caller {Caller} requested wallets for person {PersonId}",
+                GetCallerPersonId(), personId);
+            return Forbid();
+        }
+
         _logger.LogInformation("Getting wallets for person {PersonId}", personId);
 
         var query = new GetWalletsByPersonQuery(personId, includeInactive);
@@ -189,18 +237,39 @@ public class WalletController : ControllerBase
         }
     }
 
+    /// <summary>The authenticated caller's person id (from the NameIdentifier claim), if any.</summary>
+    private Guid? GetCallerPersonId()
+    {
+        var id = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        return Guid.TryParse(id, out var g) ? g : null;
+    }
+
+    /// <summary>True when the caller holds a privileged role allowed to access any person's resources.</summary>
+    private bool IsAdminOrOfficer()
+        => User.IsInRole("Admin") || User.IsInRole("Officer") || User.IsInRole("TenantAdmin");
+
+    /// <summary>True when the supplied person id matches the authenticated caller's person id.</summary>
+    private bool OwnsPerson(string? personId)
+    {
+        var caller = GetCallerPersonId();
+        return caller is not null
+            && !string.IsNullOrEmpty(personId)
+            && string.Equals(personId, caller.Value.ToString(), StringComparison.OrdinalIgnoreCase);
+    }
+
     private Guid GetTenantId()
     {
-        var tenantClaim = User.FindFirst("TenantId")?.Value
-            ?? User.FindFirst("tenant_id")?.Value
+        var tenantClaim = User.FindFirst("tenant_id")?.Value
+            ?? User.FindFirst("TenantId")?.Value
             ?? User.FindFirst("tid")?.Value;
         if (Guid.TryParse(tenantClaim, out var tenantId))
         {
             return tenantId;
         }
 
-        // Default for development
-        return Guid.Parse("a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11");
+        // SECURITY: fail closed. Never fall back to a hardcoded tenant — that would let an
+        // authenticated request with a missing/invalid tenant claim write into another tenant.
+        throw new InvalidOperationException("A valid tenant context (tenant_id claim) is required.");
     }
 }
 
@@ -209,9 +278,17 @@ public class WalletController : ControllerBase
 /// </summary>
 public class CreateWalletRequest
 {
+    [System.ComponentModel.DataAnnotations.Required]
     public Guid PersonId { get; set; }
+
+    [System.ComponentModel.DataAnnotations.Required]
+    [System.ComponentModel.DataAnnotations.StringLength(100, MinimumLength = 1)]
     public string Type { get; set; } = "HOLDER";
+
+    [System.ComponentModel.DataAnnotations.Required]
+    [System.ComponentModel.DataAnnotations.StringLength(200, MinimumLength = 1)]
     public string Name { get; set; } = string.Empty;
+
     public Dictionary<string, object>? Metadata { get; set; }
 }
 

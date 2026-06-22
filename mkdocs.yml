@@ -1,0 +1,105 @@
+site_name: NumbatWallet Documentation Portal
+site_description: >-
+  Audience-filtered documentation for the NumbatWallet digital wallet &
+  verifiable-credentials platform (Credenxia). Directors, Account Management,
+  Support, Tech and Clients.
+site_author: Credenxia
+docs_dir: docs-portal/content
+site_dir: docs-portal/site
+use_directory_urls: true
+
+theme:
+  name: material
+  language: en
+  features:
+    - navigation.sections
+    - navigation.tabs
+    - navigation.top
+    - navigation.indexes
+    - navigation.tracking
+    - content.code.copy
+    - content.tabs.link
+    - search.suggest
+    - search.highlight
+    - toc.follow
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: indigo
+      accent: amber
+      toggle:
+        icon: material/weather-night
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: indigo
+      accent: amber
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to light mode
+  icon:
+    repo: fontawesome/brands/github
+
+plugins:
+  - search
+  - tags
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - md_in_html
+  - tables
+  - footnotes
+  - toc:
+      permalink: true
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+
+nav:
+  - Home: index.md
+  - Directors:
+      - directors/index.md
+      - Status & Readiness: directors/status-readiness.md
+      - Compliance Posture: directors/compliance.md
+      - Risk & Pending Items: directors/risk-register.md
+  - Account Management:
+      - account-management/index.md
+      - Capabilities Matrix: account-management/capabilities.md
+      - Pilot Readiness (SDKs): account-management/pilot-readiness.md
+  - Support:
+      - support/index.md
+      - Environments & URLs: support/environments.md
+      - Runbook: support/runbook.md
+      - Known Issues: support/known-issues.md
+  - Tech:
+      - tech/index.md
+      - Architecture (As-Built): tech/architecture.md
+      - Authentication Schemes: tech/auth-schemes.md
+      - API Surface: tech/api-surface.md
+      - Data Protection: tech/data-protection.md
+      - Deployment & CI: tech/deployment.md
+  - Clients:
+      - clients/index.md
+      - Getting Started: clients/getting-started.md
+      - Authentication Model: clients/auth-model.md
+      - SDK Quickstarts: clients/sdks.md
+  - Tags: tags.md
+
+extra_css:
+  - stylesheets/extra.css
+
+extra:
+  generator: false
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/Credenxia/NumbatWallet
+
+copyright: >-
+  Developed under tender agreement DPC2142; continues as a Credenxia platform product.

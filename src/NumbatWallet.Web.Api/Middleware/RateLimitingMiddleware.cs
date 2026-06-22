@@ -34,7 +34,7 @@ public class DistributedRateLimitingMiddleware
 
         var key = GetRateLimitKey(context);
         var limit = GetRateLimit(context);
-        var window = TimeSpan.FromMinutes(_configuration.GetValue<int>("RateLimiting:Distributed:WindowMinutes", 1));
+        var window = TimeSpan.FromMinutes(_configuration.GetValue("RateLimiting:Distributed:WindowMinutes", 1));
 
         var currentCount = await GetCurrentCountAsync(key);
 
@@ -79,20 +79,20 @@ public class DistributedRateLimitingMiddleware
         // Different limits based on user role
         if (context.User.IsInRole("Admin"))
         {
-            return _configuration.GetValue<int>("RateLimiting:Distributed:Admin", 1000);
+            return _configuration.GetValue("RateLimiting:Distributed:Admin", 1000);
         }
 
         if (context.User.IsInRole("Officer"))
         {
-            return _configuration.GetValue<int>("RateLimiting:Distributed:Officer", 500);
+            return _configuration.GetValue("RateLimiting:Distributed:Officer", 500);
         }
 
         if (context.User.Identity?.IsAuthenticated == true)
         {
-            return _configuration.GetValue<int>("RateLimiting:Distributed:Authenticated", 100);
+            return _configuration.GetValue("RateLimiting:Distributed:Authenticated", 100);
         }
 
-        return _configuration.GetValue<int>("RateLimiting:Distributed:Anonymous", 20);
+        return _configuration.GetValue("RateLimiting:Distributed:Anonymous", 20);
     }
 
     private async Task<int> GetCurrentCountAsync(string key)

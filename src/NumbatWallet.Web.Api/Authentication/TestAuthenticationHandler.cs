@@ -1,0 +1,117 @@
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.Extensions.Options;
+using System.Security.Claims;
+using System.Text.Encodings.Web;
+using System.IdentityModel.Tokens.Jwt;
+using Microsoft.IdentityModel.Tokens;
+using NumbatWallet.Application.Services;
+
+namespace NumbatWallet.Web.Api.Authentication;
+
+/// <summary>
+/// Test authentication handler for DEVELOPMENT ONLY
+/// Validates real JWT tokens but provides fallback for testing
+/// </summary>
+public class TestAuthenticationHandler : AuthenticationHandler<AuthenticationSchemeOptions>
+{
+    private readonly ITokenBlacklistService _tokenBlacklistService;
+    private readonly NumbatWallet.Application.Interfaces.IAccessTokenSigner _accessTokenSigner;
+
+    public TestAuthenticationHandler(
+        IOptionsMonitor<AuthenticationSchemeOptions> options,
+        ILoggerFactory logger,
+        UrlEncoder encoder,
+        ITokenBlacklistService tokenBlacklistService,
+        NumbatWallet.Application.Interfaces.IAccessTokenSigner accessTokenSigner)
+        : base(options, logger, encoder)
+    {
+        _tokenBlacklistService = tokenBlacklistService;
+        _accessTokenSigner = accessTokenSigner;
+    }
+
+    protected override Task<AuthenticateResult> HandleAuthenticateAsync()
+    {
+        ClaimsPrincipal? principal = null;
+
+        // Check for Authorization header with Bearer token
+        if (Request.Headers.TryGetValue("Authorization", out var authHeader))
+        {
+            var token = authHeader.ToString().Replace("Bearer ", "");
+            if (!string.IsNullOrWhiteSpace(token))
+            {
+                // Check if token is blacklisted (logged out)
+                if (_tokenBlacklistService.IsTokenBlacklisted(token))
+                {
+                    return Task.FromResult(AuthenticateResult.Fail("Token has been revoked"));
+                }
+
+                try
+                {
+                    // Parse JWT token to extract claims
+                    var tokenHandler = new JwtSecurityTokenHandler
+                    {
+                        MapInboundClaims = false // Preserve original JWT claim names (sub, email, etc)
+                    };
+                    // Validate against whatever the configured signer produced (HS256 or RS256),
+                    // so this dev handler works regardless of the signing mode.
+                    var validationParameters = new TokenValidationParameters
+                    {
+                        ValidateIssuerSigningKey = true,
+                        IssuerSigningKeys = _accessTokenSigner.GetValidationKeys(),
+                        ValidAlgorithms = new[] { _accessTokenSigner.Algorithm },
+                        ValidateIssuer = false, // Allow any issuer for testing
+                        ValidateAudience = false, // Allow any audience for testing
+                        ValidateLifetime = true,
+                        ClockSkew = TimeSpan.FromMinutes(5)
+                    };
+
+                    principal = tokenHandler.ValidateToken(token, validationParameters, out _);
+                }
+                catch
+                {
+                    // JWT parsing failed - use default claims
+                    principal = null;
+                }
+            }
+        }
+
+        // If no valid JWT token, check if endpoint allows anonymous
+        if (principal == null)
+        {
+            var endpoint = Context.GetEndpoint();
+            var allowAnonymous = endpoint?.Metadata?.GetMetadata<Microsoft.AspNetCore.Authorization.IAllowAnonymous>() != null;
+
+            if (allowAnonymous)
+            {
+                // For anonymous endpoints, return default test claims.
+                // NOTE: deliberately NO tenant_id claim — anonymous callers (e.g. verifiers
+                // hitting verifyPresentation / presentations/requests/{id}/submit) have no
+                // tenant. A fabricated tenant here used to poison ICurrentTenantService and
+                // made the TenantInterceptor reject the verification bookkeeping write
+                // ("Cannot modify entity from different tenant ... 'test-tenant'").
+                var claims = new[]
+                {
+                    new Claim("user_id", "test-user"),
+                    new Claim(ClaimTypes.Role, "User"),
+                    new Claim(ClaimTypes.Name, "Test User"),
+                    new Claim(ClaimTypes.NameIdentifier, "test-user")
+                };
+
+                var identity = new ClaimsIdentity(claims, "Test");
+                principal = new ClaimsPrincipal(identity);
+
+                var ticket = new AuthenticationTicket(principal, "Test");
+                return Task.FromResult(AuthenticateResult.Success(ticket));
+            }
+            else
+            {
+                // For non-anonymous endpoints without token, return authentication failure (401)
+                return Task.FromResult(AuthenticateResult.Fail("No authentication token provided"));
+            }
+        }
+
+        // Valid JWT token - return success
+        var successTicket = new AuthenticationTicket(principal, "Test");
+        return Task.FromResult(AuthenticateResult.Success(successTicket));
+    }
+}

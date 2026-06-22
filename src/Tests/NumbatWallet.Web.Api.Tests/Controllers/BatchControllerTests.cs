@@ -2,18 +2,15 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
-using Moq;
 using NumbatWallet.Application.Commands.Batch;
 using NumbatWallet.Application.DTOs;
 using NumbatWallet.Application.Interfaces;
 using NumbatWallet.Web.Api.Controllers;
 using NumbatWallet.Web.Api.Security;
 using NumbatWallet.Web.Api.Tests.TestHelpers;
-using Xunit;
 
 namespace NumbatWallet.Web.Api.Tests.Controllers;
 
@@ -91,7 +88,7 @@ public class BatchControllerTests : ApiTestBase
         response.StatusCode.Should().Be(HttpStatusCode.OK);
         var result = await response.Content.ReadFromJsonAsync<BatchOperationResultDto<CredentialDto>>(_jsonOptions);
         result.Should().NotBeNull();
-        result!.TotalItems.Should().Be(1);
+        result.TotalItems.Should().Be(1);
     }
 
     [Fact]
@@ -151,7 +148,7 @@ public class BatchControllerTests : ApiTestBase
         response.StatusCode.Should().Be(HttpStatusCode.OK);
         var result = await response.Content.ReadFromJsonAsync<BatchOperationResultDto<VerificationResultDto>>(_jsonOptions);
         result.Should().NotBeNull();
-        result!.TotalItems.Should().Be(1);
+        result.TotalItems.Should().Be(1);
         result.Results.Should().HaveCount(1);
     }
 
@@ -193,7 +190,7 @@ public class BatchControllerTests : ApiTestBase
         response.StatusCode.Should().Be(HttpStatusCode.OK);
         var result = await response.Content.ReadFromJsonAsync<BatchOperationResultDto<VerificationResultDto>>(_jsonOptions);
         result.Should().NotBeNull();
-        result!.TotalItems.Should().Be(3);
+        result.TotalItems.Should().Be(3);
         result.Results.Should().HaveCount(3);
         result.SuccessCount.Should().BeGreaterThanOrEqualTo(0);
         result.FailureCount.Should().BeGreaterThanOrEqualTo(0);
@@ -223,7 +220,7 @@ public class BatchControllerTests : ApiTestBase
         response.StatusCode.Should().Be(HttpStatusCode.OK);
         var result = await response.Content.ReadFromJsonAsync<BatchOperationResultDto<bool>>(_jsonOptions);
         result.Should().NotBeNull();
-        result!.TotalItems.Should().Be(2);
+        result.TotalItems.Should().Be(2);
         result.Results.Should().HaveCount(2);
     }
 
@@ -252,7 +249,7 @@ public class BatchControllerTests : ApiTestBase
         response.StatusCode.Should().Be(HttpStatusCode.OK);
         var result = await response.Content.ReadFromJsonAsync<BatchOperationResultDto<IssuanceDto>>(_jsonOptions);
         result.Should().NotBeNull();
-        result!.TotalItems.Should().Be(1);
+        result.TotalItems.Should().Be(1);
     }
 
     [Fact]
@@ -314,7 +311,7 @@ public class BatchControllerTests : ApiTestBase
         response.StatusCode.Should().Be(HttpStatusCode.OK);
         var result = await response.Content.ReadFromJsonAsync<BatchOperationStatusDto>(_jsonOptions);
         result.Should().NotBeNull();
-        result!.BatchId.Should().Be(batchId);
+        result.BatchId.Should().Be(batchId);
         result.Status.Should().Be("Processing");
         result.ProcessedItems.Should().Be(67);
     }

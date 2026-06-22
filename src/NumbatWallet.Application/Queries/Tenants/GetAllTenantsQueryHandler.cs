@@ -1,28 +1,25 @@
-using AutoMapper;
 using Microsoft.Extensions.Logging;
 using NumbatWallet.Application.CQRS.Interfaces;
 using NumbatWallet.Application.DTOs;
+using NumbatWallet.Application.Extensions;
 using NumbatWallet.Domain.Interfaces;
 
 namespace NumbatWallet.Application.Queries.Tenants;
 
 /// <summary>
 /// Handler for getting all tenants
-/// POA: Real implementation
+/// POA: Real implementation with extension methods for DTO conversion
 /// </summary>
 public class GetAllTenantsQueryHandler : IQueryHandler<GetAllTenantsQuery, IEnumerable<TenantDto>>
 {
     private readonly ITenantRepository _tenantRepository;
-    private readonly IMapper _mapper;
     private readonly ILogger<GetAllTenantsQueryHandler> _logger;
 
     public GetAllTenantsQueryHandler(
         ITenantRepository tenantRepository,
-        IMapper mapper,
         ILogger<GetAllTenantsQueryHandler> logger)
     {
         _tenantRepository = tenantRepository;
-        _mapper = mapper;
         _logger = logger;
     }
 
@@ -34,9 +31,9 @@ public class GetAllTenantsQueryHandler : IQueryHandler<GetAllTenantsQuery, IEnum
             ? await _tenantRepository.GetActiveTenantsAsync(cancellationToken)
             : await _tenantRepository.GetAllAsync(cancellationToken);
 
-        var dtos = _mapper.Map<IEnumerable<TenantDto>>(tenants);
+        var dtos = tenants.ToDtos().ToList();
 
-        _logger.LogInformation("Retrieved {Count} tenants", dtos.Count());
+        _logger.LogInformation("Retrieved {Count} tenants", dtos.Count);
 
         return dtos;
     }

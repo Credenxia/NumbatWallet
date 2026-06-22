@@ -14,17 +14,16 @@ public class KeyVaultWrapProvider : IKeyWrapProvider
 {
     private readonly KeyClient _keyClient;
     private readonly ILogger<KeyVaultWrapProvider> _logger;
-    private readonly string _keyVaultUri;
 
     public KeyVaultWrapProvider(
         IConfiguration configuration,
         ILogger<KeyVaultWrapProvider> logger)
     {
         _logger = logger;
-        _keyVaultUri = configuration["KeyVault:Uri"]
+        var keyVaultUri = configuration["KeyVault:Uri"]
             ?? throw new InvalidOperationException("KeyVault:Uri configuration is required");
 
-        _keyClient = new KeyClient(new Uri(_keyVaultUri), new DefaultAzureCredential());
+        _keyClient = new KeyClient(new Uri(keyVaultUri), new DefaultAzureCredential());
     }
 
     public async Task<byte[]> WrapAsync(byte[] plainDek, string kekId, string tenantId)

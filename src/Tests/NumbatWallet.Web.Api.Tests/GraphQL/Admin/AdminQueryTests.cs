@@ -1,5 +1,3 @@
-using FluentAssertions;
-using Moq;
 using NumbatWallet.Application.DTOs;
 using NumbatWallet.Application.Interfaces;
 
@@ -73,6 +71,92 @@ public class AdminQueryTests : IDisposable
         // Test implementation simplified for compilation
         await Task.CompletedTask;
         tenants.Should().HaveCount(2);
+    }
+
+    [Fact]
+    public async Task GetAdminWallets_Should_Return_All_Tenant_Wallets_Newest_First()
+    {
+        // Arrange
+        var walletServiceMock = new Mock<IWalletService>();
+        walletServiceMock
+            .Setup(x => x.GetAllAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<WalletDto>
+            {
+                CreateWallet("11111111-1111-1111-1111-111111111111", "Alice Smith", "Alice Wallet", daysOld: 10),
+                CreateWallet("22222222-2222-2222-2222-222222222222", "Bob Jones", "Bob Wallet", daysOld: 1)
+            });
+
+        var query = new NumbatWallet.Web.Api.GraphQL.Admin.AdminQuery();
+
+        // Act
+        var result = await query.GetAdminWallets(walletServiceMock.Object);
+
+        // Assert
+        result.Should().HaveCount(2);
+        result[0].PersonName.Should().Be("Bob Jones"); // newest first
+        result[1].PersonName.Should().Be("Alice Smith");
+    }
+
+    [Fact]
+    public async Task GetAdminWallets_Should_Filter_By_Search_Term()
+    {
+        // Arrange
+        var walletServiceMock = new Mock<IWalletService>();
+        walletServiceMock
+            .Setup(x => x.GetAllAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<WalletDto>
+            {
+                CreateWallet("11111111-1111-1111-1111-111111111111", "Alice Smith", "Alice Wallet", daysOld: 10),
+                CreateWallet("22222222-2222-2222-2222-222222222222", "Bob Jones", "Bob Wallet", daysOld: 1)
+            });
+
+        var query = new NumbatWallet.Web.Api.GraphQL.Admin.AdminQuery();
+
+        // Act
+        var result = await query.GetAdminWallets(walletServiceMock.Object, search: "alice");
+
+        // Assert
+        result.Should().ContainSingle()
+            .Which.PersonName.Should().Be("Alice Smith");
+    }
+
+    [Fact]
+    public async Task GetAdminWallets_Should_Respect_First_Limit()
+    {
+        // Arrange
+        var wallets = Enumerable.Range(0, 5)
+            .Select(i => CreateWallet(Guid.NewGuid().ToString(), $"Person {i}", $"Wallet {i}", daysOld: i))
+            .ToList();
+
+        var walletServiceMock = new Mock<IWalletService>();
+        walletServiceMock
+            .Setup(x => x.GetAllAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(wallets);
+
+        var query = new NumbatWallet.Web.Api.GraphQL.Admin.AdminQuery();
+
+        // Act
+        var result = await query.GetAdminWallets(walletServiceMock.Object, first: 3);
+
+        // Assert
+        result.Should().HaveCount(3);
+    }
+
+    private static WalletDto CreateWallet(string id, string personName, string name, int daysOld)
+    {
+        return new WalletDto
+        {
+            Id = id,
+            PersonId = Guid.NewGuid().ToString(),
+            PersonName = personName,
+            Name = name,
+            Status = "Active",
+            IsActive = true,
+            IsSuspended = false,
+            CreatedAt = DateTimeOffset.UtcNow.AddDays(-daysOld),
+            UpdatedAt = DateTimeOffset.UtcNow.AddDays(-daysOld),
+            CredentialCount = 0
+        };
     }
 
     [Fact]

@@ -190,7 +190,7 @@ public class JwtSigningService : IJwtSigningService
                 var keyName = $"jwt-signing-{keyId}";
                 var hsmKeyMetadata = await _hsmService.GetKeyMetadataAsync(keyName, cancellationToken);
 
-                if (hsmKeyMetadata != null && hsmKeyMetadata.Enabled)
+                if (hsmKeyMetadata.Enabled)
                 {
                     // For RSA keys from HSM
                     if (hsmKeyMetadata.Algorithm == KeyAlgorithm.RSA2048 ||
@@ -254,7 +254,7 @@ public class JwtSigningService : IJwtSigningService
             var keyName = $"jwt-signing-{keyId}";
             var hsmKeyMetadata = await _hsmService.GetKeyMetadataAsync(keyName, cancellationToken);
 
-            if (hsmKeyMetadata != null && hsmKeyMetadata.Enabled)
+            if (hsmKeyMetadata.Enabled)
             {
                 // For RSA keys from HSM
                 if (hsmKeyMetadata.Algorithm == KeyAlgorithm.RSA2048 ||

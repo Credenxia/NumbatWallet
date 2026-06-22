@@ -5,6 +5,7 @@ public class AuthenticationResultDto
     public required string AccessToken { get; init; }
     public required string RefreshToken { get; init; }
     public int ExpiresIn { get; init; }
+    public DateTime ExpiresAt { get; init; }
     public string TokenType { get; init; } = "Bearer";
     public required string UserId { get; init; }
     public required string Email { get; init; }

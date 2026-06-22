@@ -34,6 +34,8 @@ public class NumbatWalletDbContext : DbContext, IUnitOfWork
     public DbSet<Tenant> Tenants => Set<Tenant>();
     public DbSet<Wallet> Wallets => Set<Wallet>();
     public DbSet<Credential> Credentials => Set<Credential>();
+    public DbSet<Presentation> Presentations => Set<Presentation>();
+    public DbSet<PresentationRequest> PresentationRequests => Set<PresentationRequest>();
     public DbSet<Person> Persons => Set<Person>();
     public DbSet<Issuer> Issuers => Set<Issuer>();
     public DbSet<TenantCertificate> TenantCertificates => Set<TenantCertificate>();
@@ -42,6 +44,9 @@ public class NumbatWalletDbContext : DbContext, IUnitOfWork
     public DbSet<CertificateRevocation> CertificateRevocations => Set<CertificateRevocation>();
     public DbSet<WalletTemplate> WalletTemplates => Set<WalletTemplate>();
     public DbSet<Issuance> Issuances => Set<Issuance>();
+    public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
+    public DbSet<UnmaskAudit> UnmaskAudits => Set<UnmaskAudit>();
+    public DbSet<AdminUser> AdminUsers => Set<AdminUser>();
 
     // Event sourcing entities
     public DbSet<StoredEvent> StoredEvents => Set<StoredEvent>();
@@ -54,6 +59,11 @@ public class NumbatWalletDbContext : DbContext, IUnitOfWork
 
         // Apply snake_case naming convention for PostgreSQL
         optionsBuilder.UseSnakeCaseNamingConvention();
+
+        // Suppress PendingModelChangesWarning to allow EF migrations in development
+        // when the model has changes not yet captured in a migration
+        optionsBuilder.ConfigureWarnings(w =>
+            w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
 
         base.OnConfiguring(optionsBuilder);
     }
@@ -69,10 +79,14 @@ public class NumbatWalletDbContext : DbContext, IUnitOfWork
         // Use dynamic evaluation of TenantId to ensure it's evaluated at query time
         modelBuilder.Entity<Wallet>().HasQueryFilter(w => w.TenantId == _tenantService.TenantId.ToString());
         modelBuilder.Entity<Credential>().HasQueryFilter(c => c.TenantId == _tenantService.TenantId.ToString());
+        modelBuilder.Entity<Presentation>().HasQueryFilter(p => p.TenantId == _tenantService.TenantId.ToString());
+        modelBuilder.Entity<PresentationRequest>().HasQueryFilter(p => p.TenantId == _tenantService.TenantId.ToString());
         modelBuilder.Entity<Person>().HasQueryFilter(p => p.TenantId == _tenantService.TenantId.ToString());
         modelBuilder.Entity<Issuer>().HasQueryFilter(i => i.TenantId == _tenantService.TenantId.ToString());
         modelBuilder.Entity<WalletTemplate>().HasQueryFilter(wt => wt.TenantId == _tenantService.TenantId);
         modelBuilder.Entity<Issuance>().HasQueryFilter(i => i.TenantId == _tenantService.TenantId);
+        modelBuilder.Entity<AuditLog>().HasQueryFilter(a => a.TenantId == _tenantService.TenantId);
+        modelBuilder.Entity<AdminUser>().HasQueryFilter(u => u.TenantId == _tenantService.TenantId);
 
         // Configure Tenant entity
         modelBuilder.Entity<Tenant>(entity =>
@@ -100,65 +114,11 @@ public class NumbatWalletDbContext : DbContext, IUnitOfWork
             }
         });
 
-        // Configure WalletTemplate entity
-        modelBuilder.Entity<WalletTemplate>(entity =>
-        {
-            entity.HasKey(e => e.Id);
-            entity.Property(e => e.TenantId).IsRequired();
-            entity.Property(e => e.Name).IsRequired().HasMaxLength(200);
-            entity.Property(e => e.Description).IsRequired().HasMaxLength(1000);
-            entity.Property(e => e.Version).IsRequired().HasMaxLength(20);
+        // WalletTemplate configuration moved to WalletTemplateConfiguration.cs
 
-            // Configure complex properties as JSON
-            if (Database.IsSqlite())
-            {
-                entity.Property(e => e.Fields)
-                    .HasConversion(
-                        v => System.Text.Json.JsonSerializer.Serialize(v, (System.Text.Json.JsonSerializerOptions?)null),
-                        v => System.Text.Json.JsonSerializer.Deserialize<List<WalletField>>(v, (System.Text.Json.JsonSerializerOptions?)null) ?? new List<WalletField>());
-
-                entity.Property(e => e.Metadata)
-                    .HasConversion(
-                        v => System.Text.Json.JsonSerializer.Serialize(v, (System.Text.Json.JsonSerializerOptions?)null),
-                        v => System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, object>>(v, (System.Text.Json.JsonSerializerOptions?)null) ?? new Dictionary<string, object>());
-
-                entity.Property(e => e.SupportedCredentialTypes)
-                    .HasConversion(
-                        v => System.Text.Json.JsonSerializer.Serialize(v, (System.Text.Json.JsonSerializerOptions?)null),
-                        v => System.Text.Json.JsonSerializer.Deserialize<List<string>>(v, (System.Text.Json.JsonSerializerOptions?)null) ?? new List<string>());
-            }
-            else
-            {
-                entity.Property(e => e.Fields)
-                    .HasColumnType("jsonb")
-                    .HasConversion(
-                        v => System.Text.Json.JsonSerializer.Serialize(v, (System.Text.Json.JsonSerializerOptions?)null),
-                        v => System.Text.Json.JsonSerializer.Deserialize<List<WalletField>>(v, (System.Text.Json.JsonSerializerOptions?)null) ?? new List<WalletField>());
-
-                entity.Property(e => e.Metadata)
-                    .HasColumnType("jsonb")
-                    .HasConversion(
-                        v => System.Text.Json.JsonSerializer.Serialize(v, (System.Text.Json.JsonSerializerOptions?)null),
-                        v => System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, object>>(v, (System.Text.Json.JsonSerializerOptions?)null) ?? new Dictionary<string, object>());
-
-                entity.Property(e => e.SupportedCredentialTypes)
-                    .HasColumnType("jsonb")
-                    .HasConversion(
-                        v => System.Text.Json.JsonSerializer.Serialize(v, (System.Text.Json.JsonSerializerOptions?)null),
-                        v => System.Text.Json.JsonSerializer.Deserialize<List<string>>(v, (System.Text.Json.JsonSerializerOptions?)null) ?? new List<string>());
-            }
-
-            // Indexes for performance
-            entity.HasIndex(e => e.TenantId);
-            entity.HasIndex(e => new { e.TenantId, e.Name }).IsUnique();
-            entity.HasIndex(e => new { e.TenantId, e.IsActive });
-        });
-
-        // Configure JSONB for PostgreSQL only
-        if (!Database.IsSqlite())
-        {
-            modelBuilder.HasPostgresExtension("pgcrypto"); // For encryption functions if needed
-        }
+        // NOTE: no Postgres extensions are declared. Field-level encryption is performed
+        // app-side (AES-256-GCM); pgcrypto was a speculative declaration and is not
+        // allow-listed on Azure Database for PostgreSQL flexible servers by default.
 
         // Configure event sourcing entities
         EventSourcingConfiguration.ConfigureEventSourcing(modelBuilder);
@@ -176,21 +136,30 @@ public class NumbatWalletDbContext : DbContext, IUnitOfWork
             if (entry.State == EntityState.Added)
             {
                 entry.Entity.CreatedAt = _dateTimeService.UtcNow;
-                entry.Entity.CreatedBy = _currentUserService.UserId;
+                // Preserve a caller-set value (e.g. seeding/system writes); use the
+                // current user when authenticated, otherwise fall back to "system".
+                // Never overwrite with null — created_by is NOT NULL in the database.
+                entry.Entity.CreatedBy = !string.IsNullOrEmpty(_currentUserService.UserId)
+                    ? _currentUserService.UserId
+                    : entry.Entity.CreatedBy ?? "system";
 
-                if (entry.Entity is ITenantAware tenantEntity)
-                {
-                    var tenantIdString = _tenantService.TenantId == Guid.Empty ? null : _tenantService.TenantId.ToString();
-                    if (!string.IsNullOrEmpty(tenantIdString))
-                    {
-                        tenantEntity.SetTenantId(tenantIdString);
-                    }
-                }
+                // NOTE: Tenant ID setting is handled by TenantInterceptor using ICurrentTenantService
+                // Removed duplicate logic here to avoid conflicts with string-based tenant IDs
+                // if (entry.Entity is ITenantAware tenantEntity)
+                // {
+                //     var tenantIdString = _tenantService.TenantId == Guid.Empty ? null : _tenantService.TenantId.ToString();
+                //     if (!string.IsNullOrEmpty(tenantIdString))
+                //     {
+                //         tenantEntity.SetTenantId(tenantIdString);
+                //     }
+                // }
             }
             else if (entry.State == EntityState.Modified)
             {
                 entry.Entity.ModifiedAt = _dateTimeService.UtcNow;
-                entry.Entity.ModifiedBy = _currentUserService.UserId;
+                entry.Entity.ModifiedBy = !string.IsNullOrEmpty(_currentUserService.UserId)
+                    ? _currentUserService.UserId
+                    : entry.Entity.ModifiedBy ?? "system";
             }
         }
 

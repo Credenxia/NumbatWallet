@@ -1,8 +1,6 @@
 using NumbatWallet.Application.Commands.Batch;
 using NumbatWallet.Application.DTOs;
-using NumbatWallet.Application.CQRS.Interfaces;
 using NumbatWallet.Web.Api.Security;
-using System.Collections.Concurrent;
 using System.Security.Claims;
 
 namespace NumbatWallet.Web.Api.Controllers;

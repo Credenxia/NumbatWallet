@@ -15,14 +15,17 @@ public static class ServiceCollectionExtensions
     {
         var assembly = Assembly.GetExecutingAssembly();
 
-        // Register AutoMapper
-        services.AddAutoMapper(assembly);
+        // AutoMapper removed - using extension methods for DTO conversions
 
         // Register FluentValidation validators
         services.AddValidatorsFromAssembly(assembly);
 
         // Register custom CQRS implementation (no MediatR as per issue #154)
         services.AddScoped<IDispatcher, Dispatcher>();
+
+        // Default access-token signer (symmetric HS256). Infrastructure overrides this with the
+        // Key Vault RSA signer when Jwt:Signer = "KeyVaultRsa".
+        services.AddSingleton<IAccessTokenSigner, HmacAccessTokenSigner>();
 
         // Auto-register all command handlers
         services.Scan(scan => scan
@@ -50,7 +53,8 @@ public static class ServiceCollectionExtensions
         services.AddScoped<SharedKernel.Interfaces.IEventDispatcher, EventDispatcher>();
 
         // Register Mock Services for Development
-        services.AddScoped<Commands.Credentials.Handlers.IVerificationService, Commands.Credentials.Handlers.MockVerificationService>();
+        // NOTE: IVerificationService (presentation tokens) is registered in Infrastructure DI
+        // with the real JwtPresentationTokenService — no mock in the production path.
         services.AddScoped<Commands.Credentials.Handlers.ICredentialSharingService, Commands.Credentials.Handlers.MockCredentialSharingService>();
 
         // Register Domain Event Handlers
@@ -60,10 +64,10 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IDomainEventHandler<CredentialRevokedEvent>, EventHandlers.CredentialRevokedEventHandler>();
 
         // Register Domain Services
-        services.AddScoped<Domain.Services.IWalletDomainService, Domain.Services.WalletDomainService>();
-        services.AddScoped<Domain.Services.ICredentialDomainService, Domain.Services.CredentialDomainService>();
-        services.AddScoped<Domain.Services.IVerificationDomainService, Domain.Services.VerificationDomainService>();
-        services.AddScoped<Domain.Services.IPersonVerificationService, Domain.Services.PersonVerificationService>();
+        services.AddScoped<DomainServices.IWalletDomainService, DomainServices.WalletDomainService>();
+        services.AddScoped<DomainServices.ICredentialDomainService, DomainServices.CredentialDomainService>();
+        services.AddScoped<DomainServices.IVerificationDomainService, DomainServices.VerificationDomainService>();
+        services.AddScoped<DomainServices.IPersonVerificationService, DomainServices.PersonVerificationService>();
 
         // Register Application Services
         services.AddScoped<IPersonService, PersonService>();
@@ -72,20 +76,24 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IOrganizationService, OrganizationService>();
         services.AddScoped<IStatisticsService, StatisticsService>();
         services.AddScoped<IWalletTemplateService, WalletTemplateService>();
+        services.AddScoped<ICertificateManagementService, CertificateManagementService>();
         // Note: IHealthCheckService is registered in Infrastructure layer
+
+        // Register Token Blacklist Service (Singleton for state persistence)
+        services.AddSingleton<ITokenBlacklistService, TokenBlacklistService>();
 
         // Register Bulk Operation Services
         services.AddSingleton<IBulkOperationStatusService, BulkOperationStatusService>();
         services.AddHostedService<BulkOperationCleanupService>();
 
-        // TODO: Register Background Jobs after fixing them
-        // services.AddHostedService<BackgroundJobs.CredentialExpiryCheckJob>();
-        // services.AddHostedService<BackgroundJobs.StatisticsAggregationJob>();
-        // services.AddHostedService<BackgroundJobs.DatabaseCleanupJob>();
-        // services.AddHostedService<BackgroundJobs.NotificationProcessorJob>();
+        // Background Jobs
+        services.AddHostedService<BackgroundJobs.CredentialExpiryCheckJob>();
+        services.AddHostedService<BackgroundJobs.StatisticsAggregationJob>();
+        services.AddHostedService<BackgroundJobs.DatabaseCleanupJob>();
+        services.AddHostedService<BackgroundJobs.NotificationProcessorJob>();
 
-        // TODO: Register notification channel for async processing
-        // services.AddSingleton(System.Threading.Channels.Channel.CreateUnbounded<BackgroundJobs.NotificationMessage>());
+        // Notification channel for async processing
+        services.AddSingleton(System.Threading.Channels.Channel.CreateUnbounded<BackgroundJobs.NotificationMessage>());
 
         return services;
     }

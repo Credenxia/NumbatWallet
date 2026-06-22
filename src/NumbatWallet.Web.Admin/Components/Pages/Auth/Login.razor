@@ -1,0 +1,79 @@
+@page "/login"
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.Extensions.Configuration
+@attribute [AllowAnonymous]
+@layout NumbatWallet.Web.Admin.Components.Layout.LoginLayout
+@inject NavigationManager Navigation
+@inject IConfiguration Configuration
+
+<PageTitle>Sign In - NumbatWallet Admin</PageTitle>
+
+<div class="login-container">
+    <div class="login-card">
+        <div class="login-header">
+            <div class="login-logo">
+                <i class="bi bi-wallet2"></i>
+            </div>
+            <h1>Numbat<span>Wallet</span></h1>
+            <p class="login-subtitle">Admin Portal</p>
+        </div>
+
+        @if (!string.IsNullOrEmpty(_errorMessage))
+        {
+            <div class="alert alert-danger" role="alert">
+                <i class="bi bi-exclamation-triangle me-2"></i>
+                @_errorMessage
+            </div>
+        }
+
+        <form method="post" action="/auth/login">
+            <div class="form-group mb-3">
+                <label for="email" class="form-label">Email Address</label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+                    <input type="email" id="email" name="email" class="form-control"
+                           placeholder="admin@numbatwallet.wa.gov.au" required />
+                </div>
+            </div>
+
+            <div class="form-group mb-3">
+                <label for="password" class="form-label">Password</label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-lock"></i></span>
+                    <input type="password" id="password" name="password" class="form-control"
+                           placeholder="Enter your password" required />
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary w-100">
+                <i class="bi bi-box-arrow-in-right me-2"></i>
+                <span>Sign In</span>
+            </button>
+        </form>
+
+        @if (Configuration.GetValue<bool>("Credentry:Enabled"))
+        {
+            <div class="text-center my-3 text-muted">or</div>
+            <a href="/login/credentry" class="btn btn-outline-secondary w-100" data-testid="credentry-login">
+                <i class="bi bi-shield-lock me-2"></i>
+                <span>Sign in with Credentry</span>
+            </a>
+        }
+
+        <div class="login-footer">
+            <p class="text-muted">Government of Western Australia</p>
+        </div>
+    </div>
+</div>
+
+@code {
+    private string? _errorMessage;
+
+    [SupplyParameterFromQuery(Name = "error")]
+    public string? Error { get; set; }
+
+    protected override void OnInitialized()
+    {
+        _errorMessage = Error;
+    }
+}

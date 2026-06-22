@@ -1,9 +1,6 @@
-using Microsoft.EntityFrameworkCore;
 using NumbatWallet.Application.CQRS.Interfaces;
 using NumbatWallet.Domain.Interfaces;
 using NumbatWallet.SharedKernel.Interfaces;
-using NumbatWallet.Application.Common.Exceptions;
-using NumbatWallet.SharedKernel.Exceptions;
 using NumbatWallet.Domain.Specifications;
 
 namespace NumbatWallet.Application.Commands.Wallets.Handlers;

@@ -51,9 +51,9 @@ public sealed class GetWalletByIdQueryHandler : IQueryHandler<GetWalletByIdQuery
         }
 
         // Get credential count
-        var credentials = await _credentialRepository.FindAsync(
+        var credentials = (await _credentialRepository.FindAsync(
             new Domain.Specifications.CredentialByWalletSpecification(query.WalletId),
-            cancellationToken);
+            cancellationToken)).ToList();
 
         var activeCredentials = credentials.Count(c => c.IsActive());
         var expiredCredentials = credentials.Count(c => c.IsExpired());
@@ -69,7 +69,7 @@ public sealed class GetWalletByIdQueryHandler : IQueryHandler<GetWalletByIdQuery
             IsSuspended = wallet.Status == SharedKernel.Enums.WalletStatus.Suspended,
             CreatedAt = wallet.CreatedAt,
             UpdatedAt = wallet.ModifiedAt ?? wallet.CreatedAt,
-            CredentialCount = credentials.Count(),
+            CredentialCount = credentials.Count,
             Metadata = new Dictionary<string, string>
             {
                 ["Type"] = wallet.Type.ToString(),

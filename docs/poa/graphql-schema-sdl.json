@@ -1,0 +1,4990 @@
+{
+  "__schema": {
+    "types": [
+      {
+        "name": "UuidOperationFilterInput",
+        "kind": "INPUT_OBJECT",
+        "description": null,
+        "fields": null
+      },
+      {
+        "name": "RevokeCredentialInput",
+        "kind": "INPUT_OBJECT",
+        "description": null,
+        "fields": null
+      },
+      {
+        "name": "DateTimeOperationFilterInput",
+        "kind": "INPUT_OBJECT",
+        "description": null,
+        "fields": null
+      },
+      {
+        "name": "UpdatePersonInput",
+        "kind": "INPUT_OBJECT",
+        "description": null,
+        "fields": null
+      },
+      {
+        "name": "WalletDtoSortInput",
+        "kind": "INPUT_OBJECT",
+        "description": null,
+        "fields": null
+      },
+      {
+        "name": "OrganizationDto",
+        "kind": "OBJECT",
+        "description": null,
+        "fields": [
+          {
+            "name": "id",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "UUID",
+                "kind": "SCALAR"
+              }
+            }
+          },
+          {
+            "name": "name",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "String",
+                "kind": "SCALAR"
+              }
+            }
+          },
+          {
+            "name": "identifier",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "String",
+                "kind": "SCALAR"
+              }
+            }
+          },
+          {
+            "name": "type",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "OrganizationType",
+                "kind": "ENUM"
+              }
+            }
+          },
+          {
+            "name": "contactEmail",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "String",
+                "kind": "SCALAR"
+              }
+            }
+          },
+          {
+            "name": "contactPhone",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": "String",
+              "kind": "SCALAR",
+              "ofType": null
+            }
+          },
+          {
+            "name": "address",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": "AddressDto",
+              "kind": "OBJECT",
+              "ofType": null
+            }
+          },
+          {
+            "name": "website",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": "String",
+              "kind": "SCALAR",
+              "ofType": null
+            }
+          },
+          {
+            "name": "isVerified",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "Boolean",
+                "kind": "SCALAR"
+              }
+            }
+          },
+          {
+            "name": "createdAt",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "DateTime",
+                "kind": "SCALAR"
+              }
+            }
+          },
+          {
+            "name": "lastModified",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": "DateTime",
+              "kind": "SCALAR",
+              "ofType": null
+            }
+          }
+        ]
+      },
+      {
+        "name": "PersonDtoSortInput",
+        "kind": "INPUT_OBJECT",
+        "description": "Data transfer object for Person entity",
+        "fields": null
+      },
+      {
+        "name": "AddressDtoSortInput",
+        "kind": "INPUT_OBJECT",
+        "description": null,
+        "fields": null
+      },
+      {
+        "name": "ListStringOperationFilterInput",
+        "kind": "INPUT_OBJECT",
+        "description": null,
+        "fields": null
+      },
+      {
+        "name": "CreateWalletInput",
+        "kind": "INPUT_OBJECT",
+        "description": null,
+        "fields": null
+      },
+      {
+        "name": "OrganizationTypeOperationFilterInput",
+        "kind": "INPUT_OBJECT",
+        "description": null,
+        "fields": null
+      },
+      {
+        "name": "KeyValuePairOfStringAndStringFilterInput",
+        "kind": "INPUT_OBJECT",
+        "description": null,
+        "fields": null
+      },
+      {
+        "name": "ShareCredentialResult",
+        "kind": "OBJECT",
+        "description": null,
+        "fields": [
+          {
+            "name": "shareUrl",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "String",
+                "kind": "SCALAR"
+              }
+            }
+          },
+          {
+            "name": "shareCode",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "String",
+                "kind": "SCALAR"
+              }
+            }
+          },
+          {
+            "name": "expiresAt",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "DateTime",
+                "kind": "SCALAR"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "name": "ApplyPolicy",
+        "kind": "ENUM",
+        "description": "Defines when a policy shall be executed.",
+        "fields": null
+      },
+      {
+        "name": "KeyValuePairOfStringAndObjectFilterInput",
+        "kind": "INPUT_OBJECT",
+        "description": null,
+        "fields": null
+      },
+      {
+        "name": "ListFilterInputTypeOfKeyValuePairOfStringAndStringFilterInput",
+        "kind": "INPUT_OBJECT",
+        "description": null,
+        "fields": null
+      },
+      {
+        "name": "CredentialsByTypeEdge",
+        "kind": "OBJECT",
+        "description": "An edge in a connection.",
+        "fields": [
+          {
+            "name": "cursor",
+            "description": "A cursor for use in pagination.",
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "String",
+                "kind": "SCALAR"
+              }
+            }
+          },
+          {
+            "name": "node",
+            "description": "The item at the end of the edge.",
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "CredentialDto",
+                "kind": "OBJECT"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "name": "TimeSpan",
+        "kind": "SCALAR",
+        "description": "The `TimeSpan` scalar represents an ISO-8601 compliant duration type.",
+        "fields": null
+      },
+      {
+        "name": "IssuancesByStatusConnection",
+        "kind": "OBJECT",
+        "description": "A connection to a list of items.",
+        "fields": [
+          {
+            "name": "pageInfo",
+            "description": "Information to aid in pagination.",
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "PageInfo",
+                "kind": "OBJECT"
+              }
+            }
+          },
+          {
+            "name": "edges",
+            "description": "A list of edges.",
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "LIST",
+              "ofType": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            }
+          },
+          {
+            "name": "nodes",
+            "description": "A flattened list of the nodes.",
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "LIST",
+              "ofType": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "name": "LocalDate",
+        "kind": "SCALAR",
+        "description": "The `LocalDate` scalar type represents a ISO date string, represented as UTF-8 character sequences YYYY-MM-DD. The scalar follows the specification defined in RFC3339",
+        "fields": null
+      },
+      {
+        "name": "VerificationResult",
+        "kind": "OBJECT",
+        "description": null,
+        "fields": [
+          {
+            "name": "isValid",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "Boolean",
+                "kind": "SCALAR"
+              }
+            }
+          },
+          {
+            "name": "issuer",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": "String",
+              "kind": "SCALAR",
+              "ofType": null
+            }
+          },
+          {
+            "name": "issuedAt",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": "DateTime",
+              "kind": "SCALAR",
+              "ofType": null
+            }
+          },
+          {
+            "name": "expiresAt",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": "DateTime",
+              "kind": "SCALAR",
+              "ofType": null
+            }
+          },
+          {
+            "name": "errors",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": null,
+                "kind": "LIST"
+              }
+            }
+          },
+          {
+            "name": "claims",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": null,
+                "kind": "LIST"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "name": "SortEnumType",
+        "kind": "ENUM",
+        "description": null,
+        "fields": null
+      },
+      {
+        "name": "IntOperationFilterInput",
+        "kind": "INPUT_OBJECT",
+        "description": null,
+        "fields": null
+      },
+      {
+        "name": "CredentialsByIssuerConnection",
+        "kind": "OBJECT",
+        "description": "A connection to a list of items.",
+        "fields": [
+          {
+            "name": "pageInfo",
+            "description": "Information to aid in pagination.",
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "PageInfo",
+                "kind": "OBJECT"
+              }
+            }
+          },
+          {
+            "name": "edges",
+            "description": "A list of edges.",
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "LIST",
+              "ofType": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            }
+          },
+          {
+            "name": "nodes",
+            "description": "A flattened list of the nodes.",
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "LIST",
+              "ofType": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "name": "PersonDtoFilterInput",
+        "kind": "INPUT_OBJECT",
+        "description": "Data transfer object for Person entity",
+        "fields": null
+      },
+      {
+        "name": "BulkIssueResult",
+        "kind": "OBJECT",
+        "description": null,
+        "fields": [
+          {
+            "name": "totalRequested",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "Int",
+                "kind": "SCALAR"
+              }
+            }
+          },
+          {
+            "name": "successCount",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "Int",
+                "kind": "SCALAR"
+              }
+            }
+          },
+          {
+            "name": "failureCount",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "Int",
+                "kind": "SCALAR"
+              }
+            }
+          },
+          {
+            "name": "issuedCredentialIds",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": null,
+                "kind": "LIST"
+              }
+            }
+          },
+          {
+            "name": "errors",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": null,
+                "kind": "LIST"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "name": "__EnumValue",
+        "kind": "OBJECT",
+        "description": "One possible value for a given Enum. Enum values are unique values, not a placeholder for a string or numeric value. However an Enum value is returned in a JSON response as a string.",
+        "fields": [
+          {
+            "name": "name",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "String",
+                "kind": "SCALAR"
+              }
+            }
+          },
+          {
+            "name": "description",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": "String",
+              "kind": "SCALAR",
+              "ofType": null
+            }
+          },
+          {
+            "name": "isDeprecated",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "Boolean",
+                "kind": "SCALAR"
+              }
+            }
+          },
+          {
+            "name": "deprecationReason",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": "String",
+              "kind": "SCALAR",
+              "ofType": null
+            }
+          }
+        ]
+      },
+      {
+        "name": "CreatePersonInput",
+        "kind": "INPUT_OBJECT",
+        "description": null,
+        "fields": null
+      },
+      {
+        "name": "AddressDtoFilterInput",
+        "kind": "INPUT_OBJECT",
+        "description": null,
+        "fields": null
+      },
+      {
+        "name": "CredentialsByTypeConnection",
+        "kind": "OBJECT",
+        "description": "A connection to a list of items.",
+        "fields": [
+          {
+            "name": "pageInfo",
+            "description": "Information to aid in pagination.",
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "PageInfo",
+                "kind": "OBJECT"
+              }
+            }
+          },
+          {
+            "name": "edges",
+            "description": "A list of edges.",
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "LIST",
+              "ofType": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            }
+          },
+          {
+            "name": "nodes",
+            "description": "A flattened list of the nodes.",
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "LIST",
+              "ofType": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "name": "IssuanceDto",
+        "kind": "OBJECT",
+        "description": "Represents an issuance request for a credential",
+        "fields": [
+          {
+            "name": "id",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "UUID",
+                "kind": "SCALAR"
+              }
+            }
+          },
+          {
+            "name": "credentialType",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "String",
+                "kind": "SCALAR"
+              }
+            }
+          },
+          {
+            "name": "requesterId",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "String",
+                "kind": "SCALAR"
+              }
+            }
+          },
+          {
+            "name": "walletId",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "UUID",
+                "kind": "SCALAR"
+              }
+            }
+          },
+          {
+            "name": "status",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "String",
+                "kind": "SCALAR"
+              }
+            }
+          },
+          {
+            "name": "requiredDocuments",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": null,
+                "kind": "LIST"
+              }
+            }
+          },
+          {
+            "name": "additionalData",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": null,
+                "kind": "LIST"
+              }
+            }
+          },
+          {
+            "name": "createdAt",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "DateTime",
+                "kind": "SCALAR"
+              }
+            }
+          },
+          {
+            "name": "approvedAt",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": "DateTime",
+              "kind": "SCALAR",
+              "ofType": null
+            }
+          },
+          {
+            "name": "rejectedAt",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": "DateTime",
+              "kind": "SCALAR",
+              "ofType": null
+            }
+          },
+          {
+            "name": "completedAt",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": "DateTime",
+              "kind": "SCALAR",
+              "ofType": null
+            }
+          },
+          {
+            "name": "approvedBy",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": "String",
+              "kind": "SCALAR",
+              "ofType": null
+            }
+          },
+          {
+            "name": "rejectedBy",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": "String",
+              "kind": "SCALAR",
+              "ofType": null
+            }
+          },
+          {
+            "name": "completedBy",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": "String",
+              "kind": "SCALAR",
+              "ofType": null
+            }
+          },
+          {
+            "name": "rejectionReason",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": "String",
+              "kind": "SCALAR",
+              "ofType": null
+            }
+          },
+          {
+            "name": "comments",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": "String",
+              "kind": "SCALAR",
+              "ofType": null
+            }
+          },
+          {
+            "name": "credentialId",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": "UUID",
+              "kind": "SCALAR",
+              "ofType": null
+            }
+          },
+          {
+            "name": "credentialData",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": null,
+                "kind": "LIST"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "name": "ComponentHealth",
+        "kind": "OBJECT",
+        "description": null,
+        "fields": [
+          {
+            "name": "status",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "String",
+                "kind": "SCALAR"
+              }
+            }
+          },
+          {
+            "name": "description",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": "String",
+              "kind": "SCALAR",
+              "ofType": null
+            }
+          },
+          {
+            "name": "responseTime",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "TimeSpan",
+                "kind": "SCALAR"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "name": "CredentialDtoSortInput",
+        "kind": "INPUT_OBJECT",
+        "description": null,
+        "fields": null
+      },
+      {
+        "name": "WalletDtoFilterInput",
+        "kind": "INPUT_OBJECT",
+        "description": null,
+        "fields": null
+      },
+      {
+        "name": "OrganizationType",
+        "kind": "ENUM",
+        "description": null,
+        "fields": null
+      },
+      {
+        "name": "PendingIssuancesConnection",
+        "kind": "OBJECT",
+        "description": "A connection to a list of items.",
+        "fields": [
+          {
+            "name": "pageInfo",
+            "description": "Information to aid in pagination.",
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "PageInfo",
+                "kind": "OBJECT"
+              }
+            }
+          },
+          {
+            "name": "edges",
+            "description": "A list of edges.",
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "LIST",
+              "ofType": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            }
+          },
+          {
+            "name": "nodes",
+            "description": "A flattened list of the nodes.",
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "LIST",
+              "ofType": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "name": "SearchCredentialsEdge",
+        "kind": "OBJECT",
+        "description": "An edge in a connection.",
+        "fields": [
+          {
+            "name": "cursor",
+            "description": "A cursor for use in pagination.",
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "String",
+                "kind": "SCALAR"
+              }
+            }
+          },
+          {
+            "name": "node",
+            "description": "The item at the end of the edge.",
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "CredentialDto",
+                "kind": "OBJECT"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "name": "CredentialsByIssuerEdge",
+        "kind": "OBJECT",
+        "description": "An edge in a connection.",
+        "fields": [
+          {
+            "name": "cursor",
+            "description": "A cursor for use in pagination.",
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "String",
+                "kind": "SCALAR"
+              }
+            }
+          },
+          {
+            "name": "node",
+            "description": "The item at the end of the edge.",
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "CredentialDto",
+                "kind": "OBJECT"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "name": "UpdateOrganizationInput",
+        "kind": "INPUT_OBJECT",
+        "description": null,
+        "fields": null
+      },
+      {
+        "name": "LocalDateOperationFilterInput",
+        "kind": "INPUT_OBJECT",
+        "description": null,
+        "fields": null
+      },
+      {
+        "name": "BooleanOperationFilterInput",
+        "kind": "INPUT_OBJECT",
+        "description": null,
+        "fields": null
+      },
+      {
+        "name": "__InputValue",
+        "kind": "OBJECT",
+        "description": "Arguments provided to Fields or Directives and the input fields of an InputObject are represented as Input Values which describe their type and optionally a default value.",
+        "fields": [
+          {
+            "name": "name",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "String",
+                "kind": "SCALAR"
+              }
+            }
+          },
+          {
+            "name": "description",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": "String",
+              "kind": "SCALAR",
+              "ofType": null
+            }
+          },
+          {
+            "name": "type",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "__Type",
+                "kind": "OBJECT"
+              }
+            }
+          },
+          {
+            "name": "defaultValue",
+            "description": "A GraphQL-formatted string representing the default value for this input value.",
+            "args": [],
+            "type": {
+              "name": "String",
+              "kind": "SCALAR",
+              "ofType": null
+            }
+          },
+          {
+            "name": "isDeprecated",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "Boolean",
+                "kind": "SCALAR"
+              }
+            }
+          },
+          {
+            "name": "deprecationReason",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": "String",
+              "kind": "SCALAR",
+              "ofType": null
+            }
+          }
+        ]
+      },
+      {
+        "name": "Mutation",
+        "kind": "OBJECT",
+        "description": "GraphQL mutations for credential operations",
+        "fields": [
+          {
+            "name": "createPerson",
+            "description": null,
+            "args": [
+              {
+                "name": "input",
+                "description": null,
+                "type": {
+                  "name": null,
+                  "kind": "NON_NULL",
+                  "ofType": {
+                    "name": "CreatePersonInput",
+                    "kind": "INPUT_OBJECT"
+                  }
+                }
+              }
+            ],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "PersonDto",
+                "kind": "OBJECT"
+              }
+            }
+          },
+          {
+            "name": "updatePerson",
+            "description": null,
+            "args": [
+              {
+                "name": "input",
+                "description": null,
+                "type": {
+                  "name": null,
+                  "kind": "NON_NULL",
+                  "ofType": {
+                    "name": "UpdatePersonInput",
+                    "kind": "INPUT_OBJECT"
+                  }
+                }
+              }
+            ],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "PersonDto",
+                "kind": "OBJECT"
+              }
+            }
+          },
+          {
+            "name": "deletePerson",
+            "description": null,
+            "args": [
+              {
+                "name": "id",
+                "description": null,
+                "type": {
+                  "name": null,
+                  "kind": "NON_NULL",
+                  "ofType": {
+                    "name": "UUID",
+                    "kind": "SCALAR"
+                  }
+                }
+              }
+            ],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "Boolean",
+                "kind": "SCALAR"
+              }
+            }
+          },
+          {
+            "name": "createOrganization",
+            "description": null,
+            "args": [
+              {
+                "name": "input",
+                "description": null,
+                "type": {
+                  "name": null,
+                  "kind": "NON_NULL",
+                  "ofType": {
+                    "name": "CreateOrganizationInput",
+                    "kind": "INPUT_OBJECT"
+                  }
+                }
+              }
+            ],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "OrganizationDto",
+                "kind": "OBJECT"
+              }
+            }
+          },
+          {
+            "name": "updateOrganization",
+            "description": null,
+            "args": [
+              {
+                "name": "input",
+                "description": null,
+                "type": {
+                  "name": null,
+                  "kind": "NON_NULL",
+                  "ofType": {
+                    "name": "UpdateOrganizationInput",
+                    "kind": "INPUT_OBJECT"
+                  }
+                }
+              }
+            ],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "OrganizationDto",
+                "kind": "OBJECT"
+              }
+            }
+          },
+          {
+            "name": "createWallet",
+            "description": null,
+            "args": [
+              {
+                "name": "input",
+                "description": null,
+                "type": {
+                  "name": null,
+                  "kind": "NON_NULL",
+                  "ofType": {
+                    "name": "CreateWalletInput",
+                    "kind": "INPUT_OBJECT"
+                  }
+                }
+              }
+            ],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "WalletDto",
+                "kind": "OBJECT"
+              }
+            }
+          },
+          {
+            "name": "updateWalletSettings",
+            "description": null,
+            "args": [
+              {
+                "name": "input",
+                "description": null,
+                "type": {
+                  "name": null,
+                  "kind": "NON_NULL",
+                  "ofType": {
+                    "name": "UpdateWalletSettingsInput",
+                    "kind": "INPUT_OBJECT"
+                  }
+                }
+              }
+            ],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "WalletDto",
+                "kind": "OBJECT"
+              }
+            }
+          },
+          {
+            "name": "backupWallet",
+            "description": null,
+            "args": [
+              {
+                "name": "walletId",
+                "description": null,
+                "type": {
+                  "name": null,
+                  "kind": "NON_NULL",
+                  "ofType": {
+                    "name": "UUID",
+                    "kind": "SCALAR"
+                  }
+                }
+              }
+            ],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "BackupResult",
+                "kind": "OBJECT"
+              }
+            }
+          },
+          {
+            "name": "restoreWallet",
+            "description": null,
+            "args": [
+              {
+                "name": "input",
+                "description": null,
+                "type": {
+                  "name": null,
+                  "kind": "NON_NULL",
+                  "ofType": {
+                    "name": "RestoreWalletInput",
+                    "kind": "INPUT_OBJECT"
+                  }
+                }
+              }
+            ],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "WalletDto",
+                "kind": "OBJECT"
+              }
+            }
+          },
+          {
+            "name": "issueCredential",
+            "description": null,
+            "args": [
+              {
+                "name": "input",
+                "description": null,
+                "type": {
+                  "name": null,
+                  "kind": "NON_NULL",
+                  "ofType": {
+                    "name": "IssueCredentialInput",
+                    "kind": "INPUT_OBJECT"
+                  }
+                }
+              }
+            ],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "CredentialDto",
+                "kind": "OBJECT"
+              }
+            }
+          },
+          {
+            "name": "revokeCredential",
+            "description": "Revoke an issued credential",
+            "args": [
+              {
+                "name": "input",
+                "description": null,
+                "type": {
+                  "name": null,
+                  "kind": "NON_NULL",
+                  "ofType": {
+                    "name": "RevokeCredentialInput",
+                    "kind": "INPUT_OBJECT"
+                  }
+                }
+              }
+            ],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "Boolean",
+                "kind": "SCALAR"
+              }
+            }
+          },
+          {
+            "name": "verifyCredential",
+            "description": "Verify a verifiable credential",
+            "args": [
+              {
+                "name": "credentialId",
+                "description": null,
+                "type": {
+                  "name": null,
+                  "kind": "NON_NULL",
+                  "ofType": {
+                    "name": "UUID",
+                    "kind": "SCALAR"
+                  }
+                }
+              },
+              {
+                "name": "input",
+                "description": null,
+                "type": {
+                  "name": null,
+                  "kind": "NON_NULL",
+                  "ofType": {
+                    "name": "VerifyCredentialInput",
+                    "kind": "INPUT_OBJECT"
+                  }
+                }
+              }
+            ],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "VerificationResultDto",
+                "kind": "OBJECT"
+              }
+            }
+          },
+          {
+            "name": "shareCredential",
+            "description": null,
+            "args": [
+              {
+                "name": "input",
+                "description": null,
+                "type": {
+                  "name": null,
+                  "kind": "NON_NULL",
+                  "ofType": {
+                    "name": "ShareCredentialInput",
+                    "kind": "INPUT_OBJECT"
+                  }
+                }
+              }
+            ],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "ShareCredentialResult",
+                "kind": "OBJECT"
+              }
+            }
+          },
+          {
+            "name": "bulkIssueCredentials",
+            "description": null,
+            "args": [
+              {
+                "name": "input",
+                "description": null,
+                "type": {
+                  "name": null,
+                  "kind": "NON_NULL",
+                  "ofType": {
+                    "name": "BulkIssueCredentialsInput",
+                    "kind": "INPUT_OBJECT"
+                  }
+                }
+              }
+            ],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "BulkIssueResult",
+                "kind": "OBJECT"
+              }
+            }
+          },
+          {
+            "name": "createIssuance",
+            "description": "Create a new issuance request",
+            "args": [
+              {
+                "name": "input",
+                "description": null,
+                "type": {
+                  "name": null,
+                  "kind": "NON_NULL",
+                  "ofType": {
+                    "name": "CreateIssuanceInput",
+                    "kind": "INPUT_OBJECT"
+                  }
+                }
+              }
+            ],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "IssuanceDto",
+                "kind": "OBJECT"
+              }
+            }
+          },
+          {
+            "name": "approveIssuance",
+            "description": "Approve a pending issuance request",
+            "args": [
+              {
+                "name": "input",
+                "description": null,
+                "type": {
+                  "name": null,
+                  "kind": "NON_NULL",
+                  "ofType": {
+                    "name": "ApproveIssuanceInput",
+                    "kind": "INPUT_OBJECT"
+                  }
+                }
+              }
+            ],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "IssuanceDto",
+                "kind": "OBJECT"
+              }
+            }
+          },
+          {
+            "name": "rejectIssuance",
+            "description": "Reject a pending issuance request",
+            "args": [
+              {
+                "name": "input",
+                "description": null,
+                "type": {
+                  "name": null,
+                  "kind": "NON_NULL",
+                  "ofType": {
+                    "name": "RejectIssuanceInput",
+                    "kind": "INPUT_OBJECT"
+                  }
+                }
+              }
+            ],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "IssuanceDto",
+                "kind": "OBJECT"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "name": "KeyValuePairOfStringAndComponentHealth",
+        "kind": "OBJECT",
+        "description": null,
+        "fields": [
+          {
+            "name": "key",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "String",
+                "kind": "SCALAR"
+              }
+            }
+          },
+          {
+            "name": "value",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "ComponentHealth",
+                "kind": "OBJECT"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "name": "BackupResult",
+        "kind": "OBJECT",
+        "description": null,
+        "fields": [
+          {
+            "name": "backupData",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "String",
+                "kind": "SCALAR"
+              }
+            }
+          },
+          {
+            "name": "backupId",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "String",
+                "kind": "SCALAR"
+              }
+            }
+          },
+          {
+            "name": "createdAt",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "DateTime",
+                "kind": "SCALAR"
+              }
+            }
+          },
+          {
+            "name": "isEncrypted",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "Boolean",
+                "kind": "SCALAR"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "name": "__Directive",
+        "kind": "OBJECT",
+        "description": "A Directive provides a way to describe alternate runtime execution and type validation behavior in a GraphQL document.\n\nIn some cases, you need to provide options to alter GraphQL's execution behavior in ways field arguments will not suffice, such as conditionally including or skipping a field. Directives provide this by describing additional information to the executor.",
+        "fields": [
+          {
+            "name": "name",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "String",
+                "kind": "SCALAR"
+              }
+            }
+          },
+          {
+            "name": "description",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": "String",
+              "kind": "SCALAR",
+              "ofType": null
+            }
+          },
+          {
+            "name": "locations",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": null,
+                "kind": "LIST"
+              }
+            }
+          },
+          {
+            "name": "args",
+            "description": null,
+            "args": [
+              {
+                "name": "includeDeprecated",
+                "description": null,
+                "type": {
+                  "name": null,
+                  "kind": "NON_NULL",
+                  "ofType": {
+                    "name": "Boolean",
+                    "kind": "SCALAR"
+                  }
+                }
+              }
+            ],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": null,
+                "kind": "LIST"
+              }
+            }
+          },
+          {
+            "name": "isRepeatable",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "Boolean",
+                "kind": "SCALAR"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "name": "AddressDto",
+        "kind": "OBJECT",
+        "description": null,
+        "fields": [
+          {
+            "name": "street1",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "String",
+                "kind": "SCALAR"
+              }
+            }
+          },
+          {
+            "name": "street2",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": "String",
+              "kind": "SCALAR",
+              "ofType": null
+            }
+          },
+          {
+            "name": "city",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "String",
+                "kind": "SCALAR"
+              }
+            }
+          },
+          {
+            "name": "state",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "String",
+                "kind": "SCALAR"
+              }
+            }
+          },
+          {
+            "name": "postalCode",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "String",
+                "kind": "SCALAR"
+              }
+            }
+          },
+          {
+            "name": "country",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "String",
+                "kind": "SCALAR"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "name": "PageInfo",
+        "kind": "OBJECT",
+        "description": "Information about pagination in a connection.",
+        "fields": [
+          {
+            "name": "hasNextPage",
+            "description": "Indicates whether more edges exist following the set defined by the clients arguments.",
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "Boolean",
+                "kind": "SCALAR"
+              }
+            }
+          },
+          {
+            "name": "hasPreviousPage",
+            "description": "Indicates whether more edges exist prior the set defined by the clients arguments.",
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "Boolean",
+                "kind": "SCALAR"
+              }
+            }
+          },
+          {
+            "name": "startCursor",
+            "description": "When paginating backwards, the cursor to continue.",
+            "args": [],
+            "type": {
+              "name": "String",
+              "kind": "SCALAR",
+              "ofType": null
+            }
+          },
+          {
+            "name": "endCursor",
+            "description": "When paginating forwards, the cursor to continue.",
+            "args": [],
+            "type": {
+              "name": "String",
+              "kind": "SCALAR",
+              "ofType": null
+            }
+          }
+        ]
+      },
+      {
+        "name": "IssueCredentialInput",
+        "kind": "INPUT_OBJECT",
+        "description": null,
+        "fields": null
+      },
+      {
+        "name": "CredentialsByWalletEdge",
+        "kind": "OBJECT",
+        "description": "An edge in a connection.",
+        "fields": [
+          {
+            "name": "cursor",
+            "description": "A cursor for use in pagination.",
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "String",
+                "kind": "SCALAR"
+              }
+            }
+          },
+          {
+            "name": "node",
+            "description": "The item at the end of the edge.",
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "CredentialDto",
+                "kind": "OBJECT"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "name": "SearchCredentialsConnection",
+        "kind": "OBJECT",
+        "description": "A connection to a list of items.",
+        "fields": [
+          {
+            "name": "pageInfo",
+            "description": "Information to aid in pagination.",
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "PageInfo",
+                "kind": "OBJECT"
+              }
+            }
+          },
+          {
+            "name": "edges",
+            "description": "A list of edges.",
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "LIST",
+              "ofType": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            }
+          },
+          {
+            "name": "nodes",
+            "description": "A flattened list of the nodes.",
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "LIST",
+              "ofType": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "name": "IssuanceDtoSortInput",
+        "kind": "INPUT_OBJECT",
+        "description": "Represents an issuance request for a credential",
+        "fields": null
+      },
+      {
+        "name": "CredentialDto",
+        "kind": "OBJECT",
+        "description": null,
+        "fields": [
+          {
+            "name": "id",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "String",
+                "kind": "SCALAR"
+              }
+            }
+          },
+          {
+            "name": "holderId",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "String",
+                "kind": "SCALAR"
+              }
+            }
+          },
+          {
+            "name": "issuerId",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "String",
+                "kind": "SCALAR"
+              }
+            }
+          },
+          {
+            "name": "type",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "String",
+                "kind": "SCALAR"
+              }
+            }
+          },
+          {
+            "name": "credentialSubject",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": null,
+                "kind": "LIST"
+              }
+            }
+          },
+          {
+            "name": "issuanceDate",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "DateTime",
+                "kind": "SCALAR"
+              }
+            }
+          },
+          {
+            "name": "expirationDate",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": "DateTime",
+              "kind": "SCALAR",
+              "ofType": null
+            }
+          },
+          {
+            "name": "status",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "String",
+                "kind": "SCALAR"
+              }
+            }
+          },
+          {
+            "name": "proof",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "LIST",
+              "ofType": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            }
+          },
+          {
+            "name": "metadata",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "LIST",
+              "ofType": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            }
+          },
+          {
+            "name": "isRevoked",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "Boolean",
+                "kind": "SCALAR"
+              }
+            }
+          },
+          {
+            "name": "revocationDate",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": "DateTime",
+              "kind": "SCALAR",
+              "ofType": null
+            }
+          },
+          {
+            "name": "revocationReason",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": "String",
+              "kind": "SCALAR",
+              "ofType": null
+            }
+          }
+        ]
+      },
+      {
+        "name": "Any",
+        "kind": "SCALAR",
+        "description": null,
+        "fields": null
+      },
+      {
+        "name": "IssuancesByWalletEdge",
+        "kind": "OBJECT",
+        "description": "An edge in a connection.",
+        "fields": [
+          {
+            "name": "cursor",
+            "description": "A cursor for use in pagination.",
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "String",
+                "kind": "SCALAR"
+              }
+            }
+          },
+          {
+            "name": "node",
+            "description": "The item at the end of the edge.",
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "IssuanceDto",
+                "kind": "OBJECT"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "name": "PersonDto",
+        "kind": "OBJECT",
+        "description": "Data transfer object for Person entity",
+        "fields": [
+          {
+            "name": "id",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "UUID",
+                "kind": "SCALAR"
+              }
+            }
+          },
+          {
+            "name": "email",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "String",
+                "kind": "SCALAR"
+              }
+            }
+          },
+          {
+            "name": "phoneNumber",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "String",
+                "kind": "SCALAR"
+              }
+            }
+          },
+          {
+            "name": "firstName",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "String",
+                "kind": "SCALAR"
+              }
+            }
+          },
+          {
+            "name": "lastName",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "String",
+                "kind": "SCALAR"
+              }
+            }
+          },
+          {
+            "name": "dateOfBirth",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "LocalDate",
+                "kind": "SCALAR"
+              }
+            }
+          },
+          {
+            "name": "externalId",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "String",
+                "kind": "SCALAR"
+              }
+            }
+          },
+          {
+            "name": "emailVerificationStatus",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "String",
+                "kind": "SCALAR"
+              }
+            }
+          },
+          {
+            "name": "phoneVerificationStatus",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "String",
+                "kind": "SCALAR"
+              }
+            }
+          },
+          {
+            "name": "isVerified",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "Boolean",
+                "kind": "SCALAR"
+              }
+            }
+          },
+          {
+            "name": "status",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "String",
+                "kind": "SCALAR"
+              }
+            }
+          },
+          {
+            "name": "createdAt",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "DateTime",
+                "kind": "SCALAR"
+              }
+            }
+          },
+          {
+            "name": "updatedAt",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": "DateTime",
+              "kind": "SCALAR",
+              "ofType": null
+            }
+          }
+        ]
+      },
+      {
+        "name": "KeyValuePairOfStringAndInt32",
+        "kind": "OBJECT",
+        "description": null,
+        "fields": [
+          {
+            "name": "key",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "String",
+                "kind": "SCALAR"
+              }
+            }
+          },
+          {
+            "name": "value",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "Int",
+                "kind": "SCALAR"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "name": "CredentialStatistics",
+        "kind": "OBJECT",
+        "description": "Credential statistics model",
+        "fields": [
+          {
+            "name": "totalCredentials",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "Int",
+                "kind": "SCALAR"
+              }
+            }
+          },
+          {
+            "name": "activeCredentials",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "Int",
+                "kind": "SCALAR"
+              }
+            }
+          },
+          {
+            "name": "revokedCredentials",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "Int",
+                "kind": "SCALAR"
+              }
+            }
+          },
+          {
+            "name": "expiredCredentials",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "Int",
+                "kind": "SCALAR"
+              }
+            }
+          },
+          {
+            "name": "issuedToday",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "Int",
+                "kind": "SCALAR"
+              }
+            }
+          },
+          {
+            "name": "issuedThisWeek",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "Int",
+                "kind": "SCALAR"
+              }
+            }
+          },
+          {
+            "name": "issuedThisMonth",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "Int",
+                "kind": "SCALAR"
+              }
+            }
+          },
+          {
+            "name": "credentialsByType",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": null,
+                "kind": "LIST"
+              }
+            }
+          },
+          {
+            "name": "credentialsByIssuer",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": null,
+                "kind": "LIST"
+              }
+            }
+          },
+          {
+            "name": "averageValidityPeriod",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "TimeSpan",
+                "kind": "SCALAR"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "name": "Boolean",
+        "kind": "SCALAR",
+        "description": "The `Boolean` scalar type represents `true` or `false`.",
+        "fields": null
+      },
+      {
+        "name": "__Schema",
+        "kind": "OBJECT",
+        "description": "A GraphQL Schema defines the capabilities of a GraphQL server. It exposes all available types and directives on the server, as well as the entry points for query, mutation, and subscription operations.",
+        "fields": [
+          {
+            "name": "description",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": "String",
+              "kind": "SCALAR",
+              "ofType": null
+            }
+          },
+          {
+            "name": "types",
+            "description": "A list of all types supported by this server.",
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": null,
+                "kind": "LIST"
+              }
+            }
+          },
+          {
+            "name": "queryType",
+            "description": "The type that query operations will be rooted at.",
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "__Type",
+                "kind": "OBJECT"
+              }
+            }
+          },
+          {
+            "name": "mutationType",
+            "description": "If this server supports mutation, the type that mutation operations will be rooted at.",
+            "args": [],
+            "type": {
+              "name": "__Type",
+              "kind": "OBJECT",
+              "ofType": null
+            }
+          },
+          {
+            "name": "subscriptionType",
+            "description": "If this server support subscription, the type that subscription operations will be rooted at.",
+            "args": [],
+            "type": {
+              "name": "__Type",
+              "kind": "OBJECT",
+              "ofType": null
+            }
+          },
+          {
+            "name": "directives",
+            "description": "A list of all directives supported by this server.",
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": null,
+                "kind": "LIST"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "name": "IssuanceDtoFilterInput",
+        "kind": "INPUT_OBJECT",
+        "description": "Represents an issuance request for a credential",
+        "fields": null
+      },
+      {
+        "name": "CredentialsByWalletConnection",
+        "kind": "OBJECT",
+        "description": "A connection to a list of items.",
+        "fields": [
+          {
+            "name": "pageInfo",
+            "description": "Information to aid in pagination.",
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "PageInfo",
+                "kind": "OBJECT"
+              }
+            }
+          },
+          {
+            "name": "edges",
+            "description": "A list of edges.",
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "LIST",
+              "ofType": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            }
+          },
+          {
+            "name": "nodes",
+            "description": "A flattened list of the nodes.",
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "LIST",
+              "ofType": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "name": "OrganizationDtoFilterInput",
+        "kind": "INPUT_OBJECT",
+        "description": null,
+        "fields": null
+      },
+      {
+        "name": "VerificationChecksDto",
+        "kind": "OBJECT",
+        "description": null,
+        "fields": [
+          {
+            "name": "signature",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "Boolean",
+                "kind": "SCALAR"
+              }
+            }
+          },
+          {
+            "name": "expiry",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "Boolean",
+                "kind": "SCALAR"
+              }
+            }
+          },
+          {
+            "name": "revocation",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "Boolean",
+                "kind": "SCALAR"
+              }
+            }
+          },
+          {
+            "name": "schema",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "Boolean",
+                "kind": "SCALAR"
+              }
+            }
+          },
+          {
+            "name": "issuer",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "Boolean",
+                "kind": "SCALAR"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "name": "__TypeKind",
+        "kind": "ENUM",
+        "description": "An enum describing what kind of type a given `__Type` is.",
+        "fields": null
+      },
+      {
+        "name": "AddressDtoInput",
+        "kind": "INPUT_OBJECT",
+        "description": null,
+        "fields": null
+      },
+      {
+        "name": "ShareCredentialInput",
+        "kind": "INPUT_OBJECT",
+        "description": null,
+        "fields": null
+      },
+      {
+        "name": "DashboardStatistics",
+        "kind": "OBJECT",
+        "description": null,
+        "fields": [
+          {
+            "name": "totalUsers",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "Int",
+                "kind": "SCALAR"
+              }
+            }
+          },
+          {
+            "name": "activeWallets",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "Int",
+                "kind": "SCALAR"
+              }
+            }
+          },
+          {
+            "name": "totalCredentials",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "Int",
+                "kind": "SCALAR"
+              }
+            }
+          },
+          {
+            "name": "credentialsIssuedToday",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "Int",
+                "kind": "SCALAR"
+              }
+            }
+          },
+          {
+            "name": "credentialsExpiringThisWeek",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "Int",
+                "kind": "SCALAR"
+              }
+            }
+          },
+          {
+            "name": "credentialsByType",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": null,
+                "kind": "LIST"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "name": "WalletDto",
+        "kind": "OBJECT",
+        "description": null,
+        "fields": [
+          {
+            "name": "id",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "String",
+                "kind": "SCALAR"
+              }
+            }
+          },
+          {
+            "name": "personId",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "String",
+                "kind": "SCALAR"
+              }
+            }
+          },
+          {
+            "name": "personName",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "String",
+                "kind": "SCALAR"
+              }
+            }
+          },
+          {
+            "name": "name",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "String",
+                "kind": "SCALAR"
+              }
+            }
+          },
+          {
+            "name": "status",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "String",
+                "kind": "SCALAR"
+              }
+            }
+          },
+          {
+            "name": "isActive",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "Boolean",
+                "kind": "SCALAR"
+              }
+            }
+          },
+          {
+            "name": "isSuspended",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "Boolean",
+                "kind": "SCALAR"
+              }
+            }
+          },
+          {
+            "name": "createdAt",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "DateTime",
+                "kind": "SCALAR"
+              }
+            }
+          },
+          {
+            "name": "updatedAt",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "DateTime",
+                "kind": "SCALAR"
+              }
+            }
+          },
+          {
+            "name": "credentialCount",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "Int",
+                "kind": "SCALAR"
+              }
+            }
+          },
+          {
+            "name": "metadata",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": null,
+                "kind": "LIST"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "name": "IssuancesByWalletConnection",
+        "kind": "OBJECT",
+        "description": "A connection to a list of items.",
+        "fields": [
+          {
+            "name": "pageInfo",
+            "description": "Information to aid in pagination.",
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "PageInfo",
+                "kind": "OBJECT"
+              }
+            }
+          },
+          {
+            "name": "edges",
+            "description": "A list of edges.",
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "LIST",
+              "ofType": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            }
+          },
+          {
+            "name": "nodes",
+            "description": "A flattened list of the nodes.",
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "LIST",
+              "ofType": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "name": "VerifyCredentialInput",
+        "kind": "INPUT_OBJECT",
+        "description": null,
+        "fields": null
+      },
+      {
+        "name": "Int",
+        "kind": "SCALAR",
+        "description": "The `Int` scalar type represents non-fractional signed whole numeric values. Int can represent values between -(2^31) and 2^31 - 1.",
+        "fields": null
+      },
+      {
+        "name": "UUID",
+        "kind": "SCALAR",
+        "description": null,
+        "fields": null
+      },
+      {
+        "name": "__DirectiveLocation",
+        "kind": "ENUM",
+        "description": "A Directive can be adjacent to many parts of the GraphQL language, a __DirectiveLocation describes one such possible adjacencies.",
+        "fields": null
+      },
+      {
+        "name": "CredentialType",
+        "kind": "ENUM",
+        "description": null,
+        "fields": null
+      },
+      {
+        "name": "__Type",
+        "kind": "OBJECT",
+        "description": "The fundamental unit of any GraphQL Schema is the type. There are many kinds of types in GraphQL as represented by the `__TypeKind` enum.\n\nDepending on the kind of a type, certain fields describe information about that type. Scalar types provide no information beyond a name and description, while Enum types provide their values. Object and Interface types provide the fields they describe. Abstract types, Union and Interface, provide the Object types possible at runtime. List and NonNull types compose other types.",
+        "fields": [
+          {
+            "name": "kind",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "__TypeKind",
+                "kind": "ENUM"
+              }
+            }
+          },
+          {
+            "name": "name",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": "String",
+              "kind": "SCALAR",
+              "ofType": null
+            }
+          },
+          {
+            "name": "description",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": "String",
+              "kind": "SCALAR",
+              "ofType": null
+            }
+          },
+          {
+            "name": "fields",
+            "description": null,
+            "args": [
+              {
+                "name": "includeDeprecated",
+                "description": null,
+                "type": {
+                  "name": null,
+                  "kind": "NON_NULL",
+                  "ofType": {
+                    "name": "Boolean",
+                    "kind": "SCALAR"
+                  }
+                }
+              }
+            ],
+            "type": {
+              "name": null,
+              "kind": "LIST",
+              "ofType": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            }
+          },
+          {
+            "name": "interfaces",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "LIST",
+              "ofType": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            }
+          },
+          {
+            "name": "possibleTypes",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "LIST",
+              "ofType": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            }
+          },
+          {
+            "name": "enumValues",
+            "description": null,
+            "args": [
+              {
+                "name": "includeDeprecated",
+                "description": null,
+                "type": {
+                  "name": null,
+                  "kind": "NON_NULL",
+                  "ofType": {
+                    "name": "Boolean",
+                    "kind": "SCALAR"
+                  }
+                }
+              }
+            ],
+            "type": {
+              "name": null,
+              "kind": "LIST",
+              "ofType": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            }
+          },
+          {
+            "name": "inputFields",
+            "description": null,
+            "args": [
+              {
+                "name": "includeDeprecated",
+                "description": null,
+                "type": {
+                  "name": null,
+                  "kind": "NON_NULL",
+                  "ofType": {
+                    "name": "Boolean",
+                    "kind": "SCALAR"
+                  }
+                }
+              }
+            ],
+            "type": {
+              "name": null,
+              "kind": "LIST",
+              "ofType": {
+                "name": null,
+                "kind": "NON_NULL"
+              }
+            }
+          },
+          {
+            "name": "ofType",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": "__Type",
+              "kind": "OBJECT",
+              "ofType": null
+            }
+          },
+          {
+            "name": "specifiedByURL",
+            "description": "`specifiedByURL` may return a String (in the form of a URL) for custom scalars, otherwise it will return `null`.",
+            "args": [],
+            "type": {
+              "name": "String",
+              "kind": "SCALAR",
+              "ofType": null
+            }
+          },
+          {
+            "name": "oneOf",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": "Boolean",
+              "kind": "SCALAR",
+              "ofType": null
+            }
+          }
+        ]
+      },
+      {
+        "name": "OrganizationDtoSortInput",
+        "kind": "INPUT_OBJECT",
+        "description": null,
+        "fields": null
+      },
+      {
+        "name": "CreateOrganizationInput",
+        "kind": "INPUT_OBJECT",
+        "description": null,
+        "fields": null
+      },
+      {
+        "name": "Query",
+        "kind": "OBJECT",
+        "description": "GraphQL queries for credential operations",
+        "fields": [
+          {
+            "name": "persons",
+            "description": null,
+            "args": [
+              {
+                "name": "where",
+                "description": null,
+                "type": {
+                  "name": "PersonDtoFilterInput",
+                  "kind": "INPUT_OBJECT",
+                  "ofType": null
+                }
+              },
+              {
+                "name": "order",
+                "description": null,
+                "type": {
+                  "name": null,
+                  "kind": "LIST",
+                  "ofType": {
+                    "name": null,
+                    "kind": "NON_NULL"
+                  }
+                }
+              }
+            ],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": null,
+                "kind": "LIST"
+              }
+            }
+          },
+          {
+            "name": "personById",
+            "description": null,
+            "args": [
+              {
+                "name": "id",
+                "description": null,
+                "type": {
+                  "name": null,
+                  "kind": "NON_NULL",
+                  "ofType": {
+                    "name": "UUID",
+                    "kind": "SCALAR"
+                  }
+                }
+              }
+            ],
+            "type": {
+              "name": "PersonDto",
+              "kind": "OBJECT",
+              "ofType": null
+            }
+          },
+          {
+            "name": "personByEmail",
+            "description": null,
+            "args": [
+              {
+                "name": "email",
+                "description": null,
+                "type": {
+                  "name": null,
+                  "kind": "NON_NULL",
+                  "ofType": {
+                    "name": "String",
+                    "kind": "SCALAR"
+                  }
+                }
+              }
+            ],
+            "type": {
+              "name": "PersonDto",
+              "kind": "OBJECT",
+              "ofType": null
+            }
+          },
+          {
+            "name": "organizations",
+            "description": null,
+            "args": [
+              {
+                "name": "where",
+                "description": null,
+                "type": {
+                  "name": "OrganizationDtoFilterInput",
+                  "kind": "INPUT_OBJECT",
+                  "ofType": null
+                }
+              },
+              {
+                "name": "order",
+                "description": null,
+                "type": {
+                  "name": null,
+                  "kind": "LIST",
+                  "ofType": {
+                    "name": null,
+                    "kind": "NON_NULL"
+                  }
+                }
+              }
+            ],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": null,
+                "kind": "LIST"
+              }
+            }
+          },
+          {
+            "name": "organizationById",
+            "description": null,
+            "args": [
+              {
+                "name": "id",
+                "description": null,
+                "type": {
+                  "name": null,
+                  "kind": "NON_NULL",
+                  "ofType": {
+                    "name": "UUID",
+                    "kind": "SCALAR"
+                  }
+                }
+              }
+            ],
+            "type": {
+              "name": "OrganizationDto",
+              "kind": "OBJECT",
+              "ofType": null
+            }
+          },
+          {
+            "name": "walletById",
+            "description": null,
+            "args": [
+              {
+                "name": "id",
+                "description": null,
+                "type": {
+                  "name": null,
+                  "kind": "NON_NULL",
+                  "ofType": {
+                    "name": "UUID",
+                    "kind": "SCALAR"
+                  }
+                }
+              }
+            ],
+            "type": {
+              "name": "WalletDto",
+              "kind": "OBJECT",
+              "ofType": null
+            }
+          },
+          {
+            "name": "walletsByPersonId",
+            "description": null,
+            "args": [
+              {
+                "name": "personId",
+                "description": null,
+                "type": {
+                  "name": null,
+                  "kind": "NON_NULL",
+                  "ofType": {
+                    "name": "UUID",
+                    "kind": "SCALAR"
+                  }
+                }
+              }
+            ],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": null,
+                "kind": "LIST"
+              }
+            }
+          },
+          {
+            "name": "myWallets",
+            "description": null,
+            "args": [
+              {
+                "name": "where",
+                "description": null,
+                "type": {
+                  "name": "WalletDtoFilterInput",
+                  "kind": "INPUT_OBJECT",
+                  "ofType": null
+                }
+              },
+              {
+                "name": "order",
+                "description": null,
+                "type": {
+                  "name": null,
+                  "kind": "LIST",
+                  "ofType": {
+                    "name": null,
+                    "kind": "NON_NULL"
+                  }
+                }
+              }
+            ],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": null,
+                "kind": "LIST"
+              }
+            }
+          },
+          {
+            "name": "credentials",
+            "description": null,
+            "args": [
+              {
+                "name": "walletId",
+                "description": null,
+                "type": {
+                  "name": null,
+                  "kind": "NON_NULL",
+                  "ofType": {
+                    "name": "UUID",
+                    "kind": "SCALAR"
+                  }
+                }
+              },
+              {
+                "name": "where",
+                "description": null,
+                "type": {
+                  "name": "CredentialDtoFilterInput",
+                  "kind": "INPUT_OBJECT",
+                  "ofType": null
+                }
+              },
+              {
+                "name": "order",
+                "description": null,
+                "type": {
+                  "name": null,
+                  "kind": "LIST",
+                  "ofType": {
+                    "name": null,
+                    "kind": "NON_NULL"
+                  }
+                }
+              }
+            ],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": null,
+                "kind": "LIST"
+              }
+            }
+          },
+          {
+            "name": "credentialById",
+            "description": null,
+            "args": [
+              {
+                "name": "id",
+                "description": null,
+                "type": {
+                  "name": null,
+                  "kind": "NON_NULL",
+                  "ofType": {
+                    "name": "UUID",
+                    "kind": "SCALAR"
+                  }
+                }
+              }
+            ],
+            "type": {
+              "name": "CredentialDto",
+              "kind": "OBJECT",
+              "ofType": null
+            }
+          },
+          {
+            "name": "activeCredentials",
+            "description": null,
+            "args": [
+              {
+                "name": "walletId",
+                "description": null,
+                "type": {
+                  "name": null,
+                  "kind": "NON_NULL",
+                  "ofType": {
+                    "name": "UUID",
+                    "kind": "SCALAR"
+                  }
+                }
+              }
+            ],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": null,
+                "kind": "LIST"
+              }
+            }
+          },
+          {
+            "name": "expiredCredentials",
+            "description": null,
+            "args": [
+              {
+                "name": "walletId",
+                "description": null,
+                "type": {
+                  "name": null,
+                  "kind": "NON_NULL",
+                  "ofType": {
+                    "name": "UUID",
+                    "kind": "SCALAR"
+                  }
+                }
+              }
+            ],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": null,
+                "kind": "LIST"
+              }
+            }
+          },
+          {
+            "name": "dashboardStatistics",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "DashboardStatistics",
+                "kind": "OBJECT"
+              }
+            }
+          },
+          {
+            "name": "issuanceStatistics",
+            "description": "Get statistical information about issuances",
+            "args": [
+              {
+                "name": "startDate",
+                "description": null,
+                "type": {
+                  "name": "DateTime",
+                  "kind": "SCALAR",
+                  "ofType": null
+                }
+              },
+              {
+                "name": "endDate",
+                "description": null,
+                "type": {
+                  "name": "DateTime",
+                  "kind": "SCALAR",
+                  "ofType": null
+                }
+              }
+            ],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "IssuanceProcessStatistics",
+                "kind": "OBJECT"
+              }
+            }
+          },
+          {
+            "name": "healthStatus",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "HealthStatus",
+                "kind": "OBJECT"
+              }
+            }
+          },
+          {
+            "name": "credential",
+            "description": "Get a credential by its unique identifier",
+            "args": [
+              {
+                "name": "id",
+                "description": null,
+                "type": {
+                  "name": null,
+                  "kind": "NON_NULL",
+                  "ofType": {
+                    "name": "String",
+                    "kind": "SCALAR"
+                  }
+                }
+              }
+            ],
+            "type": {
+              "name": "CredentialDto",
+              "kind": "OBJECT",
+              "ofType": null
+            }
+          },
+          {
+            "name": "credentialsByWallet",
+            "description": "Get all credentials associated with a specific wallet",
+            "args": [
+              {
+                "name": "walletId",
+                "description": null,
+                "type": {
+                  "name": null,
+                  "kind": "NON_NULL",
+                  "ofType": {
+                    "name": "UUID",
+                    "kind": "SCALAR"
+                  }
+                }
+              },
+              {
+                "name": "first",
+                "description": "Returns the first _n_ elements from the list.",
+                "type": {
+                  "name": "Int",
+                  "kind": "SCALAR",
+                  "ofType": null
+                }
+              },
+              {
+                "name": "after",
+                "description": "Returns the elements in the list that come after the specified cursor.",
+                "type": {
+                  "name": "String",
+                  "kind": "SCALAR",
+                  "ofType": null
+                }
+              },
+              {
+                "name": "last",
+                "description": "Returns the last _n_ elements from the list.",
+                "type": {
+                  "name": "Int",
+                  "kind": "SCALAR",
+                  "ofType": null
+                }
+              },
+              {
+                "name": "before",
+                "description": "Returns the elements in the list that come before the specified cursor.",
+                "type": {
+                  "name": "String",
+                  "kind": "SCALAR",
+                  "ofType": null
+                }
+              },
+              {
+                "name": "where",
+                "description": null,
+                "type": {
+                  "name": "CredentialDtoFilterInput",
+                  "kind": "INPUT_OBJECT",
+                  "ofType": null
+                }
+              },
+              {
+                "name": "order",
+                "description": null,
+                "type": {
+                  "name": null,
+                  "kind": "LIST",
+                  "ofType": {
+                    "name": null,
+                    "kind": "NON_NULL"
+                  }
+                }
+              }
+            ],
+            "type": {
+              "name": "CredentialsByWalletConnection",
+              "kind": "OBJECT",
+              "ofType": null
+            }
+          },
+          {
+            "name": "credentialsByIssuer",
+            "description": "Get all credentials issued by a specific issuer",
+            "args": [
+              {
+                "name": "issuerId",
+                "description": null,
+                "type": {
+                  "name": null,
+                  "kind": "NON_NULL",
+                  "ofType": {
+                    "name": "String",
+                    "kind": "SCALAR"
+                  }
+                }
+              },
+              {
+                "name": "first",
+                "description": "Returns the first _n_ elements from the list.",
+                "type": {
+                  "name": "Int",
+                  "kind": "SCALAR",
+                  "ofType": null
+                }
+              },
+              {
+                "name": "after",
+                "description": "Returns the elements in the list that come after the specified cursor.",
+                "type": {
+                  "name": "String",
+                  "kind": "SCALAR",
+                  "ofType": null
+                }
+              },
+              {
+                "name": "last",
+                "description": "Returns the last _n_ elements from the list.",
+                "type": {
+                  "name": "Int",
+                  "kind": "SCALAR",
+                  "ofType": null
+                }
+              },
+              {
+                "name": "before",
+                "description": "Returns the elements in the list that come before the specified cursor.",
+                "type": {
+                  "name": "String",
+                  "kind": "SCALAR",
+                  "ofType": null
+                }
+              },
+              {
+                "name": "where",
+                "description": null,
+                "type": {
+                  "name": "CredentialDtoFilterInput",
+                  "kind": "INPUT_OBJECT",
+                  "ofType": null
+                }
+              },
+              {
+                "name": "order",
+                "description": null,
+                "type": {
+                  "name": null,
+                  "kind": "LIST",
+                  "ofType": {
+                    "name": null,
+                    "kind": "NON_NULL"
+                  }
+                }
+              }
+            ],
+            "type": {
+              "name": "CredentialsByIssuerConnection",
+              "kind": "OBJECT",
+              "ofType": null
+            }
+          },
+          {
+            "name": "credentialsByType",
+            "description": "Get all credentials of a specific type",
+            "args": [
+              {
+                "name": "type",
+                "description": null,
+                "type": {
+                  "name": null,
+                  "kind": "NON_NULL",
+                  "ofType": {
+                    "name": "String",
+                    "kind": "SCALAR"
+                  }
+                }
+              },
+              {
+                "name": "first",
+                "description": "Returns the first _n_ elements from the list.",
+                "type": {
+                  "name": "Int",
+                  "kind": "SCALAR",
+                  "ofType": null
+                }
+              },
+              {
+                "name": "after",
+                "description": "Returns the elements in the list that come after the specified cursor.",
+                "type": {
+                  "name": "String",
+                  "kind": "SCALAR",
+                  "ofType": null
+                }
+              },
+              {
+                "name": "last",
+                "description": "Returns the last _n_ elements from the list.",
+                "type": {
+                  "name": "Int",
+                  "kind": "SCALAR",
+                  "ofType": null
+                }
+              },
+              {
+                "name": "before",
+                "description": "Returns the elements in the list that come before the specified cursor.",
+                "type": {
+                  "name": "String",
+                  "kind": "SCALAR",
+                  "ofType": null
+                }
+              },
+              {
+                "name": "where",
+                "description": null,
+                "type": {
+                  "name": "CredentialDtoFilterInput",
+                  "kind": "INPUT_OBJECT",
+                  "ofType": null
+                }
+              },
+              {
+                "name": "order",
+                "description": null,
+                "type": {
+                  "name": null,
+                  "kind": "LIST",
+                  "ofType": {
+                    "name": null,
+                    "kind": "NON_NULL"
+                  }
+                }
+              }
+            ],
+            "type": {
+              "name": "CredentialsByTypeConnection",
+              "kind": "OBJECT",
+              "ofType": null
+            }
+          },
+          {
+            "name": "searchCredentials",
+            "description": "Search credentials based on various criteria",
+            "args": [
+              {
+                "name": "holderId",
+                "description": null,
+                "type": {
+                  "name": "String",
+                  "kind": "SCALAR",
+                  "ofType": null
+                }
+              },
+              {
+                "name": "issuerId",
+                "description": null,
+                "type": {
+                  "name": "String",
+                  "kind": "SCALAR",
+                  "ofType": null
+                }
+              },
+              {
+                "name": "type",
+                "description": null,
+                "type": {
+                  "name": "String",
+                  "kind": "SCALAR",
+                  "ofType": null
+                }
+              },
+              {
+                "name": "status",
+                "description": null,
+                "type": {
+                  "name": "String",
+                  "kind": "SCALAR",
+                  "ofType": null
+                }
+              },
+              {
+                "name": "issuedAfter",
+                "description": null,
+                "type": {
+                  "name": "DateTime",
+                  "kind": "SCALAR",
+                  "ofType": null
+                }
+              },
+              {
+                "name": "issuedBefore",
+                "description": null,
+                "type": {
+                  "name": "DateTime",
+                  "kind": "SCALAR",
+                  "ofType": null
+                }
+              },
+              {
+                "name": "includeRevoked",
+                "description": null,
+                "type": {
+                  "name": "Boolean",
+                  "kind": "SCALAR",
+                  "ofType": null
+                }
+              },
+              {
+                "name": "includeExpired",
+                "description": null,
+                "type": {
+                  "name": "Boolean",
+                  "kind": "SCALAR",
+                  "ofType": null
+                }
+              },
+              {
+                "name": "first",
+                "description": "Returns the first _n_ elements from the list.",
+                "type": {
+                  "name": "Int",
+                  "kind": "SCALAR",
+                  "ofType": null
+                }
+              },
+              {
+                "name": "after",
+                "description": "Returns the elements in the list that come after the specified cursor.",
+                "type": {
+                  "name": "String",
+                  "kind": "SCALAR",
+                  "ofType": null
+                }
+              },
+              {
+                "name": "last",
+                "description": "Returns the last _n_ elements from the list.",
+                "type": {
+                  "name": "Int",
+                  "kind": "SCALAR",
+                  "ofType": null
+                }
+              },
+              {
+                "name": "before",
+                "description": "Returns the elements in the list that come before the specified cursor.",
+                "type": {
+                  "name": "String",
+                  "kind": "SCALAR",
+                  "ofType": null
+                }
+              },
+              {
+                "name": "where",
+                "description": null,
+                "type": {
+                  "name": "CredentialDtoFilterInput",
+                  "kind": "INPUT_OBJECT",
+                  "ofType": null
+                }
+              },
+              {
+                "name": "order",
+                "description": null,
+                "type": {
+                  "name": null,
+                  "kind": "LIST",
+                  "ofType": {
+                    "name": null,
+                    "kind": "NON_NULL"
+                  }
+                }
+              }
+            ],
+            "type": {
+              "name": "SearchCredentialsConnection",
+              "kind": "OBJECT",
+              "ofType": null
+            }
+          },
+          {
+            "name": "issuance",
+            "description": "Get an issuance request by its unique identifier",
+            "args": [
+              {
+                "name": "id",
+                "description": null,
+                "type": {
+                  "name": null,
+                  "kind": "NON_NULL",
+                  "ofType": {
+                    "name": "UUID",
+                    "kind": "SCALAR"
+                  }
+                }
+              }
+            ],
+            "type": {
+              "name": "IssuanceDto",
+              "kind": "OBJECT",
+              "ofType": null
+            }
+          },
+          {
+            "name": "issuancesByStatus",
+            "description": "Get all issuance requests with a specific status",
+            "args": [
+              {
+                "name": "status",
+                "description": null,
+                "type": {
+                  "name": null,
+                  "kind": "NON_NULL",
+                  "ofType": {
+                    "name": "String",
+                    "kind": "SCALAR"
+                  }
+                }
+              },
+              {
+                "name": "first",
+                "description": "Returns the first _n_ elements from the list.",
+                "type": {
+                  "name": "Int",
+                  "kind": "SCALAR",
+                  "ofType": null
+                }
+              },
+              {
+                "name": "after",
+                "description": "Returns the elements in the list that come after the specified cursor.",
+                "type": {
+                  "name": "String",
+                  "kind": "SCALAR",
+                  "ofType": null
+                }
+              },
+              {
+                "name": "last",
+                "description": "Returns the last _n_ elements from the list.",
+                "type": {
+                  "name": "Int",
+                  "kind": "SCALAR",
+                  "ofType": null
+                }
+              },
+              {
+                "name": "before",
+                "description": "Returns the elements in the list that come before the specified cursor.",
+                "type": {
+                  "name": "String",
+                  "kind": "SCALAR",
+                  "ofType": null
+                }
+              },
+              {
+                "name": "where",
+                "description": null,
+                "type": {
+                  "name": "IssuanceDtoFilterInput",
+                  "kind": "INPUT_OBJECT",
+                  "ofType": null
+                }
+              },
+              {
+                "name": "order",
+                "description": null,
+                "type": {
+                  "name": null,
+                  "kind": "LIST",
+                  "ofType": {
+                    "name": null,
+                    "kind": "NON_NULL"
+                  }
+                }
+              }
+            ],
+            "type": {
+              "name": "IssuancesByStatusConnection",
+              "kind": "OBJECT",
+              "ofType": null
+            }
+          },
+          {
+            "name": "pendingIssuances",
+            "description": "Get all pending issuance requests awaiting approval",
+            "args": [
+              {
+                "name": "first",
+                "description": "Returns the first _n_ elements from the list.",
+                "type": {
+                  "name": "Int",
+                  "kind": "SCALAR",
+                  "ofType": null
+                }
+              },
+              {
+                "name": "after",
+                "description": "Returns the elements in the list that come after the specified cursor.",
+                "type": {
+                  "name": "String",
+                  "kind": "SCALAR",
+                  "ofType": null
+                }
+              },
+              {
+                "name": "last",
+                "description": "Returns the last _n_ elements from the list.",
+                "type": {
+                  "name": "Int",
+                  "kind": "SCALAR",
+                  "ofType": null
+                }
+              },
+              {
+                "name": "before",
+                "description": "Returns the elements in the list that come before the specified cursor.",
+                "type": {
+                  "name": "String",
+                  "kind": "SCALAR",
+                  "ofType": null
+                }
+              },
+              {
+                "name": "where",
+                "description": null,
+                "type": {
+                  "name": "IssuanceDtoFilterInput",
+                  "kind": "INPUT_OBJECT",
+                  "ofType": null
+                }
+              },
+              {
+                "name": "order",
+                "description": null,
+                "type": {
+                  "name": null,
+                  "kind": "LIST",
+                  "ofType": {
+                    "name": null,
+                    "kind": "NON_NULL"
+                  }
+                }
+              }
+            ],
+            "type": {
+              "name": "PendingIssuancesConnection",
+              "kind": "OBJECT",
+              "ofType": null
+            }
+          },
+          {
+            "name": "issuancesByWallet",
+            "description": "Get all issuance requests for a specific wallet",
+            "args": [
+              {
+                "name": "walletId",
+                "description": null,
+                "type": {
+                  "name": null,
+                  "kind": "NON_NULL",
+                  "ofType": {
+                    "name": "UUID",
+                    "kind": "SCALAR"
+                  }
+                }
+              },
+              {
+                "name": "first",
+                "description": "Returns the first _n_ elements from the list.",
+                "type": {
+                  "name": "Int",
+                  "kind": "SCALAR",
+                  "ofType": null
+                }
+              },
+              {
+                "name": "after",
+                "description": "Returns the elements in the list that come after the specified cursor.",
+                "type": {
+                  "name": "String",
+                  "kind": "SCALAR",
+                  "ofType": null
+                }
+              },
+              {
+                "name": "last",
+                "description": "Returns the last _n_ elements from the list.",
+                "type": {
+                  "name": "Int",
+                  "kind": "SCALAR",
+                  "ofType": null
+                }
+              },
+              {
+                "name": "before",
+                "description": "Returns the elements in the list that come before the specified cursor.",
+                "type": {
+                  "name": "String",
+                  "kind": "SCALAR",
+                  "ofType": null
+                }
+              },
+              {
+                "name": "where",
+                "description": null,
+                "type": {
+                  "name": "IssuanceDtoFilterInput",
+                  "kind": "INPUT_OBJECT",
+                  "ofType": null
+                }
+              },
+              {
+                "name": "order",
+                "description": null,
+                "type": {
+                  "name": null,
+                  "kind": "LIST",
+                  "ofType": {
+                    "name": null,
+                    "kind": "NON_NULL"
+                  }
+                }
+              }
+            ],
+            "type": {
+              "name": "IssuancesByWalletConnection",
+              "kind": "OBJECT",
+              "ofType": null
+            }
+          },
+          {
+            "name": "credentialStatistics",
+            "description": "Get statistical information about credentials",
+            "args": [
+              {
+                "name": "startDate",
+                "description": null,
+                "type": {
+                  "name": "DateTime",
+                  "kind": "SCALAR",
+                  "ofType": null
+                }
+              },
+              {
+                "name": "endDate",
+                "description": null,
+                "type": {
+                  "name": "DateTime",
+                  "kind": "SCALAR",
+                  "ofType": null
+                }
+              }
+            ],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "CredentialStatistics",
+                "kind": "OBJECT"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "name": "RejectIssuanceInput",
+        "kind": "INPUT_OBJECT",
+        "description": null,
+        "fields": null
+      },
+      {
+        "name": "String",
+        "kind": "SCALAR",
+        "description": "The `String` scalar type represents textual data, represented as UTF-8 character sequences. The String type is most often used by GraphQL to represent free-form human-readable text.",
+        "fields": null
+      },
+      {
+        "name": "BulkIssueCredentialsInput",
+        "kind": "INPUT_OBJECT",
+        "description": null,
+        "fields": null
+      },
+      {
+        "name": "ApproveIssuanceInput",
+        "kind": "INPUT_OBJECT",
+        "description": null,
+        "fields": null
+      },
+      {
+        "name": "CredentialDtoFilterInput",
+        "kind": "INPUT_OBJECT",
+        "description": null,
+        "fields": null
+      },
+      {
+        "name": "IssuanceStatistics",
+        "kind": "OBJECT",
+        "description": null,
+        "fields": [
+          {
+            "name": "date",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "DateTime",
+                "kind": "SCALAR"
+              }
+            }
+          },
+          {
+            "name": "issuedCount",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "Int",
+                "kind": "SCALAR"
+              }
+            }
+          },
+          {
+            "name": "revokedCount",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "Int",
+                "kind": "SCALAR"
+              }
+            }
+          },
+          {
+            "name": "expiredCount",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "Int",
+                "kind": "SCALAR"
+              }
+            }
+          },
+          {
+            "name": "byCredentialType",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": null,
+                "kind": "LIST"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "name": "__Field",
+        "kind": "OBJECT",
+        "description": "Object and Interface types are described by a list of Fields, each of which has a name, potentially a list of arguments, and a return type.",
+        "fields": [
+          {
+            "name": "name",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "String",
+                "kind": "SCALAR"
+              }
+            }
+          },
+          {
+            "name": "description",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": "String",
+              "kind": "SCALAR",
+              "ofType": null
+            }
+          },
+          {
+            "name": "args",
+            "description": null,
+            "args": [
+              {
+                "name": "includeDeprecated",
+                "description": null,
+                "type": {
+                  "name": null,
+                  "kind": "NON_NULL",
+                  "ofType": {
+                    "name": "Boolean",
+                    "kind": "SCALAR"
+                  }
+                }
+              }
+            ],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": null,
+                "kind": "LIST"
+              }
+            }
+          },
+          {
+            "name": "type",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "__Type",
+                "kind": "OBJECT"
+              }
+            }
+          },
+          {
+            "name": "isDeprecated",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "Boolean",
+                "kind": "SCALAR"
+              }
+            }
+          },
+          {
+            "name": "deprecationReason",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": "String",
+              "kind": "SCALAR",
+              "ofType": null
+            }
+          }
+        ]
+      },
+      {
+        "name": "StringOperationFilterInput",
+        "kind": "INPUT_OBJECT",
+        "description": null,
+        "fields": null
+      },
+      {
+        "name": "CreateIssuanceInput",
+        "kind": "INPUT_OBJECT",
+        "description": null,
+        "fields": null
+      },
+      {
+        "name": "UpdateWalletSettingsInput",
+        "kind": "INPUT_OBJECT",
+        "description": null,
+        "fields": null
+      },
+      {
+        "name": "RestoreWalletInput",
+        "kind": "INPUT_OBJECT",
+        "description": null,
+        "fields": null
+      },
+      {
+        "name": "KeyValuePairOfStringAndString",
+        "kind": "OBJECT",
+        "description": null,
+        "fields": [
+          {
+            "name": "key",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "String",
+                "kind": "SCALAR"
+              }
+            }
+          },
+          {
+            "name": "value",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "String",
+                "kind": "SCALAR"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "name": "DateTime",
+        "kind": "SCALAR",
+        "description": "The `DateTime` scalar represents an ISO-8601 compliant date time type.",
+        "fields": null
+      },
+      {
+        "name": "ListFilterInputTypeOfKeyValuePairOfStringAndObjectFilterInput",
+        "kind": "INPUT_OBJECT",
+        "description": null,
+        "fields": null
+      },
+      {
+        "name": "HealthStatus",
+        "kind": "OBJECT",
+        "description": null,
+        "fields": [
+          {
+            "name": "status",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "String",
+                "kind": "SCALAR"
+              }
+            }
+          },
+          {
+            "name": "components",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": null,
+                "kind": "LIST"
+              }
+            }
+          },
+          {
+            "name": "checkedAt",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "DateTime",
+                "kind": "SCALAR"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "name": "IssuancesByStatusEdge",
+        "kind": "OBJECT",
+        "description": "An edge in a connection.",
+        "fields": [
+          {
+            "name": "cursor",
+            "description": "A cursor for use in pagination.",
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "String",
+                "kind": "SCALAR"
+              }
+            }
+          },
+          {
+            "name": "node",
+            "description": "The item at the end of the edge.",
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "IssuanceDto",
+                "kind": "OBJECT"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "name": "IssuanceProcessStatistics",
+        "kind": "OBJECT",
+        "description": "Issuance statistics model",
+        "fields": [
+          {
+            "name": "totalIssuances",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "Int",
+                "kind": "SCALAR"
+              }
+            }
+          },
+          {
+            "name": "pendingIssuances",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "Int",
+                "kind": "SCALAR"
+              }
+            }
+          },
+          {
+            "name": "approvedIssuances",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "Int",
+                "kind": "SCALAR"
+              }
+            }
+          },
+          {
+            "name": "rejectedIssuances",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "Int",
+                "kind": "SCALAR"
+              }
+            }
+          },
+          {
+            "name": "completedIssuances",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "Int",
+                "kind": "SCALAR"
+              }
+            }
+          },
+          {
+            "name": "averageProcessingTime",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "TimeSpan",
+                "kind": "SCALAR"
+              }
+            }
+          },
+          {
+            "name": "issuancesByType",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": null,
+                "kind": "LIST"
+              }
+            }
+          },
+          {
+            "name": "issuancesByStatus",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": null,
+                "kind": "LIST"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "name": "PendingIssuancesEdge",
+        "kind": "OBJECT",
+        "description": "An edge in a connection.",
+        "fields": [
+          {
+            "name": "cursor",
+            "description": "A cursor for use in pagination.",
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "String",
+                "kind": "SCALAR"
+              }
+            }
+          },
+          {
+            "name": "node",
+            "description": "The item at the end of the edge.",
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "IssuanceDto",
+                "kind": "OBJECT"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "name": "VerificationResultDto",
+        "kind": "OBJECT",
+        "description": null,
+        "fields": [
+          {
+            "name": "isValid",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "Boolean",
+                "kind": "SCALAR"
+              }
+            }
+          },
+          {
+            "name": "checks",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "VerificationChecksDto",
+                "kind": "OBJECT"
+              }
+            }
+          },
+          {
+            "name": "errorMessage",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": "String",
+              "kind": "SCALAR",
+              "ofType": null
+            }
+          },
+          {
+            "name": "verifiedAt",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "DateTime",
+                "kind": "SCALAR"
+              }
+            }
+          },
+          {
+            "name": "claims",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": null,
+                "kind": "LIST"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "name": "BulkIssueError",
+        "kind": "OBJECT",
+        "description": null,
+        "fields": [
+          {
+            "name": "walletId",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "UUID",
+                "kind": "SCALAR"
+              }
+            }
+          },
+          {
+            "name": "error",
+            "description": null,
+            "args": [],
+            "type": {
+              "name": null,
+              "kind": "NON_NULL",
+              "ofType": {
+                "name": "String",
+                "kind": "SCALAR"
+              }
+            }
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,14 @@
+=== Integration Evidence: Dashboard Statistics ===
+Timestamp: 2026-03-13T08:02:59.9232370Z
+
+--- STEP 1: GET Dashboard Statistics ---
+GET /api/admin/statistics/dashboard
+Status: 401 Unauthorized
+Response: 
+
+--- STEP 2: GET Admin Tenants ---
+GET /api/admin/tenants
+Status: 401 Unauthorized
+Response (truncated): 
+
+=== Dashboard Integration Evidence Complete ===

@@ -75,8 +75,10 @@ public static class TelemetryExtensions
                     })
                     .AddEntityFrameworkCoreInstrumentation(options =>
                     {
-                        options.SetDbStatementForText = true;
-                        options.SetDbStatementForStoredProcedure = true;
+                        // 1.15.x: SetDbStatementForText/SetDbStatementForStoredProcedure were
+                        // removed — query text is recorded per semantic conventions. We leave
+                        // SetDbQueryParameters at its default (false): parameter values can
+                        // contain PII and must never be exported.
                         options.EnrichWithIDbCommand = (activity, command) =>
                         {
                             activity.SetTag("db.command.timeout", command.CommandTimeout);
@@ -125,7 +127,7 @@ public static class TelemetryExtensions
                     .AddView("http.server.request.duration",
                         new ExplicitBucketHistogramConfiguration
                         {
-                            Boundaries = new double[] { 0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10 }
+                            Boundaries = new[] { 0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10 }
                         });
 
                 // Add exporters

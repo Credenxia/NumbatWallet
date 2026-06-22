@@ -1,8 +1,6 @@
 using Microsoft.Extensions.Logging;
-using NumbatWallet.Application.Common.Exceptions;
 using NumbatWallet.Application.CQRS.Interfaces;
 using NumbatWallet.Domain.Entities;
-using NumbatWallet.Domain.Enums;
 using NumbatWallet.Domain.Interfaces;
 using NumbatWallet.SharedKernel.Exceptions;
 using NumbatWallet.SharedKernel.Interfaces;

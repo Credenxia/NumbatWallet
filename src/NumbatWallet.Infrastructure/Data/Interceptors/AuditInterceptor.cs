@@ -55,10 +55,7 @@ public class AuditInterceptor : SaveChangesInterceptor
             }
 
             var auditEntry = CreateAuditEntry(entry, currentUserService.UserId, tenantService.TenantId);
-            if (auditEntry != null)
-            {
-                auditEntries.Add(auditEntry);
-            }
+            auditEntries.Add(auditEntry);
         }
 
         // Log audit entries

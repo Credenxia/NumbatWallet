@@ -6,7 +6,6 @@ using NumbatWallet.Application.CQRS.Interfaces;
 using NumbatWallet.Application.DTOs;
 using NumbatWallet.Application.Interfaces;
 using NumbatWallet.Domain.Interfaces;
-using NumbatWallet.SharedKernel.Exceptions;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
@@ -17,19 +16,22 @@ namespace NumbatWallet.Application.Commands.Authentication.Handlers;
 public class LoginCommandHandler : ICommandHandler<LoginCommand, AuthenticationResultDto>
 {
     private readonly IPersonRepository _personRepository;
-    private readonly IAuthenticationService _authenticationService;
-    private readonly IConfiguration _configuration;
+    private readonly IEnumerable<IPasswordValidator> _passwordValidators;
+    private readonly IRefreshTokenStore _refreshTokenStore;
+    private readonly IAccessTokenSigner _accessTokenSigner;
     private readonly ILogger<LoginCommandHandler> _logger;
 
     public LoginCommandHandler(
         IPersonRepository personRepository,
-        IAuthenticationService authenticationService,
-        IConfiguration configuration,
+        IEnumerable<IPasswordValidator> passwordValidators,
+        IRefreshTokenStore refreshTokenStore,
+        IAccessTokenSigner accessTokenSigner,
         ILogger<LoginCommandHandler> logger)
     {
         _personRepository = personRepository;
-        _authenticationService = authenticationService;
-        _configuration = configuration;
+        _passwordValidators = passwordValidators;
+        _refreshTokenStore = refreshTokenStore;
+        _accessTokenSigner = accessTokenSigner;
         _logger = logger;
     }
 
@@ -51,32 +53,30 @@ public class LoginCommandHandler : ICommandHandler<LoginCommand, AuthenticationR
             throw new UnauthorizedException("Invalid credentials");
         }
 
-        // For POA, we're not storing passwords in Person entity
-        // In production, this would validate against Azure AD or ServiceWA
-        // For now, check against a hardcoded admin account or use mock validation
+        // Authentication via password validators
+        // - AzureAdPasswordValidator: Government officers (@wa.gov.au)
+        // - ServiceWaPasswordValidator: Citizens (other domains)
+        // - TestPasswordValidator: Integration testing only
 
-        bool isAuthenticated = false;
         string[] roles = Array.Empty<string>();
+        bool isAuthenticated = false;
 
-        // Check for admin account (POA mock)
-        if (command.Email.Equals("admin@numbatwallet.wa.gov.au", StringComparison.OrdinalIgnoreCase))
+        // Find validator that supports this email
+        foreach (var validator in _passwordValidators)
         {
-            // Simple password check for POA
-            if (command.Password == "Admin123!")
+            if (validator.SupportsEmail(command.Email))
             {
-                isAuthenticated = true;
-                roles = new[] { "Admin", "Officer" };
-            }
-        }
-        else
-        {
-            // For other users, check if they're verified
-            if (person.IsVerified && person.Status == SharedKernel.Enums.PersonStatus.Active)
-            {
-                // In production, validate password against identity provider
-                // For POA, accept any password for verified users
-                isAuthenticated = !string.IsNullOrEmpty(command.Password);
-                roles = new[] { "User" };
+                _logger.LogDebug("Using {ValidatorType} for {Email}",
+                    validator.GetType().Name, command.Email);
+
+                roles = await validator.ValidateAsync(command.Email, command.Password, cancellationToken);
+
+                if (roles.Length > 0)
+                {
+                    isAuthenticated = true;
+                    _logger.LogInformation("Authentication successful for: {Email}", command.Email);
+                    break;
+                }
             }
         }
 
@@ -86,9 +86,16 @@ public class LoginCommandHandler : ICommandHandler<LoginCommand, AuthenticationR
             throw new UnauthorizedException("Invalid credentials");
         }
 
-        // Generate JWT token
-        var token = GenerateJwtToken(person.Id.ToString(), command.Email, roles);
+        // Generate the signed access token (HS256 or RS256 depending on the configured signer).
+        var expiresAt = DateTime.UtcNow.AddHours(1);
+        var token = _accessTokenSigner.CreateToken(
+            BuildClaims(person.Id.ToString(), command.Email, roles, person.TenantId),
+            expiresAt);
         var refreshToken = GenerateRefreshToken();
+
+        // Store refresh token for validation (rotated on refresh, revoked on logout).
+        var refreshTokenExpiry = DateTime.UtcNow.AddDays(30); // 30 days expiry
+        _refreshTokenStore.Store(refreshToken, person.Id.ToString(), roles, refreshTokenExpiry);
 
         _logger.LogInformation("Login successful for: {Email}", command.Email);
 
@@ -97,6 +104,7 @@ public class LoginCommandHandler : ICommandHandler<LoginCommand, AuthenticationR
             AccessToken = token,
             RefreshToken = refreshToken,
             ExpiresIn = 3600, // 1 hour
+            ExpiresAt = expiresAt,
             TokenType = "Bearer",
             UserId = person.Id.ToString(),
             Email = command.Email,
@@ -112,36 +120,26 @@ public class LoginCommandHandler : ICommandHandler<LoginCommand, AuthenticationR
         };
     }
 
-    private string GenerateJwtToken(string userId, string email, string[] roles)
+    private static List<Claim> BuildClaims(string userId, string email, string[] roles, string tenantId)
     {
-        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(
-            _configuration["Jwt:Key"] ?? _configuration["Jwt:SecretKey"] ?? "ThisIsADevelopmentSecretKeyThatIs256BitsLong!!"));
-        var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-
+        // CLAIM CONTRACT: the subject claims (NameIdentifier + OIDC "sub") MUST both carry the
+        // PERSON's Guid — REST GetMyWallets, GraphQL myWallets and the wallet/credential
+        // ownership (IDOR) checks all resolve the caller's person by parsing them as a Guid.
+        // The email is carried separately in ClaimTypes.Email. Pinned by LoginCommandHandlerTests.
         var claims = new List<Claim>
         {
             new Claim(ClaimTypes.NameIdentifier, userId),
             new Claim(ClaimTypes.Email, email),
-            new Claim(JwtRegisteredClaimNames.Sub, email),
-            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+            new Claim(JwtRegisteredClaimNames.Sub, userId),
+            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+            new Claim("tenant_id", tenantId),
+            new Claim("user_id", userId)
         };
-
-        foreach (var role in roles)
-        {
-            claims.Add(new Claim(ClaimTypes.Role, role));
-        }
-
-        var token = new JwtSecurityToken(
-            issuer: _configuration["Jwt:Issuer"] ?? "https://numbatwallet.wa.gov.au",
-            audience: _configuration["Jwt:Audience"] ?? "https://api.numbatwallet.wa.gov.au",
-            claims: claims,
-            expires: DateTime.UtcNow.AddHours(1),
-            signingCredentials: creds);
-
-        return new JwtSecurityTokenHandler().WriteToken(token);
+        claims.AddRange(roles.Select(role => new Claim(ClaimTypes.Role, role)));
+        return claims;
     }
 
-    private string GenerateRefreshToken()
+    private static string GenerateRefreshToken()
     {
         var randomNumber = new byte[32];
         using var rng = RandomNumberGenerator.Create();

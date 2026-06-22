@@ -3,6 +3,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using NumbatWallet.Application.Interfaces;
 using NumbatWallet.SharedKernel.Interfaces;
@@ -15,20 +16,34 @@ public class HmacSearchTokenService : IHmacSearchTokenService
     private readonly ICurrentTenantService _currentTenantService;
     private readonly IMemoryCache _memoryCache;
     private readonly ILogger<HmacSearchTokenService> _logger;
+    private readonly IConfiguration? _configuration;
 
     private const int PREFIX_LENGTH = 5;
     private const string PEPPER_SECRET_NAME = "search-pepper";
+
+    // Deployment-wide pepper for DETERMINISTIC identifier tokens (email/phone). Deliberately
+    // NOT tenant-scoped: these tokens back exact-match lookups on the login path, which must
+    // produce identical tokens whether the row was written by the startup seeder (no ambient
+    // tenant context) or by an authenticated request (tenant resolved from claims). Tenant
+    // isolation is still enforced by the global tenant query filters / per-tenant databases.
+    // Sourced from config 'Search:TokenPepper' (base64; local dev — stable across restarts)
+    // or the Key Vault secret 'search-token-pepper' (created on first use).
+    private const string IDENTIFIER_PEPPER_SECRET_NAME = "search-token-pepper";
+    private const string IDENTIFIER_PEPPER_CONFIG_KEY = "Search:TokenPepper";
+    private const string IDENTIFIER_PEPPER_CACHE_KEY = "search-token-pepper";
 
     public HmacSearchTokenService(
         IKeyVaultService keyVaultService,
         ICurrentTenantService currentTenantService,
         IMemoryCache memoryCache,
-        ILogger<HmacSearchTokenService> logger)
+        ILogger<HmacSearchTokenService> logger,
+        IConfiguration? configuration = null)
     {
         _keyVaultService = keyVaultService;
         _currentTenantService = currentTenantService;
         _memoryCache = memoryCache;
         _logger = logger;
+        _configuration = configuration;
     }
 
     public async Task<List<string>> GenerateNameTokensAsync(string fullName)
@@ -122,9 +137,28 @@ public class HmacSearchTokenService : IHmacSearchTokenService
         }
 
         var normalized = email.ToLowerInvariant().Trim();
-        var pepper = await GetTenantPepperAsync();
+        var pepper = await GetIdentifierPepperAsync();
 
         return GenerateHmacToken(pepper, $"email:{normalized}");
+    }
+
+    public async Task<string?> GeneratePhoneTokenAsync(string phoneNumber)
+    {
+        if (string.IsNullOrWhiteSpace(phoneNumber))
+        {
+            return null;
+        }
+
+        // Normalize to digits only so "+61 400 000 000", "0061400000000" formatting variants
+        // of the SAME stored value cannot diverge ("+" / spaces / dashes / parens stripped).
+        var normalized = new string(phoneNumber.Where(char.IsAsciiDigit).ToArray());
+        if (normalized.Length == 0)
+        {
+            return null;
+        }
+
+        var pepper = await GetIdentifierPepperAsync();
+        return GenerateHmacToken(pepper, $"phone:{normalized}");
     }
 
     public async Task<string> GenerateDateTokenAsync(DateTime dateTime, DateGranularity granularity)
@@ -191,6 +225,77 @@ public class HmacSearchTokenService : IHmacSearchTokenService
             .TrimEnd('=')
             .Replace('+', '-')
             .Replace('/', '_');
+    }
+
+    /// <summary>
+    /// Resolves the deployment-wide pepper for deterministic identifier tokens (email/phone).
+    /// Config 'Search:TokenPepper' (base64) takes precedence; otherwise the Key Vault secret
+    /// 'search-token-pepper' is fetched (and created on first use). FAILS CLOSED: an unresolvable
+    /// or invalid pepper throws rather than silently deriving a different key — a wrong pepper
+    /// would make every stored token unmatchable and break login for all users.
+    /// KEY ROTATION: rotating this pepper invalidates every stored email/phone search token;
+    /// rotation requires recomputing the token columns for all rows (re-save persons) in the
+    /// same deployment step.
+    /// </summary>
+    private async Task<byte[]> GetIdentifierPepperAsync()
+    {
+        if (_memoryCache.TryGetValue<byte[]>(IDENTIFIER_PEPPER_CACHE_KEY, out var cached))
+        {
+            return cached!;
+        }
+
+        byte[] pepper;
+
+        var configured = _configuration?[IDENTIFIER_PEPPER_CONFIG_KEY];
+        if (!string.IsNullOrEmpty(configured))
+        {
+            pepper = DecodePepper(configured, $"config '{IDENTIFIER_PEPPER_CONFIG_KEY}'");
+        }
+        else
+        {
+            var secret = await _keyVaultService.GetSecretAsync(IDENTIFIER_PEPPER_SECRET_NAME);
+            if (!string.IsNullOrEmpty(secret))
+            {
+                pepper = DecodePepper(secret, $"Key Vault secret '{IDENTIFIER_PEPPER_SECRET_NAME}'");
+            }
+            else
+            {
+                pepper = RandomNumberGenerator.GetBytes(32);
+                var stored = await _keyVaultService.SetSecretAsync(
+                    IDENTIFIER_PEPPER_SECRET_NAME,
+                    Convert.ToBase64String(pepper));
+                if (!stored)
+                {
+                    throw new InvalidOperationException(
+                        $"Failed to persist the search-token pepper to Key Vault secret '{IDENTIFIER_PEPPER_SECRET_NAME}'. " +
+                        "Refusing to continue with an unpersisted pepper: tokens written now would be unmatchable after restart.");
+                }
+
+                _logger.LogInformation("Generated new deployment-wide search-token pepper");
+            }
+        }
+
+        _memoryCache.Set(IDENTIFIER_PEPPER_CACHE_KEY, pepper, TimeSpan.FromHours(24));
+        return pepper;
+    }
+
+    private static byte[] DecodePepper(string base64, string source)
+    {
+        try
+        {
+            var bytes = Convert.FromBase64String(base64);
+            if (bytes.Length < 16)
+            {
+                throw new InvalidOperationException(
+                    $"Search-token pepper from {source} is too short ({bytes.Length} bytes); at least 16 bytes required.");
+            }
+            return bytes;
+        }
+        catch (FormatException ex)
+        {
+            throw new InvalidOperationException(
+                $"Search-token pepper from {source} is not valid base64.", ex);
+        }
     }
 
     private async Task<byte[]> GetTenantPepperAsync()

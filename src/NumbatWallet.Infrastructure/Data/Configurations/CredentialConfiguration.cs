@@ -70,8 +70,21 @@ public class CredentialConfiguration : IEntityTypeConfiguration<Credential>
         builder.HasIndex(c => c.TenantId);
         builder.HasIndex(c => new { c.TenantId, c.WalletId });
         builder.HasIndex(c => new { c.TenantId, c.Status });
+        builder.HasIndex(c => new { c.WalletId, c.Status });
 
-        // Ignore domain events
+        // Relationships
+        builder.HasOne(c => c.Wallet)
+            .WithMany(w => w.Credentials)
+            .HasForeignKey(c => c.WalletId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasOne(c => c.Issuer)
+            .WithMany()
+            .HasForeignKey(c => c.IssuerId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        // Ignore domain events and claims
         builder.Ignore(c => c.DomainEvents);
+        builder.Ignore(c => c.Claims);
     }
 }

@@ -1,0 +1,6 @@
+=== API Evidence: Health Check ===
+Endpoint: GET http://localhost:5042/health
+Status Code: 200
+Response Body: {"status":"Healthy","timestamp":"2026-03-13T07:48:28.620897Z"}
+Timestamp: 2026-03-13T07:48:28.6244480Z
+Result: PASS

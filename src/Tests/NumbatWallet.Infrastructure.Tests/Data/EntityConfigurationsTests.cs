@@ -133,13 +133,13 @@ public class EntityConfigurationsTests
         // Assert
         var walletEntity = modelBuilder.Model.FindEntityType(typeof(Wallet));
         Assert.NotNull(walletEntity);
-        var walletIndexes = walletEntity.GetIndexes();
+        var walletIndexes = walletEntity.GetIndexes().ToList();
         Assert.Contains(walletIndexes, idx => idx.Properties.Any(p => p.Name == "PersonId"));
         Assert.Contains(walletIndexes, idx => idx.Properties.Any(p => p.Name == "TenantId"));
 
         var credentialEntity = modelBuilder.Model.FindEntityType(typeof(Credential));
         Assert.NotNull(credentialEntity);
-        var credentialIndexes = credentialEntity.GetIndexes();
+        var credentialIndexes = credentialEntity.GetIndexes().ToList();
         Assert.Contains(credentialIndexes, idx => idx.Properties.Any(p => p.Name == "WalletId"));
         Assert.Contains(credentialIndexes, idx => idx.Properties.Any(p => p.Name == "IssuerId"));
     }

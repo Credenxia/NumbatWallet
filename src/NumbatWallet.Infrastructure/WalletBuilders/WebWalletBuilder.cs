@@ -438,20 +438,6 @@ if (savedTheme) {{
 {options.CustomJs}";
     }
 
-    private WebWalletOptions CreateDefaultOptions(WalletTemplate walletTemplate)
-    {
-        return new WebWalletOptions
-        {
-            Theme = "light",
-            PrimaryColor = "#003366",
-            SecondaryColor = "#F5F5F5",
-            EnableQrCode = true,
-            EnableSharing = true,
-            EnablePrinting = true,
-            EnableOfflineMode = true
-        };
-    }
-
     private QRCodeGenerator.ECCLevel GetErrorCorrectionLevel(string level)
     {
         return level?.ToUpperInvariant() switch

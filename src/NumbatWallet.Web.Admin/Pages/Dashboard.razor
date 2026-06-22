@@ -1,6 +1,8 @@
-@page "/"
-@page "/dashboard"
+@* OLD DASHBOARD - Routes disabled to prevent ambiguous match. Use Components/Pages/Dashboard.razor instead *@
+@page "/old-dashboard"
+@using NumbatWallet.Web.Admin.Services
 @inject NavigationManager Navigation
+@inject IDashboardService DashboardService
 
 <h3>Dashboard - NumbatWallet Admin</h3>
 
@@ -161,40 +163,47 @@
 </div>
 
 @code {
-    // Mock data for now - will be replaced with real service calls
-    private int activeWallets = 1234;
-    private int totalCredentials = 5678;
-    private int credentialsIssuedToday = 42;
-    private int activeTenants = 8;
-    private int totalTenants = 10;
-    private long apiRequestsPerMinute = 2500;
-    private int avgResponseTime = 125;
-    private decimal cpuUsage = 35.2m;
-    private long memoryUsage = 1_073_741_824; // 1 GB
+    private int activeWallets = 0;
+    private int totalCredentials = 0;
+    private int credentialsIssuedToday = 0;
+    private int activeTenants = 0;
+    private int totalTenants = 0;
+    private long apiRequestsPerMinute = 0;
+    private int avgResponseTime = 0;
+    private decimal cpuUsage = 0;
+    private long memoryUsage = 0;
 
     protected override async Task OnInitializedAsync()
     {
-        // Simulate loading data
-        await Task.Delay(100);
-        StateHasChanged();
+        await LoadDashboardData();
     }
 
     private async Task RefreshDashboard()
     {
-        // Simulate refresh
-        await Task.Delay(100);
+        await LoadDashboardData();
+    }
 
-        // Update with random values for demo
-        var random = new Random();
-        activeWallets = random.Next(1000, 2000);
-        totalCredentials = random.Next(5000, 7000);
-        credentialsIssuedToday = random.Next(20, 100);
-        apiRequestsPerMinute = random.Next(2000, 3000);
-        avgResponseTime = random.Next(100, 200);
-        cpuUsage = (decimal)(random.NextDouble() * 100);
-        memoryUsage = random.Next(900_000_000, 1_500_000_000);
+    private async Task LoadDashboardData()
+    {
+        try
+        {
+            var metrics = await DashboardService.GetMetricsAsync("24h");
 
-        StateHasChanged();
+            activeWallets = metrics.ActiveWallets;
+            totalCredentials = metrics.TotalCredentials;
+            credentialsIssuedToday = metrics.VerificationsToday;
+
+            var health = await DashboardService.GetSystemHealthAsync();
+            cpuUsage = (decimal)health.PerformanceMetrics.GetValueOrDefault("CPU Usage", 0);
+            var memoryUsagePercent = health.PerformanceMetrics.GetValueOrDefault("Memory Usage", 0);
+            memoryUsage = (long)(memoryUsagePercent / 100 * 4_294_967_296); // Assume 4GB total
+
+            StateHasChanged();
+        }
+        catch (Exception)
+        {
+            // Service returns default/mock data on error
+        }
     }
 
     private string FormatNumber(long number)

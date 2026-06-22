@@ -55,7 +55,7 @@ public class AzureBlobStorageService : IBlobStorageService
         try
         {
             var containerClient = _blobServiceClient.GetBlobContainerClient(containerName);
-            await containerClient.CreateIfNotExistsAsync(PublicAccessType.None, cancellationToken: cancellationToken);
+            await containerClient.CreateIfNotExistsAsync(cancellationToken: cancellationToken);
 
             var blobName = GenerateBlobName(fileName);
             var blobClient = containerClient.GetBlobClient(blobName);
@@ -284,7 +284,7 @@ public class AzureBlobStorageService : IBlobStorageService
 
     private string GetContentType(string fileName)
     {
-        var extension = Path.GetExtension(fileName)?.ToLowerInvariant();
+        var extension = Path.GetExtension(fileName).ToLowerInvariant();
 
         return extension switch
         {

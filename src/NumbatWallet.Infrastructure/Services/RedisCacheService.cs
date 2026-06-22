@@ -8,18 +8,16 @@ namespace NumbatWallet.Infrastructure.Services;
 
 public class RedisCacheService : ICacheService
 {
-    private readonly IDistributedCache _distributedCache;
     private readonly IConnectionMultiplexer _redis;
     private readonly IDatabase _database;
     private readonly ILogger<RedisCacheService> _logger;
     private readonly JsonSerializerOptions _jsonOptions;
 
     public RedisCacheService(
-        IDistributedCache distributedCache,
+        IDistributedCache _distributedCache,
         IConnectionMultiplexer redis,
         ILogger<RedisCacheService> logger)
     {
-        _distributedCache = distributedCache;
         _redis = redis;
         _database = redis.GetDatabase();
         _logger = logger;
@@ -42,7 +40,7 @@ public class RedisCacheService : ICacheService
             }
 
             _logger.LogDebug("Cache hit for key: {Key}", key);
-            return JsonSerializer.Deserialize<T>(value!, _jsonOptions);
+            return JsonSerializer.Deserialize<T>((string)value!, _jsonOptions);
         }
         catch (Exception ex)
         {
@@ -204,15 +202,14 @@ public class RedisCacheService : ICacheService
 
         try
         {
-            var redisKeys = keys.Select(k => (RedisKey)k).ToArray();
-            var values = await _database.StringGetAsync(redisKeys);
-
             var keyArray = keys.ToArray();
+            var redisKeys = keyArray.Select(k => (RedisKey)k).ToArray();
+            var values = await _database.StringGetAsync(redisKeys);
             for (int i = 0; i < keyArray.Length; i++)
             {
                 if (!values[i].IsNullOrEmpty)
                 {
-                    result[keyArray[i]] = JsonSerializer.Deserialize<T>(values[i]!, _jsonOptions);
+                    result[keyArray[i]] = JsonSerializer.Deserialize<T>((string)values[i]!, _jsonOptions);
                 }
                 else
                 {

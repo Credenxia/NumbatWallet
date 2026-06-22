@@ -123,10 +123,10 @@ public class BulkOperationStatusService : IBulkOperationStatusService
     {
         try
         {
-            _statusCache.AddOrUpdate(operationId, status, (key, old) => status);
+            _statusCache.AddOrUpdate(operationId, status, (_, _) => status);
             _cacheExpiry.AddOrUpdate(operationId,
                 DateTime.UtcNow.AddMinutes(CacheExpirationMinutes),
-                (key, old) => DateTime.UtcNow.AddMinutes(CacheExpirationMinutes));
+                (_, _) => DateTime.UtcNow.AddMinutes(CacheExpirationMinutes));
 
             _logger.LogDebug("Updated status for operation {OperationId}: {Status}",
                 operationId, status.Status);
@@ -147,10 +147,10 @@ public class BulkOperationStatusService : IBulkOperationStatusService
     {
         try
         {
-            _resultsCache.AddOrUpdate(operationId, results, (key, old) => results);
+            _resultsCache.AddOrUpdate(operationId, results, (_, _) => results);
             _cacheExpiry.AddOrUpdate(operationId,
                 DateTime.UtcNow.AddMinutes(CacheExpirationMinutes),
-                (key, old) => DateTime.UtcNow.AddMinutes(CacheExpirationMinutes));
+                (_, _) => DateTime.UtcNow.AddMinutes(CacheExpirationMinutes));
 
             // Clean up cancellation token if operation is complete
             if (results.Status == "Completed" || results.Status == "Failed" || results.Status == "Cancelled")

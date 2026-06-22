@@ -1,7 +1,7 @@
 using System.Security.Cryptography.X509Certificates;
 using NumbatWallet.Domain.Entities;
 using NumbatWallet.Domain.Interfaces;
-using NumbatWallet.Domain.Services;
+using NumbatWallet.Application.DomainServices;
 using Microsoft.Extensions.Logging;
 
 namespace NumbatWallet.Infrastructure.Services;
@@ -9,18 +9,16 @@ namespace NumbatWallet.Infrastructure.Services;
 public class CertificateValidationService : ICertificateValidationService
 {
     private readonly ICertificateAuthorityRepository _authorityRepository;
-    private readonly ICertificateTrustStoreRepository _trustStoreRepository;
     private readonly ILogger<CertificateValidationService> _logger;
     private readonly HttpClient _httpClient;
 
     public CertificateValidationService(
         ICertificateAuthorityRepository authorityRepository,
-        ICertificateTrustStoreRepository trustStoreRepository,
+        ICertificateTrustStoreRepository _trustStoreRepository,
         ILogger<CertificateValidationService> logger,
         HttpClient httpClient)
     {
         _authorityRepository = authorityRepository;
-        _trustStoreRepository = trustStoreRepository;
         _logger = logger;
         _httpClient = httpClient;
     }
@@ -114,7 +112,8 @@ public class CertificateValidationService : ICertificateValidationService
             chain.ChainPolicy.VerificationFlags = X509VerificationFlags.AllowUnknownCertificateAuthority;
 
             // Add trusted authorities to the chain
-            foreach (var authority in authorities.Where(a => a.IsTrusted))
+            var authoritiesList = authorities.ToList();
+            foreach (var authority in authoritiesList.Where(a => a.IsTrusted))
             {
                 var authBytes = Convert.FromBase64String(authority.CertificateData);
                 using var authCert = X509CertificateLoader.LoadCertificate(authBytes);
@@ -134,7 +133,7 @@ public class CertificateValidationService : ICertificateValidationService
             // Verify that the chain ends with a trusted authority
             var rootCert = chain.ChainElements[^1].Certificate;
             var rootThumbprint = rootCert.Thumbprint;
-            var trustedRoot = authorities.Any(a => a.Thumbprint.Equals(rootThumbprint, StringComparison.OrdinalIgnoreCase) && a.IsTrusted);
+            var trustedRoot = authoritiesList.Any(a => a.Thumbprint.Equals(rootThumbprint, StringComparison.OrdinalIgnoreCase) && a.IsTrusted);
 
             if (!trustedRoot)
             {
@@ -216,7 +215,7 @@ public class CertificateValidationService : ICertificateValidationService
             }
 
             // Download CRL
-            var crlData = await _httpClient.GetByteArrayAsync(crlUrl, cancellationToken);
+            _ = await _httpClient.GetByteArrayAsync(crlUrl, cancellationToken);
 
             // Note: Full CRL implementation would require parsing the CRL and checking certificate serial number
             // For now, we'll assume the certificate is not revoked if we can download the CRL

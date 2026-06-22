@@ -20,13 +20,13 @@ public static class AzureServiceConfiguration
         IConfiguration configuration)
     {
         var azureConfig = configuration.GetSection("Azure");
-        var useRealAzure = azureConfig.GetValue<bool>("UseRealServices", false);
+        var useRealAzure = azureConfig.GetValue("UseRealServices", false);
 
         if (useRealAzure)
         {
             // Configure Azure credential
             var credential = GetAzureCredential(configuration);
-            services.AddSingleton<TokenCredential>(credential);
+            services.AddSingleton(credential);
 
             // Add Azure Key Vault
             var keyVaultUrl = azureConfig["KeyVault:Url"];
@@ -51,7 +51,7 @@ public static class AzureServiceConfiguration
             var storageConnectionString = azureConfig["Storage:ConnectionString"];
             if (!string.IsNullOrEmpty(storageConnectionString))
             {
-                services.AddSingleton(sp =>
+                services.AddSingleton(_ =>
                 {
                     return new BlobServiceClient(storageConnectionString);
                 });

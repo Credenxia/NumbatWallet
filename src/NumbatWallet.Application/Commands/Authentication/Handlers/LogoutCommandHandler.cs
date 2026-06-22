@@ -1,15 +1,23 @@
 using Microsoft.Extensions.Logging;
 using NumbatWallet.Application.CQRS.Interfaces;
+using NumbatWallet.Application.Interfaces;
+using NumbatWallet.Application.Services;
 
 namespace NumbatWallet.Application.Commands.Authentication.Handlers;
 
 public class LogoutCommandHandler : ICommandHandler<LogoutCommand, bool>
 {
+    private readonly ITokenBlacklistService _tokenBlacklistService;
+    private readonly IRefreshTokenStore _refreshTokenStore;
     private readonly ILogger<LogoutCommandHandler> _logger;
-    // In production, we'd maintain a token blacklist in cache
 
-    public LogoutCommandHandler(ILogger<LogoutCommandHandler> logger)
+    public LogoutCommandHandler(
+        ITokenBlacklistService tokenBlacklistService,
+        IRefreshTokenStore refreshTokenStore,
+        ILogger<LogoutCommandHandler> logger)
     {
+        _tokenBlacklistService = tokenBlacklistService;
+        _refreshTokenStore = refreshTokenStore;
         _logger = logger;
     }
 
@@ -19,12 +27,20 @@ public class LogoutCommandHandler : ICommandHandler<LogoutCommand, bool>
     {
         _logger.LogInformation("Logout requested for user: {UserId}", command.UserId);
 
-        // In production, we would:
-        // 1. Add the token to a blacklist in Redis/cache
-        // 2. Clear any server-side session data
-        // 3. Revoke refresh tokens
+        // Blacklist the access token so it can no longer authenticate.
+        if (!string.IsNullOrWhiteSpace(command.Token))
+        {
+            _tokenBlacklistService.BlacklistToken(command.Token);
+            _logger.LogInformation("Access token blacklisted for user: {UserId}", command.UserId);
+        }
 
-        // For POA, we'll just log the action
+        // Revoke the refresh token (a distinct opaque value) so it can't mint new access tokens.
+        if (!string.IsNullOrWhiteSpace(command.RefreshToken))
+        {
+            _refreshTokenStore.Revoke(command.RefreshToken);
+            _logger.LogInformation("Refresh token revoked for user: {UserId}", command.UserId);
+        }
+
         await Task.CompletedTask; // Simulate async work
 
         _logger.LogInformation("User logged out successfully: {UserId}", command.UserId);

@@ -443,7 +443,7 @@ public class MockIcaoService : IIcaoService
 
     private async Task<List<X509Certificate2>> BuildCertificateChainAsync(
         X509Certificate2 certificate,
-        CancellationToken cancellationToken)
+        CancellationToken _ct)
     {
         var chain = new List<X509Certificate2> { certificate };
 

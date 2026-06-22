@@ -1,10 +1,9 @@
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using Moq;
 using NumbatWallet.Application.Interfaces;
 using NumbatWallet.Infrastructure.Services;
 using NumbatWallet.SharedKernel.Interfaces;
-using FluentAssertions;
 
 namespace NumbatWallet.Infrastructure.Tests.Services;
 
@@ -13,7 +12,6 @@ public class HmacSearchTokenServiceTests : IDisposable
     private readonly Mock<IKeyVaultService> _keyVaultServiceMock;
     private readonly Mock<ICurrentTenantService> _currentTenantServiceMock;
     private readonly MemoryCache _memoryCache;
-    private readonly Mock<ILogger<HmacSearchTokenService>> _loggerMock;
     private readonly HmacSearchTokenService _sut;
 
     public HmacSearchTokenServiceTests()
@@ -21,13 +19,13 @@ public class HmacSearchTokenServiceTests : IDisposable
         _keyVaultServiceMock = new Mock<IKeyVaultService>();
         _currentTenantServiceMock = new Mock<ICurrentTenantService>();
         _memoryCache = new MemoryCache(new MemoryCacheOptions());
-        _loggerMock = new Mock<ILogger<HmacSearchTokenService>>();
+        var loggerMock = new Mock<ILogger<HmacSearchTokenService>>();
 
         _sut = new HmacSearchTokenService(
             _keyVaultServiceMock.Object,
             _currentTenantServiceMock.Object,
             _memoryCache,
-            _loggerMock.Object);
+            loggerMock.Object);
     }
 
     [Fact]
@@ -68,17 +66,20 @@ public class HmacSearchTokenServiceTests : IDisposable
         result.Should().BeEmpty();
     }
 
+    private static string ValidPepper => Convert.ToBase64String(Enumerable.Repeat((byte)7, 32).ToArray());
+
+    private void SetupIdentifierPepper()
+    {
+        _keyVaultServiceMock.Setup(x => x.GetSecretAsync("search-token-pepper", default))
+            .ReturnsAsync(ValidPepper);
+    }
+
     [Fact]
     public async Task GenerateEmailTokenAsync_WithValidEmail_ShouldGenerateSingleToken()
     {
         // Arrange
         var email = "John.Doe@Example.COM";
-        var tenantId = "tenant-123";
-        var pepper = "test-pepper-base64";
-
-        _currentTenantServiceMock.Setup(x => x.TenantId).Returns(tenantId);
-        _keyVaultServiceMock.Setup(x => x.GetSecretAsync($"search-pepper-{tenantId}", default))
-            .ReturnsAsync(pepper);
+        SetupIdentifierPepper();
 
         // Act
         var result = await _sut.GenerateEmailTokenAsync(email);
@@ -89,6 +90,110 @@ public class HmacSearchTokenServiceTests : IDisposable
         // Test normalization - should produce same token for different cases
         var result2 = await _sut.GenerateEmailTokenAsync("john.doe@example.com");
         result2.Should().Be(result);
+    }
+
+    [Fact]
+    public async Task GeneratePhoneTokenAsync_WithFormattingVariants_ShouldGenerateSameToken()
+    {
+        // Arrange
+        SetupIdentifierPepper();
+
+        // Act
+        var canonical = await _sut.GeneratePhoneTokenAsync("61400000000");
+        var formatted = await _sut.GeneratePhoneTokenAsync("+61 400-000-000");
+        var parenthesised = await _sut.GeneratePhoneTokenAsync("(61) 400 000 000");
+
+        // Assert - digits-only normalization makes all variants identical
+        canonical.Should().NotBeNullOrEmpty();
+        formatted.Should().Be(canonical);
+        parenthesised.Should().Be(canonical);
+    }
+
+    [Fact]
+    public async Task GeneratePhoneTokenAsync_DifferentNumbers_ShouldGenerateDifferentTokens()
+    {
+        // Arrange
+        SetupIdentifierPepper();
+
+        // Act
+        var first = await _sut.GeneratePhoneTokenAsync("+61400000001");
+        var second = await _sut.GeneratePhoneTokenAsync("+61400000002");
+
+        // Assert
+        first.Should().NotBe(second);
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("   ")]
+    [InlineData("no-digits-here")]
+    public async Task GeneratePhoneTokenAsync_WithInvalidInput_ShouldReturnNull(string? phone)
+    {
+        // Act
+        var result = await _sut.GeneratePhoneTokenAsync(phone!);
+
+        // Assert
+        result.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task GenerateEmailTokenAsync_WithConfigPepper_ShouldNotUseKeyVault()
+    {
+        // Arrange - pepper supplied via configuration takes precedence over Key Vault
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["Search:TokenPepper"] = ValidPepper
+            })
+            .Build();
+
+        using var cache = new MemoryCache(new MemoryCacheOptions());
+        var sut = new HmacSearchTokenService(
+            _keyVaultServiceMock.Object,
+            _currentTenantServiceMock.Object,
+            cache,
+            new Mock<ILogger<HmacSearchTokenService>>().Object,
+            configuration);
+
+        // Act
+        var token = await sut.GenerateEmailTokenAsync("citizen@example.com");
+
+        // Assert
+        token.Should().NotBeNullOrEmpty();
+        _keyVaultServiceMock.Verify(
+            x => x.GetSecretAsync(It.IsAny<string>(), default),
+            Times.Never);
+    }
+
+    [Fact]
+    public async Task GenerateEmailTokenAsync_WithInvalidBase64Pepper_ShouldFailClosed()
+    {
+        // Arrange - a malformed pepper must throw, never silently derive a different key
+        _keyVaultServiceMock.Setup(x => x.GetSecretAsync("search-token-pepper", default))
+            .ReturnsAsync("not-valid-base64!!");
+
+        // Act
+        var act = () => _sut.GenerateEmailTokenAsync("citizen@example.com");
+
+        // Assert
+        await act.Should().ThrowAsync<InvalidOperationException>();
+    }
+
+    [Fact]
+    public async Task GenerateEmailTokenAsync_WhenPepperCannotBePersisted_ShouldFailClosed()
+    {
+        // Arrange - no pepper anywhere, and Key Vault write fails
+        _keyVaultServiceMock.Setup(x => x.GetSecretAsync("search-token-pepper", default))
+            .ReturnsAsync((string?)null);
+        _keyVaultServiceMock.Setup(x => x.SetSecretAsync("search-token-pepper", It.IsAny<string>(), default))
+            .ReturnsAsync(false);
+
+        // Act
+        var act = () => _sut.GenerateEmailTokenAsync("citizen@example.com");
+
+        // Assert
+        await act.Should().ThrowAsync<InvalidOperationException>();
     }
 
     [Fact]
@@ -142,15 +247,10 @@ public class HmacSearchTokenServiceTests : IDisposable
     }
 
     [Fact]
-    public async Task GetTenantPepperAsync_ShouldCachePepper()
+    public async Task GetIdentifierPepperAsync_ShouldCachePepper()
     {
         // Arrange
-        var tenantId = "tenant-123";
-        var pepper = "test-pepper-base64";
-
-        _currentTenantServiceMock.Setup(x => x.TenantId).Returns(tenantId);
-        _keyVaultServiceMock.Setup(x => x.GetSecretAsync($"search-pepper-{tenantId}", default))
-            .ReturnsAsync(pepper);
+        SetupIdentifierPepper();
 
         // Act - Call twice
         await _sut.GenerateEmailTokenAsync("test@example.com");
@@ -158,21 +258,18 @@ public class HmacSearchTokenServiceTests : IDisposable
 
         // Assert - Should only call KeyVault once due to caching
         _keyVaultServiceMock.Verify(
-            x => x.GetSecretAsync($"search-pepper-{tenantId}", default),
+            x => x.GetSecretAsync("search-token-pepper", default),
             Times.Once);
     }
 
     [Fact]
-    public async Task GetTenantPepperAsync_WhenNotExists_ShouldGenerateNew()
+    public async Task GetIdentifierPepperAsync_WhenNotExists_ShouldGenerateAndPersistNew()
     {
         // Arrange
-        var tenantId = "new-tenant";
-
-        _currentTenantServiceMock.Setup(x => x.TenantId).Returns(tenantId);
-        _keyVaultServiceMock.Setup(x => x.GetSecretAsync($"search-pepper-{tenantId}", default))
+        _keyVaultServiceMock.Setup(x => x.GetSecretAsync("search-token-pepper", default))
             .ReturnsAsync((string?)null); // Simulate not found
         _keyVaultServiceMock.Setup(x => x.SetSecretAsync(
-            $"search-pepper-{tenantId}",
+            "search-token-pepper",
             It.IsAny<string>(),
             default))
             .ReturnsAsync(true);
@@ -183,7 +280,7 @@ public class HmacSearchTokenServiceTests : IDisposable
         // Assert
         result.Should().NotBeNullOrEmpty();
         _keyVaultServiceMock.Verify(
-            x => x.SetSecretAsync($"search-pepper-{tenantId}", It.IsAny<string>(), default),
+            x => x.SetSecretAsync("search-token-pepper", It.IsAny<string>(), default),
             Times.Once);
     }
 
@@ -229,11 +326,7 @@ public class HmacSearchTokenServiceTests : IDisposable
         // Arrange
         if (shouldGenerateToken)
         {
-            var tenantId = "tenant-123";
-            var pepper = "test-pepper-base64";
-            _currentTenantServiceMock.Setup(x => x.TenantId).Returns(tenantId);
-            _keyVaultServiceMock.Setup(x => x.GetSecretAsync($"search-pepper-{tenantId}", default))
-                .ReturnsAsync(pepper);
+            SetupIdentifierPepper();
         }
 
         // Act
@@ -278,6 +371,7 @@ public class HmacSearchTokenServiceTests : IDisposable
         _currentTenantServiceMock.Setup(x => x.TenantId).Returns(tenantId);
         _keyVaultServiceMock.Setup(x => x.GetSecretAsync($"search-pepper-{tenantId}", default))
             .ReturnsAsync(pepper);
+        SetupIdentifierPepper(); // email tokens use the deployment-wide identifier pepper
 
         // Act
         var result = await _sut.GenerateBulkTokensAsync(persons);

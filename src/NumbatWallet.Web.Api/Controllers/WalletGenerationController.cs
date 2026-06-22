@@ -114,9 +114,18 @@ public class WalletGenerationController : ControllerBase
             return NotFound($"Template {templateId} not found");
         }
 
+        var teamIdentifier = HttpContext.Request.Headers["X-Apple-Team-Id"].FirstOrDefault()
+            ?? Configuration["AppleWallet:TeamIdentifier"];
+
+        if (string.IsNullOrEmpty(teamIdentifier))
+        {
+            return BadRequest("Apple Team Identifier is required. " +
+                "Set it via X-Apple-Team-Id header or configure AppleWallet:TeamIdentifier.");
+        }
+
         var options = new AppleWalletOptions
         {
-            TeamIdentifier = HttpContext.Request.Headers["X-Apple-Team-Id"].FirstOrDefault() ?? "DUMMY",
+            TeamIdentifier = teamIdentifier,
             PassTypeIdentifier = $"pass.au.gov.wa.numbatwallet.{template.Type.ToString().ToLowerInvariant()}",
             OrganizationName = "Government of Western Australia",
             Description = template.Description,

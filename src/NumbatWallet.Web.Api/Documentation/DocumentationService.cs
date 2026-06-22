@@ -1,4 +1,4 @@
-using Microsoft.OpenApi.Models;
+using Microsoft.OpenApi;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using System.Xml.Linq;
 using System.Xml.XPath;
@@ -140,10 +140,6 @@ public class DocumentationService : IDocumentationService
             {
                 html.AppendLine($"<h3>{line[4..]}</h3>");
             }
-            else if (line.StartsWith("```", StringComparison.Ordinal))
-            {
-                continue; // Skip code block markers
-            }
             else if (line.StartsWith("- ", StringComparison.Ordinal))
             {
                 html.AppendLine($"<li>{line[2..]}</li>");
@@ -260,36 +256,22 @@ public class ApiDocumentationOperationFilter : IOperationFilter
     public void Apply(OpenApiOperation operation, OperationFilterContext context)
     {
         // Add default responses
-        operation.Responses.TryAdd("401", new OpenApiResponse
+        operation.Responses?.TryAdd("401", new OpenApiResponse
         {
-            Description = "Unauthorized - Invalid or missing authentication",
-            Content = new Dictionary<string, OpenApiMediaType>
-            {
-                ["application/json"] = new OpenApiMediaType
-                {
-                    Schema = new OpenApiSchema
-                    {
-                        Reference = new OpenApiReference
-                        {
-                            Type = ReferenceType.Schema,
-                            Id = "ProblemDetails"
-                        }
-                    }
-                }
-            }
+            Description = "Unauthorized - Invalid or missing authentication"
         });
 
-        operation.Responses.TryAdd("403", new OpenApiResponse
+        operation.Responses?.TryAdd("403", new OpenApiResponse
         {
             Description = "Forbidden - Insufficient permissions"
         });
 
-        operation.Responses.TryAdd("429", new OpenApiResponse
+        operation.Responses?.TryAdd("429", new OpenApiResponse
         {
             Description = "Too Many Requests - Rate limit exceeded"
         });
 
-        operation.Responses.TryAdd("500", new OpenApiResponse
+        operation.Responses?.TryAdd("500", new OpenApiResponse
         {
             Description = "Internal Server Error"
         });
@@ -304,7 +286,8 @@ public class ApiDocumentationOperationFilter : IOperationFilter
         if (context.ApiDescription.ActionDescriptor is Microsoft.AspNetCore.Mvc.Controllers.ControllerActionDescriptor controllerDescriptor)
         {
             var controllerName = controllerDescriptor.ControllerName;
-            operation.Tags = new List<OpenApiTag> { new OpenApiTag { Name = controllerName } };
+            operation.Tags ??= new HashSet<OpenApiTagReference>();
+            operation.Tags.Add(new OpenApiTagReference(controllerName));
         }
 
         // Add security requirements for authorized endpoints
@@ -313,23 +296,16 @@ public class ApiDocumentationOperationFilter : IOperationFilter
 
         if (hasAuthorize)
         {
-            operation.Security = new List<OpenApiSecurityRequirement>
-            {
+            operation.Security =
+            [
                 new OpenApiSecurityRequirement
                 {
                     {
-                        new OpenApiSecurityScheme
-                        {
-                            Reference = new OpenApiReference
-                            {
-                                Type = ReferenceType.SecurityScheme,
-                                Id = "Bearer"
-                            }
-                        },
-                        Array.Empty<string>()
+                        new OpenApiSecuritySchemeReference("Bearer"),
+                        new List<string>()
                     }
                 }
-            };
+            ];
         }
     }
 }
@@ -339,38 +315,19 @@ public class ApiDocumentationOperationFilter : IOperationFilter
 /// </summary>
 public class ApiDocumentationSchemaFilter : ISchemaFilter
 {
-    public void Apply(OpenApiSchema schema, SchemaFilterContext context)
+    public void Apply(IOpenApiSchema schema, SchemaFilterContext context)
     {
         // Add descriptions from XML comments
-        if (context.Type != null)
-        {
-            var xmlDoc = GetXmlDocumentation(context.Type);
-            if (!string.IsNullOrEmpty(xmlDoc))
-            {
-                schema.Description = xmlDoc;
-            }
+        if (context.Type is null) return;
 
-            // Add example values for common types
-            if (context.Type == typeof(Guid))
-            {
-                schema.Example = new Microsoft.OpenApi.Any.OpenApiString(Guid.NewGuid().ToString());
-            }
-            else if (context.Type == typeof(DateTime))
-            {
-                schema.Example = new Microsoft.OpenApi.Any.OpenApiString(DateTime.UtcNow.ToString("O"));
-            }
-            else if (context.Type.Name.Contains("Email", StringComparison.OrdinalIgnoreCase))
-            {
-                schema.Example = new Microsoft.OpenApi.Any.OpenApiString("user@example.com");
-            }
-            else if (context.Type.Name.Contains("Phone", StringComparison.OrdinalIgnoreCase))
-            {
-                schema.Example = new Microsoft.OpenApi.Any.OpenApiString("+61 4XX XXX XXX");
-            }
+        var xmlDoc = GetXmlDocumentation(context.Type);
+        if (!string.IsNullOrEmpty(xmlDoc))
+        {
+            schema.Description = xmlDoc;
         }
     }
 
-    private string? GetXmlDocumentation(Type type)
+    private static string? GetXmlDocumentation(Type type)
     {
         try
         {

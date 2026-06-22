@@ -1,0 +1,33 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: numbatwallet-api
+  labels:
+    app: numbatwallet-api
+    component: api
+    app.kubernetes.io/part-of: numbatwallet
+spec:
+  type: ClusterIP
+  selector:
+    app: numbatwallet-api
+  ports:
+    - port: 80
+      targetPort: 8080
+      protocol: TCP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: numbatwallet-admin
+  labels:
+    app: numbatwallet-admin
+    component: frontend
+    app.kubernetes.io/part-of: numbatwallet
+spec:
+  type: ClusterIP
+  selector:
+    app: numbatwallet-admin
+  ports:
+    - port: 80
+      targetPort: 8080
+      protocol: TCP

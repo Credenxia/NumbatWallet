@@ -7,7 +7,6 @@ namespace NumbatWallet.Infrastructure.Data;
 public class UnitOfWork : IUnitOfWork
 {
     private readonly NumbatWalletDbContext _context;
-    private readonly Dictionary<Type, object> _repositories;
     private IDbContextTransaction? _transaction;
     private bool _disposed;
 
@@ -19,7 +18,6 @@ public class UnitOfWork : IUnitOfWork
         IIssuerRepository issuerRepository)
     {
         _context = context;
-        _repositories = new Dictionary<Type, object>();
 
         // Register repositories
         PersonRepository = personRepository;

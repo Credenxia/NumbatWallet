@@ -1,12 +1,9 @@
 using HotChocolate.AspNetCore;
-using HotChocolate.Execution;
-using HotChocolate.Execution.Configuration;
-using HotChocolate.Utilities;
 using NumbatWallet.Web.Api.GraphQL.Schema;
-using NumbatWallet.Web.Api.GraphQL.Types;
 using NumbatWallet.Web.Api.GraphQL.Queries;
 using NumbatWallet.Web.Api.GraphQL.Mutations;
-using System.Diagnostics.CodeAnalysis;
+using NumbatWallet.Web.Api.GraphQL.Admin;
+using NumbatWallet.Web.Api.GraphQL.Subscriptions;
 
 namespace NumbatWallet.Web.Api.Extensions;
 
@@ -17,16 +14,24 @@ public static class GraphQLExtensions
         services
             .AddGraphQLServer()
             .AddAuthorization()
+            // AnyType for OUTPUT Dictionary<string, object> fields
+            // Note: INPUT types must use JSON strings, not Dictionary
+            .AddType<AnyType>()
+            .BindRuntimeType<Dictionary<string, object>, AnyType>()
             .AddQueryType<Query>()
             .AddMutationType<Mutation>()
             .AddSubscriptionType<Subscription>()
-            // Register credential types
-            .AddType<CredentialType>()
-            .AddType<IssuanceType>()
-            .AddType<VerificationResultType>()
+            // Register Admin GraphQL extensions
+            .AddTypeExtension<AdminQuery>()
+            .AddTypeExtension<AdminMutation>()
+            .AddTypeExtension<AdminSubscription>()
+            .AddTypeExtension<BulkOperationSubscriptions>()
             // Register credential queries and mutations
             .AddTypeExtension<CredentialQuery>()
             .AddTypeExtension<CredentialMutation>()
+            // Register presentation queries and mutations (present → verify flow)
+            .AddTypeExtension<PresentationQuery>()
+            .AddTypeExtension<PresentationMutation>()
             .AddProjections()
             .AddFiltering()
             .AddSorting()
@@ -34,17 +39,17 @@ public static class GraphQLExtensions
             .ModifyRequestOptions(opt =>
             {
                 opt.IncludeExceptionDetails = configuration.GetValue<bool>("GraphQL:IncludeExceptionDetails");
-                opt.ExecutionTimeout = TimeSpan.FromSeconds(configuration.GetValue<int>("GraphQL:ExecutionTimeoutSeconds", 30));
+                opt.ExecutionTimeout = TimeSpan.FromSeconds(configuration.GetValue("GraphQL:ExecutionTimeoutSeconds", 30));
             })
             // .AddDiagnosticEventListener<GraphQLDiagnosticEventListener>() // Re-enable when HotChocolate supports this
             // .AddHttpRequestInterceptor<GraphQLRequestInterceptor>() // Re-enable when HotChocolate supports this
             .AddErrorFilter<GraphQLErrorFilter>()
-            .AddMaxExecutionDepthRule(configuration.GetValue<int>("GraphQL:MaxExecutionDepth", 15))
+            .AddMaxExecutionDepthRule(configuration.GetValue("GraphQL:MaxExecutionDepth", 15))
             .UseExceptions()
             .UseTimeout()
             .UseDocumentCache()
+            .UseDocumentParser()        // MUST be before UseDocumentValidation
             .UseDocumentValidation()
-            .UseDocumentParser()
             .UseOperationCache()
             .UseOperationResolver()
             .UseOperationVariableCoercion()
@@ -69,8 +74,16 @@ public static class GraphQLExtensions
     {
         var environment = app.Environment.EnvironmentName;
 
-        app.MapGraphQL("/graphql")
-            .RequireAuthorization();
+        // Allow anonymous access in Development for schema export and testing
+        if (environment == "Development")
+        {
+            app.MapGraphQL("/graphql");
+        }
+        else
+        {
+            app.MapGraphQL("/graphql")
+                .RequireAuthorization();
+        }
 
         // TODO: Enable GraphQL Voyager when package is available
         // if (environment != "Production")
@@ -79,7 +92,7 @@ public static class GraphQLExtensions
         // }
 
         // Map WebSocket for subscriptions
-        app.MapGraphQLWebSocket("/graphql");
+        app.MapGraphQLWebSocket("/graphql/ws");
 
         return app;
     }

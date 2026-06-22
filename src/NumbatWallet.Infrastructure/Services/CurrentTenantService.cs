@@ -22,38 +22,35 @@ public class CurrentTenantService : ICurrentTenantService
                 return _tenantId;
             }
 
-            // Try to get from HTTP context (header, claim, or route)
             var context = _httpContextAccessor.HttpContext;
-            if (context != null)
+            if (context == null)
             {
-                // Check header first
-                if (context.Request.Headers.TryGetValue("X-Tenant-Id", out var headerTenantId))
-                {
-                    _tenantId = headerTenantId.ToString();
-                    return _tenantId;
-                }
+                return null;
+            }
 
-                // Check user claims
-                var tenantClaim = context.User?.FindFirst("tenant_id")
-                    ?? context.User?.FindFirst("TenantId");
-                if (tenantClaim != null)
-                {
-                    _tenantId = tenantClaim.Value;
-                    return _tenantId;
-                }
+            // SECURITY: the tenant is resolved from the VALIDATED identity claim only.
+            // X-Tenant-Id header and path segments are attacker-controlled and must never
+            // determine the tenant for an authenticated request, or a caller could read/write
+            // another tenant's data (cross-tenant isolation breach).
+            var tenantClaim = context.User?.FindFirst("tenant_id")
+                ?? context.User?.FindFirst("TenantId");
+            if (tenantClaim != null && !string.IsNullOrEmpty(tenantClaim.Value))
+            {
+                _tenantId = tenantClaim.Value;
+                return _tenantId;
+            }
 
-                // Check path for tenant ID (e.g., /api/tenant/xyz/...)
-                var path = context.Request.Path.Value;
-                if (!string.IsNullOrEmpty(path))
-                {
-                    var segments = path.Split('/', StringSplitOptions.RemoveEmptyEntries);
-                    var tenantIndex = Array.IndexOf(segments, "tenant");
-                    if (tenantIndex >= 0 && tenantIndex < segments.Length - 1)
-                    {
-                        _tenantId = segments[tenantIndex + 1];
-                        return _tenantId;
-                    }
-                }
+            // Development-only convenience: allow an explicit X-Tenant-Id header ONLY when the
+            // caller is unauthenticated (local tooling / tests). Never honoured in production.
+            var isDevelopment = string.Equals(
+                Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT"),
+                "Development", StringComparison.OrdinalIgnoreCase);
+            var isAuthenticated = context.User?.Identity?.IsAuthenticated == true;
+            if (isDevelopment && !isAuthenticated &&
+                context.Request.Headers.TryGetValue("X-Tenant-Id", out var headerTenantId))
+            {
+                _tenantId = headerTenantId.ToString();
+                return _tenantId;
             }
 
             return null;

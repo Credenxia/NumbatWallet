@@ -8,7 +8,6 @@ namespace NumbatWallet.Web.Admin.Services;
 public class AuthService : IAuthService
 {
     private readonly AuthenticationStateProvider _authenticationStateProvider;
-    private readonly IApiClient _apiClient;
     private readonly ISessionStorageService _sessionStorage;
     private readonly ILogger<AuthService> _logger;
     private readonly IHttpContextAccessor _httpContextAccessor;
@@ -19,13 +18,11 @@ public class AuthService : IAuthService
 
     public AuthService(
         AuthenticationStateProvider authenticationStateProvider,
-        IApiClient apiClient,
         ISessionStorageService sessionStorage,
         IHttpContextAccessor httpContextAccessor,
         ILogger<AuthService> logger)
     {
         _authenticationStateProvider = authenticationStateProvider;
-        _apiClient = apiClient;
         _sessionStorage = sessionStorage;
         _httpContextAccessor = httpContextAccessor;
         _logger = logger;
@@ -73,20 +70,6 @@ public class AuthService : IAuthService
 
     public async Task<UserInfo?> GetCurrentUserAsync()
     {
-        // Try to get from session storage first
-        try
-        {
-            var cachedUser = await _sessionStorage.GetItemAsync<UserInfo>(UserInfoKey);
-            if (cachedUser != null)
-            {
-                return cachedUser;
-            }
-        }
-        catch (Exception ex)
-        {
-            _logger.LogWarning(ex, "Failed to get user from session storage");
-        }
-
         var authState = await _authenticationStateProvider.GetAuthenticationStateAsync();
         var user = authState.User;
 
@@ -95,6 +78,7 @@ public class AuthService : IAuthService
             return null;
         }
 
+        // Build user info from claims (works during prerendering)
         var userInfo = new UserInfo
         {
             Id = user.FindFirst(ClaimTypes.NameIdentifier)?.Value,
@@ -108,14 +92,14 @@ public class AuthService : IAuthService
             LastLogin = DateTime.UtcNow
         };
 
-        // Cache in session storage
+        // Try to cache in session storage (skip during prerendering when JS not available)
         try
         {
             await _sessionStorage.SetItemAsync(UserInfoKey, userInfo);
         }
-        catch (Exception ex)
+        catch
         {
-            _logger.LogWarning(ex, "Failed to cache user in session storage");
+            // Ignore - session storage not available during prerendering
         }
 
         return userInfo;
@@ -123,49 +107,31 @@ public class AuthService : IAuthService
 
     public async Task<List<string>> GetUserPermissionsAsync(string userId)
     {
-        // Try to get from session storage first
-        try
-        {
-            var cacheKey = $"{PermissionsKey}:{userId}";
-            var cachedPermissions = await _sessionStorage.GetItemAsync<List<string>>(cacheKey);
-
-            if (cachedPermissions != null)
-            {
-                return cachedPermissions;
-            }
-        }
-        catch (Exception ex)
-        {
-            _logger.LogWarning(ex, "Failed to get permissions from session storage");
-        }
+        // REMOVED: API call to avoid circular dependency with ApiClient
+        // Permissions should come from claims in the authentication token
+        // If additional permissions are needed, components should call API directly
 
         try
         {
-            // Fetch from API
-            var permissions = await _apiClient.GetAsync<List<string>>(
-                $"/api/admin/users/{userId}/permissions");
+            var authState = await _authenticationStateProvider.GetAuthenticationStateAsync();
+            var user = authState.User;
 
-            // Cache for 5 minutes
-            if (permissions != null)
+            if (user?.Identity?.IsAuthenticated == true)
             {
-                try
-                {
-                    await _sessionStorage.SetItemAsync(
-                        $"{PermissionsKey}:{userId}",
-                        permissions);
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogWarning(ex, "Failed to cache permissions in session storage");
-                }
+                // Get permissions from claims
+                var permissions = user.FindAll("permission")
+                    .Select(c => c.Value)
+                    .ToList();
+
+                return permissions;
             }
 
-            return permissions ?? new List<string>();
+            return [];
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to fetch permissions for user {UserId}", userId);
-            return new List<string>();
+            _logger.LogError(ex, "Failed to get permissions for user {UserId}", userId);
+            return [];
         }
     }
 
@@ -179,24 +145,38 @@ public class AuthService : IAuthService
     {
         try
         {
-            // Try to get from session storage
-            var token = await _sessionStorage.GetItemAsStringAsync(TokenKey);
-            if (!string.IsNullOrEmpty(token))
-            {
-                return token;
-            }
-
-            // Try to get from HTTP context
+            // Try to get from HTTP context first (works during prerendering)
             var httpContext = _httpContextAccessor.HttpContext;
             if (httpContext != null)
             {
-                token = await httpContext.GetTokenAsync("access_token");
+                var token = await httpContext.GetTokenAsync("access_token");
                 if (!string.IsNullOrEmpty(token))
                 {
-                    // Cache the token
-                    await _sessionStorage.SetItemAsStringAsync(TokenKey, token);
+                    // Try to cache the token in session storage (skip if JS not available)
+                    try
+                    {
+                        await _sessionStorage.SetItemAsStringAsync(TokenKey, token);
+                    }
+                    catch
+                    {
+                        // Ignore - JS interop not available during prerendering
+                    }
                     return token;
                 }
+            }
+
+            // Try session storage only as fallback (may not work during prerendering)
+            try
+            {
+                var cachedToken = await _sessionStorage.GetItemAsStringAsync(TokenKey);
+                if (!string.IsNullOrEmpty(cachedToken))
+                {
+                    return cachedToken;
+                }
+            }
+            catch
+            {
+                // Ignore - JS interop not available during prerendering
             }
         }
         catch (Exception ex)

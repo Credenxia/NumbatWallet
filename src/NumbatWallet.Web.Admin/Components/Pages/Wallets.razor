@@ -2,7 +2,8 @@
 @using Microsoft.AspNetCore.Components.Authorization
 @using NumbatWallet.Web.Admin.Components.Common
 @using NumbatWallet.Web.Admin.Services
-@inject IApiClient ApiClient
+@attribute [Authorize]
+@inject IAdminGraphQLClient GraphQLClient
 @inject IAuthService AuthService
 @inject IJSRuntime JS
 @inject ILogger<Wallets> Logger
@@ -83,20 +84,13 @@
                 <div class="search-box">
                     <i class="bi bi-search"></i>
                     <input type="text" @bind="SearchTerm" @oninput="@(async (e) => await OnSearchChanged(e))"
-                           placeholder="Search by DID or holder name..." class="form-control" />
+                           placeholder="Search by wallet ID, name, or holder..." class="form-control" />
                 </div>
                 <div class="filter-group">
                     <select @bind="StatusFilter" @bind:event="onchange" @bind:after="OnFilterChanged" class="form-control">
                         <option value="">All Status</option>
                         <option value="Active">Active</option>
                         <option value="Suspended">Suspended</option>
-                        <option value="Revoked">Revoked</option>
-                    </select>
-                    <select @bind="TenantFilter" @bind:event="onchange" @bind:after="OnFilterChanged" class="form-control">
-                        <option value="">All Tenants</option>
-                        <option value="wa-health">WA Health</option>
-                        <option value="wa-transport">WA Transport</option>
-                        <option value="curtin-uni">Curtin University</option>
                     </select>
                 </div>
             </div>
@@ -125,16 +119,15 @@
                         <div class="wallet-body">
                             <div class="wallet-did">
                                 <i class="bi bi-fingerprint"></i>
-                                <span>@wallet.Did</span>
+                                <span>@wallet.Id</span>
                             </div>
                             <div class="wallet-holder">
                                 <strong>@wallet.HolderName</strong>
-                                <small class="text-muted">@wallet.HolderEmail</small>
                             </div>
                             <div class="wallet-info">
                                 <div class="info-item">
-                                    <i class="bi bi-building"></i>
-                                    <span>@wallet.TenantName</span>
+                                    <i class="bi bi-wallet2"></i>
+                                    <span>@wallet.Name</span>
                                 </div>
                                 <div class="info-item">
                                     <i class="bi bi-card-checklist"></i>
@@ -419,7 +412,6 @@
 
     private string SearchTerm = "";
     private string StatusFilter = "";
-    private string TenantFilter = "";
 
     private int CurrentPage = 1;
     private int PageSize = 9;
@@ -446,10 +438,19 @@
             IsLoading = true;
             ErrorMessage = null;
 
-            // Simulate API call
-            await Task.Delay(500);
+            // Live data from the admin GraphQL `adminWallets` query (tenant-scoped on the backend)
+            var wallets = await GraphQLClient.GetWalletsAsync();
 
-            AllWallets = GenerateSampleWallets();
+            AllWallets = wallets.Select(w => new WalletDto
+            {
+                Id = w.Id,
+                Name = w.Name,
+                HolderName = w.PersonName,
+                Status = w.Status,
+                CredentialCount = w.CredentialCount,
+                CreatedAt = w.CreatedAt.ToLocalTime().DateTime
+            }).ToList();
+
             ApplyFilters();
         }
         catch (Exception ex)
@@ -470,18 +471,14 @@
         if (!string.IsNullOrWhiteSpace(SearchTerm))
         {
             filtered = filtered.Where(w =>
-                w.Did.Contains(SearchTerm, StringComparison.OrdinalIgnoreCase) ||
+                w.Id.Contains(SearchTerm, StringComparison.OrdinalIgnoreCase) ||
+                w.Name.Contains(SearchTerm, StringComparison.OrdinalIgnoreCase) ||
                 w.HolderName.Contains(SearchTerm, StringComparison.OrdinalIgnoreCase));
         }
 
         if (!string.IsNullOrWhiteSpace(StatusFilter))
         {
             filtered = filtered.Where(w => w.Status == StatusFilter);
-        }
-
-        if (!string.IsNullOrWhiteSpace(TenantFilter))
-        {
-            filtered = filtered.Where(w => w.TenantId == TenantFilter);
         }
 
         TotalCount = filtered.Count();
@@ -530,7 +527,8 @@
     {
         try
         {
-            // Create wallet via API
+            // POA: mock action — wallet creation from the admin portal is not wired yet
+            // (backend createWallet mutation requires a personId; needs a person picker)
             await Task.Delay(500);
             CloseCreateModal();
             await LoadWallets();
@@ -568,54 +566,27 @@
 
     private async Task SuspendWallet(WalletDto wallet)
     {
+        // POA: mock action — suspend wallet is not wired to the backend mutation yet (local UI state only)
         wallet.Status = "Suspended";
         ApplyFilters();
+        await Task.CompletedTask;
     }
 
     private async Task ActivateWallet(WalletDto wallet)
     {
+        // POA: mock action — activate wallet is not wired to the backend mutation yet (local UI state only)
         wallet.Status = "Active";
         ApplyFilters();
-    }
-
-    private List<WalletDto> GenerateSampleWallets()
-    {
-        var wallets = new List<WalletDto>();
-        var random = new Random();
-        var names = new[] { "John Smith", "Sarah Johnson", "Michael Brown", "Emma Wilson", "James Davis", "Lisa Anderson" };
-        var tenants = new[] { ("wa-health", "WA Health"), ("wa-transport", "WA Transport"), ("curtin-uni", "Curtin University") };
-        var statuses = new[] { "Active", "Active", "Active", "Suspended" };
-
-        for (int i = 0; i < 25; i++)
-        {
-            var name = names[random.Next(names.Length)];
-            var tenant = tenants[random.Next(tenants.Length)];
-            var status = statuses[random.Next(statuses.Length)];
-
-            wallets.Add(new WalletDto
-            {
-                Did = $"did:ion:EiD{Guid.NewGuid().ToString("N").Substring(0, 20)}",
-                HolderName = name,
-                HolderEmail = $"{name.Replace(" ", ".").ToLower()}@example.com",
-                TenantId = tenant.Item1,
-                TenantName = tenant.Item2,
-                Status = status,
-                CredentialCount = random.Next(1, 10),
-                CreatedAt = DateTime.Now.AddDays(-random.Next(1, 180)),
-                Type = "Personal"
-            });
-        }
-
-        return wallets.OrderByDescending(w => w.CreatedAt).ToList();
+        await Task.CompletedTask;
     }
 
     private class WalletDto
     {
-        public string Did { get; set; } = "";
+        public string Id { get; set; } = "";
+        public string Name { get; set; } = "";
         public string HolderName { get; set; } = "";
         public string HolderEmail { get; set; } = "";
         public string TenantId { get; set; } = "";
-        public string TenantName { get; set; } = "";
         public string Status { get; set; } = "Active";
         public int CredentialCount { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.Now;

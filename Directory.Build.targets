@@ -1,0 +1,18 @@
+<Project>
+  <!--
+    The Web SDK's default Content glob (**\*.json, CopyToOutputDirectory=PreserveNewest)
+    re-includes appsettings files ALREADY COPIED to bin/, because the DefaultItemExcludes
+    bin-glob does not reliably match on this platform (mixed \ and / separators in the
+    SDK-evaluated exclude list). Each build then copies bin into bin, nesting one level
+    per build until paths exceed the OS limit and the build fails (MSB3021).
+
+    Removing the items here is bulletproof: Directory.Build.targets is imported after all
+    SDK props, so these Removes run after the default items are created.
+  -->
+  <ItemGroup>
+    <Content Remove="bin/**" />
+    <Content Remove="obj/**" />
+    <None Remove="bin/**" />
+    <None Remove="obj/**" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,40 @@
+<Project>
+  <!-- Common test project properties -->
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+  </PropertyGroup>
+
+  <!-- Global test usings for convenience -->
+  <ItemGroup>
+    <Using Include="Xunit" />
+    <Using Include="FluentAssertions" />
+    <Using Include="Moq" />
+    <Using Include="System" />
+    <Using Include="System.Collections.Generic" />
+    <Using Include="System.Linq" />
+    <Using Include="System.Threading" />
+    <Using Include="System.Threading.Tasks" />
+  </ItemGroup>
+
+  <!-- Code analysis settings for tests -->
+  <PropertyGroup>
+    <!-- Disable specific rules for test projects -->
+    <NoWarn>$(NoWarn);CA1707;CA1711;CA2007;CA1062</NoWarn>
+    <!-- CA1707: Identifiers should not contain underscores (test methods use underscores) -->
+    <!-- CA1711: Identifiers should not have incorrect suffix (xUnit collections need 'Collection' suffix) -->
+    <!-- CA2007: Do not directly await a Task (not needed in tests) -->
+    <!-- CA1062: Validate arguments of public methods (not needed for test methods) -->
+  </PropertyGroup>
+
+  <!-- Code coverage settings -->
+  <PropertyGroup>
+    <CollectCoverage>true</CollectCoverage>
+    <CoverletOutputFormat>opencover,json,lcov,cobertura</CoverletOutputFormat>
+    <CoverletOutput>$(MSBuildProjectDirectory)/TestResults/</CoverletOutput>
+    <Exclude>[*.Tests]*,[*.IntegrationTests]*,[*]*.Migrations.*</Exclude>
+    <ExcludeByAttribute>Obsolete,GeneratedCodeAttribute,CompilerGeneratedAttribute,ExcludeFromCodeCoverageAttribute</ExcludeByAttribute>
+    <IncludeTestAssembly>false</IncludeTestAssembly>
+  </PropertyGroup>
+</Project>

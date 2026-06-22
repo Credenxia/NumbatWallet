@@ -1,0 +1,39 @@
+@page "/integrations"
+@using Microsoft.AspNetCore.Components.Authorization
+@attribute [Authorize]
+
+<PageTitle>Integrations - NumbatWallet Admin</PageTitle>
+
+<div class="page-header">
+    <h1>Integrations</h1>
+    <div class="page-actions">
+        <button class="btn btn-primary">
+            <i class="bi bi-plug"></i> Add Integration
+        </button>
+    </div>
+</div>
+
+<AuthorizeView>
+    <Authorized>
+        <div class="card">
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <i class="bi bi-plug-fill"></i>
+                    <div>
+                        <strong>Third-Party Integrations</strong>
+                        <p class="mb-0">Configure integrations with external identity providers, payment systems, and credential issuers.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </Authorized>
+    <NotAuthorized>
+        <div class="alert alert-warning">
+            <i class="bi bi-shield-exclamation"></i>
+            <div>
+                <strong>Authentication Required</strong>
+                <p class="mb-0">Please <a href="/login">sign in</a> to manage integrations.</p>
+            </div>
+        </div>
+    </NotAuthorized>
+</AuthorizeView>

@@ -1,6 +1,5 @@
 using System.Text;
 using Azure;
-using Azure.Core;
 using Azure.Identity;
 using Azure.Security.KeyVault.Keys;
 using Azure.Security.KeyVault.Keys.Cryptography;
@@ -200,11 +199,9 @@ public class MockAzureKeyVaultService : IAzureKeyVaultService
 {
     private readonly Dictionary<string, string> _secrets = new();
     private readonly Dictionary<string, byte[]> _keys = new();
-    private readonly ILogger<MockAzureKeyVaultService> _logger;
 
-    public MockAzureKeyVaultService(ILogger<MockAzureKeyVaultService> logger)
+    public MockAzureKeyVaultService(ILogger<MockAzureKeyVaultService> _logger)
     {
-        _logger = logger;
     }
 
     public Task<string> GetSecretAsync(string secretName, CancellationToken cancellationToken = default)

@@ -1,9 +1,7 @@
 using System.Text;
-using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Moq;
 using NumbatWallet.Application.Interfaces;
 using NumbatWallet.Domain.Interfaces;
 using NumbatWallet.Domain.ValueObjects;
@@ -32,7 +30,7 @@ public class RequestSignatureMiddlewareTests
         _options = new RequestSignatureOptions
         {
             RequireSignature = true,
-            MaxSignatureAgeSeconds = 300,
+            MaxSignatureAgeSeconds = 60, // 1 minute for testing
             SignedHeaders = new List<string> { "Content-Type", "Host" },
             ExcludedPaths = new List<string> { "/health", "/swagger" }
         };
@@ -144,8 +142,8 @@ public class RequestSignatureMiddlewareTests
         _nextMock.Verify(x => x(It.IsAny<HttpContext>()), Times.Never);
     }
 
-    [Fact(Skip = "Integration test - requires full middleware implementation")]
-    public async Task InvokeAsync_WithExpiredSignature_ShouldReturn401()
+    [Fact]
+    public async Task InvokeAsync_WithExpiredSignature_ShouldReturn400()
     {
         // Arrange
         var context = CreateHttpContext();
@@ -310,7 +308,7 @@ public class RequestSignatureMiddlewareTests
             "SHA256",
             "test-signature",
             "test-nonce",
-            DateTimeOffset.UtcNow.AddMinutes(-10),
+            DateTimeOffset.UtcNow.AddMinutes(-2), // 2 minutes old - within RequestSignature validation but expired for middleware
             new Dictionary<string, string>());
     }
 

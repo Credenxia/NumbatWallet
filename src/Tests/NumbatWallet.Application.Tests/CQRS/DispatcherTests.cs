@@ -1,7 +1,5 @@
-using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Moq;
 using NumbatWallet.Application.CQRS;
 using NumbatWallet.Application.CQRS.Interfaces;
 

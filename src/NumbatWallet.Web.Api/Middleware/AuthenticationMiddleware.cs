@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
+using NumbatWallet.Web.Api.Authentication;
 using System.Security.Claims;
 using System.Text;
 
@@ -14,8 +15,25 @@ public static class AuthenticationMiddleware
         this IServiceCollection services,
         IConfiguration configuration)
     {
+        // ServiceWA OIDC: the Authority/Audience values shipped in appsettings are PLACEHOLDERS —
+        // a real integration requires the actual authority, audience and client registration from
+        // the ServiceWA identity team. The scheme is therefore registered only when explicitly
+        // enabled (`ServiceWA:OidcEnabled=true`), and fails fast at startup if enabled without
+        // real configuration. Until then citizens authenticate via POST /api/v1/auth/login
+        // (ServiceWaPasswordValidator / TestPasswordValidator) and receive self-issued JWTs.
+        var serviceWaOidcEnabled = configuration.GetValue<bool>("ServiceWA:OidcEnabled");
+        if (serviceWaOidcEnabled &&
+            (string.IsNullOrWhiteSpace(configuration["ServiceWA:Authority"]) ||
+             string.IsNullOrWhiteSpace(configuration["ServiceWA:Audience"])))
+        {
+            throw new InvalidOperationException(
+                "ServiceWA OIDC is enabled (ServiceWA:OidcEnabled=true) but ServiceWA:Authority and/or " +
+                "ServiceWA:Audience are not configured. Production requires the real ServiceWA " +
+                "authority/audience — set them (from Key Vault) or disable ServiceWA:OidcEnabled.");
+        }
+
         // Add authentication services
-        services.AddAuthentication(options =>
+        var authBuilder = services.AddAuthentication(options =>
         {
             options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
             options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -86,9 +104,13 @@ public static class AuthenticationMiddleware
                     return Task.CompletedTask;
                 }
             };
-        })
-        .AddJwtBearer("ServiceWA", options =>
+        });
+
+        // Registered only when real ServiceWA OIDC config is present (see fail-fast above).
+        if (serviceWaOidcEnabled)
         {
+            authBuilder.AddJwtBearer("ServiceWA", options =>
+            {
             // Configure ServiceWA authentication for citizens
             options.Authority = configuration["ServiceWA:Authority"];
             options.Audience = configuration["ServiceWA:Audience"];
@@ -123,8 +145,20 @@ public static class AuthenticationMiddleware
                     return Task.CompletedTask;
                 }
             };
-        })
-        .AddJwtBearer("Internal", options =>
+            });
+        }
+
+        // Credentry SSO federation: register the CredentryJwt bearer scheme (config-gated)
+        // so the MultiAuth selector below can route Credentry-issued tokens to it. All other
+        // schemes (AzureAD, ServiceWA, Internal) are unchanged — migration-period coexistence.
+        var credentryEnabled = configuration.GetValue<bool>("Credentry:Enabled");
+        var credentryAuthority = configuration["Credentry:Authority"];
+        if (credentryEnabled)
+        {
+            authBuilder.AddCredentryJwt(configuration);
+        }
+
+        authBuilder.AddJwtBearer("Internal", options =>
         {
             // Configure internal JWT for service-to-service authentication
             var key = Encoding.UTF8.GetBytes(configuration["Jwt:SecretKey"]
@@ -154,8 +188,20 @@ public static class AuthenticationMiddleware
                     return JwtBearerDefaults.AuthenticationScheme;
                 }
 
-                // Check issuer to determine scheme
-                if (authHeader.Contains("servicewa", StringComparison.OrdinalIgnoreCase))
+                // Credentry federation: issuer-based selection — decode the JWT issuer
+                // WITHOUT validating and forward to CredentryJwt when it matches the
+                // configured Credentry issuer (full validation happens in that scheme).
+                if (credentryEnabled &&
+                    Authentication.CredentryTokenInspector.IsCredentryToken(authHeader, credentryAuthority))
+                {
+                    return Authentication.CredentryAuthenticationDefaults.AuthenticationScheme;
+                }
+
+                // Check issuer to determine scheme. Never forward to ServiceWA unless the
+                // scheme was actually registered (real OIDC config present) — forwarding to
+                // an unregistered scheme throws at request time.
+                if (serviceWaOidcEnabled &&
+                    authHeader.Contains("servicewa", StringComparison.OrdinalIgnoreCase))
                 {
                     return "ServiceWA";
                 }
@@ -307,13 +353,34 @@ public class ApiKeyAuthenticationMiddleware
                 var keyName = validApiKeys.FirstOrDefault(x => x.Value == apiKey).Key;
 
                 // Create claims for API key authentication
+                // A service key has a stable subject identity. Both ClaimTypes.NameIdentifier
+                // and the OIDC-style "sub" claim are populated so resolvers that read either
+                // (e.g. GraphQL mutations gating on "sub") treat the key as an authenticated principal.
+                var subject = $"apikey:{keyName}";
                 var claims = new List<Claim>
                 {
                     new Claim(ClaimTypes.Name, keyName),
                     new Claim(ClaimTypes.AuthenticationMethod, "ApiKey"),
                     new Claim("api_key_name", keyName),
-                    new Claim(ClaimTypes.Role, "Service")
+                    new Claim(ClaimTypes.NameIdentifier, subject),
+                    new Claim("sub", subject)
                 };
+
+                // Roles for service/SDK clients are configurable via ApiKey:Roles (CSV).
+                var roles = (_configuration["ApiKey:Roles"] ?? "Service")
+                    .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+                foreach (var role in roles)
+                {
+                    claims.Add(new Claim(ClaimTypes.Role, role));
+                }
+
+                // A service key acts on behalf of a tenant it declares via X-Tenant-Id. This is
+                // trusted only because the key itself is the credential (held by the agency/SDK).
+                if (context.Request.Headers.TryGetValue("X-Tenant-Id", out var tenantHeader)
+                    && !string.IsNullOrWhiteSpace(tenantHeader))
+                {
+                    claims.Add(new Claim("tenant_id", tenantHeader.ToString()));
+                }
 
                 var identity = new ClaimsIdentity(claims, "ApiKey");
                 context.User = new ClaimsPrincipal(identity);

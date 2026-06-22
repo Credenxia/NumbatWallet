@@ -15,7 +15,6 @@ namespace NumbatWallet.Infrastructure.Services.Providers;
 public class SoftwareHsmProvider : IHsmProvider
 {
     private readonly ILogger<SoftwareHsmProvider> _logger;
-    private readonly IConfiguration _configuration;
     private readonly ConcurrentDictionary<string, SoftwareKey> _keys;
     private readonly string _keyStorePath;
     private readonly byte[] _masterKey;
@@ -29,7 +28,6 @@ public class SoftwareHsmProvider : IHsmProvider
         IConfiguration configuration,
         ILogger<SoftwareHsmProvider> logger)
     {
-        _configuration = configuration;
         _logger = logger;
         _keys = new ConcurrentDictionary<string, SoftwareKey>();
 
@@ -332,7 +330,7 @@ public class SoftwareHsmProvider : IHsmProvider
         KeyWrapAlgorithm algorithm,
         CancellationToken cancellationToken = default)
     {
-        if (!_keys.TryGetValue(wrappingKeyId, out var key))
+        if (!_keys.TryGetValue(wrappingKeyId, out _))
         {
             throw new KeyNotFoundException($"Wrapping key {wrappingKeyId} not found");
         }
@@ -351,7 +349,7 @@ public class SoftwareHsmProvider : IHsmProvider
         KeyWrapAlgorithm algorithm,
         CancellationToken cancellationToken = default)
     {
-        if (!_keys.TryGetValue(unwrappingKeyId, out var key))
+        if (!_keys.TryGetValue(unwrappingKeyId, out _))
         {
             throw new KeyNotFoundException($"Unwrapping key {unwrappingKeyId} not found");
         }
@@ -430,7 +428,6 @@ public class SoftwareHsmProvider : IHsmProvider
             {
                 // Soft delete - mark as deleted but keep in storage
                 key.Enabled = false;
-                key.DeletedOn = DateTime.UtcNow;
                 _keys[keyId] = key;
             }
 
@@ -795,7 +792,6 @@ public class SoftwareHsmProvider : IHsmProvider
         public DateTime CreatedOn { get; set; }
         public DateTime? ExpiresOn { get; set; }
         public DateTime? LastUsedOn { get; set; }
-        public DateTime? DeletedOn { get; set; }
         public bool Enabled { get; set; } = true;
         public Dictionary<string, string> Tags { get; set; } = new();
     }

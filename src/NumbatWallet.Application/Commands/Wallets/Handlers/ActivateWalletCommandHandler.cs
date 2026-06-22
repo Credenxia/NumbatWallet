@@ -3,8 +3,6 @@ using NumbatWallet.Application.CQRS.Interfaces;
 using NumbatWallet.Application.DTOs;
 using NumbatWallet.Domain.Interfaces;
 using NumbatWallet.SharedKernel.Interfaces;
-using NumbatWallet.Application.Common.Exceptions;
-using NumbatWallet.SharedKernel.Exceptions;
 
 namespace NumbatWallet.Application.Commands.Wallets.Handlers;
 
@@ -43,13 +41,15 @@ public class ActivateWalletCommandHandler : ICommandHandler<ActivateWalletComman
             throw new Application.Common.Exceptions.EntityNotFoundException("Wallet", command.WalletId.ToString());
         }
 
-        // PIN verification
-        // TODO: Full implementation requires:
-        // 1. PIN storage in Person aggregate (hashed with bcrypt/argon2)
-        // 2. IPinVerificationService with rate limiting
-        // 3. Audit logging of PIN attempts
-        // 4. Account lockout after N failed attempts
-        // For now, we validate that PIN is provided when wallet is suspended/locked
+        // Get person details (needed for PIN verification and DTO)
+        var person = await _personRepository.GetByIdAsync(wallet.PersonId, cancellationToken);
+        if (person == null || person.TenantId != tenantId)
+        {
+            _logger.LogWarning("Person {PersonId} not found for wallet {WalletId}", wallet.PersonId, command.WalletId);
+            throw new Application.Common.Exceptions.EntityNotFoundException("Person", wallet.PersonId.ToString());
+        }
+
+        // PIN verification with rate limiting and account lockout
         if (wallet.Status != SharedKernel.Enums.WalletStatus.Active)
         {
             if (string.IsNullOrWhiteSpace(command.Pin))
@@ -60,9 +60,37 @@ public class ActivateWalletCommandHandler : ICommandHandler<ActivateWalletComman
                     "PIN is required to reactivate a suspended or locked wallet");
             }
 
-            // TODO: Verify PIN against stored hash using IPinVerificationService
-            // For now, we accept any non-empty PIN - replace with actual verification
-            _logger.LogInformation("PIN provided for wallet {WalletId} reactivation - verification pending full implementation", command.WalletId);
+            // Verify PIN using the Person aggregate's built-in verification
+            var verifyResult = person.VerifyPin(command.Pin);
+            if (verifyResult.IsFailure)
+            {
+                _logger.LogWarning("PIN verification failed for wallet {WalletId}: {Error}", command.WalletId, verifyResult.Error.Message);
+
+                // Save the failed attempt count
+                await _personRepository.UpdateAsync(person, cancellationToken);
+                await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+                throw new SharedKernel.Exceptions.BusinessRuleException(verifyResult.Error.Code, verifyResult.Error.Message);
+            }
+
+            if (!verifyResult.Value)
+            {
+                _logger.LogWarning("Invalid PIN provided for wallet {WalletId}. Attempts: {Attempts}",
+                    command.WalletId, person.FailedPinAttempts);
+
+                // Save the failed attempt count
+                await _personRepository.UpdateAsync(person, cancellationToken);
+                await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+                var remainingAttempts = 5 - person.FailedPinAttempts;
+                throw new SharedKernel.Exceptions.BusinessRuleException(
+                    "Wallet.InvalidPin",
+                    $"Invalid PIN. You have {remainingAttempts} attempt(s) remaining before account lockout");
+            }
+
+            // PIN verified successfully - save the reset attempt counter
+            await _personRepository.UpdateAsync(person, cancellationToken);
+            _logger.LogInformation("PIN verified successfully for wallet {WalletId} reactivation", command.WalletId);
         }
 
         // Reactivate the wallet using the domain method
@@ -77,9 +105,8 @@ public class ActivateWalletCommandHandler : ICommandHandler<ActivateWalletComman
         await _walletRepository.UpdateAsync(wallet, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-        // Get person details for the DTO
-        var person = await _personRepository.GetByIdAsync(wallet.PersonId, cancellationToken);
-        var personName = person != null ? $"{person.FirstName} {person.LastName}" : "Unknown";
+        // Build DTO with person details
+        var personName = $"{person.FirstName} {person.LastName}";
 
         return new WalletDto
         {

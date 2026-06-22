@@ -80,12 +80,48 @@ public class WalletTemplateService : IWalletTemplateService
 
         foreach (var field in original.Fields)
         {
-            cloned.AddField(field);
+            var clonedField = new WalletField(
+                field.Name,
+                field.Label,
+                field.FieldType,
+                field.IsRequired,
+                field.DisplayOrder);
+
+            if (!string.IsNullOrEmpty(field.MappedCredentialField))
+            {
+                clonedField.SetMappedCredentialField(field.MappedCredentialField);
+            }
+
+            if (!string.IsNullOrEmpty(field.ValidationRule))
+            {
+                clonedField.SetValidationRule(field.ValidationRule);
+            }
+
+            if (!string.IsNullOrEmpty(field.DefaultValue))
+            {
+                clonedField.SetDefaultValue(field.DefaultValue);
+            }
+
+            clonedField.UpdateEditability(field.IsEditable);
+
+            // Copy properties
+            foreach (var prop in field.Properties)
+            {
+                clonedField.AddProperty(prop.Key, prop.Value);
+            }
+
+            cloned.AddField(clonedField);
         }
 
         foreach (var credType in original.SupportedCredentialTypes)
         {
             cloned.AddSupportedCredentialType(credType);
+        }
+
+        // Copy metadata
+        foreach (var metadata in original.Metadata)
+        {
+            cloned.UpdateMetadata(metadata.Key, metadata.Value);
         }
 
         await _repository.AddAsync(cloned, cancellationToken);
