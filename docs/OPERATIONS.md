@@ -86,10 +86,14 @@ the working tree uploads ~1 GB and hangs).
    persons **with** `email_search_token` under the stable pepper. Verified:
    `citizen@example.com` / `Test123!@#` logs in (200) on AKS and has a wallet.
    To repeat for a fresh seed: same Job + rollout restart.
-2. **Pepper provisioning (open):** `Search__TokenPepper` is currently a deploy-time Helm
-   value (set on Helm rev 5/6). Move it into KV `kv-numbatwallet-test-aue` as secret
-   `search-token-pepper` and extend `bootstrap-namespace.sh` to project it into
-   `numbatwallet-secrets`.
+2. **Pepper provisioning (RESOLVED 2026-06):** the pepper now lives in KV
+   `kv-numbatwallet-test-aue/search-token-pepper` and in repo secret
+   `SEARCH_TOKEN_PEPPER`; `deploy-numbatwallet.yml` passes it on every
+   `helm upgrade` (`--set api.searchTokenPepper`), so deploys no longer drop it.
+   ⚠️ **One-time cutover:** the value the CI deploy applies differs from the
+   pepper the pre-CI pods were running, so the **first** CI deploy invalidates
+   the existing tokens — run the seeded-data reseed Job once afterwards
+   (item 1) to re-tokenise. Stable from then on.
 3. **Rate limiter config:** test namespace runs 100k/min deliberately; production must
    use the strict defaults (omit `api.rateLimiting`) and size `PermitLimit` to the SLA
    concurrency per client.

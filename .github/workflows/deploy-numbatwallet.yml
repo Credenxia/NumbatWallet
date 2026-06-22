@@ -160,10 +160,16 @@ jobs:
       - name: Helm upgrade
         env:
           IMAGE_TAG: ${{ needs.build-and-push.outputs.image-tag }}
+          # Deterministic search-token pepper — login resolves persons by
+          # email_search_token, so this MUST be carried on every deploy or stored
+          # tokens stop matching and logins break. Sourced from the repo secret
+          # (mirrors KV kv-numbatwallet-test-aue/search-token-pepper).
+          SEARCH_TOKEN_PEPPER: ${{ secrets.SEARCH_TOKEN_PEPPER }}
         run: |
           helm upgrade --install numbatwallet deploy/helm/numbatwallet \
             --namespace ${{ env.NAMESPACE }} \
             --set image.tag=${IMAGE_TAG} \
+            --set api.searchTokenPepper="${SEARCH_TOKEN_PEPPER}" \
             --wait --timeout 10m
 
       # On timeout/failure, print the crashing pods' logs so
