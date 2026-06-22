@@ -450,3 +450,7 @@ local.settings.json
 
 # Aspire
 .aspire/
+# Docs portal (MkDocs)
+docs-portal/site/
+.docs-venv/
+.cache/
