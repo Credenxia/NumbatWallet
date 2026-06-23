@@ -329,6 +329,28 @@ public class Mutation
 
         return await handler.HandleAsync(command, cancellationToken);
     }
+
+    [Authorize(Roles = new[] { "Admin", "Officer", "Issuer" })]
+    [GraphQLDescription("Revoke multiple credentials in a single operation, returning per-id success/failure")]
+    public async Task<BulkRevokeResult> BulkRevokeCredentials(
+        BulkRevokeCredentialsInput input,
+        [Service] ICommandHandler<BulkRevokeCredentialsCommand, BulkRevokeResult> handler,
+        CancellationToken cancellationToken)
+    {
+        var command = new BulkRevokeCredentialsCommand(input.CredentialIds, input.Reason);
+        return await handler.HandleAsync(command, cancellationToken);
+    }
+
+    [AllowAnonymous]
+    [GraphQLDescription("Verify multiple credentials in a single operation, returning per-id validity")]
+    public async Task<BulkVerificationResult> BulkVerifyCredentials(
+        BulkVerifyCredentialsInput input,
+        [Service] ICommandHandler<BulkVerifyCredentialsCommand, BulkVerificationResult> handler,
+        CancellationToken cancellationToken)
+    {
+        var command = new BulkVerifyCredentialsCommand(input.CredentialIds);
+        return await handler.HandleAsync(command, cancellationToken);
+    }
 }
 
 // Input Types
@@ -451,6 +473,17 @@ public class BulkIssueCredentialsInput
     public Guid IssuerOrganizationId { get; set; }
     public DateTime? ValidFrom { get; set; }
     public DateTime? ValidUntil { get; set; }
+}
+
+public class BulkRevokeCredentialsInput
+{
+    public required List<Guid> CredentialIds { get; set; }
+    public required string Reason { get; set; }
+}
+
+public class BulkVerifyCredentialsInput
+{
+    public required List<Guid> CredentialIds { get; set; }
 }
 
 public class VerifyCredentialInput

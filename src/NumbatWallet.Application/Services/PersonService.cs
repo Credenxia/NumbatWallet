@@ -134,12 +134,10 @@ public class PersonService : IPersonService
 
     public async Task<IEnumerable<PersonDto>> SearchAsync(string searchTerm, CancellationToken cancellationToken = default)
     {
-        var persons = await _personRepository.FindAsync(
-            p => p.Email.Value.Contains(searchTerm) ||
-                 p.FirstName.Contains(searchTerm) ||
-                 p.LastName.Contains(searchTerm),
-            cancellationToken
-        );
+        // Delegate to the repository, which searches only queryable fields (email/phone HMAC
+        // search tokens + plaintext ExternalId). Building an EF predicate over the AES-encrypted
+        // Email/FirstName/LastName columns here threw at query-translation time → HTTP 500.
+        var persons = await _personRepository.SearchAsync(searchTerm, cancellationToken);
 
         return persons.Select(MapToDto);
     }

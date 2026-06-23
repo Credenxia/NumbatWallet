@@ -1,12 +1,13 @@
 name: Deploy NumbatWallet to AKS (nonprod)
 
 # Modeled on credentry's deploy-nonprod.yml. Deploys to the SHARED nonprod AKS
-# cluster as namespace numbatwallet-test. Triggers are deliberately narrow:
-# manual dispatch + pushes to main that touch deployable paths.
+# cluster as namespace numbatwallet-test (credentry stage convention: the `test`
+# branch deploys to the test namespace). Main-branch deploy is DISABLED for now —
+# pushes to `test` (or manual dispatch) deploy. Re-add `main` when promoting.
 on:
   workflow_dispatch:
   push:
-    branches: [main]
+    branches: [test]
     paths:
       - 'src/**'
       - 'deploy/**'
@@ -160,10 +161,16 @@ jobs:
       - name: Helm upgrade
         env:
           IMAGE_TAG: ${{ needs.build-and-push.outputs.image-tag }}
+          # Deterministic search-token pepper — login resolves persons by
+          # email_search_token, so this MUST be carried on every deploy or stored
+          # tokens stop matching and logins break. Sourced from the repo secret
+          # (mirrors KV kv-numbatwallet-test-aue/search-token-pepper).
+          SEARCH_TOKEN_PEPPER: ${{ secrets.SEARCH_TOKEN_PEPPER }}
         run: |
           helm upgrade --install numbatwallet deploy/helm/numbatwallet \
             --namespace ${{ env.NAMESPACE }} \
             --set image.tag=${IMAGE_TAG} \
+            --set api.searchTokenPepper="${SEARCH_TOKEN_PEPPER}" \
             --wait --timeout 10m
 
       # On timeout/failure, print the crashing pods' logs so

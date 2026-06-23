@@ -214,6 +214,96 @@ public class SearchTokenInterceptorTests : IDisposable
         (await repository.IsEmailUniqueAsync("new@example.com")).Should().BeTrue();
     }
 
+    [Fact]
+    public async Task PersonRepository_SearchAsync_ByEmail_FindsPersonViaSearchToken()
+    {
+        // Arrange
+        _context.Persons.Add(CreatePerson(email: "citizen@example.com"));
+        await _context.SaveChangesAsync();
+        _context.ChangeTracker.Clear();
+
+        var repository = new PersonRepository(_context, _tokenService);
+
+        // Act — an email search term must resolve via the deterministic email search token,
+        // NOT by querying the AES-encrypted Email column (which would throw / never match).
+        var results = await repository.SearchAsync("Citizen@Example.com");
+
+        // Assert
+        results.Should().ContainSingle();
+    }
+
+    [Fact]
+    public async Task PersonRepository_SearchAsync_ByPhone_FindsPersonViaSearchToken()
+    {
+        // Arrange
+        _context.Persons.Add(CreatePerson(phone: "+61400000000"));
+        await _context.SaveChangesAsync();
+        _context.ChangeTracker.Clear();
+
+        var repository = new PersonRepository(_context, _tokenService);
+
+        // Act
+        var results = await repository.SearchAsync("+61 400 000 000");
+
+        // Assert
+        results.Should().ContainSingle();
+    }
+
+    [Fact]
+    public async Task PersonRepository_SearchAsync_ByExternalId_FindsPersonViaPlaintextColumn()
+    {
+        // Arrange
+        var person = CreatePerson();
+        var externalId = person.ExternalId;
+        _context.Persons.Add(person);
+        await _context.SaveChangesAsync();
+        _context.ChangeTracker.Clear();
+
+        var repository = new PersonRepository(_context, _tokenService);
+
+        // Act
+        var results = await repository.SearchAsync(externalId);
+
+        // Assert
+        results.Should().ContainSingle();
+    }
+
+    [Fact]
+    public async Task PersonRepository_SearchAsync_ByName_ReturnsEmpty_NotError()
+    {
+        // Arrange — names are AES-encrypted and cannot be substring-searched. The search must
+        // degrade to an empty result, never throw a query-translation 500.
+        _context.Persons.Add(CreatePerson());
+        await _context.SaveChangesAsync();
+        _context.ChangeTracker.Clear();
+
+        var repository = new PersonRepository(_context, _tokenService);
+
+        // Act
+        var act = async () => await repository.SearchAsync("Citizen");
+
+        // Assert
+        await act.Should().NotThrowAsync();
+        (await repository.SearchAsync("Citizen")).Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task PersonRepository_SearchAsync_UnknownEmail_ReturnsEmpty()
+    {
+        // Arrange
+        _context.Persons.Add(CreatePerson(email: "citizen@example.com"));
+        await _context.SaveChangesAsync();
+        _context.ChangeTracker.Clear();
+
+        var repository = new PersonRepository(_context, _tokenService);
+
+        // Act
+        var results = await repository.SearchAsync("nobody@example.com");
+
+        // Assert
+        results.Should().BeEmpty();
+    }
+
     public void Dispose()
     {
         ProtectedFieldConverter.FieldEncryptor = null;

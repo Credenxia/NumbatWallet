@@ -17,6 +17,9 @@ public static class GraphQLExtensions
             // AnyType for OUTPUT Dictionary<string, object> fields
             // Note: INPUT types must use JSON strings, not Dictionary
             .AddType<AnyType>()
+            // SECURITY: explicit object type for TenantDto that ignores the DB ConnectionString
+            // so it is never reachable through the admin tenants/tenant GraphQL queries.
+            .AddType<NumbatWallet.Web.Api.GraphQL.Types.TenantDtoType>()
             .BindRuntimeType<Dictionary<string, object>, AnyType>()
             .AddQueryType<Query>()
             .AddMutationType<Mutation>()

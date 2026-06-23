@@ -60,6 +60,9 @@ sessions). Key values (see comments in `values.yaml` — they are authoritative)
 
 Deploy: CI workflow `.github/workflows/deploy-numbatwallet.yml` (dispatch or
 push-to-main on deployable paths): 5 unit suites gate → `az acr build` 3 images →
+<!-- AZURE_CREDENTIALS + nonprod environment provisioned 2026-06 via a dedicated SP
+     (github-numbatwallet-deploy: Contributor on sub + AKS RBAC Admin on the
+     numbatwallet-test namespace + Cluster User on the cluster). -->
 `helm upgrade` → smoke. Requires GitHub secret `AZURE_CREDENTIALS` + a `nonprod`
 environment (NOT yet configured — pending user step). Manual image builds must use
 `az acr build --platform linux/amd64` from a clean `git archive` context (building from
@@ -77,17 +80,20 @@ the working tree uploads ~1 GB and hangs).
 
 ## 4. Operator runbook (current open items — from perf RESULTS §8)
 
-1. **Seeded-login backfill on AKS (open):** the searchable-PII change landed after the
-   original seed, so pre-existing seeded persons have **no** `email_search_token` —
-   seeded logins (e.g. `citizen@example.com`) fail with "person not found" on AKS.
-   Fix: re-seed the disposable `numbatwallet_test` data or run an authorized backfill
-   job; ensure the pepper is stable first. A valid test account exists:
-   `john.doe@example.com` / `Test123!@#` (created through the API post-change, so its
-   tokens are correct).
-2. **Pepper provisioning (open):** `Search__TokenPepper` is currently a deploy-time Helm
-   value (set on Helm rev 5/6). Move it into KV `kv-numbatwallet-test-aue` as secret
-   `search-token-pepper` and extend `bootstrap-namespace.sh` to project it into
-   `numbatwallet-secrets`.
+1. **Seeded-login backfill on AKS (RESOLVED 2026-06):** ran an in-namespace Job
+   (`TRUNCATE "Persons" CASCADE` against `numbatwallet_test`, credential kept in-cluster)
+   then `kubectl rollout restart deployment/numbatwallet-api` so the seeder repopulated
+   persons **with** `email_search_token` under the stable pepper. Verified:
+   `citizen@example.com` / `Test123!@#` logs in (200) on AKS and has a wallet.
+   To repeat for a fresh seed: same Job + rollout restart.
+2. **Pepper provisioning (RESOLVED 2026-06):** the pepper now lives in KV
+   `kv-numbatwallet-test-aue/search-token-pepper` and in repo secret
+   `SEARCH_TOKEN_PEPPER`; `deploy-numbatwallet.yml` passes it on every
+   `helm upgrade` (`--set api.searchTokenPepper`), so deploys no longer drop it.
+   ⚠️ **One-time cutover:** the value the CI deploy applies differs from the
+   pepper the pre-CI pods were running, so the **first** CI deploy invalidates
+   the existing tokens — run the seeded-data reseed Job once afterwards
+   (item 1) to re-tokenise. Stable from then on.
 3. **Rate limiter config:** test namespace runs 100k/min deliberately; production must
    use the strict defaults (omit `api.rateLimiting`) and size `PermitLimit` to the SLA
    concurrency per client.
