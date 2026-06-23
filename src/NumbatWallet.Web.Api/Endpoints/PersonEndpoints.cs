@@ -98,8 +98,17 @@ public class PersonEndpoints : ICarterModule
         [FromServices] IQueryHandler<SearchPersonsQuery, IEnumerable<PersonDto>> handler,
         CancellationToken cancellationToken)
     {
+        // email= / phoneNumber= resolve through the same search path, which (under field
+        // encryption) matches them via the deterministic HMAC search tokens. An explicit
+        // email/phone param takes precedence over a free-text searchTerm.
+        var term = !string.IsNullOrWhiteSpace(searchRequest.Email)
+            ? searchRequest.Email
+            : !string.IsNullOrWhiteSpace(searchRequest.PhoneNumber)
+                ? searchRequest.PhoneNumber
+                : searchRequest.SearchTerm;
+
         var query = new SearchPersonsQuery(
-            searchRequest.SearchTerm,
+            term,
             null);
 
         var result = await handler.HandleAsync(query, cancellationToken);

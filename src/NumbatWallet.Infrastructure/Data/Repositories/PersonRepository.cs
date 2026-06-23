@@ -97,17 +97,77 @@ public class PersonRepository : RepositoryBase<Person, Guid>, IPersonRepository
         return await DbSet.Where(p => p.CreatedAt >= since).ToListAsync(cancellationToken);
     }
 
-    // NOTE: substring search over FirstName/LastName/Email cannot match once field encryption is
-    // enabled (the columns hold ciphertext JSON) — a pre-existing limitation of this fuzzy search,
-    // now also true for email. Exact lookups must use GetByEmailAsync/GetByMobileNumberAsync.
+    // Field encryption makes FirstName/LastName/Email/Phone non-queryable (the columns hold
+    // AES-GCM ciphertext, so EF cannot translate Contains/equality over them — doing so threw a
+    // query-translation error → HTTP 500). Search therefore runs ONLY over fields that are
+    // actually queryable:
+    //   * email term  → exact match on the deterministic EmailSearchToken (HMAC) shadow column
+    //   * phone term  → exact match on the PhoneSearchToken (HMAC) shadow column
+    //   * ExternalId  → exact match on the plaintext ExternalId column
+    // A name-only term matches none of these and returns an empty result rather than erroring.
+    // Substring/name search is unsupported under field encryption (use email/phone exact lookups).
     public async Task<IReadOnlyList<Person>> SearchAsync(string searchTerm, CancellationToken cancellationToken = default)
     {
-        var lowerSearchTerm = searchTerm.ToLowerInvariant();
+        if (string.IsNullOrWhiteSpace(searchTerm))
+        {
+            return Array.Empty<Person>();
+        }
+
+        var trimmed = searchTerm.Trim();
+
+        // Email term: resolve via the deterministic email search token.
+        if (trimmed.Contains('@', StringComparison.Ordinal))
+        {
+            var emailToken = await _searchTokenService.GenerateEmailTokenAsync(trimmed);
+            if (emailToken is null)
+            {
+                return Array.Empty<Person>();
+            }
+
+            return await DbSet
+                .Where(p => EF.Property<string?>(p, SearchTokenInterceptor.EmailSearchTokenProperty) == emailToken)
+                .ToListAsync(cancellationToken);
+        }
+
+        // Phone term: digits-only (optionally a leading '+', spaces, dashes, parens).
+        if (LooksLikePhoneNumber(trimmed))
+        {
+            var phoneToken = await _searchTokenService.GeneratePhoneTokenAsync(trimmed);
+            if (phoneToken is not null)
+            {
+                var byPhone = await DbSet
+                    .Where(p => EF.Property<string?>(p, SearchTokenInterceptor.PhoneSearchTokenProperty) == phoneToken)
+                    .ToListAsync(cancellationToken);
+
+                if (byPhone.Count > 0)
+                {
+                    return byPhone;
+                }
+            }
+        }
+
+        // Fall back to the queryable plaintext ExternalId (exact match).
         return await DbSet
-            .Where(p => p.FirstName.ToLowerInvariant().Contains(lowerSearchTerm) ||
-                       p.LastName.ToLowerInvariant().Contains(lowerSearchTerm) ||
-                       p.Email.Value.ToLowerInvariant().Contains(lowerSearchTerm))
+            .Where(p => p.ExternalId == trimmed)
             .ToListAsync(cancellationToken);
+    }
+
+    private static bool LooksLikePhoneNumber(string value)
+    {
+        var hasDigit = false;
+        foreach (var c in value)
+        {
+            if (char.IsDigit(c))
+            {
+                hasDigit = true;
+            }
+            else if (c is not ('+' or ' ' or '-' or '(' or ')'))
+            {
+                return false;
+            }
+        }
+
+        return hasDigit;
     }
 
     public async Task<PagedResponse<Person>> GetPagedAsync(
