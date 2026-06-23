@@ -41,10 +41,23 @@ try
     // Admin portal communicates through API only (Clean Architecture)
     // No Application or Infrastructure layer dependencies
 
-    // Add authentication
-    if (builder.Environment.IsDevelopment())
+    // Authentication has three explicit, config-selected modes (never two interactive logins
+    // active at once):
+    //   1. Development          → dev cookie login (/login) for the seeded local accounts.
+    //   2. Credentry SSO        → cookie session whose ONLY interactive login is "Sign in with
+    //      (non-dev, enabled)     Credentry"; the default challenge redirects to the IdP. No
+    //                             Azure AD, no dev login. This is the deployed test-env mode.
+    //   3. Azure AD (Entra)     → non-dev with Credentry disabled (future production).
+    // Contract: credentry/docs/integration/06-NUMBATWALLET-FEDERATION-CONTRACT.md.
+    var credentryEnabled = builder.Configuration.GetValue<bool>("Credentry:Enabled");
+    var authMode = NumbatWallet.Web.Admin.Authentication.AdminAuthentication.ResolveMode(
+        builder.Environment.IsDevelopment(), credentryEnabled);
+    const string credentryCookieScheme =
+        Microsoft.AspNetCore.Authentication.Cookies.CookieAuthenticationDefaults.AuthenticationScheme; // "Cookies"
+
+    if (authMode == NumbatWallet.Web.Admin.Authentication.AdminAuthMode.Development)
     {
-        // Development: use cookie auth with local login endpoint
+        // Mode 1 — Development: cookie auth with local login endpoint.
         builder.Services.AddAuthentication("NumbatWalletAuth")
             .AddCookie("NumbatWalletAuth", options =>
             {
@@ -53,9 +66,31 @@ try
 
         builder.Services.AddControllersWithViews();
     }
+    else if (authMode == NumbatWallet.Web.Admin.Authentication.AdminAuthMode.CredentrySso)
+    {
+        // Mode 2 — Credentry SSO only: the cookie carries the session; an unauthenticated
+        // request challenges the "Credentry" OIDC handler (registered below) and is redirected
+        // to the IdP. Secure cookies behind Front Door rely on forwarded headers
+        // (ASPNETCORE_FORWARDEDHEADERS_ENABLED=true) so the app knows the request is HTTPS.
+        builder.Services.AddAuthentication(options =>
+            {
+                options.DefaultScheme = credentryCookieScheme;
+                options.DefaultSignInScheme = credentryCookieScheme;
+                options.DefaultChallengeScheme = "Credentry";
+            })
+            .AddCookie(credentryCookieScheme, options =>
+            {
+                options.LoginPath = "/login";
+                options.AccessDeniedPath = "/access-denied";
+                options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+                options.Cookie.SameSite = SameSiteMode.Lax; // login returns via top-level GET redirect
+            });
+
+        builder.Services.AddControllersWithViews();
+    }
     else
     {
-        // Production: use Azure AD authentication
+        // Mode 3 — Azure AD (Entra) authentication.
         builder.Services.AddAuthentication(OpenIdConnectDefaults.AuthenticationScheme)
             .AddMicrosoftIdentityWebApp(builder.Configuration.GetSection("AzureAd"));
 
@@ -63,12 +98,10 @@ try
             .AddMicrosoftIdentityUI();
     }
 
-    // Credentry SSO federation (config-gated): adds a "Sign in with Credentry" OIDC option
-    // (authorization code + PKCE against the Credentry IdP, client numbatwallet-admin) that
-    // signs in to the SAME cookie session the existing logins use — the rest of the app is
-    // unaffected. The existing dev cookie login remains the default path.
-    // Contract: credentry/docs/integration/06-NUMBATWALLET-FEDERATION-CONTRACT.md.
-    var credentryEnabled = builder.Configuration.GetValue<bool>("Credentry:Enabled");
+    // "Sign in with Credentry" OIDC handler (authorization code + PKCE against the Credentry
+    // IdP, client numbatwallet-admin). It signs into the SAME cookie session the mode above
+    // established. In Development it is an additional button on the dev login; in Mode 2 it is
+    // the default challenge (the sole interactive login).
     if (credentryEnabled)
     {
         var credentryCfg = builder.Configuration.GetSection("Credentry");

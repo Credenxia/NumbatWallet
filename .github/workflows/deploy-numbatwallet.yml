@@ -166,11 +166,35 @@ jobs:
           # tokens stop matching and logins break. Sourced from the repo secret
           # (mirrors KV kv-numbatwallet-test-aue/search-token-pepper).
           SEARCH_TOKEN_PEPPER: ${{ secrets.SEARCH_TOKEN_PEPPER }}
+          # Credentry SSO federation. Stays DISABLED (chart default) until Credentry
+          # provisions the nonprod clients — then set repo variable CREDENTRY_ENABLED=true
+          # plus CREDENTRY_AUTHORITY + the tenant-map GUIDs. The admin client secret rides
+          # the K8s secret (bootstrap-namespace.sh), not here.
+          CREDENTRY_ENABLED: ${{ vars.CREDENTRY_ENABLED }}
+          CREDENTRY_AUTHORITY: ${{ vars.CREDENTRY_AUTHORITY }}
+          CREDENTRY_TENANT_CREDENTRY_GUID: ${{ vars.CREDENTRY_TENANT_CREDENTRY_GUID }}
+          CREDENTRY_TENANT_NUMBAT_GUID: ${{ vars.CREDENTRY_TENANT_NUMBAT_GUID }}
         run: |
+          CREDENTRY_ARGS=()
+          if [ "${CREDENTRY_ENABLED}" = "true" ]; then
+            echo "Credentry SSO: ENABLED for this deploy"
+            CREDENTRY_ARGS+=(--set api.credentry.enabled=true --set admin.credentry.enabled=true)
+            if [ -n "${CREDENTRY_AUTHORITY}" ]; then
+              CREDENTRY_ARGS+=(--set "api.credentry.authority=${CREDENTRY_AUTHORITY}")
+              CREDENTRY_ARGS+=(--set "admin.credentry.authority=${CREDENTRY_AUTHORITY}")
+            fi
+            if [ -n "${CREDENTRY_TENANT_CREDENTRY_GUID}" ] && [ -n "${CREDENTRY_TENANT_NUMBAT_GUID}" ]; then
+              CREDENTRY_ARGS+=(--set "api.credentry.tenantMap.${CREDENTRY_TENANT_CREDENTRY_GUID}=${CREDENTRY_TENANT_NUMBAT_GUID}")
+              CREDENTRY_ARGS+=(--set "admin.credentry.tenantMap.${CREDENTRY_TENANT_CREDENTRY_GUID}=${CREDENTRY_TENANT_NUMBAT_GUID}")
+            fi
+          else
+            echo "Credentry SSO: disabled (set repo variable CREDENTRY_ENABLED=true once provisioned)"
+          fi
           helm upgrade --install numbatwallet deploy/helm/numbatwallet \
             --namespace ${{ env.NAMESPACE }} \
             --set image.tag=${IMAGE_TAG} \
             --set api.searchTokenPepper="${SEARCH_TOKEN_PEPPER}" \
+            "${CREDENTRY_ARGS[@]}" \
             --wait --timeout 10m
 
       # On timeout/failure, print the crashing pods' logs so
@@ -197,3 +221,38 @@ jobs:
           kubectl run nw-smoke --rm -i --restart=Never --namespace ${{ env.NAMESPACE }} \
             --image=curlimages/curl:8.10.1 -- \
             curl -fsS -o /dev/null -w "%{http_code}" http://numbatwallet-api/health
+
+      # Post-deploy federation contract check: mint a real Credentry client-credentials
+      # token and call a tenant-scoped endpoint through it. SKIPS cleanly until Credentry
+      # provisions the nonprod numbatwallet-m2m client (secret CREDENTRY_M2M_CLIENT_SECRET
+      # + variable CREDENTRY_AUTHORITY). Proves the live federation end-to-end once enabled.
+      - name: Credentry M2M contract smoke
+        env:
+          CREDENTRY_AUTHORITY: ${{ vars.CREDENTRY_AUTHORITY }}
+          M2M_CLIENT_ID: ${{ vars.CREDENTRY_M2M_CLIENT_ID }}
+          M2M_CLIENT_SECRET: ${{ secrets.CREDENTRY_M2M_CLIENT_SECRET }}
+          API_BASE: https://tst.numbatwallet.credentry.com.au
+        run: |
+          if [ -z "${M2M_CLIENT_SECRET}" ] || [ -z "${CREDENTRY_AUTHORITY}" ]; then
+            echo "Credentry M2M smoke: SKIPPED (CREDENTRY_M2M_CLIENT_SECRET / CREDENTRY_AUTHORITY not set yet)"
+            exit 0
+          fi
+          CLIENT_ID="${M2M_CLIENT_ID:-numbatwallet-m2m}"
+          echo ">>> Requesting client_credentials token from ${CREDENTRY_AUTHORITY}/connect/token"
+          TOKEN=$(curl -fsS -X POST "${CREDENTRY_AUTHORITY}/connect/token" \
+            -d grant_type=client_credentials \
+            -d "client_id=${CLIENT_ID}" \
+            -d "client_secret=${M2M_CLIENT_SECRET}" \
+            -d scope=numbatwallet.api | jq -r .access_token)
+          if [ -z "${TOKEN}" ] || [ "${TOKEN}" = "null" ]; then
+            echo "::error::Failed to obtain an M2M token from Credentry"; exit 1
+          fi
+          echo ">>> Calling a tenant-scoped endpoint with the Credentry token"
+          CODE=$(curl -sS -o /dev/null -w "%{http_code}" \
+            -H "Authorization: Bearer ${TOKEN}" \
+            "${API_BASE}/api/v1/persons?page=1&pageSize=1")
+          echo "GET /api/v1/persons -> HTTP ${CODE}"
+          if [ "${CODE}" != "200" ]; then
+            echo "::error::Credentry M2M contract smoke failed (expected 200, got ${CODE})"; exit 1
+          fi
+          echo "Credentry M2M contract smoke: PASSED"

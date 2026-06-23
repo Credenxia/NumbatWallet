@@ -108,6 +108,25 @@ spec:
                   name: {{ .Values.secretName }}
                   key: admin-api-key
 
+            {{- if .Values.api.credentry.enabled }}
+            # Credentry SSO federation — validates Credentry-issued RS256 access tokens.
+            # CredentryOptionsValidator fail-fast-checks these at startup.
+            - name: Credentry__Enabled
+              value: "true"
+            - name: Credentry__Authority
+              value: {{ .Values.api.credentry.authority | quote }}
+            - name: Credentry__Audience
+              value: {{ .Values.api.credentry.audience | quote }}
+            - name: Credentry__RequiredProduct
+              value: {{ .Values.api.credentry.requiredProduct | quote }}
+            - name: Credentry__RequireHttpsMetadata
+              value: {{ .Values.api.credentry.requireHttpsMetadata | quote }}
+            {{- range $credentryTenant, $numbatTenant := .Values.api.credentry.tenantMap }}
+            - name: Credentry__TenantMap__{{ $credentryTenant }}
+              value: {{ $numbatTenant | quote }}
+            {{- end }}
+            {{- end }}
+
             {{- with .Values.api.extraEnv }}
             # Ad-hoc environment (set at deploy time, e.g. --set-json api.extraEnv=...)
             {{- toYaml . | nindent 12 }}

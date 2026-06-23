@@ -63,6 +63,22 @@ api:
   # for deploy-time-only configuration (e.g. an ephemeral extra ApiKey:Keys entry
   # for smoke/perf tooling). Keep empty in committed values.
   extraEnv: []
+  # Credentry SSO federation — the API VALIDATES Credentry-issued RS256 access tokens
+  # (additional bearer scheme; never replaces API-key / citizen auth). Committed DISABLED
+  # and without secrets; turned on at deploy time once Credentry provisions the nonprod
+  # clients (set CREDENTRY_ENABLED + the tenant-map repo variables, or --set directly).
+  # The API needs no client secret — it only validates tokens. Contract:
+  # credentry/docs/integration/06-NUMBATWALLET-FEDERATION-CONTRACT.md.
+  credentry:
+    enabled: false
+    authority: "https://tst.portal.credentry.com.au"
+    audience: "numbatwallet-api"
+    requiredProduct: "NUMBATWALLET"
+    requireHttpsMetadata: true
+    # Credentry tenant GUID -> NumbatWallet tenant GUID. Populated at enable time with the
+    # real nonprod Credentry tenant GUID, mapping to the AKS Testing seed tenant
+    # (00000000-0000-0000-0000-000000000000). Unmapped tenants fail closed.
+    tenantMap: {}
 
 admin:
   replicas: 1
@@ -81,6 +97,27 @@ admin:
   # Ambient tenant used at seed time when no HTTP context exists (Guid.Empty
   # fail-closed value) — the Admin portal must address the same tenant.
   tenantId: "00000000-0000-0000-0000-000000000000"
+  # Credentry SSO ("Sign in with Credentry", auth-code + PKCE, client numbatwallet-admin).
+  # When enabled the deployment template forces a non-Development ASPNETCORE_ENVIRONMENT so
+  # Credentry becomes the SOLE interactive login (Web.Admin auth mode 2) — enabling the flag
+  # and the environment can never desync. The client secret is delivered via the K8s secret
+  # key 'credentry-admin-client-secret' (bootstrap-namespace.sh ← Key Vault), never here.
+  # Committed DISABLED; turn on together with api.credentry at enable time.
+  credentry:
+    enabled: false
+    authority: "https://tst.portal.credentry.com.au"
+    requireHttpsMetadata: true
+    clientId: "numbatwallet-admin"
+    scopes:
+      - openid
+      - profile
+      - email
+      - offline_access
+      - credentry.api
+      - credentry.roles
+      - numbatwallet.api
+    # Credentry tenant GUID -> NumbatWallet tenant GUID (same mapping as api.credentry).
+    tenantMap: {}
 
 migrations:
   # Helm pre-install/pre-upgrade hook Job (EF Core migrations bundle)

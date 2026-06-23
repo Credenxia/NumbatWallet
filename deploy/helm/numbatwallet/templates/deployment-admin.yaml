@@ -41,7 +41,14 @@ spec:
                 - ALL
           env:
             - name: ASPNETCORE_ENVIRONMENT
+              {{- if .Values.admin.credentry.enabled }}
+              # Credentry SSO requires a non-Development environment so "Sign in with Credentry"
+              # is the SOLE interactive login (Web.Admin auth mode 2). Forced here so enabling
+              # Credentry and the environment can never desync into the Azure-AD branch.
+              value: "Staging"
+              {{- else }}
               value: {{ .Values.admin.environment | quote }}
+              {{- end }}
             - name: ASPNETCORE_URLS
               value: "http://+:8080"
             - name: ASPNETCORE_FORWARDEDHEADERS_ENABLED
@@ -60,6 +67,32 @@ spec:
                   key: admin-api-key
             - name: AdminApi__TenantId
               value: {{ .Values.admin.tenantId | quote }}
+
+            {{- if .Values.admin.credentry.enabled }}
+            # "Sign in with Credentry" (auth-code + PKCE, client numbatwallet-admin). The client
+            # secret comes from the K8s secret (sourced from Key Vault); never templated inline.
+            - name: Credentry__Enabled
+              value: "true"
+            - name: Credentry__Authority
+              value: {{ .Values.admin.credentry.authority | quote }}
+            - name: Credentry__RequireHttpsMetadata
+              value: {{ .Values.admin.credentry.requireHttpsMetadata | quote }}
+            - name: Credentry__ClientId
+              value: {{ .Values.admin.credentry.clientId | quote }}
+            - name: Credentry__ClientSecret
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secretName }}
+                  key: credentry-admin-client-secret
+            {{- range $i, $scope := .Values.admin.credentry.scopes }}
+            - name: Credentry__Scopes__{{ $i }}
+              value: {{ $scope | quote }}
+            {{- end }}
+            {{- range $credentryTenant, $numbatTenant := .Values.admin.credentry.tenantMap }}
+            - name: Credentry__TenantMap__{{ $credentryTenant }}
+              value: {{ $numbatTenant | quote }}
+            {{- end }}
+            {{- end }}
 
           resources:
             {{- toYaml .Values.admin.resources | nindent 12 }}
