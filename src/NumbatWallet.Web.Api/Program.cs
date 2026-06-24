@@ -170,6 +170,8 @@ try
     // pre-existing default scheme — self-issued JWTs, the API-key middleware and the
     // (dead-code) Azure AD/ServiceWA schemes are untouched (integrate-first, delete-later).
     var credentryEnabled = builder.Configuration.GetValue<bool>("Credentry:Enabled");
+    // Bind + fail-fast-validate the Credentry options at host start (no-op when disabled).
+    builder.Services.AddCredentryOptions(builder.Configuration);
     if (builder.Environment.IsDevelopment() || builder.Environment.IsEnvironment("Testing"))
     {
         // Development/Testing: Use test handler for easier testing

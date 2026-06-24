@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using NumbatWallet.Application.Interfaces;
 using System.IdentityModel.Tokens.Jwt;
@@ -273,21 +274,24 @@ public static class CredentryAuthenticationExtensions
 
         builder.Services
             .AddOptions<JwtBearerOptions>(CredentryAuthenticationDefaults.AuthenticationScheme)
-            .Configure<IConfiguration>((options, config) =>
+            .Configure<IOptionsMonitor<CredentryOptions>>((options, credentryMonitor) =>
             {
-                var section = config.GetSection(CredentryAuthenticationDefaults.ConfigurationSection);
-                var authority = section["Authority"];
+                // Resolved on first use of the scheme (not captured at startup), so late-applied
+                // configuration sources still win — and CredentryOptionsValidator has already
+                // fail-fast-validated this at host start (ValidateOnStart).
+                var credentry = credentryMonitor.CurrentValue;
+                var authority = credentry.Authority;
                 if (string.IsNullOrWhiteSpace(authority))
                 {
                     throw new InvalidOperationException(
                         "Credentry federation is enabled (Credentry:Enabled=true) but Credentry:Authority is not configured.");
                 }
 
-                var audience = section["Audience"] ?? "numbatwallet-api";
+                var audience = credentry.Audience;
 
                 options.Authority = authority;
                 // Dev runs the Credentry IdP on http://localhost:5144; production authorities are HTTPS.
-                options.RequireHttpsMetadata = section.GetValue("RequireHttpsMetadata", true);
+                options.RequireHttpsMetadata = credentry.RequireHttpsMetadata;
                 // Keep the raw OIDC claim names (sub, tid, role, …) — the mapping below is explicit.
                 options.MapInboundClaims = false;
                 options.TokenValidationParameters = new TokenValidationParameters
@@ -342,10 +346,11 @@ public static class CredentryAuthenticationExtensions
             {
                 options.ForwardDefaultSelector = context =>
                 {
-                    // Resolved per request (cheap dictionary lookup) rather than captured at
-                    // startup, so late-applied configuration sources (tests, reload) win.
-                    var authority = context.RequestServices.GetRequiredService<IConfiguration>()
-                        [$"{CredentryAuthenticationDefaults.ConfigurationSection}:Authority"];
+                    // Resolved per request (cheap) rather than captured at startup, so
+                    // late-applied configuration sources (tests, reload) win.
+                    var authority = context.RequestServices
+                        .GetRequiredService<IOptionsMonitor<CredentryOptions>>()
+                        .CurrentValue.Authority;
                     var authorizationHeader = context.Request.Headers.Authorization.FirstOrDefault();
                     return CredentryTokenInspector.IsCredentryToken(authorizationHeader, authority)
                         ? CredentryAuthenticationDefaults.AuthenticationScheme
@@ -358,10 +363,10 @@ public static class CredentryAuthenticationExtensions
 
     private static async Task OnCredentryTokenValidatedAsync(TokenValidatedContext context)
     {
-        var credentrySection = context.HttpContext.RequestServices
-            .GetRequiredService<IConfiguration>()
-            .GetSection(CredentryAuthenticationDefaults.ConfigurationSection);
-        var requiredProduct = credentrySection["RequiredProduct"] ?? CredentryClaimsMapper.RequiredProduct;
+        var credentry = context.HttpContext.RequestServices
+            .GetRequiredService<IOptionsMonitor<CredentryOptions>>()
+            .CurrentValue;
+        var requiredProduct = credentry.RequiredProduct;
         var logger = context.HttpContext.RequestServices
             .GetRequiredService<ILoggerFactory>()
             .CreateLogger("CredentryJwt");
@@ -389,7 +394,7 @@ public static class CredentryAuthenticationExtensions
         var tenantMapped = CredentryClaimsMapper.TryMapTenant(
             identity,
             credentryTenantId,
-            tid => credentrySection.GetSection("TenantMap")[tid]);
+            tid => credentry.TenantMap.GetValueOrDefault(tid));
         if (!tenantMapped)
         {
             logger.LogWarning(

@@ -10,6 +10,10 @@
 #       jwt-secret-key                   -> jwt-secret-key
 #       field-encryption-key             -> field-encryption-key
 #       admin-api-key                    -> admin-api-key
+#       credentry-admin-client-secret    -> credentry-admin-client-secret  (optional;
+#         the "Sign in with Credentry" OIDC client secret. Empty until Credentry provisions
+#         the nonprod numbatwallet-admin client — the admin pod only reads it when
+#         admin.credentry.enabled=true, so an empty placeholder is harmless before then.)
 #
 # Prerequisites:
 #   - az login (with access to subscription "Credenxia AU LAB" for the product KV)
@@ -47,6 +51,10 @@ CONNECTION_STRING="$(get_kv 'ConnectionStrings--numbatwallet')"
 JWT_SECRET_KEY="$(get_kv 'jwt-secret-key')"
 FIELD_ENCRYPTION_KEY="$(get_kv 'field-encryption-key')"
 ADMIN_API_KEY="$(get_kv 'admin-api-key')"
+# Optional — present only once Credentry provisions the nonprod numbatwallet-admin client.
+# Falls back to empty so bootstrap stays green before then (the key still exists, so the admin
+# pod's secretKeyRef resolves; it's only consumed when admin.credentry.enabled=true).
+CREDENTRY_ADMIN_CLIENT_SECRET="$(get_kv 'credentry-admin-client-secret' 2>/dev/null || echo '')"
 
 echo ">>> Applying K8s secret ${SECRET_NAME} in ${NAMESPACE}"
 kubectl create secret generic "${SECRET_NAME}" \
@@ -55,6 +63,7 @@ kubectl create secret generic "${SECRET_NAME}" \
   --from-literal=jwt-secret-key="${JWT_SECRET_KEY}" \
   --from-literal=field-encryption-key="${FIELD_ENCRYPTION_KEY}" \
   --from-literal=admin-api-key="${ADMIN_API_KEY}" \
+  --from-literal=credentry-admin-client-secret="${CREDENTRY_ADMIN_CLIENT_SECRET}" \
   --dry-run=client -o yaml | kubectl apply -f -
 
 echo ">>> Done. Namespace contents:"
